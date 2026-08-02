@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Prasun Shop Admin</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+
+
+<body>
+
+
+<header>
+
+<div class="container">
+
+<h1>
+Prasun Shop Admin
+</h1>
+
+</div>
+
+</header>
+
+
+
+<section class="products">
+
+
+<div class="container">
+
+
+<h2>
+Customer Orders
+</h2>
+
+
+<table border="1" width="100%">
+
+
+<thead>
+
+<tr>
+
+<th>
+Order ID
+</th>
+
+<th>
+Customer
+</th>
+
+<th>
+Email
+</th>
+
+<th>
+Phone
+</th>
+
+<th>
+Product
+</th>
+
+<th>
+Total
+</th>
+
+<th>
+Date
+</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="orders">
+
+
+<tr>
+
+<td colspan="7">
+Loading orders...
+</td>
+
+</tr>
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+</section>
+
+
+
+<script>
+
+
+fetch(
+"https://prasun-shop-api.prasun301.workers.dev/"
+)
+
+
+.then(response =>
+response.json()
+)
+
+
+.then(orders => {
+
+
+let table =
+document.getElementById("orders");
+
+
+
+table.innerHTML = "";
+
+
+
+orders.forEach(order => {
+
+
+table.innerHTML += `
+
+
+<tr>
+
+
+<td>
+${order.id}
+</td>
+
+
+<td>
+${order.customer_name}
+</td>
+
+
+<td>
+${order.email}
+</td>
+
+
+<td>
+${order.phone}
+</td>
+
+
+<td>
+${order.products}
+</td>
+
+
+<td>
+$${order.total}
+</td>
+
+
+<td>
+${order.created_at}
+</td>
+
+
+</tr>
+
+
+`;
+
+
+});
+
+
+})
+
+.catch(error => {
+
+
+console.log(
+error
+);
+
+
+});
+
+
+</script>
+
+
+</body>
+
+</html>
