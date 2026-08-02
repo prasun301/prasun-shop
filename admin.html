@@ -135,6 +135,28 @@ table.innerHTML = "";
 orders.forEach(order => {
 
 
+let products =
+JSON.parse(order.products);
+
+
+
+let productText = "";
+
+
+
+products.forEach(item => {
+
+
+productText +=
+`
+${item.id} × ${item.quantity}<br>
+`;
+
+
+});
+
+
+
 table.innerHTML += `
 
 
@@ -162,7 +184,7 @@ ${order.phone}
 
 
 <td>
-${order.products}
+${productText}
 </td>
 
 
