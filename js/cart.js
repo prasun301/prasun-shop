@@ -1,11 +1,9 @@
-// Load shopping cart
+// Load cart
 
 
-let cart =
-JSON.parse(
+let cart = JSON.parse(
     localStorage.getItem("cart")
 ) || [];
-
 
 
 const cartItems =
@@ -17,8 +15,18 @@ document.getElementById("cart-total");
 
 
 
-let total = 0;
+if(cart.length === 0){
 
+    cartItems.innerHTML =
+    "<p>Your cart is empty.</p>";
+
+    cartTotal.innerHTML =
+    "Total: $0.00";
+
+}
+
+
+else {
 
 
 fetch("data/products.json")
@@ -30,41 +38,26 @@ fetch("data/products.json")
 .then(products => {
 
 
-
-    if(cart.length === 0){
-
-
-        cartItems.innerHTML =
-        "<p>Your cart is empty.</p>";
-
-        return;
-
-
-    }
-
+    let total = 0;
 
 
     cart.forEach(item => {
 
 
-
-        let product =
+        const product =
         products.find(
-            product => product.id === item.id
+            p => p.id === item.id
         );
-
 
 
         if(product){
 
 
-
-            let itemTotal =
+            let subtotal =
             product.price * item.quantity;
 
 
-
-            total += itemTotal;
+            total += subtotal;
 
 
 
@@ -74,34 +67,34 @@ fetch("data/products.json")
             <div class="card">
 
 
-                <img
-                src="${product.image}"
-                width="200"
-                >
+            <img 
+            src="${product.image}"
+            width="200"
+            >
 
 
-                <h3>
-                ${product.name}
-                </h3>
+            <h3>
+            ${product.name}
+            </h3>
 
 
-                <p>
-                Quantity:
-                ${item.quantity}
-                </p>
+            <p>
+            Quantity:
+            ${item.quantity}
+            </p>
 
 
-                <p>
-                Price:
-                $${product.price}
-                </p>
+            <p>
+            Price:
+            $${product.price}
+            </p>
 
 
-                <button onclick="removeFromCart('${product.id}')">
+            <button onclick="removeFromCart('${product.id}')">
 
-                Remove
+            Remove
 
-                </button>
+            </button>
 
 
             </div>
@@ -111,7 +104,6 @@ fetch("data/products.json")
 
 
         }
-
 
 
     });
@@ -125,22 +117,22 @@ fetch("data/products.json")
 
 })
 
+
 .catch(error => {
 
-
 console.log(
-"Cart error:",
+"Error loading cart:",
 error
 );
-
 
 });
 
 
+}
 
 
 
-// Remove product
+// Remove item
 
 
 function removeFromCart(id){
@@ -152,12 +144,10 @@ function removeFromCart(id){
     );
 
 
-
     localStorage.setItem(
         "cart",
         JSON.stringify(cart)
     );
-
 
 
     location.reload();
