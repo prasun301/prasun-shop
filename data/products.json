@@ -1,0 +1,51 @@
+fetch("data/products.json")
+
+.then(response => response.json())
+
+.then(products => {
+
+
+let container =
+document.getElementById("product-list");
+
+
+products.forEach(product => {
+
+
+container.innerHTML += `
+
+<div class="card">
+
+
+<img src="${product.image}" width="100%">
+
+
+<h3>${product.name}</h3>
+
+
+<p>
+${product.description}
+</p>
+
+
+<h4>
+$${product.price}
+</h4>
+
+
+<a href="product.html?id=${product.id}">
+<button>
+View Product
+</button>
+</a>
+
+
+</div>
+
+`;
+
+
+});
+
+
+});
