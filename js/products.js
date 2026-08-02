@@ -1,4 +1,4 @@
-// Load products from database
+// Load all products
 
 fetch("data/products.json")
 
@@ -14,6 +14,7 @@ fetch("data/products.json")
 
 
         productList.innerHTML += `
+
 
         <div class="card">
 
@@ -51,6 +52,7 @@ fetch("data/products.json")
 
         </div>
 
+
         `;
 
 
@@ -61,9 +63,9 @@ fetch("data/products.json")
 
 .catch(error => {
 
-console.log(
-"Error loading products:",
-error
-);
+    console.log(
+        "Error loading products:",
+        error
+    );
 
 });
