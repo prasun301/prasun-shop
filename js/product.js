@@ -114,7 +114,33 @@ function addToCart(productId){
 
 
 
-    cart.push(productId);
+    let existingProduct =
+    cart.find(
+        item => item.id === productId
+    );
+
+
+
+    if(existingProduct){
+
+
+        existingProduct.quantity += 1;
+
+
+    }
+
+    else {
+
+
+        cart.push({
+
+            id: productId,
+            quantity: 1
+
+        });
+
+
+    }
 
 
 
