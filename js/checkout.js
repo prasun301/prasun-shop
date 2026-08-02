@@ -137,18 +137,16 @@ function(event){
 
 
     alert(
-        "Thank you " + name +
-        "! Your order has been received."
-    );
+    "Thank you " + name +
+    "! Your order has been received."
+);
 
 
-
-    localStorage.removeItem("cart");
-
+localStorage.removeItem("cart");
 
 
-    window.location.href =
-    "index.html";
+window.location.href =
+"order-success.html";
 
 
 });
