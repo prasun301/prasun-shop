@@ -34,13 +34,12 @@ document.querySelectorAll('a[href^="#"]').forEach(link => {
 const buyButtons = document.querySelectorAll(".card button");
 
 
-buyButtons.forEach(button => {
+buyButtons.forEach((button, index) => {
 
     button.addEventListener("click", function(){
 
-        alert(
-            "Thank you for your interest! Product checkout will be available soon."
-        );
+        window.location.href = 
+        "product.html?id=00" + (index + 1);
 
     });
 
