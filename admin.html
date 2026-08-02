@@ -252,9 +252,38 @@ $${order.total}
 </td>
 
 <td>
-<span class="status pending">
-${order.status}
-</span>
+
+<select
+onchange="updateStatus(${order.id}, this.value)"
+>
+
+<option value="Pending"
+${order.status==="Pending"?"selected":""}>
+Pending
+</option>
+
+<option value="Processing"
+${order.status==="Processing"?"selected":""}>
+Processing
+</option>
+
+<option value="Shipped"
+${order.status==="Shipped"?"selected":""}>
+Shipped
+</option>
+
+<option value="Completed"
+${order.status==="Completed"?"selected":""}>
+Completed
+</option>
+
+<option value="Cancelled"
+${order.status==="Cancelled"?"selected":""}>
+Cancelled
+</option>
+
+</select>
+
 </td>
 
 <td>
@@ -277,7 +306,41 @@ ${order.created_at}
 
 }
 
+async function updateStatus(id,status){
 
+const response = await fetch(
+
+"https://prasun-shop-api.prasun301.workers.dev/",
+
+{
+
+method:"PUT",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+id:id,
+
+status:status
+
+})
+
+}
+
+);
+
+const result = await response.json();
+
+if(result.success){
+
+alert("Order status updated.");
+
+}
+
+}
 
 </script>
 </body>
