@@ -136,17 +136,78 @@ function(event){
 
 
 
-    alert(
-    "Thank you " + name +
-    "! Your order has been received."
-);
+    fetch("https://prasun-shop-api.prasun301.workers.dev/", {
 
 
-localStorage.removeItem("cart");
+    method: "POST",
 
 
-window.location.href =
-"order-success.html";
+    headers: {
+
+        "Content-Type": "application/json"
+
+    },
+
+
+    body: JSON.stringify({
+
+        customerName: name,
+
+        email:
+        document.getElementById("email").value,
+
+
+        phone:
+        document.getElementById("phone").value,
+
+
+        address:
+        document.getElementById("address").value,
+
+
+        cart: cart,
+
+        total: total
+
+
+    })
+
+
+})
+
+
+.then(response => response.json())
+
+
+.then(data => {
+
+
+    console.log(
+        "Order sent:",
+        data
+    );
+
+
+    localStorage.removeItem("cart");
+
+
+    window.location.href =
+    "order-success.html";
+
+
+})
+
+
+.catch(error => {
+
+
+    console.log(
+        "Order error:",
+        error
+    );
+
+
+});
 
 
 });
