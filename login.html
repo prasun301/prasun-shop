@@ -83,8 +83,11 @@ await response.json();
 if(result.success){
 
 localStorage.setItem(
-"adminLoggedIn",
-"true"
+
+"sessionToken",
+
+result.token
+
 );
 
 window.location.href =
