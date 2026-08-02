@@ -1,12 +1,12 @@
-// Load single product details
+// Load single product
 
 
-const params = new URLSearchParams(
+const urlParams = new URLSearchParams(
     window.location.search
 );
 
 
-const productId = params.get("id");
+const productId = urlParams.get("id");
 
 
 
@@ -24,9 +24,9 @@ fetch("data/products.json")
     );
 
 
-    const container = document.getElementById(
-        "product-detail"
-    );
+    const container =
+    document.getElementById("product-detail");
+
 
 
     if(product){
@@ -38,7 +38,7 @@ fetch("data/products.json")
         <div class="card">
 
 
-            <img 
+            <img
             src="${product.image}"
             alt="${product.name}"
             width="100%"
@@ -75,10 +75,11 @@ fetch("data/products.json")
 
     }
 
+
     else {
 
 
-        container.innerHTML =
+        container.innerHTML = 
         "<h2>Product not found</h2>";
 
 
@@ -89,7 +90,10 @@ fetch("data/products.json")
 
 .catch(error => {
 
-console.log(error);
+    console.log(
+        "Error:",
+        error
+    );
 
 });
 
@@ -97,10 +101,10 @@ console.log(error);
 
 
 
-// Add product to cart
+// Add to cart function
 
 
-function addToCart(id){
+function addToCart(productId){
 
 
     let cart =
@@ -110,7 +114,7 @@ function addToCart(id){
 
 
 
-    cart.push(id);
+    cart.push(productId);
 
 
 
@@ -118,6 +122,7 @@ function addToCart(id){
         "cart",
         JSON.stringify(cart)
     );
+
 
 
     alert(
