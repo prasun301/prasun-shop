@@ -1,376 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Prasun Shop Admin</title>
-
-<link rel="stylesheet" href="css/style.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prasun Shop Admin</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
-
-
 <body>
 
+    <header>
+        <div class="container">
+            <h1>Prasun Shop Admin</h1>
+        </div>
+    </header>
+
+    <section class="products">
+        <div class="container">
+            <h2>Customer Orders</h2>
+            
+            <table border="1" width="100%">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Product</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="orders">
+                    <tr>
+                        <td colspan="8">Loading orders...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ALL JAVASCRIPT MUST GO INSIDE THIS SCRIPT TAG -->
+    <script>
+        // ==========================
+        // 1. VERIFY SESSION
+        // ==========================
+        async function verifySession() {
+            const token = localStorage.getItem("sessionToken");
+
+            // If no token exists at all, kick them to login
+            if (!token) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            try {
+                // Ask the Worker if this token is actually real and unexpired
+                const response = await fetch("https://prasun-shop-api.prasun301.workers.dev/verify-session", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ token })
+                });
+
+                const result = await response.json();
+
+                // If the Worker says it's fake or expired, delete it and kick them out
+                if (!result.valid) {
+                    localStorage.removeItem("sessionToken");
+                    window.location.href = "login.html";
+                }
+            } catch (error) {
+                console.error("Failed to verify session:", error);
+                window.location.href = "login.html";
+            }
+        }
+
+        // Run this immediately when the page loads
+        verifySession();
+
+        // ==========================
+        // 2. LOAD PRODUCTS & ORDERS
+        // ==========================
+        let productsList = [];
+
+        // Load products first
+        fetch("data/products.json")
+            .then(response => response.json())
+            .then(products => {
+                productsList = products;
+                // Then load orders
+                loadOrders();
+            });
+
+        function loadOrders() {
+            fetch("https://prasun-shop-api.prasun301.workers.dev/")
+                .then(response => response.json())
+                .then(orders => {
+                    let table = document.getElementById("orders");
+                    table.innerHTML = "";
+
+                    orders.forEach(order => {
+                        let cart = JSON.parse(order.products);
+                        let productText = "";
+
+                        cart.forEach(item => {
+                            let product = productsList.find(p => p.id === item.id);
+                            if (product) {
+                                productText += `${product.name} &times; ${item.quantity}<br>`;
+                            } else {
+                                productText += `${item.id} &times; ${item.quantity}<br>`;
+                            }
+                        });
+
+                        table.innerHTML += `
+                            <tr>
+                                <td>${order.id}</td>
+                                <td>${order.customer_name}</td>
+                                <td>${order.email}</td>
+                                <td>${order.phone}</td>
+                                <td>${productText}</td>
+                                <td>$${order.total}</td>
+                                <td>
+                                    <select onchange="updateStatus(${order.id}, this.value)">
+                                        <option value="Pending" ${order.status === "Pending" ? "selected" : ""}>Pending</option>
+                                        <option value="Processing" ${order.status === "Processing" ? "selected" : ""}>Processing</option>
+                                        <option value="Shipped" ${order.status === "Shipped" ? "selected" : ""}>Shipped</option>
+                                        <option value="Completed" ${order.status === "Completed" ? "selected" : ""}>Completed</option>
+                                        <option value="Cancelled" ${order.status === "Cancelled" ? "selected" : ""}>Cancelled</option>
+                                    </select>
+                                </td>
+                                <td>${order.created_at}</td>
+                            </tr>
+                        `;
+                    });
+                });
+        }
+
+        // ==========================
+        // 3. UPDATE ORDER STATUS
+        // ==========================
+        async function updateStatus(id, status) {
+            const response = await fetch("https://prasun-shop-api.prasun301.workers.dev/", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id: id,
+                    status: status
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert("Order status updated.");
+            }
+        }
+    </script>
 
-<header>
-
-<div class="container">
-
-<h1>
-Prasun Shop Admin
-</h1>
-
-</div>
-
-</header>
-
-
-
-<section class="products">
-
-
-<div class="container">
-
-
-<h2>
-Customer Orders
-</h2>
-
-
-<table border="1" width="100%">
-
-
-<thead>
-
-<tr>
-
-<th>
-Order ID
-</th>
-
-<th>
-Customer
-</th>
-
-<th>
-Email
-</th>
-
-<th>
-Phone
-</th>
-
-<th>
-Product
-</th>
-
-<th>
-Total
-</th>
-
-<th>
-Status
-</th>
-
-<th>
-Date
-</th>
-
-</tr>
-
-</thead>
-
-
-<tbody id="orders">
-
-
-<tr>
-
-<td colspan="7">
-Loading orders...
-</td>
-
-</tr>
-
-
-</tbody>
-
-
-</table>
-
-
-</div>
-
-
-</section>
-
-async function verifySession() {
-  const token = localStorage.getItem("sessionToken");
-
-  // If no token exists at all, kick them to login
-  if (!token) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  // Ask the Worker if this token is actually real and unexpired
-  const response = await fetch("https://prasun-shop-api.prasun301.workers.dev/verify-session", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ token })
-  });
-
-  const result = await response.json();
-
-  // If the Worker says it's fake or expired, delete it and kick them out
-  if (!result.valid) {
-    localStorage.removeItem("sessionToken");
-    window.location.href = "login.html";
-  }
-}
-
-// Run this immediately when the page loads
-verifySession();
-
-<script>
-
-let productsList = [];
-
-
-// Load products first
-
-fetch("data/products.json")
-
-.then(response => response.json())
-
-.then(products => {
-
-
-productsList = products;
-
-
-// Then load orders
-
-loadOrders();
-
-
-});
-
-
-
-function loadOrders(){
-
-
-fetch(
-"https://prasun-shop-api.prasun301.workers.dev/"
-)
-
-
-.then(response =>
-response.json()
-)
-
-
-.then(orders => {
-
-
-let table =
-document.getElementById("orders");
-
-
-table.innerHTML = "";
-
-
-
-orders.forEach(order => {
-
-
-
-let cart =
-JSON.parse(order.products);
-
-
-
-let productText = "";
-
-
-
-cart.forEach(item => {
-
-
-
-let product =
-productsList.find(
-p => p.id === item.id
-);
-
-
-
-if(product){
-
-
-productText +=
-`
-${product.name} × ${item.quantity}<br>
-`;
-
-
-
-}
-
-else {
-
-
-productText +=
-`
-${item.id} × ${item.quantity}<br>
-`;
-
-
-}
-
-
-
-});
-
-
-
-
-
-table.innerHTML += `
-
-
-<tr>
-
-
-<td>
-${order.id}
-</td>
-
-
-<td>
-${order.customer_name}
-</td>
-
-
-<td>
-${order.email}
-</td>
-
-
-<td>
-${order.phone}
-</td>
-
-
-<td>
-${productText}
-</td>
-
-
-<td>
-$${order.total}
-</td>
-
-<td>
-
-<select
-onchange="updateStatus(${order.id}, this.value)"
->
-
-<option value="Pending"
-${order.status==="Pending"?"selected":""}>
-Pending
-</option>
-
-<option value="Processing"
-${order.status==="Processing"?"selected":""}>
-Processing
-</option>
-
-<option value="Shipped"
-${order.status==="Shipped"?"selected":""}>
-Shipped
-</option>
-
-<option value="Completed"
-${order.status==="Completed"?"selected":""}>
-Completed
-</option>
-
-<option value="Cancelled"
-${order.status==="Cancelled"?"selected":""}>
-Cancelled
-</option>
-
-</select>
-
-</td>
-
-<td>
-${order.created_at}
-</td>
-
-
-</tr>
-
-
-`;
-
-
-
-});
-
-
-});
-
-
-}
-
-async function updateStatus(id,status){
-
-const response = await fetch(
-
-"https://prasun-shop-api.prasun301.workers.dev/",
-
-{
-
-method:"PUT",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-
-id:id,
-
-status:status
-
-})
-
-}
-
-);
-
-const result = await response.json();
-
-if(result.success){
-
-alert("Order status updated.");
-
-}
-
-}
-
-</script>
 </body>
-
 </html>
