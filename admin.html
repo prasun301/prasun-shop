@@ -109,6 +109,32 @@ Loading orders...
 
 <script>
 
+let productsList = [];
+
+
+// Load products first
+
+fetch("data/products.json")
+
+.then(response => response.json())
+
+.then(products => {
+
+
+productsList = products;
+
+
+// Then load orders
+
+loadOrders();
+
+
+});
+
+
+
+function loadOrders(){
+
 
 fetch(
 "https://prasun-shop-api.prasun301.workers.dev/"
@@ -127,7 +153,6 @@ let table =
 document.getElementById("orders");
 
 
-
 table.innerHTML = "";
 
 
@@ -135,7 +160,8 @@ table.innerHTML = "";
 orders.forEach(order => {
 
 
-let products =
+
+let cart =
 JSON.parse(order.products);
 
 
@@ -144,7 +170,30 @@ let productText = "";
 
 
 
-products.forEach(item => {
+cart.forEach(item => {
+
+
+
+let product =
+productsList.find(
+p => p.id === item.id
+);
+
+
+
+if(product){
+
+
+productText +=
+`
+${product.name} × ${item.quantity}<br>
+`;
+
+
+
+}
+
+else {
 
 
 productText +=
@@ -153,7 +202,13 @@ ${item.id} × ${item.quantity}<br>
 `;
 
 
+}
+
+
+
 });
+
+
 
 
 
@@ -204,25 +259,18 @@ ${order.created_at}
 `;
 
 
+
+});
+
+
 });
 
 
-})
+}
 
-.catch(error => {
-
-
-console.log(
-error
-);
-
-
-});
 
 
 </script>
-
-
 </body>
 
 </html>
