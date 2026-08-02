@@ -106,54 +106,56 @@ fetch("data/products.json")
 
 function addToCart(productId){
 
-
     let cart =
     JSON.parse(
         localStorage.getItem("cart")
     ) || [];
 
 
+    fetch("data/products.json")
+    .then(response => response.json())
+    .then(products => {
 
-    let existingProduct =
-    cart.find(
-        item => item.id === productId
-    );
-
-
-
-    if(existingProduct){
+        const product = products.find(
+            item => item.id === productId
+        );
 
 
-        existingProduct.quantity += 1;
+        let existingProduct =
+        cart.find(
+            item => item.id === productId
+        );
 
 
-    }
+        if(existingProduct){
 
-    else {
+            existingProduct.quantity += 1;
 
+        }
 
-        cart.push({
+        else {
 
-            id: productId,
-            quantity: 1
+            cart.push({
 
-        });
+                id: product.id,
+                name: product.name,
+                quantity: 1
 
+            });
 
-    }
-
-
-
-    localStorage.setItem(
-        "cart",
-        JSON.stringify(cart)
-    );
+        }
 
 
+        localStorage.setItem(
+            "cart",
+            JSON.stringify(cart)
+        );
 
-    alert(
-        "Product added to cart!"
-    );
 
+        alert(
+            "Product added to cart!"
+        );
+
+    });
 
 }
