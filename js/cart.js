@@ -1,7 +1,5 @@
-// Load cart
-
-
-let cart = JSON.parse(
+let cart =
+JSON.parse(
     localStorage.getItem("cart")
 ) || [];
 
@@ -13,20 +11,6 @@ document.getElementById("cart-items");
 const cartTotal =
 document.getElementById("cart-total");
 
-
-
-if(cart.length === 0){
-
-    cartItems.innerHTML =
-    "<p>Your cart is empty.</p>";
-
-    cartTotal.innerHTML =
-    "Total: $0.00";
-
-}
-
-
-else {
 
 
 fetch("data/products.json")
@@ -41,16 +25,34 @@ fetch("data/products.json")
     let total = 0;
 
 
+    if(cart.length === 0){
+
+
+        cartItems.innerHTML =
+        "<p>Your cart is empty.</p>";
+
+        cartTotal.innerHTML =
+        "Total: $0.00";
+
+        return;
+
+    }
+
+
+
     cart.forEach(item => {
 
 
-        const product =
+
+        let product =
         products.find(
             p => p.id === item.id
         );
 
 
+
         if(product){
+
 
 
             let subtotal =
@@ -79,14 +81,28 @@ fetch("data/products.json")
 
 
             <p>
-            Quantity:
-            ${item.quantity}
+            Price: $${product.price}
             </p>
 
 
+            <button onclick="changeQuantity('${product.id}', -1)">
+            -
+            </button>
+
+
+            <span>
+            ${item.quantity}
+            </span>
+
+
+            <button onclick="changeQuantity('${product.id}', 1)">
+            +
+            </button>
+
+
             <p>
-            Price:
-            $${product.price}
+            Subtotal:
+            $${subtotal.toFixed(2)}
             </p>
 
 
@@ -115,24 +131,55 @@ fetch("data/products.json")
 
 
 
-})
-
-
-.catch(error => {
-
-console.log(
-"Error loading cart:",
-error
-);
-
 });
+
+
+
+
+
+function changeQuantity(id, change){
+
+
+    let item =
+    cart.find(
+        product => product.id === id
+    );
+
+
+
+    if(item){
+
+
+        item.quantity += change;
+
+
+
+        if(item.quantity <= 0){
+
+            cart =
+            cart.filter(
+                product => product.id !== id
+            );
+
+        }
+
+
+    }
+
+
+
+    localStorage.setItem(
+        "cart",
+        JSON.stringify(cart)
+    );
+
+
+    location.reload();
 
 
 }
 
 
-
-// Remove item
 
 
 function removeFromCart(id){
@@ -151,6 +198,5 @@ function removeFromCart(id){
 
 
     location.reload();
-
 
 }
