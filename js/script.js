@@ -1,5 +1,8 @@
 // Prasun Shop JavaScript
 
+let allProducts = [];
+
+
 // -------------------------
 // Smooth scrolling
 // -------------------------
@@ -10,9 +13,11 @@ document.querySelectorAll('a[href^="#"]').forEach(link => {
 
         e.preventDefault();
 
-        const target = document.querySelector(this.getAttribute("href"));
+        const target = document.querySelector(
+            this.getAttribute("href")
+        );
 
-        if (target) {
+        if(target){
 
             target.scrollIntoView({
                 behavior: "smooth"
@@ -24,62 +29,145 @@ document.querySelectorAll('a[href^="#"]').forEach(link => {
 
 });
 
+
 // -------------------------
-// Load Featured Products
+// Load Products
 // -------------------------
 
 fetch("data/products.json")
+
 .then(response => response.json())
+
 .then(products => {
+
+    allProducts = products;
+
+    displayProducts(products);
+
+})
+
+.catch(error => {
+
+    console.log(
+        "Error loading products:",
+        error
+    );
+
+});
+
+
+// -------------------------
+// Display Products
+// -------------------------
+
+function displayProducts(products){
 
     const productList = document.getElementById("product-list");
 
-    if (!productList) return;
+    if(!productList) return;
+
+
+    productList.innerHTML = "";
+
 
     products.forEach(product => {
 
+
         productList.innerHTML += `
+
 
         <div class="card">
 
-            <img
-                src="${product.image}"
-                alt="${product.name}"
-                width="100%"
+
+            <img 
+            src="${product.image}" 
+            alt="${product.name}"
+            width="100%"
             >
 
-            <p class="product-category">${product.category}</p>
 
-<p class="product-rating">
-⭐ ${product.rating}
-</p>
+            <p class="product-category">
+            ${product.category || ""}
+            </p>
 
-<h3>${product.name}</h3>
 
-<p>${product.description}</p>
+            <p class="product-rating">
+            ⭐ ${product.rating || "5"}
+            </p>
 
-<h4>$${product.price}</h4>
 
-<p class="stock">
-✅ In Stock (${product.stock})
-</p>
+            <h3>
+            ${product.name}
+            </h3>
 
-<button onclick="window.location.href='product.html?id=${product.id}'">
-    Buy Now
-</button>
+
+            <p>
+            ${product.description}
+            </p>
+
+
+            <h4>
+            $${product.price}
+            </h4>
+
+
+            <p class="stock">
+            ✅ In Stock
+            </p>
+
+
+            <button onclick="window.location.href='product.html?id=${product.id}'">
+
+            Buy Now
+
+            </button>
+
 
         </div>
 
+
         `;
+
 
     });
 
-})
-.catch(error => {
 
-    console.error("Error loading products:", error);
+}
 
-});
+
+// -------------------------
+// Product Search
+// -------------------------
+
+const searchInput = document.getElementById("searchInput");
+
+
+if(searchInput){
+
+
+    searchInput.addEventListener("input", function(){
+
+
+        const keyword = this.value.toLowerCase();
+
+
+        const filteredProducts = allProducts.filter(product =>
+
+
+            product.name.toLowerCase().includes(keyword)
+
+
+        );
+
+
+        displayProducts(filteredProducts);
+
+
+    });
+
+
+}
+
 
 // -------------------------
 // Newsletter
@@ -87,24 +175,40 @@ fetch("data/products.json")
 
 const subscribeButton = document.querySelector(".contact button");
 
-if (subscribeButton) {
 
-    subscribeButton.addEventListener("click", function() {
+if(subscribeButton){
+
+    subscribeButton.addEventListener("click", function(){
+
 
         const email = document.querySelector(".contact input").value;
 
-        if (email === "") {
 
-            alert("Please enter your email address.");
+        if(email === ""){
 
-        } else {
 
-            alert("Thank you for subscribing to Prasun Shop!");
+            alert(
+                "Please enter your email address."
+            );
 
-            document.querySelector(".contact input").value = "";
 
         }
 
+        else {
+
+
+            alert(
+                "Thank you for subscribing to Prasun Shop!"
+            );
+
+
+            document.querySelector(".contact input").value = "";
+
+
+        }
+
+
     });
+
 
 }
