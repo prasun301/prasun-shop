@@ -967,6 +967,7 @@ font-size:16px;
     text-align: center;
     padding: 8px 12px;
 }
+
 /* ====================================================
    Product Detail & Specifications Centering Fixes
 ==================================================== */
@@ -974,8 +975,8 @@ font-size:16px;
 /* Center everything inside the main product card */
 .product-detail-card {
     text-align: center;
-    max-width: 800px;      /* Prevents the card from stretching too wide on big screens */
-    margin: 0 auto;        /* Centers the card on the page */
+    max-width: 800px;      
+    margin: 0 auto;        
 }
 
 /* Add breathing room around the Features and Specs sections */
@@ -988,7 +989,7 @@ font-size:16px;
     list-style: none;
     padding: 0;
     margin: 0 auto;
-    display: inline-block; /* This allows the ul to be centered by the parent's text-align */
+    display: inline-block; 
     text-align: center;
 }
 
@@ -1000,19 +1001,18 @@ font-size:16px;
 
 /* Center and style the Specifications Table */
 .spec-table {
-    margin: 0 auto;        /* Centers the table itself */
+    margin: 0 auto;        
     border-collapse: collapse;
     width: 100%;
-    max-width: 500px;      /* Keeps the table at a nice, readable width */
+    max-width: 500px;      
 }
 
 .spec-table td {
     padding: 12px 15px;
     border-bottom: 1px solid #eee;
-    text-align: center;    /* Centers the text inside the table cells */
+    text-align: center;    
 }
 
-/* Make the specification labels (like "Color", "Weight") bold to stand out */
 .spec-table tr td:first-child {
     font-weight: 600;
     color: #222;
@@ -1030,4 +1030,33 @@ font-size:16px;
     object-fit: contain;
     margin: 0 auto 20px auto;
     display: block;
+}
+
+
+/* ====================================================
+   Mobile Responsiveness for Product Details
+==================================================== */
+
+@media (max-width: 600px) {
+    /* Stack the buttons on mobile so they don't squish */
+    .product-detail-card button {
+        width: 100%;
+        margin-bottom: 15px;
+        display: block;
+    }
+    
+    .product-detail-card button:first-of-type {
+        margin-right: 0;
+    }
+    
+    /* Make the spec table font slightly smaller for phones */
+    .spec-table td {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+    
+    /* Adjust product image height for smaller screens */
+    .product-main-image {
+        max-height: 250px;
+    }
 }
