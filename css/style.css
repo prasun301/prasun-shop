@@ -919,65 +919,115 @@ font-size:16px;
 
 }
 
-/* Feature List & Specifications - Centered */
+/* ====================================================
+   Product Detail & Specifications Centering Fixes
+==================================================== */
 
-.product-section,
-.specifications,
-.product-specifications {
+/* General center alignment for the entire product detail container */
+#product-detail {
     text-align: center;
 }
 
-.product-section ul,
-.specifications ul,
-.product-specifications ul {
+/* Force Flex containers inside the product details to center */
+#product-detail div, 
+#product-detail span, 
+#product-detail section {
+    justify-content: center;
+}
+
+/* Specific styling for features and specifications lists */
+#product-detail ul,
+#product-detail ol,
+#product-detail dl {
     list-style: none;
     padding: 0;
     margin: 0 auto;
+    display: inline-block; /* Crucial: This forces the block to center relative to its container */
+    text-align: center;
 }
 
-.product-section li,
-.specifications li,
-.product-specifications li,
-.product-section p,
-.specifications p,
-.product-specifications p,
-.product-section div,
-.specifications div,
-.product-specifications div {
+/* Ensure individual list items are centered */
+#product-detail li {
+    text-align: center;
     margin-bottom: 12px;
     font-size: 16px;
-    text-align: center; 
-    justify-content: center; /* Forces centering if Flexbox is used to render the JSON */
+    list-style-position: inside; /* Keeps bullets/numbers centered if enabled */
 }
 
-/* Force center if javascript renders the keys and values side-by-side using Flexbox */
-.spec-row,
-.spec-item,
-.specification-item {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    text-align: center;
-    width: 100%;
-}
-
-/* In case a table is generated for specifications */
-.product-section table,
-.specifications table,
-.product-specifications table {
+/* If JavaScript happens to be rendering a table for specifications */
+#product-detail table {
     margin: 0 auto;
     text-align: center;
     width: 100%;
     max-width: 600px;
 }
 
-.product-section th, 
-.product-section td,
-.specifications th,
-.specifications td,
-.product-specifications th,
-.product-specifications td {
+#product-detail th,
+#product-detail td {
     text-align: center;
-    padding: 10px;
+    padding: 8px 12px;
+}
+/* ====================================================
+   Product Detail & Specifications Centering Fixes
+==================================================== */
+
+/* Center everything inside the main product card */
+.product-detail-card {
+    text-align: center;
+    max-width: 800px;      /* Prevents the card from stretching too wide on big screens */
+    margin: 0 auto;        /* Centers the card on the page */
+}
+
+/* Add breathing room around the Features and Specs sections */
+.product-section {
+    margin: 40px 0;
+}
+
+/* Center the Key Features List */
+.product-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 auto;
+    display: inline-block; /* This allows the ul to be centered by the parent's text-align */
+    text-align: center;
+}
+
+.product-section ul li {
+    margin-bottom: 12px;
+    font-size: 16px;
+    color: #444;
+}
+
+/* Center and style the Specifications Table */
+.spec-table {
+    margin: 0 auto;        /* Centers the table itself */
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 500px;      /* Keeps the table at a nice, readable width */
+}
+
+.spec-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    text-align: center;    /* Centers the text inside the table cells */
+}
+
+/* Make the specification labels (like "Color", "Weight") bold to stand out */
+.spec-table tr td:first-child {
+    font-weight: 600;
+    color: #222;
+}
+
+.spec-table tr td:last-child {
+    color: #555;
+}
+
+/* Center the product image nicely */
+.product-main-image {
+    max-width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
+    margin: 0 auto 20px auto;
+    display: block;
 }
