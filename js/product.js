@@ -13,8 +13,7 @@ const urlParams = new URLSearchParams(
 const productId = urlParams.get("id");
 
 
-
-const container =
+const container = 
 document.getElementById("product-detail");
 
 
@@ -45,13 +44,142 @@ fetch("data/products.json")
     if(product){
 
 
+
+        let featuresHTML = "";
+
+
+
+        if(product.features){
+
+
+            featuresHTML = `
+
+
+            <div class="product-section">
+
+
+            <h3>
+            Key Features
+            </h3>
+
+
+            <ul>
+
+
+            ${
+                product.features.map(
+                    
+                    feature =>
+
+                    `<li>✓ ${feature}</li>`
+
+                ).join("")
+            }
+
+
+            </ul>
+
+
+            </div>
+
+
+            `;
+
+
+        }
+
+
+
+
+
+
+        let specificationsHTML = "";
+
+
+
+        if(product.specifications){
+
+
+            specificationsHTML = `
+
+
+            <div class="product-section">
+
+
+            <h3>
+            Specifications
+            </h3>
+
+
+
+            <table class="spec-table">
+
+
+            ${
+                Object.entries(product.specifications)
+
+                .map(
+
+                    ([key,value]) =>
+
+
+                    `
+
+                    <tr>
+
+                    <td>
+                    ${key}
+                    </td>
+
+
+                    <td>
+                    ${value}
+                    </td>
+
+
+                    </tr>
+
+
+                    `
+
+
+                )
+
+                .join("")
+            }
+
+
+
+            </table>
+
+
+            </div>
+
+
+            `;
+
+
+        }
+
+
+
+
+
+
+
         container.innerHTML = `
+
 
 
         <div class="card product-detail-card">
 
 
+
+
+
             <img
+
+            class="product-main-image"
 
             src="${product.image}"
 
@@ -62,8 +190,10 @@ fetch("data/products.json")
 
 
 
+
             <p class="product-category">
 
+            Category:
             ${product.category || "Smart Product"}
 
             </p>
@@ -71,11 +201,25 @@ fetch("data/products.json")
 
 
 
-            <p class="product-rating">
 
-            ⭐ ${product.rating || "5"}
+            <p class="product-sku">
+
+            SKU:
+            ${product.sku || "N/A"}
 
             </p>
+
+
+
+
+
+
+            <p class="product-rating">
+
+            ⭐ ${product.rating || 5}/5
+
+            </p>
+
 
 
 
@@ -91,7 +235,8 @@ fetch("data/products.json")
 
 
 
-            <p>
+
+            <p class="product-description">
 
             ${product.description}
 
@@ -101,11 +246,30 @@ fetch("data/products.json")
 
 
 
-            <h2>
+
+
+            ${featuresHTML}
+
+
+
+
+
+            ${specificationsHTML}
+
+
+
+
+
+
+
+
+            <h2 class="product-price">
 
             $${product.price.toFixed(2)}
 
             </h2>
+
+
 
 
 
@@ -122,7 +286,11 @@ fetch("data/products.json")
 
 
 
-            <button onclick="addToCart('${product.id}')">
+
+
+            <button 
+
+            onclick="addToCart('${product.id}')">
 
             🛒 Add to Cart
 
@@ -132,7 +300,10 @@ fetch("data/products.json")
 
 
 
-            <button onclick="buyNow('${product.id}')">
+
+            <button 
+
+            onclick="buyNow('${product.id}')">
 
             ⚡ Buy Now
 
@@ -145,13 +316,17 @@ fetch("data/products.json")
         </div>
 
 
+
         `;
+
 
 
     }
 
 
+
     else {
+
 
 
         container.innerHTML =
@@ -159,7 +334,9 @@ fetch("data/products.json")
         "<h2>Product not found</h2>";
 
 
+
     }
+
 
 
 })
@@ -167,6 +344,7 @@ fetch("data/products.json")
 
 
 .catch(error => {
+
 
 
 console.log(
@@ -178,7 +356,10 @@ error
 );
 
 
+
 });
+
+
 
 
 
@@ -215,10 +396,13 @@ function addToCart(productId){
 
 
 
+
     if(existingProduct){
 
 
+
         existingProduct.quantity += 1;
+
 
 
     }
@@ -227,16 +411,23 @@ function addToCart(productId){
     else {
 
 
+
         cart.push({
+
 
             id: productId,
 
-            quantity: 1
+
+            quantity:1
+
 
         });
 
 
+
     }
+
+
 
 
 
@@ -254,6 +445,9 @@ function addToCart(productId){
 
 
 
+
+
+
     if(typeof updateCartCount === "function"){
 
 
@@ -261,6 +455,7 @@ function addToCart(productId){
 
 
     }
+
 
 
 
@@ -275,6 +470,8 @@ function addToCart(productId){
 
 
 }
+
+
 
 
 
@@ -312,34 +509,39 @@ function buyNow(productId){
 
 
 
-    // Add product only if not already in cart
-
     if(!existingProduct){
 
 
 
         cart.push({
 
-            id: productId,
 
-            quantity: 1
+            id:productId,
+
+
+            quantity:1
+
 
         });
 
 
 
-
-
-        localStorage.setItem(
-
-            "cart",
-
-            JSON.stringify(cart)
-
-        );
-
-
     }
+
+
+
+
+
+
+    localStorage.setItem(
+
+        "cart",
+
+        JSON.stringify(cart)
+
+    );
+
+
 
 
 
@@ -357,7 +559,12 @@ function buyNow(productId){
 
 
 
-    window.location.href = "checkout.html";
+
+
+    window.location.href =
+
+    "checkout.html";
+
 
 
 }
