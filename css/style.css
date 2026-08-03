@@ -919,23 +919,65 @@ font-size:16px;
 
 }
 
-/* Feature List - Remove Bullets */
+/* Feature List & Specifications - Centered */
 
-.product-section ul {
-
-list-style:none;
-
-padding:0;
-
-margin:0;
-
+.product-section,
+.specifications,
+.product-specifications {
+    text-align: center;
 }
 
+.product-section ul,
+.specifications ul,
+.product-specifications ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 auto;
+}
 
-.product-section li {
+.product-section li,
+.specifications li,
+.product-specifications li,
+.product-section p,
+.specifications p,
+.product-specifications p,
+.product-section div,
+.specifications div,
+.product-specifications div {
+    margin-bottom: 12px;
+    font-size: 16px;
+    text-align: center; 
+    justify-content: center; /* Forces centering if Flexbox is used to render the JSON */
+}
 
-margin-bottom:12px;
+/* Force center if javascript renders the keys and values side-by-side using Flexbox */
+.spec-row,
+.spec-item,
+.specification-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    width: 100%;
+}
 
-font-size:16px;
+/* In case a table is generated for specifications */
+.product-section table,
+.specifications table,
+.product-specifications table {
+    margin: 0 auto;
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+}
 
+.product-section th, 
+.product-section td,
+.specifications th,
+.specifications td,
+.product-specifications th,
+.product-specifications td {
+    text-align: center;
+    padding: 10px;
 }
