@@ -1,23 +1,35 @@
 [
   {
     "id": "001",
+    "category": "Smart Lighting",
+    "brand": "Prasun Smart",
     "name": "Smart LED Lamp",
     "price": 29.99,
     "image": "images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png",
-    "description": "Modern smart LED lamp for home decoration."
+    "description": "Modern smart LED lamp for home decoration.",
+    "stock": 25,
+    "rating": 4.8
   },
   {
     "id": "002",
+    "category": "Audio",
+    "brand": "Prasun Smart",
     "name": "Wireless Earbuds",
     "price": 39.99,
     "image": "images/products/19_879a626a-c861-421d-ac54-2721a8f1f633.jpg",
-    "description": "High quality wireless earbuds with clear sound."
+    "description": "High quality wireless earbuds with clear sound.",
+    "stock": 18,
+    "rating": 4.7
   },
   {
     "id": "003",
+    "category": "Power & Charging",
+    "brand": "Prasun Smart",
     "name": "Portable Charger",
     "price": 49.99,
     "image": "images/products/25_ea5d6fc9-acce-4a3f-96f7-070589e68c44.jpg",
-    "description": "Fast charging portable power bank for daily use."
+    "description": "Fast charging portable power bank for daily use.",
+    "stock": 35,
+    "rating": 4.9
   }
 ]
