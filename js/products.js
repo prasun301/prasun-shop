@@ -9,15 +9,19 @@ fetch("data/products.json")
     // Read category from URL
     const params = new URLSearchParams(window.location.search);
     const selectedCategory = params.get("category");
+    console.log("URL:", window.location.href);
+    console.log("Category:", selectedCategory);
+    console.log(products);
 
     // Filter products if category exists
     let filteredProducts = products;
 
     if (selectedCategory) {
 
-        filteredProducts = products.filter(product =>
-            product.category === selectedCategory
-        );
+        filteredProducts = products.filter(product => {
+    console.log(product.category, "==", selectedCategory);
+    return product.category === selectedCategory;
+});
 
         // Change page heading
         const heading = document.querySelector("h2");
