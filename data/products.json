@@ -1,35 +1,110 @@
 [
   {
     "id": "001",
+    "sku": "CJSN188416414NM",
+    "name": "G-Shaped Smart LED Atmosphere Lamp with Bluetooth Speaker & Wireless Charger",
     "category": "Smart Lighting",
-    "brand": "Prasun Smart",
-    "name": "Smart LED Lamp",
     "price": 29.99,
-    "image": "images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png",
-    "description": "Modern smart LED lamp for home decoration.",
-    "stock": 25,
-    "rating": 4.8
+    "image": "images/products/smart-led-lamp.jpg",
+
+    "description": "Upgrade your living space with this multifunctional G-shaped Smart LED Atmosphere Lamp. It combines stylish lighting, Bluetooth music, wireless charging, alarm clock, and smart control features in one modern device. Perfect for bedrooms, living rooms, offices, and gaming spaces.",
+
+    "features": [
+      "15W fast wireless charging",
+      "Built-in Bluetooth speaker",
+      "RGB atmosphere lighting",
+      "APP, voice, remote and button control",
+      "Adjustable brightness (1%-100%)",
+      "Multiple light color modes",
+      "Smart wake-up and sleep mode",
+      "Modern decorative design"
+    ],
+
+    "specifications": {
+      "Material": "Plastic",
+      "Product Type": "Electronic Smart Lamp",
+      "Color Options": "Black, Light Grey, White",
+      "Size": "22.5 × 8.2 × 23 cm",
+      "Package Size": "227 × 86 × 240 mm",
+      "Wireless Charging": "15W",
+      "Control": "APP / Voice / Remote / Button",
+      "Power Input": "100-240V"
+    },
+
+    "rating": 5
   },
+
+
   {
     "id": "002",
-    "category": "Audio",
-    "brand": "Prasun Smart",
-    "name": "Wireless Earbuds",
+    "sku": "CJCD135893009IR",
+    "name": "Mini 5000mAh Magnetic Wireless Power Bank Fast Charging Portable Battery",
+    "category": "Power & Charging",
     "price": 39.99,
-    "image": "images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg",
-    "description": "High quality wireless earbuds with clear sound.",
-    "stock": 18,
-    "rating": 4.7
+    "image": "images/products/magnetic-power-bank.jpg",
+
+    "description": "Stay powered wherever you go with this compact 5000mAh Magnetic Wireless Power Bank. Designed with strong magnetic attachment, fast charging capability, LED power display, and portable lightweight design, it is perfect for travel, work, and daily use.",
+
+    "features": [
+      "5000mAh battery capacity",
+      "Strong magnetic wireless charging",
+      "Six-level magnetic adsorption system",
+      "Fast charging technology",
+      "LED battery display",
+      "Supports wireless and wired charging",
+      "Compact and travel-friendly design",
+      "Airplane safe portable battery"
+    ],
+
+    "specifications": {
+      "Material": "Plastic",
+      "Product Type": "Portable Power Bank",
+      "Battery": "955465 × 1 piece",
+      "Capacity": "5000mAh",
+      "Input": "2.1A",
+      "Output": "2.1A",
+      "Wireless Charging": "5W",
+      "Size": "91 × 64 × 15 mm",
+      "Colors": "Cool Black, Retro Green, Ivory White, Cherry Blossom Pink",
+      "Compatibility": "Apple and compatible mobile devices"
+    },
+
+    "rating": 5
   },
+
+
   {
     "id": "003",
-    "category": "Power & Charging",
-    "brand": "Prasun Smart",
-    "name": "Portable Charger",
+    "sku": "CJYP270967903CX",
+    "name": "High-Quality Noise Cancelling Wireless Bluetooth Sports Earbuds",
+    "category": "Audio",
     "price": 49.99,
-    "image": "images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg",
-    "description": "Fast charging portable power bank for daily use.",
-    "stock": 35,
-    "rating": 4.9
+    "image": "images/products/wireless-earbuds.jpg",
+
+    "description": "Experience clear and immersive sound with these stylish Noise Cancelling Wireless Bluetooth Sports Earbuds. Designed for sports, travel, gaming, and everyday listening, they provide comfortable wearing, stable connection, and long battery performance.",
+
+    "features": [
+      "Noise cancellation technology",
+      "Bluetooth wireless connection",
+      "Water-resistant design",
+      "Low-latency gaming mode",
+      "Voice control support",
+      "Hands-free calling",
+      "Long battery life",
+      "Comfortable in-ear design"
+    ],
+
+    "specifications": {
+      "Material": "PC + ABS",
+      "Product Type": "Wireless Bluetooth Earbuds",
+      "Wearing Style": "In-ear",
+      "Transmission Distance": "10 meters",
+      "Battery Life": "4-8 hours",
+      "Colors": "White, Skin Tone, Black",
+      "Features": "Waterproof, Noise Cancellation, Music Playback, Gaming Mode",
+      "Package Size": "120 × 100 × 60 mm"
+    },
+
+    "rating": 5
   }
 ]
