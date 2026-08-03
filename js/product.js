@@ -1,5 +1,9 @@
-// Load single product
+// =================================
+// Prasun Shop - Product Details
+// =================================
 
+
+// Get product ID from URL
 
 const urlParams = new URLSearchParams(
     window.location.search
@@ -8,6 +12,17 @@ const urlParams = new URLSearchParams(
 
 const productId = urlParams.get("id");
 
+
+
+const container =
+document.getElementById("product-detail");
+
+
+
+
+// =================================
+// Load Product
+// =================================
 
 
 fetch("data/products.json")
@@ -20,51 +35,100 @@ fetch("data/products.json")
 
 
     const product = products.find(
+
         item => item.id === productId
+
     );
-
-
-    const container =
-    document.getElementById("product-detail");
 
 
 
     if(product){
 
 
+
         container.innerHTML = `
 
 
-        <div class="card">
+        <div class="card product-detail-card">
 
 
             <img
+
             src="${product.image}"
+
             alt="${product.name}"
-            width="100%"
+
             >
 
 
-            <h1>
-            ${product.name}
-            </h1>
 
+            <p class="product-category">
 
-            <p>
-            ${product.description}
+            ${product.category || "Smart Product"}
+
             </p>
 
 
+
+            <p class="product-rating">
+
+            ⭐ ${product.rating || "5"}
+
+            </p>
+
+
+
+
+            <h1>
+
+            ${product.name}
+
+            </h1>
+
+
+
+
+            <p>
+
+            ${product.description}
+
+            </p>
+
+
+
+
             <h2>
-            $${product.price}
+
+            $${product.price.toFixed(2)}
+
             </h2>
+
+
+
+            <p class="stock">
+
+            ✅ In Stock
+
+            </p>
+
+
+
 
 
             <button onclick="addToCart('${product.id}')">
 
-            Add to Cart
+            🛒 Add to Cart
 
             </button>
+
+
+
+            <button onclick="buyNow('${product.id}')">
+
+            ⚡ Buy Now
+
+            </button>
+
 
 
         </div>
@@ -79,7 +143,8 @@ fetch("data/products.json")
     else {
 
 
-        container.innerHTML = 
+        container.innerHTML =
+
         "<h2>Product not found</h2>";
 
 
@@ -88,12 +153,19 @@ fetch("data/products.json")
 
 })
 
+
+
 .catch(error => {
 
-    console.log(
-        "Error:",
-        error
-    );
+
+console.log(
+
+"Error loading product:",
+
+error
+
+);
+
 
 });
 
@@ -101,61 +173,124 @@ fetch("data/products.json")
 
 
 
-// Add to cart function
+
+
+// =================================
+// Add To Cart
+// =================================
 
 
 function addToCart(productId){
 
-    let cart =
-    JSON.parse(
+
+
+    let cart = JSON.parse(
+
         localStorage.getItem("cart")
+
     ) || [];
 
 
-    fetch("data/products.json")
-    .then(response => response.json())
-    .then(products => {
-
-        const product = products.find(
-            item => item.id === productId
-        );
 
 
-        let existingProduct =
-        cart.find(
-            item => item.id === productId
-        );
+    let existingProduct =
+
+    cart.find(
+
+        item => item.id === productId
+
+    );
 
 
-        if(existingProduct){
-
-            existingProduct.quantity += 1;
-
-        }
-
-        else {
-
-            cart.push({
-
-                id: product.id,
-                name: product.name,
-                quantity: 1
-
-            });
-
-        }
 
 
-        localStorage.setItem(
-            "cart",
-            JSON.stringify(cart)
-        );
+
+    if(existingProduct){
 
 
-        alert(
-            "Product added to cart!"
-        );
+        existingProduct.quantity += 1;
 
-    });
+
+    }
+
+
+    else {
+
+
+        cart.push({
+
+            id: productId,
+
+            quantity: 1
+
+        });
+
+
+    }
+
+
+
+
+
+    localStorage.setItem(
+
+        "cart",
+
+        JSON.stringify(cart)
+
+    );
+
+
+
+
+    // Update cart number immediately
+
+    if(typeof updateCartCount === "function"){
+
+        updateCartCount();
+
+    }
+
+
+
+    alert(
+
+        "Product added to cart!"
+
+    );
+
+
+
+}
+
+
+
+
+
+
+
+// =================================
+// Buy Now
+// =================================
+
+
+function buyNow(productId){
+
+
+    addToCart(productId);
+
+
+
+    setTimeout(()=>{
+
+
+        window.location.href =
+
+        "checkout.html";
+
+
+    },500);
+
+
 
 }
