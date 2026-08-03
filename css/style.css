@@ -6,7 +6,7 @@
 
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Poppins', sans-serif;
     color: #222;
     background: #ffffff;
     line-height: 1.6;
@@ -173,13 +173,17 @@ nav a:hover {
 
 
 
-.card {
-
+card {
     background: white;
     padding: 25px;
     border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition property */
+}
 
+.card:hover {
+    transform: translateY(-8px); /* Lifts the card upward gracefully */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12); /* Deepens the shadow for a floating depth effect */
 }
 
 
