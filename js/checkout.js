@@ -1,20 +1,33 @@
-// Load checkout information
+// =====================================
+// Prasun Shop - Checkout System
+// =====================================
 
 
-let cart =
-JSON.parse(
+// Load cart
+
+let cart = JSON.parse(
+
     localStorage.getItem("cart")
+
 ) || [];
 
 
 
 const orderSummary =
+
 document.getElementById("order-summary");
 
 
 
 let total = 0;
 
+
+
+
+
+// =====================================
+// Display Order Summary
+// =====================================
 
 
 fetch("data/products.json")
@@ -30,8 +43,27 @@ fetch("data/products.json")
     if(cart.length === 0){
 
 
-        orderSummary.innerHTML =
-        "<p>Your cart is empty.</p>";
+        orderSummary.innerHTML = `
+
+
+        <div class="empty-cart">
+
+
+            <h3>
+            Your cart is empty
+            </h3>
+
+
+            <a href="products.html">
+            Continue Shopping
+            </a>
+
+
+        </div>
+
+
+        `;
+
 
         return;
 
@@ -40,20 +72,28 @@ fetch("data/products.json")
 
 
 
+
+
     cart.forEach(item => {
 
 
-        let product =
-        products.find(
+
+        const product = products.find(
+
             p => p.id === item.id
+
         );
+
+
 
 
 
         if(product){
 
 
-            let subtotal =
+
+            const subtotal =
+
             product.price * item.quantity;
 
 
@@ -62,27 +102,70 @@ fetch("data/products.json")
 
 
 
+
+
             orderSummary.innerHTML += `
 
 
-            <div class="card">
+
+            <div class="order-item">
 
 
-            <h3>
-            ${product.name}
-            </h3>
+
+                <img
+
+                src="${product.image}"
+
+                alt="${product.name}"
+
+                >
 
 
-            <p>
-            Quantity:
-            ${item.quantity}
-            </p>
 
 
-            <p>
-            Subtotal:
-            $${subtotal.toFixed(2)}
-            </p>
+
+                <div>
+
+
+                    <h3>
+
+                    ${product.name}
+
+                    </h3>
+
+
+
+                    <p>
+
+                    Quantity:
+                    ${item.quantity}
+
+                    </p>
+
+
+
+
+                    <p>
+
+                    Price:
+                    $${product.price.toFixed(2)}
+
+                    </p>
+
+
+
+
+
+                    <p>
+
+                    Subtotal:
+                    $${subtotal.toFixed(2)}
+
+                    </p>
+
+
+                </div>
+
 
 
             </div>
@@ -98,116 +181,216 @@ fetch("data/products.json")
 
 
 
+
+
     orderSummary.innerHTML += `
 
 
-    <h3>
-    Total:
-    $${total.toFixed(2)}
-    </h3>
+
+    <div class="order-total">
+
+
+        <h2>
+
+        Total:
+        $${total.toFixed(2)}
+
+        </h2>
+
+
+    </div>
+
 
 
     `;
 
 
 
-});
-
-
-
-
-
-// Place order
-
-
-document
-.getElementById("checkout-form")
-.addEventListener(
-"submit",
-function(event){
-
-
-    event.preventDefault();
-
-
-
-    let name =
-    document.getElementById("name").value;
-
-
-
-    fetch("https://prasun-shop-api.prasun301.workers.dev/", {
-
-
-    method: "POST",
-
-
-    headers: {
-
-        "Content-Type": "application/json"
-
-    },
-
-
-    body: JSON.stringify({
-
-        customerName: name,
-
-        email:
-        document.getElementById("email").value,
-
-
-        phone:
-        document.getElementById("phone").value,
-
-
-        address:
-        document.getElementById("address").value,
-
-
-        cart: cart,
-
-        total: total
-
-
-    })
-
-
 })
 
-
-.then(response => response.json())
-
-
-.then(data => {
-
-
-    console.log(
-        "Order sent:",
-        data
-    );
-
-
-    localStorage.removeItem("cart");
-
-
-    window.location.href =
-    "order-success.html";
-
-
-})
 
 
 .catch(error => {
 
 
-    console.log(
-        "Order error:",
-        error
-    );
+console.log(
+
+"Error loading checkout:",
+
+error
+
+);
 
 
 });
+
+
+
+
+
+
+
+
+
+// =====================================
+// Submit Order
+// =====================================
+
+
+document
+
+.getElementById("checkout-form")
+
+.addEventListener(
+
+"submit",
+
+function(event){
+
+
+
+event.preventDefault();
+
+
+
+
+
+const customerName =
+
+document.getElementById("name").value;
+
+
+
+
+
+fetch(
+
+"https://prasun-shop-api.prasun301.workers.dev/",
+
+{
+
+
+method:"POST",
+
+
+headers:{
+
+
+"Content-Type":"application/json"
+
+
+},
+
+
+
+body:JSON.stringify({
+
+
+
+customerName: customerName,
+
+
+
+email:
+
+document.getElementById("email").value,
+
+
+
+phone:
+
+document.getElementById("phone").value,
+
+
+
+address:
+
+document.getElementById("address").value,
+
+
+
+cart:cart,
+
+
+
+total:total
+
+
+
+})
+
+
+}
+
+)
+
+
+
+
+
+.then(response => response.json())
+
+
+
+.then(data => {
+
+
+
+console.log(
+
+"Order sent:",
+
+data
+
+);
+
+
+
+
+
+// Clear cart after successful order
+
+
+localStorage.removeItem("cart");
+
+
+
+
+
+window.location.href =
+
+"order-success.html";
+
+
+
+})
+
+
+
+.catch(error => {
+
+
+
+console.log(
+
+"Order error:",
+
+error
+
+);
+
+
+
+alert(
+
+"Something went wrong. Please try again."
+
+);
+
+
+
+});
+
 
 
 });
