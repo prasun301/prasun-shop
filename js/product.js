@@ -45,7 +45,6 @@ fetch("data/products.json")
     if(product){
 
 
-
         container.innerHTML = `
 
 
@@ -62,6 +61,7 @@ fetch("data/products.json")
 
 
 
+
             <p class="product-category">
 
             ${product.category || "Smart Product"}
@@ -70,11 +70,13 @@ fetch("data/products.json")
 
 
 
+
             <p class="product-rating">
 
             ⭐ ${product.rating || "5"}
 
             </p>
+
 
 
 
@@ -88,6 +90,7 @@ fetch("data/products.json")
 
 
 
+
             <p>
 
             ${product.description}
@@ -97,11 +100,14 @@ fetch("data/products.json")
 
 
 
+
             <h2>
 
             $${product.price.toFixed(2)}
 
             </h2>
+
+
 
 
 
@@ -115,6 +121,7 @@ fetch("data/products.json")
 
 
 
+
             <button onclick="addToCart('${product.id}')">
 
             🛒 Add to Cart
@@ -123,11 +130,15 @@ fetch("data/products.json")
 
 
 
+
+
             <button onclick="buyNow('${product.id}')">
 
             ⚡ Buy Now
 
             </button>
+
+
 
 
 
@@ -193,9 +204,8 @@ function addToCart(productId){
 
 
 
-    let existingProduct =
 
-    cart.find(
+    let existingProduct = cart.find(
 
         item => item.id === productId
 
@@ -243,13 +253,16 @@ function addToCart(productId){
 
 
 
-    // Update cart number immediately
 
     if(typeof updateCartCount === "function"){
 
+
         updateCartCount();
 
+
     }
+
+
 
 
 
@@ -277,20 +290,74 @@ function addToCart(productId){
 function buyNow(productId){
 
 
-    addToCart(productId);
+
+    let cart = JSON.parse(
+
+        localStorage.getItem("cart")
+
+    ) || [];
 
 
 
-    setTimeout(()=>{
 
 
-        window.location.href =
+    let existingProduct = cart.find(
 
-        "checkout.html";
+        item => item.id === productId
+
+    );
 
 
-    },500);
 
+
+
+
+    // Add product only if not already in cart
+
+    if(!existingProduct){
+
+
+
+        cart.push({
+
+            id: productId,
+
+            quantity: 1
+
+        });
+
+
+
+
+
+        localStorage.setItem(
+
+            "cart",
+
+            JSON.stringify(cart)
+
+        );
+
+
+    }
+
+
+
+
+
+    if(typeof updateCartCount === "function"){
+
+
+        updateCartCount();
+
+
+    }
+
+
+
+
+
+    window.location.href = "checkout.html";
 
 
 }
