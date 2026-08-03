@@ -384,3 +384,45 @@ nav a {
     background: #f8d7da;
     color: #721c24;
 }
+
+/* ==========================
+   Categories
+========================== */
+
+.categories{
+    padding:70px 20px;
+    background:#f8f9fb;
+}
+
+.categories h2{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.category-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+    gap:20px;
+}
+
+.category-card{
+    background:#ffffff;
+    padding:30px 20px;
+    border-radius:12px;
+    text-align:center;
+    font-size:40px;
+    cursor:pointer;
+    transition:.3s;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+.category-card h3{
+    margin-top:15px;
+    font-size:18px;
+    color:#333;
+}
+
+.category-card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 12px 25px rgba(0,0,0,.15);
+}
