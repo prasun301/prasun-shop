@@ -48,15 +48,25 @@ fetch("data/products.json")
                 width="100%"
             >
 
-            <h3>${product.name}</h3>
+            <p class="product-category">${product.category}</p>
 
-            <p>${product.description}</p>
+<p class="product-rating">
+⭐ ${product.rating}
+</p>
 
-            <h4>$${product.price}</h4>
+<h3>${product.name}</h3>
 
-            <button onclick="window.location.href='product.html?id=${product.id}'">
-                Buy Now
-            </button>
+<p>${product.description}</p>
+
+<h4>$${product.price}</h4>
+
+<p class="stock">
+✅ In Stock (${product.stock})
+</p>
+
+<button onclick="window.location.href='product.html?id=${product.id}'">
+    Buy Now
+</button>
 
         </div>
 
