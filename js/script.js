@@ -36,13 +36,27 @@ document.querySelectorAll('a[href^="#"]').forEach(link => {
 
 fetch("data/products.json")
 
-.then(response => response.json())
-
 .then(products => {
 
     allProducts = products;
 
-    displayProducts(products);
+    const params = new URLSearchParams(window.location.search);
+
+    const category = params.get("category");
+
+    if(category){
+
+        const filtered = products.filter(product =>
+            product.category === category
+        );
+
+        displayProducts(filtered);
+
+    }else{
+
+        displayProducts(products);
+
+    }
 
 })
 
