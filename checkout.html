@@ -8,6 +8,8 @@
 
 <title>Checkout | Prasun Shop</title>
 
+<meta name="description" content="Complete your purchase at Prasun Shop.">
+
 <link rel="stylesheet" href="css/style.css">
 
 </head>
@@ -16,29 +18,69 @@
 <body>
 
 
+<!-- Header -->
+
 <header>
+
 
 <div class="container nav">
 
+
 <div class="logo">
+
 Prasun Shop
+
 </div>
+
+
 
 
 <nav>
 
-<a href="index.html">Home</a>
 
-<a href="products.html">Products</a>
+<a href="index.html">
+Home
+</a>
 
-<a href="cart.html">Cart</a>
+
+<a href="products.html">
+Products
+</a>
+
+
+<a href="cart.html">
+Cart
+</a>
+
+
+
+<a href="cart.html" class="cart-icon">
+
+🛒
+
+<span id="cart-count">
+0
+</span>
+
+</a>
+
+
 
 </nav>
 
+
 </div>
+
 
 </header>
 
+
+
+
+
+
+
+<!-- Checkout Section -->
 
 
 <section class="products">
@@ -47,66 +89,123 @@ Prasun Shop
 <div class="container">
 
 
+
 <h2>
+
 Checkout
+
 </h2>
 
 
+
+
+<!-- Order Summary -->
+
+
+<div class="checkout-box">
+
+
+<h3>
+
+Order Summary
+
+</h3>
+
+
+
 <div id="order-summary">
+
+Loading order...
 
 </div>
 
 
 
+</div>
+
+
+
+
+
+
+
+
+<!-- Customer Information -->
+
+
+<div class="checkout-box">
+
+
 <h3>
+
 Customer Information
+
 </h3>
+
+
 
 
 <form id="checkout-form">
 
 
-<input 
+
+<input
+
 type="text"
+
 id="name"
+
 placeholder="Full Name"
+
 required
+
 >
 
 
-<br><br>
 
 
-<input 
+<input
+
 type="email"
+
 id="email"
+
 placeholder="Email Address"
+
 required
+
 >
 
 
-<br><br>
 
 
-<input 
+<input
+
 type="tel"
+
 id="phone"
+
 placeholder="Phone Number"
+
 required
+
 >
 
 
-<br><br>
 
 
 <textarea
+
 id="address"
+
 placeholder="Shipping Address"
+
 required
+
 ></textarea>
 
 
-<br><br>
+
 
 
 <button type="submit">
@@ -116,7 +215,14 @@ Place Order
 </button>
 
 
+
+
 </form>
+
+
+
+</div>
+
 
 
 </div>
@@ -126,9 +232,20 @@ Place Order
 
 
 
-<script src="js/checkout.js"></script>
+
+
+
+
+<!-- JavaScript -->
+
 
 <script src="js/cart-count.js"></script>
+
+<script src="js/checkout.js"></script>
+
+
+
 </body>
+
 
 </html>
