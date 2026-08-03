@@ -35,16 +35,15 @@ document.querySelectorAll('a[href^="#"]').forEach(link => {
 // -------------------------
 
 fetch("data/products.json")
-
+.then(response => response.json())
 .then(products => {
 
     allProducts = products;
 
     const params = new URLSearchParams(window.location.search);
-
     const category = params.get("category");
 
-    if(category){
+    if (category) {
 
         const filtered = products.filter(product =>
             product.category === category
@@ -52,20 +51,16 @@ fetch("data/products.json")
 
         displayProducts(filtered);
 
-    }else{
+    } else {
 
         displayProducts(products);
 
     }
 
 })
-
 .catch(error => {
 
-    console.log(
-        "Error loading products:",
-        error
-    );
+    console.log("Error loading products:", error);
 
 });
 
