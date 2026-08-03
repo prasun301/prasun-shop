@@ -1,7 +1,8 @@
 // Prasun Shop JavaScript
 
-
-// Smooth scrolling for navigation links
+// -------------------------
+// Smooth scrolling
+// -------------------------
 
 document.querySelectorAll('a[href^="#"]').forEach(link => {
 
@@ -9,11 +10,9 @@ document.querySelectorAll('a[href^="#"]').forEach(link => {
 
         e.preventDefault();
 
-        const target = document.querySelector(
-            this.getAttribute("href")
-        );
+        const target = document.querySelector(this.getAttribute("href"));
 
-        if(target){
+        if (target) {
 
             target.scrollIntoView({
                 behavior: "smooth"
@@ -25,61 +24,76 @@ document.querySelectorAll('a[href^="#"]').forEach(link => {
 
 });
 
+// -------------------------
+// Load Featured Products
+// -------------------------
 
+fetch("data/products.json")
+.then(response => response.json())
+.then(products => {
 
+    const productList = document.getElementById("product-list");
 
+    if (!productList) return;
 
-// Buy Now button action
+    products.forEach(product => {
 
-const buyButtons = document.querySelectorAll(".card button");
+        productList.innerHTML += `
 
+        <div class="card">
 
-buyButtons.forEach((button, index) => {
+            <img
+                src="${product.image}"
+                alt="${product.name}"
+                width="100%"
+            >
 
-    button.addEventListener("click", function(){
+            <h3>${product.name}</h3>
 
-        window.location.href = 
-        "product.html?id=00" + (index + 1);
+            <p>${product.description}</p>
+
+            <h4>$${product.price}</h4>
+
+            <button onclick="window.location.href='product.html?id=${product.id}'">
+                Buy Now
+            </button>
+
+        </div>
+
+        `;
 
     });
 
+})
+.catch(error => {
+
+    console.error("Error loading products:", error);
+
 });
 
-
-
-
-
-// Newsletter subscription
+// -------------------------
+// Newsletter
+// -------------------------
 
 const subscribeButton = document.querySelector(".contact button");
 
+if (subscribeButton) {
 
-if(subscribeButton){
-
-    subscribeButton.addEventListener("click", function(){
+    subscribeButton.addEventListener("click", function() {
 
         const email = document.querySelector(".contact input").value;
 
+        if (email === "") {
 
-        if(email === ""){
+            alert("Please enter your email address.");
 
-            alert(
-                "Please enter your email address."
-            );
+        } else {
 
-        }
-
-        else {
-
-            alert(
-                "Thank you for subscribing to Prasun Shop!"
-            );
-
+            alert("Thank you for subscribing to Prasun Shop!");
 
             document.querySelector(".contact input").value = "";
 
         }
-
 
     });
 
