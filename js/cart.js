@@ -1,8 +1,16 @@
-let cart =
-JSON.parse(
+// =================================
+// Prasun Shop Cart System
+// =================================
+
+
+// Load cart from browser storage
+
+let cart = JSON.parse(
     localStorage.getItem("cart")
 ) || [];
 
+
+// Cart page elements
 
 const cartItems =
 document.getElementById("cart-items");
@@ -11,6 +19,44 @@ document.getElementById("cart-items");
 const cartTotal =
 document.getElementById("cart-total");
 
+
+
+// =================================
+// Update Cart Icon Number
+// =================================
+
+function updateCartCount(){
+
+    const cartCount =
+    document.getElementById("cart-count");
+
+
+    if(cartCount){
+
+        let totalItems = cart.reduce(
+            (sum,item)=> sum + item.quantity,
+            0
+        );
+
+
+        cartCount.innerText = totalItems;
+
+    }
+
+}
+
+
+updateCartCount();
+
+
+
+
+// =================================
+// Load Cart Products
+// =================================
+
+
+if(cartItems){
 
 
 fetch("data/products.json")
@@ -25,26 +71,52 @@ fetch("data/products.json")
     let total = 0;
 
 
+    // Empty cart
+
     if(cart.length === 0){
 
 
-        cartItems.innerHTML =
-        "<p>Your cart is empty.</p>";
+        cartItems.innerHTML = `
+
+        <div class="empty-cart">
+
+        <h3>
+        Your cart is empty.
+        </h3>
+
+        <p>
+        Add some smart products from Prasun Shop.
+        </p>
+
+        <a href="index.html">
+        Continue Shopping
+        </a>
+
+        </div>
+
+        `;
+
 
         cartTotal.innerHTML =
         "Total: $0.00";
 
+
         return;
+
 
     }
 
+
+
+
+    // Display products
 
 
     cart.forEach(item => {
 
 
 
-        let product =
+        const product =
         products.find(
             p => p.id === item.id
         );
@@ -54,9 +126,9 @@ fetch("data/products.json")
         if(product){
 
 
-
             let subtotal =
             product.price * item.quantity;
+
 
 
             total += subtotal;
@@ -66,13 +138,17 @@ fetch("data/products.json")
             cartItems.innerHTML += `
 
 
-            <div class="card">
+            <div class="cart-card">
 
 
             <img 
             src="${product.image}"
-            width="200"
+            alt="${product.name}"
             >
+
+
+
+            <div class="cart-details">
 
 
             <h3>
@@ -81,8 +157,19 @@ fetch("data/products.json")
 
 
             <p>
-            Price: $${product.price}
+            Category:
+            ${product.category || "Product"}
             </p>
+
+
+            <p>
+            Price:
+            $${product.price}
+            </p>
+
+
+
+            <div class="quantity-box">
 
 
             <button onclick="changeQuantity('${product.id}', -1)">
@@ -100,17 +187,28 @@ fetch("data/products.json")
             </button>
 
 
+            </div>
+
+
+
             <p>
             Subtotal:
             $${subtotal.toFixed(2)}
             </p>
 
 
-            <button onclick="removeFromCart('${product.id}')">
+
+            <button 
+            class="remove-btn"
+            onclick="removeFromCart('${product.id}')">
 
             Remove
 
             </button>
+
+
+
+            </div>
 
 
             </div>
@@ -131,13 +229,32 @@ fetch("data/products.json")
 
 
 
+})
+
+
+.catch(error=>{
+
+
+console.log(
+"Cart loading error:",
+error
+);
+
+
 });
 
 
+}
 
+
+
+// =================================
+// Change Quantity
+// =================================
 
 
 function changeQuantity(id, change){
+
 
 
     let item =
@@ -156,10 +273,12 @@ function changeQuantity(id, change){
 
         if(item.quantity <= 0){
 
+
             cart =
             cart.filter(
                 product => product.id !== id
             );
+
 
         }
 
@@ -174,6 +293,7 @@ function changeQuantity(id, change){
     );
 
 
+
     location.reload();
 
 
@@ -182,7 +302,13 @@ function changeQuantity(id, change){
 
 
 
+// =================================
+// Remove Product
+// =================================
+
+
 function removeFromCart(id){
+
 
 
     cart =
@@ -191,12 +317,15 @@ function removeFromCart(id){
     );
 
 
+
     localStorage.setItem(
         "cart",
         JSON.stringify(cart)
     );
 
 
+
     location.reload();
+
 
 }
