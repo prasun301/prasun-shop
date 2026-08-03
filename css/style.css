@@ -919,34 +919,23 @@ font-size:16px;
 
 }
 
-/* Feature List & Specifications - Centered */
-
-.product-section {
-    text-align: center;
-}
+/* Feature List - Remove Bullets */
 
 .product-section ul {
-    list-style:none;
-    padding:0;
-    margin:0 auto;
+
+list-style:none;
+
+padding:0;
+
+margin:0;
+
 }
+
 
 .product-section li {
-    margin-bottom:12px;
-    font-size:16px;
-    text-align: center; 
-}
 
-/* In case you used a table for specifications */
-.product-section table {
-    margin: 0 auto;
-    text-align: center;
-    width: 100%;
-    max-width: 600px;
-}
+margin-bottom:12px;
 
-.product-section th, 
-.product-section td {
-    text-align: center;
-    padding: 10px;
+font-size:16px;
+
 }
