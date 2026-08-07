@@ -15,43 +15,52 @@
   <!-- Enterprise Production Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
   
-  <!-- Inline style for skeleton pulse (retained for zero-latency animation hook) -->
+  <!-- Inline style for skeleton pulse and smooth utility hooks -->
   <style>
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      50% { opacity: 0.4; }
     }
-    .skeleton { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-    .skeleton-box { background-color: var(--color-bg-muted); border-radius: var(--radius-sm); }
+    .skeleton { animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    .skeleton-box { background-color: var(--color-bg-muted, #f4f4f5); border-radius: var(--radius-sm, 6px); }
   </style>
 </head>
 
 <body class="min-h-screen flex flex-col antialiased bg-white text-zinc-900 font-sans selection:bg-zinc-900 selection:text-white">
 
   <!-- Glassmorphism Header -->
-  <header class="header sticky top-0 z-50 backdrop-blur-xl bg-white/85 border-b border-[var(--color-border-subtle,rgba(0,0,0,0.06))] transition-all">
+  <header class="header sticky top-0 z-50 backdrop-blur-xl bg-white/85 border-b border-zinc-200/60 transition-all">
     <div class="container nav-wrapper flex items-center justify-between h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
       <!-- Brand Logo -->
-      <a href="index.html" class="logo font-semibold tracking-tight text-lg text-zinc-900 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs">
-        Prasun Shop<span class="text-[var(--color-primary)]">.</span>
+      <a href="index.html" class="logo font-bold tracking-tight text-lg text-zinc-900 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-md">
+        Prasun Shop<span class="text-zinc-400">.</span>
       </a>
 
       <!-- Desktop Nav Links -->
-      <nav class="nav-links flex items-center gap-6 sm:gap-8 text-sm font-medium">
-        <a href="index.html" class="nav-link text-zinc-600 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs">Home</a>
-        <a href="products.html" class="nav-link text-zinc-900 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs" aria-current="page">Products</a>
-        <a href="#" class="nav-link text-zinc-600 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs">About</a>
-        <a href="#" class="nav-link text-zinc-600 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs">Contact</a>
+      <nav class="nav-links hidden md:flex items-center gap-8 text-sm font-medium">
+        <a href="index.html" class="nav-link text-zinc-600 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-md">Home</a>
+        <a href="products.html" class="nav-link text-zinc-900 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-md" aria-current="page">Products</a>
+        <a href="#" class="nav-link text-zinc-600 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-md">About</a>
+        <a href="#" class="nav-link text-zinc-600 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-md">Contact</a>
       </nav>
 
-      <!-- Cart Icon & Actions -->
-      <a href="#" class="cart-icon relative p-2 text-zinc-700 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-full" aria-label="Shopping Cart">
-        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" class="w-5 h-5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-        </svg>
-        <span id="cart-count" class="cart-badge absolute top-0.5 right-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-zinc-900 rounded-full shadow-xs">0</span>
-      </a>
+      <!-- Right Action Group (Cart & Mobile Menu Toggle) -->
+      <div class="flex items-center gap-3">
+        <a href="#" class="cart-icon relative p-2 text-zinc-700 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-full" aria-label="Shopping Cart">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+          <span id="cart-count" class="cart-badge absolute top-0.5 right-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-zinc-900 rounded-full shadow-xs">0</span>
+        </a>
+
+        <!-- Mobile Menu Trigger -->
+        <button type="button" class="md:hidden p-2 text-zinc-700 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-md" aria-label="Open Navigation Menu">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round5" d="M4 6h16M4 12h16m-7 6h7"/>
+          </svg>
+        </button>
+      </div>
 
     </div>
   </header>
@@ -60,20 +69,20 @@
   <main class="container section flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
     
     <!-- Page Header & Filter Controls -->
-    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 border-b border-[var(--color-border-subtle,rgba(0,0,0,0.06))] pb-8 mb-10">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 border-b border-zinc-200/80 pb-8 mb-10">
       
       <div class="space-y-1">
-        <h1 class="h2 text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">Our Products</h1>
-        <p class="text-body text-sm sm:text-base text-zinc-500 font-normal">Discover high-quality essentials crafted for modern life.</p>
+        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">Our Products</h1>
+        <p class="text-sm sm:text-base text-zinc-500 font-normal">Discover high-quality essentials crafted for modern life.</p>
       </div>
 
       <!-- Spotlight Search Component -->
-      <div class="search-box relative w-full sm:max-w-[320px] mb-0">
-        <input type="search" placeholder="Search items..." aria-label="Search items" class="search-input w-full h-12 pl-11 pr-16 bg-white border border-zinc-200 rounded-[var(--radius-md)] text-[0.9375rem] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-all shadow-xs">
+      <div class="search-box relative w-full sm:max-w-[320px]" role="search">
+        <input type="search" placeholder="Search items..." aria-label="Search items" class="search-input w-full h-11 pl-10 pr-16 bg-zinc-50/50 hover:bg-zinc-50 focus:bg-white border border-zinc-200 rounded-lg text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all shadow-2xs">
         <svg class="search-icon absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
-        <div class="search-kbd-hint absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[10px] text-zinc-400 bg-zinc-100 border border-zinc-200 px-1.5 py-0.5 rounded pointer-events-none font-mono">
+        <div class="search-kbd-hint absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[10px] text-zinc-400 bg-white border border-zinc-200 px-1.5 py-0.5 rounded shadow-2xs pointer-events-none font-mono">
           <kbd>⌘</kbd><kbd>K</kbd>
         </div>
       </div>
@@ -84,33 +93,63 @@
     <section class="products pt-0 border-none">
       <div id="product-list" class="product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
         
-        <!-- Skeleton Loading State (Replaced dynamically by js/products.js) -->
-        <article class="product-card skeleton pointer-events-none border-transparent shadow-none flex flex-col bg-white rounded-[var(--radius-md)] overflow-hidden p-4">
-          <div class="product-image-wrapper skeleton-box aspect-square rounded-[var(--radius-md)] w-full mb-4"></div>
+        <!-- Skeleton Loading State (Repeated for Grid Fidelity) -->
+        <article class="product-card skeleton pointer-events-none border border-zinc-100 bg-white rounded-xl overflow-hidden p-4 flex flex-col">
+          <div class="product-image-wrapper skeleton-box aspect-square rounded-lg w-full mb-4"></div>
           <div class="product-details flex flex-col gap-3 flex-grow">
             <div class="skeleton-box h-3 w-2/5 rounded-xs"></div>
             <div class="skeleton-box h-5 w-4/5 rounded-xs"></div>
             <div class="skeleton-box h-6 w-1/3 rounded-xs mt-auto"></div>
-            <div class="skeleton-box h-12 w-full rounded-[var(--radius-md)]"></div>
+            <div class="skeleton-box h-10 w-full rounded-lg"></div>
           </div>
         </article>
 
-        <!-- Example of how JS should inject a Product Card (for reference) -->
-        <!--
-        <article class="product-card">
-          <div class="product-badge-group">
-            <span class="badge badge-new">New</span>
+        <article class="product-card skeleton pointer-events-none border border-zinc-100 bg-white rounded-xl overflow-hidden p-4 flex flex-col hidden sm:flex">
+          <div class="product-image-wrapper skeleton-box aspect-square rounded-lg w-full mb-4"></div>
+          <div class="product-details flex flex-col gap-3 flex-grow">
+            <div class="skeleton-box h-3 w-2/5 rounded-xs"></div>
+            <div class="skeleton-box h-5 w-4/5 rounded-xs"></div>
+            <div class="skeleton-box h-6 w-1/3 rounded-xs mt-auto"></div>
+            <div class="skeleton-box h-10 w-full rounded-lg"></div>
           </div>
-          <a href="#" class="product-image-wrapper">
-            <img src="placeholder.jpg" alt="Product" class="product-image">
+        </article>
+
+        <article class="product-card skeleton pointer-events-none border border-zinc-100 bg-white rounded-xl overflow-hidden p-4 flex flex-col hidden lg:flex">
+          <div class="product-image-wrapper skeleton-box aspect-square rounded-lg w-full mb-4"></div>
+          <div class="product-details flex flex-col gap-3 flex-grow">
+            <div class="skeleton-box h-3 w-2/5 rounded-xs"></div>
+            <div class="skeleton-box h-5 w-4/5 rounded-xs"></div>
+            <div class="skeleton-box h-6 w-1/3 rounded-xs mt-auto"></div>
+            <div class="skeleton-box h-10 w-full rounded-lg"></div>
+          </div>
+        </article>
+
+        <article class="product-card skeleton pointer-events-none border border-zinc-100 bg-white rounded-xl overflow-hidden p-4 flex flex-col hidden xl:flex">
+          <div class="product-image-wrapper skeleton-box aspect-square rounded-lg w-full mb-4"></div>
+          <div class="product-details flex flex-col gap-3 flex-grow">
+            <div class="skeleton-box h-3 w-2/5 rounded-xs"></div>
+            <div class="skeleton-box h-5 w-4/5 rounded-xs"></div>
+            <div class="skeleton-box h-6 w-1/3 rounded-xs mt-auto"></div>
+            <div class="skeleton-box h-10 w-full rounded-lg"></div>
+          </div>
+        </article>
+
+        <!-- Reference Template for JS Dynamic Injection -->
+        <!--
+        <article class="product-card group relative bg-white border border-zinc-200/80 rounded-xl overflow-hidden p-4 flex flex-col hover:border-zinc-300 transition-all duration-300">
+          <div class="product-badge-group absolute top-6 left-6 z-10">
+            <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold bg-zinc-900 text-white rounded-md">New</span>
+          </div>
+          <a href="#" class="product-image-wrapper block aspect-square bg-zinc-100 rounded-lg overflow-hidden mb-4">
+            <img src="placeholder.jpg" alt="Product" class="product-image w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
           </a>
-          <div class="product-details">
-            <span class="product-category">Essentials</span>
-            <h3 class="product-title">Minimalist Ceramic Mug</h3>
-            <div class="product-price-wrapper">
-              <span class="product-price">$24.00</span>
+          <div class="product-details flex flex-col flex-grow gap-1.5">
+            <span class="product-category text-xs font-medium text-zinc-400 uppercase tracking-wider">Essentials</span>
+            <h3 class="product-title font-medium text-zinc-900 text-sm sm:text-base leading-snug">Minimalist Ceramic Mug</h3>
+            <div class="product-price-wrapper mt-2 mb-3">
+              <span class="product-price font-semibold text-zinc-900">$24.00</span>
             </div>
-            <button class="btn btn-primary btn-full add-to-cart-btn">Add to Cart</button>
+            <button class="btn btn-primary w-full mt-auto h-10 bg-zinc-900 text-white text-sm font-medium rounded-lg hover:bg-zinc-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900">Add to Cart</button>
           </div>
         </article>
         -->
@@ -121,10 +160,12 @@
   </main>
 
   <!-- Minimal Footer -->
-  <footer class="footer mt-auto py-8 border-t border-[var(--color-border-subtle,rgba(0,0,0,0.06))] bg-white">
-    <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex justify-center">
-      <div class="footer-bottom border-none p-0 flex justify-center text-xs text-zinc-500 font-medium">
-        <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
+  <footer class="footer mt-auto py-8 border-t border-zinc-200/60 bg-white">
+    <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-medium">
+      <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
+      <div class="flex items-center gap-6">
+        <a href="#" class="hover:text-zinc-900 transition-colors">Privacy Policy</a>
+        <a href="#" class="hover:text-zinc-900 transition-colors">Terms of Service</a>
       </div>
     </div>
   </footer>
