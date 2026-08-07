@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="light" class="scroll-smooth">
 
 <head>
   <meta charset="UTF-8">
@@ -15,7 +15,7 @@
   <!-- Enterprise Production Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
   
-  <!-- Inline style for skeleton pulse (keeps CSS clean) -->
+  <!-- Inline style for skeleton pulse (retained for zero-latency animation hook) -->
   <style>
     @keyframes pulse {
       0%, 100% { opacity: 1; }
@@ -26,54 +26,54 @@
   </style>
 </head>
 
-<body>
+<body class="min-h-screen flex flex-col antialiased bg-white text-zinc-900 font-sans selection:bg-zinc-900 selection:text-white">
 
   <!-- Glassmorphism Header -->
-  <header class="header">
-    <div class="container nav-wrapper">
+  <header class="header sticky top-0 z-50 backdrop-blur-xl bg-white/85 border-b border-[var(--color-border-subtle,rgba(0,0,0,0.06))] transition-all">
+    <div class="container nav-wrapper flex items-center justify-between h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
       <!-- Brand Logo -->
-      <a href="index.html" class="logo">
-        Prasun Shop<span style="color: var(--color-primary);">.</span>
+      <a href="index.html" class="logo font-semibold tracking-tight text-lg text-zinc-900 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs">
+        Prasun Shop<span class="text-[var(--color-primary)]">.</span>
       </a>
 
       <!-- Desktop Nav Links -->
-      <nav class="nav-links">
-        <a href="index.html" class="nav-link">Home</a>
-        <a href="products.html" class="nav-link" aria-current="page">Products</a>
-        <a href="#" class="nav-link">About</a>
-        <a href="#" class="nav-link">Contact</a>
+      <nav class="nav-links flex items-center gap-6 sm:gap-8 text-sm font-medium">
+        <a href="index.html" class="nav-link text-zinc-600 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs">Home</a>
+        <a href="products.html" class="nav-link text-zinc-900 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs" aria-current="page">Products</a>
+        <a href="#" class="nav-link text-zinc-600 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs">About</a>
+        <a href="#" class="nav-link text-zinc-600 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs">Contact</a>
       </nav>
 
       <!-- Cart Icon & Actions -->
-      <a href="#" class="cart-icon" aria-label="Shopping Cart">
-        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24">
+      <a href="#" class="cart-icon relative p-2 text-zinc-700 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-full" aria-label="Shopping Cart">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" class="w-5 h-5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
         </svg>
-        <span id="cart-count" class="cart-badge">0</span>
+        <span id="cart-count" class="cart-badge absolute top-0.5 right-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-zinc-900 rounded-full shadow-xs">0</span>
       </a>
 
     </div>
   </header>
 
   <!-- Main Content -->
-  <main class="container section">
+  <main class="container section flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
     
     <!-- Page Header & Filter Controls -->
-    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: var(--space-6); border-bottom: 1px solid var(--color-border-subtle); padding-bottom: var(--space-8); margin-bottom: var(--space-10);">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 border-b border-[var(--color-border-subtle,rgba(0,0,0,0.06))] pb-8 mb-10">
       
-      <div>
-        <h1 class="h2">Our Products</h1>
-        <p class="text-body">Discover high-quality essentials crafted for modern life.</p>
+      <div class="space-y-1">
+        <h1 class="h2 text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">Our Products</h1>
+        <p class="text-body text-sm sm:text-base text-zinc-500 font-normal">Discover high-quality essentials crafted for modern life.</p>
       </div>
 
       <!-- Spotlight Search Component -->
-      <div class="search-box" style="max-width: 320px; margin-bottom: 0;">
-        <input type="search" placeholder="Search items..." class="search-input" style="height: 48px; border-radius: var(--radius-md); font-size: 0.9375rem;">
-        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="search-box relative w-full sm:max-w-[320px] mb-0">
+        <input type="search" placeholder="Search items..." aria-label="Search items" class="search-input w-full h-12 pl-11 pr-16 bg-white border border-zinc-200 rounded-[var(--radius-md)] text-[0.9375rem] text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-all shadow-xs">
+        <svg class="search-icon absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
-        <div class="search-kbd-hint">
+        <div class="search-kbd-hint absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[10px] text-zinc-400 bg-zinc-100 border border-zinc-200 px-1.5 py-0.5 rounded pointer-events-none font-mono">
           <kbd>⌘</kbd><kbd>K</kbd>
         </div>
       </div>
@@ -81,17 +81,17 @@
     </div>
 
     <!-- Dynamic Product Grid -->
-    <section class="products" style="padding-top: 0; border: none;">
-      <div id="product-list" class="product-grid">
+    <section class="products pt-0 border-none">
+      <div id="product-list" class="product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
         
         <!-- Skeleton Loading State (Replaced dynamically by js/products.js) -->
-        <article class="product-card skeleton" style="pointer-events: none; border-color: transparent; box-shadow: none;">
-          <div class="product-image-wrapper skeleton-box" style="border-radius: var(--radius-md);"></div>
-          <div class="product-details" style="gap: var(--space-3);">
-            <div class="skeleton-box" style="height: 12px; width: 40%;"></div>
-            <div class="skeleton-box" style="height: 20px; width: 80%;"></div>
-            <div class="skeleton-box" style="height: 24px; width: 30%; margin-top: auto;"></div>
-            <div class="skeleton-box" style="height: 48px; width: 100%; border-radius: var(--radius-md);"></div>
+        <article class="product-card skeleton pointer-events-none border-transparent shadow-none flex flex-col bg-white rounded-[var(--radius-md)] overflow-hidden p-4">
+          <div class="product-image-wrapper skeleton-box aspect-square rounded-[var(--radius-md)] w-full mb-4"></div>
+          <div class="product-details flex flex-col gap-3 flex-grow">
+            <div class="skeleton-box h-3 w-2/5 rounded-xs"></div>
+            <div class="skeleton-box h-5 w-4/5 rounded-xs"></div>
+            <div class="skeleton-box h-6 w-1/3 rounded-xs mt-auto"></div>
+            <div class="skeleton-box h-12 w-full rounded-[var(--radius-md)]"></div>
           </div>
         </article>
 
@@ -121,9 +121,9 @@
   </main>
 
   <!-- Minimal Footer -->
-  <footer class="footer" style="margin-top: auto; padding-block: var(--space-8);">
-    <div class="container text-center">
-      <div class="footer-bottom" style="border: none; padding: 0; justify-content: center;">
+  <footer class="footer mt-auto py-8 border-t border-[var(--color-border-subtle,rgba(0,0,0,0.06))] bg-white">
+    <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex justify-center">
+      <div class="footer-bottom border-none p-0 flex justify-center text-xs text-zinc-500 font-medium">
         <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
       </div>
     </div>
