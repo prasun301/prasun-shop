@@ -1,117 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="View product details and add smart products to your Prasun Shop cart.">
+  <title>Product Details — Prasun Shop</title>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-<title>Product | Prasun Shop</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
 
-<meta name="description" content="View product details and add smart products to your Prasun Shop cart.">
-
-<link rel="stylesheet" href="css/style.css">
-
+  <!-- Custom CSS Override -->
+  <link rel="stylesheet" href="css/style.css">
 </head>
 
+<body class="bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-zinc-900 selection:text-white min-h-screen flex flex-col">
 
-<body>
+  <!-- Modern Header -->
+  <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="index.html" class="text-xl font-bold tracking-tight text-zinc-900 hover:opacity-80 transition-opacity">
+        Prasun Shop<span class="text-zinc-400">.</span>
+      </a>
 
+      <!-- Navigation Links -->
+      <nav class="flex items-center gap-6 sm:gap-8 text-sm font-medium text-zinc-600">
+        <a href="index.html" class="hover:text-zinc-900 transition-colors">Home</a>
+        <a href="products.html" class="hover:text-zinc-900 transition-colors">Products</a>
+        <a href="cart.html" class="hover:text-zinc-900 transition-colors">Cart</a>
 
-<!-- Header -->
+        <!-- Shopping Cart Icon Badge -->
+        <a href="cart.html" class="cart-icon relative p-2 text-zinc-700 hover:text-zinc-900 transition-colors" aria-label="Shopping Cart">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+          <span id="cart-count" class="absolute top-1 right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-zinc-900 rounded-full">0</span>
+        </a>
+      </nav>
 
-<header>
+    </div>
+  </header>
 
-<div class="container nav">
+  <!-- Main Content -->
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    
+    <!-- Breadcrumb Nav -->
+    <nav class="flex items-center gap-2 text-xs font-medium text-zinc-400 mb-8">
+      <a href="index.html" class="hover:text-zinc-900 transition-colors">Home</a>
+      <span>/</span>
+      <a href="products.html" class="hover:text-zinc-900 transition-colors">Products</a>
+      <span>/</span>
+      <span class="text-zinc-900">Details</span>
+    </nav>
 
+    <!-- Product Details Section -->
+    <section class="products">
+      <div class="container mx-auto">
 
-<div class="logo">
+        <!-- Dynamic Product Content Mount -->
+        <div id="product-detail">
+          
+          <!-- Modern Skeleton Loading State (Replaced dynamically by js/product.js) -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16 items-start animate-pulse">
+            <!-- Image Placeholder -->
+            <div class="aspect-square bg-zinc-200/80 rounded-3xl w-full border border-zinc-200/60"></div>
+            
+            <!-- Product Info Placeholder -->
+            <div class="flex flex-col gap-4 py-2">
+              <div class="h-4 bg-zinc-200 rounded w-1/4"></div>
+              <div class="h-9 bg-zinc-200 rounded-lg w-3/4"></div>
+              <div class="h-7 bg-zinc-200 rounded-md w-1/3 my-1"></div>
+              
+              <div class="space-y-2.5 pt-4">
+                <div class="h-3.5 bg-zinc-200 rounded w-full"></div>
+                <div class="h-3.5 bg-zinc-200 rounded w-11/12"></div>
+                <div class="h-3.5 bg-zinc-200 rounded w-4/6"></div>
+              </div>
 
-Prasun Shop
+              <div class="pt-8 flex gap-4">
+                <div class="h-12 bg-zinc-200 rounded-xl w-full sm:w-48"></div>
+              </div>
+            </div>
+          </div>
 
-</div>
+        </div>
 
+      </div>
+    </section>
 
+  </main>
 
-<nav>
+  <!-- Minimal Footer -->
+  <footer class="border-t border-zinc-200 bg-white py-8 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 text-center text-xs text-zinc-500">
+      <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
+    </div>
+  </footer>
 
-
-<a href="index.html">
-Home
-</a>
-
-
-<a href="products.html">
-Products
-</a>
-
-
-<a href="cart.html">
-Cart
-</a>
-
-
-
-<!-- Shopping Cart Icon -->
-
-<a href="cart.html" class="cart-icon">
-
-🛒
-
-<span id="cart-count">
-0
-</span>
-
-</a>
-
-
-
-</nav>
-
-
-</div>
-
-</header>
-
-
-
-
-
-<!-- Product Details -->
-
-<section class="products">
-
-
-<div class="container">
-
-
-<div id="product-detail">
-
-Loading product...
-
-</div>
-
-
-</div>
-
-
-</section>
-
-
-
-
-
-
-<!-- JavaScript -->
-
-
-<script src="js/cart-count.js"></script>
-
-<script src="js/product.js"></script>
-
-
+  <!-- JavaScript -->
+  <script src="js/cart-count.js"></script>
+  <script src="js/product.js"></script>
 
 </body>
-
 
 </html>
