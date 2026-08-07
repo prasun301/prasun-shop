@@ -1,74 +1,96 @@
 // =====================================
-// Prasun Shop - Checkout System
+// Prasun Shop - Checkout System (Optimized)
 // =====================================
 
-// Load cart
 let cart = JSON.parse(localStorage.getItem("cart")) ?? [];
-
 const orderSummary = document.getElementById("order-summary");
 let total = 0;
-let allProducts = []; // Store products globally for submission
+let allProducts = [];
 
 // =====================================
 // Display Order Summary
 // =====================================
-
 async function loadCheckoutSummary() {
-try {
-const response = await fetch("data/products.json");
-if (!response.ok) {
-throw new Error(HTTP error! Status: ${response.status});
-}
+    if (!orderSummary) return;
 
-    allProducts = await response.json();
+    try {
+        const response = await fetch("data/products.json");
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
 
-    if (cart.length === 0) {
-        orderSummary.innerHTML = `
-        <div class="empty-cart">
-            <h3>Your cart is empty</h3>
-            <a href="products.html">Continue Shopping</a>
-        </div>
-        `;
-        return;
-    }
+        allProducts = await response.json();
 
-    let summaryHTML = "";
+        if (cart.length === 0) {
+            orderSummary.innerHTML = `
+                <div class="py-8 text-center">
+                    <p class="text-zinc-500 text-sm font-medium mb-4">Your cart is empty.</p>
+                    <a href="products.html" class="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-all shadow-xs">
+                        Continue Shopping
+                    </a>
+                </div>
+            `;
+            return;
+        }
 
-    cart.forEach(item => {
-        const product = allProducts.find(p => p.id === item.id);
+        total = 0;
+        let itemsHTML = '<div class="max-h-72 overflow-y-auto space-y-4 pr-1 divider-y divide-zinc-100">';
 
-        if (product) {
-            const subtotal = product.price * item.quantity;
-            total += subtotal;
+        cart.forEach(item => {
+            const product = allProducts.find(p => p.id === item.id);
 
-            summaryHTML += `
-            <div class="order-item">
-                <img
-                src="${product.image}"
-                alt="${product.name}"
-                >
-                <div>
-                    <h3>${product.name}</h3>
-                    <p>Quantity: ${item.quantity}</p>
-                    <p>Price: $${product.price.toFixed(2)}</p>
-                    <p>Subtotal: $${subtotal.toFixed(2)}</p>
+            if (product) {
+                const subtotal = product.price * item.quantity;
+                total += subtotal;
+
+                itemsHTML += `
+                    <div class="flex items-center gap-4 pb-4 border-b border-zinc-100 last:border-0 last:pb-0">
+                        <img 
+                            src="${product.image}" 
+                            alt="${product.name}" 
+                            class="w-16 h-16 object-cover rounded-xl border border-zinc-200/60 bg-zinc-100 shrink-0"
+                        >
+                        <div class="flex-grow min-w-0">
+                            <h3 class="text-sm font-semibold text-zinc-900 truncate">${product.name}</h3>
+                            <p class="text-xs text-zinc-500">Qty: ${item.quantity}</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="text-sm font-bold text-zinc-900">$${subtotal.toFixed(2)}</p>
+                            <p class="text-[11px] text-zinc-400">$${product.price.toFixed(2)} each</p>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        itemsHTML += '</div>';
+
+        // Summary Totals Section
+        itemsHTML += `
+            <div class="pt-4 border-t border-zinc-100 space-y-2 mt-4">
+                <div class="flex justify-between text-xs text-zinc-500">
+                    <span>Subtotal</span>
+                    <span class="font-medium text-zinc-900">$${total.toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between text-xs text-zinc-500">
+                    <span>Shipping</span>
+                    <span class="text-emerald-600 font-semibold">Free</span>
+                </div>
+                <div class="flex justify-between text-base font-bold text-zinc-900 pt-3 border-t border-zinc-100">
+                    <span>Total</span>
+                    <span>$${total.toFixed(2)}</span>
                 </div>
             </div>
-            `;
-        }
-    });
+        `;
 
-    summaryHTML += `
-    <div class="order-total">
-        <h2>Total: $${total.toFixed(2)}</h2>
-    </div>
-    `;
+        orderSummary.innerHTML = itemsHTML;
 
-    orderSummary.innerHTML = summaryHTML;
-} catch (error) {
-    console.log("Error loading checkout:", error);
-}
-
+    } catch (error) {
+        console.error("Error loading checkout summary:", error);
+        orderSummary.innerHTML = `
+            <p class="text-xs text-red-500 text-center py-4">Failed to load order summary. Please refresh the page.</p>
+        `;
+    }
 }
 
 loadCheckoutSummary();
@@ -76,52 +98,78 @@ loadCheckoutSummary();
 // =====================================
 // Submit Order
 // =====================================
+const checkoutForm = document.getElementById("checkout-form");
 
-document.getElementById("checkout-form").addEventListener("submit", async function(event) {
-event.preventDefault();
+if (checkoutForm) {
+    checkoutForm.addEventListener("submit", async function(event) {
+        event.preventDefault();
 
-const customerName = document.getElementById("name").value;
-
-// Enrich cart items with product names so the backend email can use them
-const enrichedCart = cart.map(item => {
-    const product = allProducts.find(p => p.id === item.id);
-    return {
-        id: item.id,
-        name: product?.name ?? "Unknown Product",
-        price: product?.price ?? 0,
-        quantity: item.quantity
-    };
-});
-
-try {
-    const response = await fetch(
-        "[https://prasun-shop-api.prasun301.workers.dev/](https://prasun-shop-api.prasun301.workers.dev/)",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                customerName: customerName,
-                email: document.getElementById("email").value,
-                phone: document.getElementById("phone").value,
-                address: document.getElementById("address").value,
-                cart: enrichedCart,
-                total: total
-            })
+        if (cart.length === 0) {
+            alert("Your cart is empty.");
+            return;
         }
-    );
 
-    const data = await response.json();
-    console.log("Order sent:", data);
+        const submitButton = checkoutForm.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.textContent;
+        
+        // Set loading state for maximum responsiveness feel
+        submitButton.disabled = true;
+        submitButton.textContent = "Processing Order...";
+        submitButton.classList.add("opacity-75", "cursor-not-allowed");
 
-    // Clear cart after successful order
-    localStorage.removeItem("cart");
+        const customerName = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const address = document.getElementById("address").value.trim();
 
-    window.location.href = "order-success.html";
-} catch (error) {
-    console.log("Order error:", error);
-    alert("Something went wrong. Please try again.");
+        // Enrich cart items with product names for the backend
+        const enrichedCart = cart.map(item => {
+            const product = allProducts.find(p => p.id === item.id);
+            return {
+                id: item.id,
+                name: product?.name ?? "Unknown Product",
+                price: product?.price ?? 0,
+                quantity: item.quantity
+            };
+        });
+
+        try {
+            const response = await fetch("https://prasun-shop-api.prasun301.workers.dev/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    customerName,
+                    email,
+                    phone,
+                    address,
+                    cart: enrichedCart,
+                    total
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Order successfully sent:", data);
+
+            // Clear local cart storage after successful order
+            localStorage.removeItem("cart");
+
+            // Redirect to success page
+            window.location.href = "order-success.html";
+
+        } catch (error) {
+            console.error("Order submission error:", error);
+            alert("Something went wrong while placing your order. Please try again.");
+            
+            // Restore button state
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
+            submitButton.classList.remove("opacity-75", "cursor-not-allowed");
+        }
+    });
 }
-
-});
