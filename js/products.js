@@ -1,11 +1,14 @@
 // Load all products
-
 fetch("data/products.json")
 .then(response => response.json())
 .then(products => {
-
-    const productList = document.getElementById("product-list");
-
+const productList = document.getElementById("product-list");
+    // Load all products
+fetch("data/products.json")
+.then(response => response.json())
+.then(products => {
+const productList = document.getElementById("product-list");
+    
     // Read category from URL
     const params = new URLSearchParams(window.location.search);
     const selectedCategory = params.get("category");
@@ -17,11 +20,10 @@ fetch("data/products.json")
     let filteredProducts = products;
 
     if (selectedCategory) {
-
         filteredProducts = products.filter(product => {
-    console.log(product.category, "==", selectedCategory);
-    return product.category === selectedCategory;
-});
+            console.log(product.category, "==", selectedCategory);
+            return product.category === selectedCategory;
+        });
 
         // Change page heading
         const heading = document.querySelector("h2");
@@ -32,23 +34,17 @@ fetch("data/products.json")
 
     // Show message if no products
     if (filteredProducts.length === 0) {
-
         productList.innerHTML = `
             <p style="text-align:center;grid-column:1/-1;">
                 No products found in this category.
             </p>
         `;
-
         return;
     }
 
-    // Display products
-    filteredProducts.forEach(product => {
-
-        productList.innerHTML += `
-
+    // Display products with high-performance single-pass rendering
+    productList.innerHTML = filteredProducts.map(product => `
         <div class="card">
-
             <img
                 src="${product.image}"
                 alt="${product.name}"
@@ -67,16 +63,11 @@ fetch("data/products.json")
             <a href="product.html?id=${product.id}">
                 <button>View Product</button>
             </a>
-
         </div>
-
-        `;
-
-    });
-
+    `).join("");
 })
 .catch(error => {
-
     console.log("Error loading products:", error);
-
 });
+
+```
