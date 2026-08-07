@@ -33,26 +33,26 @@
 <body class="bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-zinc-900 selection:text-white min-h-screen flex flex-col">
 
   <!-- Modern Header -->
-  <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200/80">
+  <header class="sticky top-0 z-50 bg-white/85 backdrop-blur-xl border-b border-zinc-200/80 transition-all">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
       <!-- Brand Logo -->
-      <a href="index.html" class="text-xl font-bold tracking-tight text-zinc-900 hover:opacity-80 transition-opacity">
+      <a href="index.html" class="text-base sm:text-lg font-semibold tracking-tight text-zinc-900 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">
         Prasun Shop<span class="text-zinc-400">.</span>
       </a>
 
       <!-- Navigation Links -->
       <nav class="flex items-center gap-6 sm:gap-8 text-sm font-medium text-zinc-600">
-        <a href="index.html" class="hover:text-zinc-900 transition-colors">Home</a>
-        <a href="products.html" class="hover:text-zinc-900 transition-colors">Products</a>
-        <a href="cart.html" class="hover:text-zinc-900 transition-colors">Cart</a>
+        <a href="index.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
+        <a href="products.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Products</a>
+        <a href="cart.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Cart</a>
 
         <!-- Shopping Cart Icon Badge -->
-        <a href="cart.html" class="cart-icon relative p-2 text-zinc-700 hover:text-zinc-900 transition-colors" aria-label="Shopping Cart">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="cart.html" class="cart-icon relative p-2 text-zinc-700 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-full" aria-label="Shopping Cart">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
           </svg>
-          <span id="cart-count" class="absolute top-1 right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-zinc-900 rounded-full">0</span>
+          <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold text-white bg-zinc-900 rounded-full shadow-xs">0</span>
         </a>
       </nav>
 
@@ -60,15 +60,15 @@
   </header>
 
   <!-- Main Content -->
-  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
     
     <!-- Breadcrumb Nav -->
-    <nav class="flex items-center gap-2 text-xs font-medium text-zinc-400 mb-8">
-      <a href="index.html" class="hover:text-zinc-900 transition-colors">Home</a>
-      <span>/</span>
-      <a href="products.html" class="hover:text-zinc-900 transition-colors">Products</a>
-      <span>/</span>
-      <span class="text-zinc-900">Details</span>
+    <nav class="flex items-center gap-2 text-xs font-medium text-zinc-400 mb-8 tracking-wide" aria-label="Breadcrumb">
+      <a href="index.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs">Home</a>
+      <span aria-hidden="true">/</span>
+      <a href="products.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs">Products</a>
+      <span aria-hidden="true">/</span>
+      <span class="text-zinc-900 font-medium">Details</span>
     </nav>
 
     <!-- Product Details Section -->
@@ -79,24 +79,24 @@
         <div id="product-detail">
           
           <!-- Modern Skeleton Loading State (Replaced dynamically by js/product.js) -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16 items-start animate-pulse">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start animate-pulse">
             <!-- Image Placeholder -->
-            <div class="aspect-square bg-zinc-200/80 rounded-3xl w-full border border-zinc-200/60"></div>
+            <div class="aspect-square bg-zinc-200/70 rounded-2xl w-full border border-zinc-200/60 shadow-xs"></div>
             
             <!-- Product Info Placeholder -->
             <div class="flex flex-col gap-4 py-2">
-              <div class="h-4 bg-zinc-200 rounded w-1/4"></div>
-              <div class="h-9 bg-zinc-200 rounded-lg w-3/4"></div>
-              <div class="h-7 bg-zinc-200 rounded-md w-1/3 my-1"></div>
+              <div class="h-4 bg-zinc-200/70 rounded-md w-1/4"></div>
+              <div class="h-8 bg-zinc-200/70 rounded-lg w-3/4"></div>
+              <div class="h-6 bg-zinc-200/70 rounded-md w-1/3 my-1"></div>
               
-              <div class="space-y-2.5 pt-4">
-                <div class="h-3.5 bg-zinc-200 rounded w-full"></div>
-                <div class="h-3.5 bg-zinc-200 rounded w-11/12"></div>
-                <div class="h-3.5 bg-zinc-200 rounded w-4/6"></div>
+              <div class="space-y-3 pt-4">
+                <div class="h-3.5 bg-zinc-200/70 rounded-md w-full"></div>
+                <div class="h-3.5 bg-zinc-200/70 rounded-md w-11/12"></div>
+                <div class="h-3.5 bg-zinc-200/70 rounded-md w-4/6"></div>
               </div>
 
               <div class="pt-8 flex gap-4">
-                <div class="h-12 bg-zinc-200 rounded-xl w-full sm:w-48"></div>
+                <div class="h-11 bg-zinc-200/70 rounded-xl w-full sm:w-48"></div>
               </div>
             </div>
           </div>
@@ -109,8 +109,8 @@
   </main>
 
   <!-- Minimal Footer -->
-  <footer class="border-t border-zinc-200 bg-white py-8 mt-auto">
-    <div class="max-w-7xl mx-auto px-4 text-center text-xs text-zinc-500">
+  <footer class="border-t border-zinc-200/80 bg-white py-8 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-zinc-500 font-medium">
       <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
     </div>
   </footer>
