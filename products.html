@@ -1,168 +1,907 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light" class="scroll-smooth">
+<!-- =========================================================
+     HEADER
+========================================================= -->
+<header class="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Explore our collection of minimal and modern products at Prasun Shop.">
-  <title>Products — Prasun Shop</title>
+  <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
 
-  <!-- Google Fonts: Inter (Optimized Loading) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- =====================================================
+         Brand
+    ====================================================== -->
+    <a
+      href="index.html"
+      class="inline-flex items-center rounded-lg text-lg font-bold tracking-tight text-zinc-900 transition-opacity duration-200 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
+      aria-label="Prasun Shop Home">
 
-  <!-- Enterprise Production Stylesheet -->
-  <link rel="stylesheet" href="css/style.css">
-  
-  <!-- Inline style for skeleton pulse and smooth utility hooks -->
-  <style>
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    .skeleton { animation: pulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-    .skeleton-box { background-color: var(--color-bg-muted, #f4f4f5); border-radius: var(--radius-sm, 6px); }
-  </style>
-</head>
+      <span>Prasun Shop</span>
+      <span class="text-zinc-400">.</span>
 
-<body class="min-h-screen flex flex-col antialiased bg-white text-zinc-900 font-sans selection:bg-zinc-900 selection:text-white">
+    </a>
 
-  <!-- Glassmorphism Header -->
-  <header class="header sticky top-0 z-50 backdrop-blur-xl bg-white/85 border-b border-zinc-200/60 transition-all">
-    <div class="container nav-wrapper flex items-center justify-between h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <!-- Brand Logo -->
-      <a href="index.html" class="logo font-bold tracking-tight text-lg text-zinc-900 hover:opacity-85 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-md">
-        Prasun Shop<span class="text-zinc-400">.</span>
+    <!-- =====================================================
+         Desktop Navigation
+    ====================================================== -->
+    <nav
+      class="hidden md:flex items-center gap-8"
+      aria-label="Primary Navigation">
+
+      <a
+        href="index.html"
+        class="nav-link">
+        Home
       </a>
 
-      <!-- Desktop Nav Links -->
-      <nav class="nav-links hidden md:flex items-center gap-8 text-sm font-medium">
-        <a href="index.html" class="nav-link text-zinc-600 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-md">Home</a>
-        <a href="products.html" class="nav-link text-zinc-900 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-md" aria-current="page">Products</a>
-        <a href="#" class="nav-link text-zinc-600 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-md">About</a>
-        <a href="#" class="nav-link text-zinc-600 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-md">Contact</a>
-      </nav>
+      <a
+        href="products.html"
+        class="nav-link active"
+        aria-current="page">
+        Products
+      </a>
 
-      <!-- Right Action Group (Cart & Mobile Menu Toggle) -->
-      <div class="flex items-center gap-3">
-        <a href="cart.html" class="cart-icon relative p-2 text-zinc-700 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-full" aria-label="Shopping Cart">
-          <svg fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-          </svg>
-          <span id="cart-count" class="cart-badge absolute top-0.5 right-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-zinc-900 rounded-full shadow-xs">0</span>
-        </a>
+      <a
+        href="about.html"
+        class="nav-link">
+        About
+      </a>
 
-        <!-- Mobile Menu Trigger -->
-        <button type="button" class="md:hidden p-2 text-zinc-700 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 rounded-md cursor-pointer" aria-label="Open Navigation Menu">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/>
-          </svg>
-        </button>
-      </div>
+      <a
+        href="contact.html"
+        class="nav-link">
+        Contact
+      </a>
 
-    </div>
-  </header>
+    </nav>
 
-  <!-- Main Content -->
-  <main class="container section flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
-    
-    <!-- Page Header & Filter Controls -->
-    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 border-b border-zinc-200/80 pb-8 mb-8">
-      
-      <div class="space-y-1">
-        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900">Our Products</h1>
-        <p class="text-sm sm:text-base text-zinc-500 font-normal">Discover high-quality essentials crafted for modern life.</p>
-      </div>
+    <!-- =====================================================
+         Right Actions
+    ====================================================== -->
+    <div class="flex items-center gap-3">
 
-      <!-- Spotlight Search Component -->
-      <div class="search-box relative w-full sm:max-w-[320px]" role="search">
-        <input type="search" placeholder="Search items..." aria-label="Search items" class="search-input w-full h-11 pl-10 pr-16 bg-zinc-50/50 hover:bg-zinc-50 focus:bg-white border border-zinc-200 rounded-xl text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all shadow-2xs">
-        <svg class="search-icon absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      <!-- Cart -->
+      <a
+        href="cart.html"
+        class="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
+        aria-label="Shopping cart">
+
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          viewBox="0 0 24 24"
+          aria-hidden="true">
+
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+
         </svg>
-        <div class="search-kbd-hint absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-0.5 text-[10px] text-zinc-400 bg-white border border-zinc-200 px-1.5 py-0.5 rounded shadow-2xs pointer-events-none font-mono">
-          <kbd>⌘</kbd><kbd>K</kbd>
+
+        <span
+          id="cart-count"
+          class="absolute right-0.5 top-0.5 inline-flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-zinc-900 px-1 text-[10px] font-semibold text-white"
+          aria-live="polite"
+          aria-atomic="true">
+
+          0
+
+        </span>
+
+      </a>
+
+      <!-- Mobile Menu -->
+      <button
+        type="button"
+        id="menu-toggle"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 md:hidden"
+        aria-controls="mobile-menu"
+        aria-expanded="false"
+        aria-label="Open menu">
+
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true">
+
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M4 6h16M4 12h16M13 18h7"/>
+
+        </svg>
+
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- =====================================================
+       Mobile Navigation
+  ====================================================== -->
+  <nav
+    id="mobile-menu"
+    class="hidden border-t border-zinc-200 bg-white md:hidden"
+    aria-label="Mobile Navigation">
+
+    <div class="space-y-1 p-4">
+
+      <a
+        href="index.html"
+        class="mobile-nav-link">
+        Home
+      </a>
+
+      <a
+        href="products.html"
+        class="mobile-nav-link active"
+        aria-current="page">
+        Products
+      </a>
+
+      <a
+        href="about.html"
+        class="mobile-nav-link">
+        About
+      </a>
+
+      <a
+        href="contact.html"
+        class="mobile-nav-link">
+        Contact
+      </a>
+
+    </div>
+
+  </nav>
+
+</header>
+
+<!-- =========================================================
+     MAIN CONTENT
+========================================================= -->
+<main class="mx-auto max-w-7xl px-5 py-10 lg:px-8">
+
+  <!-- =====================================================
+       Page Header
+  ====================================================== -->
+  <section
+    aria-labelledby="products-heading"
+    class="mb-10 border-b border-zinc-200 pb-8">
+
+    <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+
+      <!-- Left -->
+      <div>
+
+        <h1
+          id="products-heading"
+          class="text-3xl font-bold tracking-tight text-zinc-900">
+
+          Our Products
+
+        </h1>
+
+        <p class="mt-2 max-w-xl text-zinc-500">
+
+          Discover premium digital products carefully designed
+          for engineers, professionals, students and creators.
+
+        </p>
+
+      </div>
+
+      <!-- Search -->
+      <form
+        class="relative w-full max-w-sm"
+        role="search">
+
+        <label
+          for="product-search"
+          class="sr-only">
+
+          Search products
+
+        </label>
+
+        <svg
+          class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true">
+
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+
+        </svg>
+
+        <input
+          id="product-search"
+          class="h-11 w-full rounded-xl border border-zinc-200 bg-zinc-50 pl-11 pr-16 text-sm text-zinc-900 placeholder:text-zinc-400 transition focus:border-zinc-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900"
+          type="search"
+          placeholder="Search products..."
+          autocomplete="off"
+          spellcheck="false"
+          enterkeyhint="search">
+
+        <div
+          class="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-[10px] font-mono text-zinc-400">
+
+          <kbd>⌘</kbd>
+          <kbd>K</kbd>
+
         </div>
-      </div>
+
+      </form>
 
     </div>
 
-    <!-- Category Filter Pills -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-8 no-scrollbar">
-      <a href="products.html" class="px-4 py-2 text-xs font-semibold bg-zinc-900 text-white rounded-xl shadow-xs transition-all shrink-0">All Products</a>
-      <a href="products.html?category=electronics" class="px-4 py-2 text-xs font-medium bg-zinc-100 hover:bg-zinc-200/80 text-zinc-700 rounded-xl transition-all shrink-0">Electronics</a>
-      <a href="products.html?category=lifestyle" class="px-4 py-2 text-xs font-medium bg-zinc-100 hover:bg-zinc-200/80 text-zinc-700 rounded-xl transition-all shrink-0">Lifestyle</a>
-      <a href="products.html?category=accessories" class="px-4 py-2 text-xs font-medium bg-zinc-100 hover:bg-zinc-200/80 text-zinc-700 rounded-xl transition-all shrink-0">Accessories</a>
-      <a href="products.html?category=smart" class="px-4 py-2 text-xs font-medium bg-zinc-100 hover:bg-zinc-200/80 text-zinc-700 rounded-xl transition-all shrink-0">Smart Tech</a>
+  </section>
+
+  <!-- =====================================================
+       Category Filters
+  ====================================================== -->
+  <nav
+    class="mb-10 flex gap-3 overflow-x-auto pb-2"
+    aria-label="Product Categories">
+
+    <a
+      href="products.html"
+      class="category-pill active"
+      aria-current="page">
+
+      All Products
+
+    </a>
+
+    <a
+      href="products.html?category=electronics"
+      class="category-pill">
+
+      Electronics
+
+    </a>
+
+    <a
+      href="products.html?category=lifestyle"
+      class="category-pill">
+
+      Lifestyle
+
+    </a>
+
+    <a
+      href="products.html?category=accessories"
+      class="category-pill">
+
+      Accessories
+
+    </a>
+
+    <a
+      href="products.html?category=smart"
+      class="category-pill">
+
+      Smart Tech
+
+    </a>
+
+  </nav>
+  <!-- =========================================================
+     HEADER
+========================================================= -->
+<header class="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
+
+  <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
+
+    <!-- =====================================================
+         Brand
+    ====================================================== -->
+    <a
+      href="index.html"
+      class="inline-flex items-center rounded-lg text-lg font-bold tracking-tight text-zinc-900 transition-opacity duration-200 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
+      aria-label="Prasun Shop Home">
+
+      <span>Prasun Shop</span>
+      <span class="text-zinc-400">.</span>
+
+    </a>
+
+    <!-- =====================================================
+         Desktop Navigation
+    ====================================================== -->
+    <nav
+      class="hidden md:flex items-center gap-8"
+      aria-label="Primary Navigation">
+
+      <a
+        href="index.html"
+        class="nav-link">
+        Home
+      </a>
+
+      <a
+        href="products.html"
+        class="nav-link active"
+        aria-current="page">
+        Products
+      </a>
+
+      <a
+        href="about.html"
+        class="nav-link">
+        About
+      </a>
+
+      <a
+        href="contact.html"
+        class="nav-link">
+        Contact
+      </a>
+
+    </nav>
+
+    <!-- =====================================================
+         Right Actions
+    ====================================================== -->
+    <div class="flex items-center gap-3">
+
+      <!-- Cart -->
+      <a
+        href="cart.html"
+        class="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
+        aria-label="Shopping cart">
+
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          viewBox="0 0 24 24"
+          aria-hidden="true">
+
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+
+        </svg>
+
+        <span
+          id="cart-count"
+          class="absolute right-0.5 top-0.5 inline-flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-zinc-900 px-1 text-[10px] font-semibold text-white"
+          aria-live="polite"
+          aria-atomic="true">
+
+          0
+
+        </span>
+
+      </a>
+
+      <!-- Mobile Menu -->
+      <button
+        type="button"
+        id="menu-toggle"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-zinc-700 transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2 md:hidden"
+        aria-controls="mobile-menu"
+        aria-expanded="false"
+        aria-label="Open menu">
+
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true">
+
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M4 6h16M4 12h16M13 18h7"/>
+
+        </svg>
+
+      </button>
+
     </div>
 
-    <!-- Dynamic Product Grid -->
-    <section class="products pt-0 border-none">
-      <div id="product-list" class="product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
-        
-        <!-- Skeleton Loading State (Repeated for Grid Fidelity) -->
-        <article class="product-card skeleton pointer-events-none border border-zinc-200/80 bg-white rounded-2xl overflow-hidden p-4 flex flex-col shadow-xs">
-          <div class="product-image-wrapper skeleton-box aspect-square rounded-xl w-full mb-4"></div>
-          <div class="product-details flex flex-col gap-3 flex-grow">
-            <div class="skeleton-box h-3 w-2/5 rounded-xs"></div>
-            <div class="skeleton-box h-5 w-4/5 rounded-xs"></div>
-            <div class="skeleton-box h-6 w-1/3 rounded-xs mt-auto"></div>
-            <div class="skeleton-box h-10 w-full rounded-xl"></div>
-          </div>
-        </article>
+  </div>
 
-        <article class="product-card skeleton pointer-events-none border border-zinc-200/80 bg-white rounded-2xl overflow-hidden p-4 flex flex-col hidden sm:flex shadow-xs">
-          <div class="product-image-wrapper skeleton-box aspect-square rounded-xl w-full mb-4"></div>
-          <div class="product-details flex flex-col gap-3 flex-grow">
-            <div class="skeleton-box h-3 w-2/5 rounded-xs"></div>
-            <div class="skeleton-box h-5 w-4/5 rounded-xs"></div>
-            <div class="skeleton-box h-6 w-1/3 rounded-xs mt-auto"></div>
-            <div class="skeleton-box h-10 w-full rounded-xl"></div>
-          </div>
-        </article>
+  <!-- =====================================================
+       Mobile Navigation
+  ====================================================== -->
+  <nav
+    id="mobile-menu"
+    class="hidden border-t border-zinc-200 bg-white md:hidden"
+    aria-label="Mobile Navigation">
 
-        <article class="product-card skeleton pointer-events-none border border-zinc-200/80 bg-white rounded-2xl overflow-hidden p-4 flex flex-col hidden lg:flex shadow-xs">
-          <div class="product-image-wrapper skeleton-box aspect-square rounded-xl w-full mb-4"></div>
-          <div class="product-details flex flex-col gap-3 flex-grow">
-            <div class="skeleton-box h-3 w-2/5 rounded-xs"></div>
-            <div class="skeleton-box h-5 w-4/5 rounded-xs"></div>
-            <div class="skeleton-box h-6 w-1/3 rounded-xs mt-auto"></div>
-            <div class="skeleton-box h-10 w-full rounded-xl"></div>
-          </div>
-        </article>
+    <div class="space-y-1 p-4">
 
-        <article class="product-card skeleton pointer-events-none border border-zinc-200/80 bg-white rounded-2xl overflow-hidden p-4 flex flex-col hidden xl:flex shadow-xs">
-          <div class="product-image-wrapper skeleton-box aspect-square rounded-xl w-full mb-4"></div>
-          <div class="product-details flex flex-col gap-3 flex-grow">
-            <div class="skeleton-box h-3 w-2/5 rounded-xs"></div>
-            <div class="skeleton-box h-5 w-4/5 rounded-xs"></div>
-            <div class="skeleton-box h-6 w-1/3 rounded-xs mt-auto"></div>
-            <div class="skeleton-box h-10 w-full rounded-xl"></div>
-          </div>
-        </article>
+      <a
+        href="index.html"
+        class="mobile-nav-link">
+        Home
+      </a>
 
-      </div>
-    </section>
+      <a
+        href="products.html"
+        class="mobile-nav-link active"
+        aria-current="page">
+        Products
+      </a>
 
-  </main>
+      <a
+        href="about.html"
+        class="mobile-nav-link">
+        About
+      </a>
 
-  <!-- Minimal Footer -->
-  <footer class="footer mt-auto py-8 border-t border-zinc-200/60 bg-white">
-    <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-medium">
-      <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
-      <div class="flex items-center gap-6">
-        <a href="#" class="hover:text-zinc-900 transition-colors">Privacy Policy</a>
-        <a href="#" class="hover:text-zinc-900 transition-colors">Terms of Service</a>
-      </div>
+      <a
+        href="contact.html"
+        class="mobile-nav-link">
+        Contact
+      </a>
+
     </div>
-  </footer>
 
-  <!-- Scripts -->
-  <script src="js/products.js"></script>
-  <script src="js/cart-count.js"></script>
+  </nav>
 
-</body>
+</header>
 
-</html>
+<!-- =========================================================
+     MAIN CONTENT
+========================================================= -->
+<main class="mx-auto max-w-7xl px-5 py-10 lg:px-8">
+
+  <!-- =====================================================
+       Page Header
+  ====================================================== -->
+  <section
+    aria-labelledby="products-heading"
+    class="mb-10 border-b border-zinc-200 pb-8">
+
+    <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+
+      <!-- Left -->
+      <div>
+
+        <h1
+          id="products-heading"
+          class="text-3xl font-bold tracking-tight text-zinc-900">
+
+          Our Products
+
+        </h1>
+
+        <p class="mt-2 max-w-xl text-zinc-500">
+
+          Discover premium digital products carefully designed
+          for engineers, professionals, students and creators.
+
+        </p>
+
+      </div>
+
+      <!-- Search -->
+      <form
+        class="relative w-full max-w-sm"
+        role="search">
+
+        <label
+          for="product-search"
+          class="sr-only">
+
+          Search products
+
+        </label>
+
+        <svg
+          class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true">
+
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+
+        </svg>
+
+        <input
+          id="product-search"
+          class="h-11 w-full rounded-xl border border-zinc-200 bg-zinc-50 pl-11 pr-16 text-sm text-zinc-900 placeholder:text-zinc-400 transition focus:border-zinc-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900"
+          type="search"
+          placeholder="Search products..."
+          autocomplete="off"
+          spellcheck="false"
+          enterkeyhint="search">
+
+        <div
+          class="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-[10px] font-mono text-zinc-400">
+
+          <kbd>⌘</kbd>
+          <kbd>K</kbd>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </section>
+
+  <!-- =====================================================
+       Category Filters
+  ====================================================== -->
+  <nav
+    class="mb-10 flex gap-3 overflow-x-auto pb-2"
+    aria-label="Product Categories">
+
+    <a
+      href="products.html"
+      class="category-pill active"
+      aria-current="page">
+
+      All Products
+
+    </a>
+
+    <a
+      href="products.html?category=electronics"
+      class="category-pill">
+
+      Electronics
+
+    </a>
+
+    <a
+      href="products.html?category=lifestyle"
+      class="category-pill">
+
+      Lifestyle
+
+    </a>
+
+    <a
+      href="products.html?category=accessories"
+      class="category-pill">
+
+      Accessories
+
+    </a>
+
+    <a
+      href="products.html?category=smart"
+      class="category-pill">
+
+      Smart Tech
+
+    </a>
+
+  </nav>
+  /* ==========================================================
+   PRASUN SHOP
+   Products Page Controller
+   ========================================================== */
+
+"use strict";
+
+/* ==========================================================
+   DOM
+========================================================== */
+
+const productGrid = document.getElementById("product-list");
+const emptyState = document.getElementById("empty-state");
+
+const searchInput = document.getElementById("product-search");
+
+const productTemplate = document.getElementById("product-card-template");
+const skeletonTemplate = document.getElementById("skeleton-template");
+
+const categoryLinks = document.querySelectorAll(".category-pill");
+
+/* ==========================================================
+   State
+========================================================== */
+
+let products = [];
+let filteredProducts = [];
+
+/* ==========================================================
+   URL Parameters
+========================================================== */
+
+const params = new URLSearchParams(window.location.search);
+
+const currentCategory = params.get("category") || "all";
+
+/* ==========================================================
+   Skeleton Loader
+========================================================== */
+
+function showSkeletons(count = 8) {
+
+    productGrid.innerHTML = "";
+
+    productGrid.setAttribute("aria-busy", "true");
+
+    for (let i = 0; i < count; i++) {
+
+        productGrid.appendChild(
+            skeletonTemplate.content.cloneNode(true)
+        );
+
+    }
+
+}
+
+function hideSkeletons() {
+
+    productGrid.innerHTML = "";
+
+    productGrid.setAttribute("aria-busy", "false");
+
+}
+
+/* ==========================================================
+   Empty State
+========================================================== */
+
+function showEmptyState() {
+
+    productGrid.innerHTML = "";
+
+    emptyState.classList.remove("hidden");
+
+}
+
+function hideEmptyState() {
+
+    emptyState.classList.add("hidden");
+
+}
+
+/* ==========================================================
+   Card Renderer
+========================================================== */
+
+function createProductCard(product) {
+
+    const card = productTemplate.content.cloneNode(true);
+
+    const article = card.querySelector("article");
+
+    const link = card.querySelector("a");
+
+    const image = card.querySelector("img");
+
+    const category = card.querySelector(".product-category");
+
+    const title = card.querySelector(".product-title");
+
+    const description = card.querySelector(".product-description");
+
+    const price = card.querySelector(".product-price");
+
+    const button = card.querySelector("button");
+
+    link.href = `product.html?id=${product.id}`;
+
+    image.src = product.image;
+
+    image.alt = product.name;
+
+    image.loading = "lazy";
+
+    image.decoding = "async";
+
+    category.textContent = product.category;
+
+    title.textContent = product.name;
+
+    description.textContent = product.description;
+
+    price.textContent = `$${product.price}`;
+
+    button.dataset.id = product.id;
+
+    button.dataset.action = "cart";
+
+    article.dataset.category = product.category;
+
+    article.dataset.id = product.id;
+
+    return card;
+
+}
+
+/* ==========================================================
+   Render Products
+========================================================== */
+
+function renderProducts(list) {
+
+    hideSkeletons();
+
+    hideEmptyState();
+
+    if (!list.length) {
+
+        showEmptyState();
+
+        return;
+
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    list.forEach(product => {
+
+        fragment.appendChild(
+
+            createProductCard(product)
+
+        );
+
+    });
+
+    productGrid.appendChild(fragment);
+
+}
+
+/* ==========================================================
+   Search
+========================================================== */
+
+function searchProducts(keyword) {
+
+    keyword = keyword.toLowerCase().trim();
+
+    filteredProducts = products.filter(product => {
+
+        return (
+
+            product.name.toLowerCase().includes(keyword) ||
+
+            product.category.toLowerCase().includes(keyword) ||
+
+            product.description.toLowerCase().includes(keyword)
+
+        );
+
+    });
+
+    renderProducts(filteredProducts);
+
+}
+
+/* ==========================================================
+   Category Filter
+========================================================== */
+
+function filterProducts(category) {
+
+    if (category === "all") {
+
+        filteredProducts = [...products];
+
+    }
+
+    else {
+
+        filteredProducts = products.filter(product =>
+
+            product.category.toLowerCase() === category.toLowerCase()
+
+        );
+
+    }
+
+    renderProducts(filteredProducts);
+
+}
+
+/* ==========================================================
+   Search Listener
+========================================================== */
+
+searchInput?.addEventListener("input", e => {
+
+    const keyword = e.target.value;
+
+    if (!keyword) {
+
+        renderProducts(filteredProducts);
+
+        return;
+
+    }
+
+    searchProducts(keyword);
+
+});
+
+/* ==========================================================
+   Category Buttons
+========================================================== */
+
+categoryLinks.forEach(link => {
+
+    link.addEventListener("click", () => {
+
+        categoryLinks.forEach(item =>
+
+            item.classList.remove("active")
+
+        );
+
+        link.classList.add("active");
+
+    });
+
+});
+
+/* ==========================================================
+   Fetch Products
+========================================================== */
+
+async function loadProducts() {
+
+    try {
+
+        showSkeletons();
+
+        const response = await fetch("data/products.json");
+
+        if (!response.ok) {
+
+            throw new Error("Unable to load products.");
+
+        }
+
+        products = await response.json();
+
+        filteredProducts = [...products];
+
+        if (currentCategory !== "all") {
+
+            filterProducts(currentCategory);
+
+        }
+
+        else {
+
+            renderProducts(products);
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        showEmptyState();
+
+    }
+
+}
+
+/* ==========================================================
+   Initialize
+========================================================== */
+
+document.addEventListener("DOMContentLoaded", loadProducts);
