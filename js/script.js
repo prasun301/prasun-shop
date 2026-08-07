@@ -1,54 +1,106 @@
-// Prasun Shop JavaScript — Optimized & Modernized
+// =====================================
+// Prasun Shop - Products & Interactivity
+// =====================================
 
 let allProducts = [];
 
-// -------------------------
-// Smooth Scrolling
-// -------------------------
-document.querySelectorAll('a[href^="#"]').forEach(link => {
-    link.addEventListener("click", function(e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute("href"));
-        if (target) {
-            target.scrollIntoView({ behavior: "smooth" });
-        }
+document.addEventListener("DOMContentLoaded", () => {
+    // -------------------------
+    // Smooth Scrolling
+    // -------------------------
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.addEventListener("click", function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute("href"));
+            if (target) {
+                target.scrollIntoView({ behavior: "smooth" });
+            }
+        });
     });
+
+    // -------------------------
+    // Global Keyboard Shortcut (⌘K / Ctrl+K)
+    // -------------------------
+    const searchInput = document.querySelector(".search-input");
+    if (searchInput) {
+        document.addEventListener("keydown", (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
+        });
+
+        // Real-time Search Filter Handler
+        searchInput.addEventListener("input", function() {
+            const keyword = this.value.toLowerCase().trim();
+            const filteredProducts = allProducts.filter(product =>
+                product.name.toLowerCase().includes(keyword) || 
+                (product.description && product.description.toLowerCase().includes(keyword)) ||
+                (product.category && product.category.toLowerCase().includes(keyword))
+            );
+            displayProducts(filteredProducts);
+        });
+    }
+
+    // -------------------------
+    // Load Products & Category Filtering
+    // -------------------------
+    loadProducts();
 });
 
-// -------------------------
-// Load Products
-// -------------------------
-fetch("data/products.json")
-    .then(response => {
-        if (!response.ok) throw new Error("Failed to fetch products");
-        return response.json();
-    })
-    .then(products => {
-        allProducts = products;
+async function loadProducts() {
+    const productList = document.getElementById("product-list");
+    if (!productList) return;
+
+    try {
+        const response = await fetch("data/products.json");
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        allProducts = await response.json();
 
         const params = new URLSearchParams(window.location.search);
-        const category = params.get("category");
+        const selectedCategory = params.get("category");
 
-        if (category) {
-            const filtered = products.filter(product => 
-                product.category && product.category.toLowerCase() === category.toLowerCase()
+        // Highlight Active Category Pill in Navigation
+        if (selectedCategory) {
+            document.querySelectorAll(".flex.items-center.gap-2.overflow-x-auto a").forEach(pill => {
+                const href = pill.getAttribute("href") || "";
+                if (href.toLowerCase().includes(`category=${selectedCategory.toLowerCase()}`)) {
+                    pill.className = "px-4 py-2 text-xs font-semibold bg-zinc-900 text-white rounded-xl shadow-xs transition-all shrink-0";
+                } else {
+                    pill.className = "px-4 py-2 text-xs font-medium bg-zinc-100 hover:bg-zinc-200/80 text-zinc-700 rounded-xl transition-all shrink-0";
+                }
+            });
+
+            // Update page heading
+            const heading = document.querySelector("h1, h2");
+            if (heading) {
+                heading.textContent = selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1);
+            }
+        }
+
+        // Filter products if category is present
+        let filteredProducts = allProducts;
+        if (selectedCategory) {
+            filteredProducts = allProducts.filter(product => 
+                product.category && product.category.toLowerCase() === selectedCategory.toLowerCase()
             );
-            displayProducts(filtered);
-        } else {
-            displayProducts(products);
         }
-    })
-    .catch(error => {
+
+        displayProducts(filteredProducts);
+
+    } catch (error) {
         console.error("Error loading products:", error);
-        const productList = document.getElementById("product-list");
-        if (productList) {
-            productList.innerHTML = `
-                <div class="col-span-full py-12 text-center text-zinc-500 text-sm">
-                    Unable to load products at this time. Please try again later.
-                </div>
-            `;
-        }
-    });
+        productList.innerHTML = `
+            <div class="col-span-full py-16 text-center text-zinc-500 text-sm font-medium">
+                Unable to load products at this time. Please try again later.
+            </div>
+        `;
+    }
+}
 
 // -------------------------
 // Display Products (High-Performance DOM Update)
@@ -60,13 +112,13 @@ function displayProducts(products) {
     if (products.length === 0) {
         productList.innerHTML = `
             <div class="col-span-full py-16 text-center">
-                <p class="text-zinc-500 text-sm font-medium">No products found.</p>
+                <p class="text-zinc-500 text-sm font-medium">No products found matching your search or category.</p>
             </div>
         `;
         return;
     }
 
-    // Render all cards in a single DOM write operation for maximum speed
+    // Render all cards in a single DOM write operation for high performance
     productList.innerHTML = products.map(product => `
         <div class="group bg-white rounded-2xl border border-zinc-200/80 overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col">
             <!-- Product Image Container -->
@@ -105,7 +157,7 @@ function displayProducts(products) {
 
                 <!-- Footer Action & Price -->
                 <div class="flex items-center justify-between pt-4 border-t border-zinc-100 mt-auto">
-                    <span class="text-lg font-bold text-zinc-900">$${product.price}</span>
+                    <span class="text-lg font-bold text-zinc-900">$${product.price.toFixed(2)}</span>
                     <button 
                         onclick="window.location.href='product.html?id=${product.id}'"
                         class="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 active:scale-95 rounded-xl transition-all shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900"
@@ -116,44 +168,4 @@ function displayProducts(products) {
             </div>
         </div>
     `).join("");
-}
-
-// -------------------------
-// Product Search
-// -------------------------
-const searchInput = document.getElementById("searchInput");
-
-if (searchInput) {
-    searchInput.addEventListener("input", function() {
-        const keyword = this.value.toLowerCase().trim();
-        const filteredProducts = allProducts.filter(product =>
-            product.name.toLowerCase().includes(keyword) || 
-            (product.description && product.description.toLowerCase().includes(keyword))
-        );
-        displayProducts(filteredProducts);
-    });
-}
-
-// -------------------------
-// Newsletter Subscription
-// -------------------------
-const subscribeButton = document.querySelector(".contact button");
-const subscribeInput = document.querySelector(".contact input");
-
-if (subscribeButton && subscribeInput) {
-    subscribeButton.addEventListener("click", function() {
-        const email = subscribeInput.value.trim();
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if (email === "") {
-            alert("Please enter your email address.");
-            subscribeInput.focus();
-        } else if (!emailRegex.test(email)) {
-            alert("Please enter a valid email address.");
-            subscribeInput.focus();
-        } else {
-            alert("Thank you for subscribing to Prasun Shop!");
-            subscribeInput.value = "";
-        }
-    });
 }
