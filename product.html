@@ -33,7 +33,7 @@
 <body class="bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-zinc-900 selection:text-white min-h-screen flex flex-col">
 
   <!-- Modern Header -->
-  <header class="sticky top-0 z-50 bg-white/85 backdrop-blur-xl border-b border-zinc-200/80 transition-all">
+  <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200/80 transition-all">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
       <!-- Brand Logo -->
@@ -41,21 +41,38 @@
         Prasun Shop<span class="text-zinc-400">.</span>
       </a>
 
-      <!-- Navigation Links -->
-      <nav class="flex items-center gap-6 sm:gap-8 text-sm font-medium text-zinc-600">
+      <!-- Desktop Navigation Links -->
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-600">
         <a href="index.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
         <a href="products.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Products</a>
         <a href="cart.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Cart</a>
+      </nav>
 
+      <!-- Right Action Items (Cart & Mobile Menu Trigger) -->
+      <div class="flex items-center gap-3">
         <!-- Shopping Cart Icon Badge -->
         <a href="cart.html" class="cart-icon relative p-2 text-zinc-700 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-full" aria-label="Shopping Cart">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
           </svg>
-          <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold text-white bg-zinc-900 rounded-full shadow-xs">0</span>
+          <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold text-white bg-zinc-900 rounded-full shadow-sm">0</span>
         </a>
-      </nav>
 
+        <!-- Mobile Menu Toggle Button -->
+        <button id="mobile-menu-button" type="button" class="md:hidden p-2 text-zinc-700 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-lg" aria-expanded="false" aria-label="Toggle navigation menu">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobile-menu" class="hidden md:hidden border-b border-zinc-200 bg-white/95 backdrop-blur-xl px-4 pt-3 pb-5 space-y-2">
+      <a href="index.html" class="block text-sm font-medium text-zinc-700 hover:text-zinc-900 py-1.5 transition-colors">Home</a>
+      <a href="products.html" class="block text-sm font-medium text-zinc-700 hover:text-zinc-900 py-1.5 transition-colors">Products</a>
+      <a href="cart.html" class="block text-sm font-medium text-zinc-700 hover:text-zinc-900 py-1.5 transition-colors">Cart</a>
     </div>
   </header>
 
@@ -65,9 +82,9 @@
     <!-- Breadcrumb Nav -->
     <nav class="flex items-center gap-2 text-xs font-medium text-zinc-400 mb-8 tracking-wide" aria-label="Breadcrumb">
       <a href="index.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs">Home</a>
-      <span aria-hidden="true">/</span>
+      <span aria-hidden="true" class="text-zinc-300">/</span>
       <a href="products.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xs">Products</a>
-      <span aria-hidden="true">/</span>
+      <span aria-hidden="true" class="text-zinc-300">/</span>
       <span class="text-zinc-900 font-medium">Details</span>
     </nav>
 
@@ -81,22 +98,22 @@
           <!-- Modern Skeleton Loading State (Replaced dynamically by js/product.js) -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start animate-pulse">
             <!-- Image Placeholder -->
-            <div class="aspect-square bg-zinc-200/70 rounded-2xl w-full border border-zinc-200/60 shadow-xs"></div>
+            <div class="aspect-square bg-zinc-200/80 rounded-2xl w-full border border-zinc-200/60 shadow-sm"></div>
             
             <!-- Product Info Placeholder -->
             <div class="flex flex-col gap-4 py-2">
-              <div class="h-4 bg-zinc-200/70 rounded-md w-1/4"></div>
-              <div class="h-8 bg-zinc-200/70 rounded-lg w-3/4"></div>
-              <div class="h-6 bg-zinc-200/70 rounded-md w-1/3 my-1"></div>
+              <div class="h-4 bg-zinc-200/80 rounded-md w-1/4"></div>
+              <div class="h-8 bg-zinc-200/80 rounded-lg w-3/4"></div>
+              <div class="h-6 bg-zinc-200/80 rounded-md w-1/3 my-1"></div>
               
               <div class="space-y-3 pt-4">
-                <div class="h-3.5 bg-zinc-200/70 rounded-md w-full"></div>
-                <div class="h-3.5 bg-zinc-200/70 rounded-md w-11/12"></div>
-                <div class="h-3.5 bg-zinc-200/70 rounded-md w-4/6"></div>
+                <div class="h-3.5 bg-zinc-200/80 rounded-md w-full"></div>
+                <div class="h-3.5 bg-zinc-200/80 rounded-md w-11/12"></div>
+                <div class="h-3.5 bg-zinc-200/80 rounded-md w-4/6"></div>
               </div>
 
               <div class="pt-8 flex gap-4">
-                <div class="h-11 bg-zinc-200/70 rounded-xl w-full sm:w-48"></div>
+                <div class="h-12 bg-zinc-200/80 rounded-xl w-full sm:w-48"></div>
               </div>
             </div>
           </div>
@@ -110,14 +127,31 @@
 
   <!-- Minimal Footer -->
   <footer class="border-t border-zinc-200/80 bg-white py-8 mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-zinc-500 font-medium">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-medium">
       <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
+      <div class="flex items-center gap-6">
+        <a href="#" class="hover:text-zinc-900 transition-colors">Privacy Policy</a>
+        <a href="#" class="hover:text-zinc-900 transition-colors">Terms of Service</a>
+      </div>
     </div>
   </footer>
 
-  <!-- JavaScript -->
-  <script src="js/cart-count.js"></script>
-  <script src="js/product.js"></script>
+  <!-- Inline Script for Mobile Nav Toggle -->
+  <script>
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileMenuButton && mobileMenu) {
+      mobileMenuButton.addEventListener('click', () => {
+        const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+        mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
+        mobileMenu.classList.toggle('hidden');
+      });
+    }
+  </script>
+
+  <!-- JavaScript Modules with Defer for Performance -->
+  <script src="js/cart-count.js" defer></script>
+  <script src="js/product.js" defer></script>
 
 </body>
 
