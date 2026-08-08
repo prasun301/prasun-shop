@@ -14,7 +14,6 @@
       --apple-border: #d2d2d7;
       --apple-dark: #1d1d1f;
       --apple-dark-hover: #333336;
-      --apple-blue: #0071e3;
     }
 
     body {
@@ -172,29 +171,55 @@
       margin: 0;
     }
 
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
     .btn-apple-primary {
       display: inline-flex;
       justify-content: center;
       align-items: center;
       background-color: var(--apple-dark);
       color: #ffffff;
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 500;
-      padding: 0.9rem 2rem;
+      padding: 0.85rem 1.8rem;
       border-radius: 980px;
       border: none;
       cursor: pointer;
       text-decoration: none;
       transition: background-color 0.2s ease, transform 0.1s ease;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-      margin-top: 1rem;
     }
 
     .btn-apple-primary:hover {
       background-color: var(--apple-dark-hover);
     }
 
-    .btn-apple-primary:active {
+    .btn-apple-secondary {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      background-color: transparent;
+      color: var(--apple-text);
+      font-size: 0.95rem;
+      font-weight: 500;
+      padding: 0.85rem 1.8rem;
+      border-radius: 980px;
+      border: 1px solid var(--apple-border);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .btn-apple-secondary:hover {
+      background-color: var(--apple-bg);
+      border-color: var(--apple-dark);
+    }
+
+    .btn-apple-primary:active, .btn-apple-secondary:active {
       transform: scale(0.98);
     }
 
@@ -257,7 +282,6 @@
   </footer>
 
   <script>
-    // Product Database Registry
     const productsData = {
       "smart-lamp": {
         id: "smart-lamp",
@@ -321,7 +345,12 @@
 
       localStorage.setItem('prasun_cart', JSON.stringify(cart));
       updateCartBadge();
-      alert(`Added ${product.title} to your bag!`);
+      alert(`Added ${product.title} to your bag.`);
+    }
+
+    function buyNow(productId) {
+      addToCart(productId);
+      window.location.href = 'checkout.html';
     }
 
     function loadProduct() {
@@ -341,7 +370,10 @@
           <h1 class="product-title">${product.title}</h1>
           <div class="product-price">${product.price}</div>
           <p class="product-description">${product.description}</p>
-          <button class="btn-apple-primary" onclick="addToCart('${product.id}')">Add to Bag</button>
+          <div class="button-group">
+            <button class="btn-apple-secondary" onclick="addToCart('${product.id}')">Add to Bag</button>
+            <button class="btn-apple-primary" onclick="buyNow('${product.id}')">Buy Now</button>
+          </div>
         </div>
       `;
     }
