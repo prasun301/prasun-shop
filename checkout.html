@@ -567,12 +567,12 @@
 
       if (cart.length === 0) {
         container.innerHTML = `
-          <div class="empty-cart-msg">Your bag is empty.</div>
-          <div class="summary-row"><span>Subtotal</span><span>$0.00</span></div>
-          <div class="summary-row"><span>Shipping</span><span>$0.00</span></div>
-          <div class="summary-total"><span>Total</span><span>$0.00</span></div>
-          <button class="btn-place-order" onclick="window.location.href='index.html'">Return to Shop</button>
-        `;
+        ${itemsHTML}
+        <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+        <div class="summary-row"><span>Shipping</span><span>$${shipping.toFixed(2)}</span></div>
+        <div class="summary-total"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+        <button class="btn-place-order" onclick="localStorage.removeItem('prasun_cart'); window.location.href='order-success.html';">Place Order</button>
+      `;
         return;
       }
 
