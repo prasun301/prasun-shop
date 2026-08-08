@@ -63,13 +63,11 @@
     const orderSummary = document.getElementById("order-summary");
     let total = 0;
     let productMap = new Map();
+    let productsLoaded = false;
 
-    // =====================================
-    // Display Order Summary
-    // =====================================
-    async function loadCheckoutSummary() {
-        if (!orderSummary) return;
-
+    // Centralized product data loader with caching & race-condition prevention
+    async function fetchProducts() {
+        if (productsLoaded && productMap.size > 0) return productMap;
         try {
             const response = await fetch("data/products.json", { cache: "no-cache" });
             if (!response.ok) {
@@ -81,8 +79,22 @@
                 throw new Error("Invalid data format: products.json must contain an array.");
             }
 
-            // Map products by ID for O(1) lookups
             productMap = new Map(data.filter(Boolean).map(p => [String(p.id), p]));
+            productsLoaded = true;
+        } catch (error) {
+            console.error("Error loading products data:", error);
+        }
+        return productMap;
+    }
+
+    // =====================================
+    // Display Order Summary
+    // =====================================
+    async function loadCheckoutSummary() {
+        if (!orderSummary) return;
+
+        try {
+            await fetchProducts();
 
             if (cart.length === 0) {
                 orderSummary.innerHTML = `
@@ -116,6 +128,7 @@
                                 alt="${escapeHTML(product.name)}" 
                                 class="w-16 h-16 object-cover rounded-xl border border-zinc-200/60 bg-zinc-100 shrink-0"
                                 loading="lazy"
+                                decoding="async"
                                 onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\' viewBox=\\'0 0 100 100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23f4f4f5\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%23a1a1aa\\' font-family=\\'sans-serif\\' font-size=\\'12\\'%3ENo Img%3C/text%3E%3C/svg%3E';"
                             >
                             <div class="flex-grow min-w-0">
@@ -202,6 +215,9 @@
             const phone = (formData.get("phone") || "").toString().trim();
             const address = (formData.get("address") || "").toString().trim();
 
+            // Ensure product map is loaded even if submit happens before loadCheckoutSummary finishes
+            await fetchProducts();
+
             // O(1) product map retrieval during payload construction
             const enrichedCart = cart.map(item => {
                 const product = productMap.get(String(item.id));
@@ -212,6 +228,9 @@
                     quantity: Number(item.quantity) || 1
                 };
             });
+
+            // Calculate precise order total dynamically to prevent stale/zero totals
+            const calculatedTotal = enrichedCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
             try {
                 const response = await fetch("https://prasun-shop-api.prasun301.workers.dev/", {
@@ -225,7 +244,7 @@
                         phone,
                         address,
                         cart: enrichedCart,
-                        total
+                        total: calculatedTotal
                     })
                 });
 
