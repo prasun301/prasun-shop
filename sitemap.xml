@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+    <!-- Main Store Page -->
+    <url>
+        <loc>https://shop.prasunbarua.com/</loc>
+    </url>
+
+    <!-- Company & Contact Pages -->
+    <url>
+        <loc>https://shop.prasunbarua.com/about.html</loc>
+    </url>
+
+    <url>
+        <loc>https://shop.prasunbarua.com/contact.html</loc>
+    </url>
+
+    <!-- Legal & Policy Pages (AdSense Required) -->
+    <url>
+        <loc>https://shop.prasunbarua.com/privacy.html</loc>
+    </url>
+
+    <url>
+        <loc>https://shop.prasunbarua.com/terms.html</loc>
+    </url>
+
+    <url>
+        <loc>https://shop.prasunbarua.com/refund.html</loc>
+    </url>
+
+</urlset>
