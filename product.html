@@ -7,27 +7,26 @@
   <meta name="description" content="View product details and add smart products to your Prasun Shop cart.">
   <title>Product Details — Prasun Shop</title>
 
-  <!-- Google Fonts: Inter -->
+  <!-- Early Connection Hints for External Assets -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-        },
-      },
-    }
-  </script>
+  <!-- Preload Critical Google Font Stylesheet -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  </noscript>
 
-  <!-- Custom CSS Override -->
+  <!-- Compiled Tailwind CSS (Production Build Replacement for JIT CDN) -->
+  <link rel="stylesheet" href="css/tailwind.css">
+
+  <!-- Custom CSS Overrides -->
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- JavaScript Modules (Deferred for Non-Blocking Initial Render) -->
+  <script src="js/cart-count.js" defer></script>
+  <script src="js/product.js" defer></script>
 </head>
 
 <body class="bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-zinc-950 selection:text-white min-h-screen flex flex-col">
@@ -108,20 +107,20 @@
   <main class="flex-grow">
     <section class="product-page">
       <div class="container">
-        <div id="product-detail">
-          <!-- Loading Skeleton -->
-          <div class="product-detail-loading" aria-hidden="true">
-            <div class="product-loading-image"></div>
-            <div class="product-loading-info">
-              <div class="loading-line loading-category"></div>
-              <div class="loading-line loading-title"></div>
-              <div class="loading-line loading-price"></div>
-              <div class="loading-description">
-                <div class="loading-line"></div>
-                <div class="loading-line"></div>
-                <div class="loading-line short"></div>
+        <div id="product-detail" aria-live="polite">
+          <!-- Loading Skeleton with Aspect Ratio Reserved Space (CLS Prevention) -->
+          <div class="product-detail-loading grid grid-cols-1 md:grid-cols-2 gap-8 animate-pulse" aria-hidden="true">
+            <div class="product-loading-image w-full aspect-square bg-zinc-200 rounded-lg"></div>
+            <div class="product-loading-info flex flex-col justify-center space-y-4">
+              <div class="h-4 bg-zinc-200 rounded w-1/4"></div>
+              <div class="h-8 bg-zinc-200 rounded w-3/4"></div>
+              <div class="h-6 bg-zinc-200 rounded w-1/3"></div>
+              <div class="space-y-2 pt-4">
+                <div class="h-4 bg-zinc-200 rounded w-full"></div>
+                <div class="h-4 bg-zinc-200 rounded w-5/6"></div>
+                <div class="h-4 bg-zinc-200 rounded w-2/3"></div>
               </div>
-              <div class="loading-button"></div>
+              <div class="h-12 bg-zinc-200 rounded-md w-full sm:w-48 mt-6"></div>
             </div>
           </div>
         </div>
@@ -129,7 +128,7 @@
     </section>
   </main>
 
-  <!-- Minimal Footer -->
+  <!-- Footer -->
   <footer class="border-t border-zinc-200/80 bg-white py-8 mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-medium">
       <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
@@ -140,24 +139,22 @@
     </div>
   </footer>
 
-  <!-- Inline Script for Mobile Nav Toggle -->
+  <!-- Mobile Menu Logic (Non-blocking IIFE) -->
   <script>
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mobileMenu = document.getElementById('mobile-menu');
-    if (mobileMenuButton && mobileMenu) {
-      mobileMenuButton.addEventListener('click', () => {
-        const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
-        mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
-        mobileMenuButton.setAttribute('aria-label', !isExpanded ? 'Close navigation menu' : 'Open navigation menu');
-        mobileMenu.hidden = isExpanded;
-        mobileMenu.classList.toggle('open', !isExpanded);
-      });
-    }
-  </script>
+    (() => {
+      const btn = document.getElementById('mobile-menu-button');
+      const menu = document.getElementById('mobile-menu');
+      if (!btn || !menu) return;
 
-  <!-- JavaScript Modules with Defer for Performance -->
-  <script src="js/cart-count.js" defer></script>
-  <script src="js/product.js" defer></script>
+      btn.addEventListener('click', () => {
+        const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', !isExpanded);
+        btn.setAttribute('aria-label', !isExpanded ? 'Close navigation menu' : 'Open navigation menu');
+        menu.hidden = isExpanded;
+        menu.classList.toggle('open', !isExpanded);
+      });
+    })();
+  </script>
 
 </body>
 
