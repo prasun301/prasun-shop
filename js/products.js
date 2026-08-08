@@ -1,7 +1,7 @@
 /**
  * ============================================================================
- * PRASUN SHOP — PRODUCTS & INTERACTIVITY (PERFORMANCE OPTIMIZED)
- * Production-ready async fetch, pre-indexed search, filtering, and rendering.
+ * PRASUN SHOP — PRODUCTS & INTERACTIVITY (PERFORMANCE & A11Y OPTIMIZED)
+ * Production-ready async fetch, tokenized search, filtering, and optimized rendering.
  * ============================================================================
  */
 
@@ -14,8 +14,11 @@
 
     const CONFIG = {
         STORAGE_KEYS: ["products", "prasun_products"],
+        CACHE_TTL_MS: 1000 * 60 * 30, // 30 minutes cache validity
         API_ENDPOINT: "/api/products.json",
-        DEBOUNCE_MS: 120,
+        FETCH_TIMEOUT_MS: 8000,
+        DEBOUNCE_MS: 150,
+        ITEMS_PER_PAGE: 24, // Prevents DOM freeze on huge lists
         FALLBACK_IMAGE: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
             <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
                 <rect width="800" height="600" fill="#f4f4f5"/>
@@ -26,7 +29,7 @@
         `)}`
     };
 
-    // Global reusable currency formatter (Prevents heavy object creation in render loops)
+    // Global reusable currency formatter
     const currencyFormatter = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -40,14 +43,16 @@
 
     const state = {
         allProducts: [],
+        filteredProducts: [],
         currentCategory: "",
         currentKeyword: "",
         currentSort: "featured",
+        currentPage: 1,
         searchTimer: null,
-        renderFrame: null
+        renderFrame: null,
+        fetchAbortController: null
     };
 
-    // Cached DOM elements to eliminate repeated querySelector calls
     const DOM = {
         productList: null,
         searchInput: null,
@@ -55,6 +60,7 @@
         sortSelect: null,
         resultsCount: null,
         heading: null,
+        liveRegion: null,
         categoryPills: []
     };
 
@@ -98,7 +104,6 @@
         const category = String(item.category ?? "").trim();
         const description = String(item.description ?? "").trim();
 
-        // Pre-compute normalized values once during load to optimize filter loops
         const normalizedCategory = normalize(category);
         const searchIndex = `${normalize(name)} ${normalize(description)} ${normalizedCategory}`;
 
@@ -116,58 +121,104 @@
     }
 
     /* =========================================================================
-       DATA LOADING
+       DATA FETCHING & STORAGE WITH CACHE EXPIRATION
        ========================================================================= */
+
+    function getCachedProducts() {
+        for (const key of CONFIG.STORAGE_KEYS) {
+            try {
+                const stored = localStorage.getItem(key);
+                if (!stored) continue;
+
+                const parsed = JSON.parse(stored);
+                // Validation check for TTL wrapping or standard array
+                if (parsed?.timestamp && (Date.now() - parsed.timestamp > CONFIG.CACHE_TTL_MS)) {
+                    localStorage.removeItem(key); // Expired cache
+                    continue;
+                }
+
+                const data = Array.isArray(parsed) ? parsed : parsed.data;
+                if (Array.isArray(data) && data.length > 0) {
+                    return data.map(normalizeProduct).filter(Boolean);
+                }
+            } catch (e) {
+                console.warn("[Prasun Shop] LocalStorage parse warning:", e);
+            }
+        }
+        return null;
+    }
+
+    async function fetchProductsFromAPI() {
+        if (state.fetchAbortController) {
+            state.fetchAbortController.abort();
+        }
+        state.fetchAbortController = new AbortController();
+
+        const timeoutId = setTimeout(() => state.fetchAbortController.abort(), CONFIG.FETCH_TIMEOUT_MS);
+
+        try {
+            const response = await fetch(CONFIG.API_ENDPOINT, {
+                signal: state.fetchAbortController.signal,
+                headers: { "Accept": "application/json" }
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+            
+            const json = await response.json();
+            const normalized = Array.isArray(json) ? json.map(normalizeProduct).filter(Boolean) : [];
+
+            // Save fresh copy to local storage with timestamp
+            if (normalized.length > 0) {
+                try {
+                    localStorage.setItem(CONFIG.STORAGE_KEYS[0], JSON.stringify({
+                        timestamp: Date.now(),
+                        data: json
+                    }));
+                } catch (e) {
+                    /* Handle quota exceeded gracefully */
+                }
+            }
+
+            return normalized;
+        } catch (error) {
+            if (error.name !== "AbortError") {
+                console.error("[Prasun Shop] Fetch failed:", error);
+                throw error;
+            }
+            return [];
+        }
+    }
 
     async function loadProducts() {
         if (!DOM.productList) return;
 
+        DOM.productList.setAttribute("aria-busy", "true");
+
+        // 1. Try Cache First
+        const cached = getCachedProducts();
+        if (cached) {
+            state.allProducts = cached;
+            readStateFromURL();
+            applyFilters();
+            return;
+        }
+
+        // 2. Fallback to API
         try {
-            let rawData = null;
-
-            // 1. Check LocalStorage
-            for (const key of CONFIG.STORAGE_KEYS) {
-                const stored = localStorage.getItem(key);
-                if (stored) {
-                    rawData = stored;
-                    break;
-                }
-            }
-
-            if (rawData) {
-                try {
-                    const parsed = JSON.parse(rawData);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        state.allProducts = parsed.map(normalizeProduct).filter(Boolean);
-                    }
-                } catch (e) {
-                    console.warn("[Prasun Shop] LocalStorage JSON parse failed, falling back to network.", e);
-                }
-            }
-
-            // 2. Fetch API fallback
-            if (!state.allProducts.length) {
-                const response = await fetch(CONFIG.API_ENDPOINT);
-                if (response.ok) {
-                    const json = await response.json();
-                    state.allProducts = Array.isArray(json)
-                        ? json.map(normalizeProduct).filter(Boolean)
-                        : [];
-                }
-            }
-
+            state.allProducts = await fetchProductsFromAPI();
             if (!state.allProducts.length) {
                 renderEmptyState();
                 updateResultsCount(0);
                 return;
             }
-
             readStateFromURL();
             applyFilters();
-
-        } catch (error) {
-            console.error("[Prasun Shop] Unable to load products:", error);
+        } catch {
             renderErrorState();
+        } finally {
+            DOM.productList.setAttribute("aria-busy", "false");
         }
     }
 
@@ -182,7 +233,6 @@
         state.currentKeyword = params.get("q")?.trim() || "";
         state.currentSort = params.get("sort")?.trim() || "featured";
 
-        // Sync inputs
         if (DOM.searchInput) {
             DOM.searchInput.value = state.currentKeyword;
             toggleClearButtonVisibility(Boolean(state.currentKeyword));
@@ -222,7 +272,7 @@
         DOM.categoryPills.forEach(pill => {
             const pillCat = normalize(pill.dataset.category || "");
             const active = (selected === "" && pillCat === "all") || (selected !== "" && pillCat === selected);
-            
+
             pill.classList.toggle("active", active);
             pill.setAttribute("aria-pressed", active ? "true" : "false");
         });
@@ -235,27 +285,27 @@
     }
 
     /* =========================================================================
-       FILTER & SORT ENGINE
+       FILTER & SORT ENGINE (TOKENIZED)
        ========================================================================= */
 
     function applyFilters() {
         let filtered = state.allProducts;
 
-        // 1. Pre-normalized Category Filter
+        // 1. Category Filter
         if (state.currentCategory) {
             const cat = normalize(state.currentCategory);
             filtered = filtered.filter(p => p._normalizedCategory === cat);
         }
 
-        // 2. Pre-indexed Search Filter
+        // 2. Tokenized Multi-Term Search Filter
         if (state.currentKeyword) {
-            const kw = normalize(state.currentKeyword);
-            filtered = filtered.filter(p => p._searchIndex.includes(kw));
+            const tokens = normalize(state.currentKeyword).split(/\s+/).filter(Boolean);
+            filtered = filtered.filter(p => tokens.every(token => p._searchIndex.includes(token)));
         }
 
-        // 3. Sorting (Avoid copying array if sorting isn't needed)
+        // 3. Sorting
         if (state.currentSort !== "featured") {
-            filtered = [...filtered]; // Shallow copy only when sorting mutate is needed
+            filtered = [...filtered];
             switch (state.currentSort) {
                 case "price-low":
                 case "price-asc":
@@ -275,15 +325,18 @@
             }
         }
 
-        // Batch UI render using requestAnimationFrame
+        state.filteredProducts = filtered;
+        state.currentPage = 1;
+
+        // Schedule RAF rendering
         if (state.renderFrame) cancelAnimationFrame(state.renderFrame);
         state.renderFrame = requestAnimationFrame(() => {
-            renderProducts(filtered);
+            renderProducts(state.filteredProducts);
         });
     }
 
     /* =========================================================================
-       PRODUCT RENDERING
+       OPTIMIZED PRODUCT RENDERING (DOCUMENT FRAGMENT)
        ========================================================================= */
 
     function renderProducts(products) {
@@ -297,11 +350,21 @@
             return;
         }
 
-        // Optimized string joining
-        DOM.productList.innerHTML = products.map(renderProductCard).join("");
+        // Slice for pagination chunking
+        const paginatedItems = products.slice(0, CONFIG.ITEMS_PER_PAGE);
+
+        // Fast Template Rendering via DocumentFragment to avoid raw HTML string parsing overhead
+        const fragment = document.createDocumentFragment();
+        const template = document.createElement("template");
+
+        const cardsHTML = paginatedItems.map(renderProductCardHTML).join("");
+        template.innerHTML = cardsHTML;
+        fragment.appendChild(template.content);
+
+        DOM.productList.replaceChildren(fragment);
     }
 
-    function renderProductCard(product) {
+    function renderProductCardHTML(product) {
         const safeId = encodeURIComponent(product.id);
         const image = product.image || CONFIG.FALLBACK_IMAGE;
 
@@ -353,12 +416,28 @@
     }
 
     /* =========================================================================
-       CONTROLS & LISTENERS
+       CONTROLS & ACCESSIBILITY LISTENERS
        ========================================================================= */
 
     function toggleClearButtonVisibility(show) {
         if (DOM.searchClearBtn) {
             DOM.searchClearBtn.hidden = !show;
+            DOM.searchClearBtn.setAttribute("aria-hidden", show ? "false" : "true");
+        }
+    }
+
+    function updateResultsCount(count) {
+        const text = count === 0
+            ? "No products found"
+            : `${count} ${count === 1 ? "product" : "products"} available`;
+
+        if (DOM.resultsCount) {
+            DOM.resultsCount.textContent = text;
+        }
+
+        // Live Region announcement for screen readers
+        if (DOM.liveRegion) {
+            DOM.liveRegion.textContent = text;
         }
     }
 
@@ -378,7 +457,7 @@
             });
         }
 
-        // Search Clear Button
+        // Clear Search Button
         if (DOM.searchClearBtn) {
             DOM.searchClearBtn.addEventListener("click", () => {
                 if (DOM.searchInput) {
@@ -419,7 +498,7 @@
             });
         }
 
-        // Global Keyboard Shortcut (⌘ K / Ctrl K)
+        // Global Keyboard Shortcut (Cmd+K / Ctrl+K)
         document.addEventListener("keydown", (event) => {
             if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
                 if (DOM.searchInput) {
@@ -430,19 +509,11 @@
             }
         });
 
-        // Browser Back/Forward navigation
+        // Browser Back/Forward navigation handling
         window.addEventListener("popstate", () => {
             readStateFromURL();
             applyFilters();
         });
-    }
-
-    function updateResultsCount(count) {
-        if (!DOM.resultsCount) return;
-
-        DOM.resultsCount.textContent = count === 0
-            ? "No products"
-            : `${count} ${count === 1 ? "product" : "products"}`;
     }
 
     /* =========================================================================
@@ -455,7 +526,7 @@
         const hasFilters = Boolean(state.currentCategory || state.currentKeyword);
 
         DOM.productList.innerHTML = `
-            <div class="products-empty">
+            <div class="products-empty" role="status">
                 <div class="products-empty-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="7"/>
@@ -463,7 +534,7 @@
                     </svg>
                 </div>
                 <h2>${hasFilters ? "No products found" : "No products available"}</h2>
-                <p>${hasFilters ? "Try adjusting your search or category filter." : "Products will appear here when available."}</p>
+                <p>${hasFilters ? "Try adjusting your search query or category filter." : "Products will appear here when available."}</p>
                 ${hasFilters ? `<button type="button" class="products-empty-button" id="clear-product-filters">Clear Filters</button>` : ""}
             </div>
         `;
@@ -475,7 +546,7 @@
         if (!DOM.productList) return;
 
         DOM.productList.innerHTML = `
-            <div class="products-error">
+            <div class="products-error" role="alert">
                 <div class="products-empty-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="9"/>
@@ -484,7 +555,7 @@
                     </svg>
                 </div>
                 <h2>Unable to load products</h2>
-                <p>Please check your connection and try again.</p>
+                <p>Please check your internet connection and try again.</p>
                 <button type="button" class="products-empty-button" id="retry-products">Try Again</button>
             </div>
         `;
@@ -519,6 +590,18 @@
         DOM.resultsCount = $("#products-count") || $(".products-result-count");
         DOM.heading = $("#products-heading") || $(".products-heading");
         DOM.categoryPills = $$(".category-pill");
+
+        // Accessibility Live Region (Creates dynamically if missing)
+        let liveRegion = $("#a11y-status-region");
+        if (!liveRegion) {
+            liveRegion = document.createElement("div");
+            liveRegion.id = "a11y-status-region";
+            liveRegion.className = "visually-hidden";
+            liveRegion.setAttribute("aria-live", "polite");
+            liveRegion.setAttribute("aria-atomic", "true");
+            document.body.appendChild(liveRegion);
+        }
+        DOM.liveRegion = liveRegion;
     }
 
     function initialize() {
