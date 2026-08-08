@@ -850,7 +850,6 @@
             <section
                 id="product-list"
                 class="products-grid"
-                aria-live="polite"
                 aria-busy="true"
                 aria-label="Products">
                 <article class="product-skeleton">
@@ -986,7 +985,6 @@
             const mobileMenu = document.getElementById("products-mobile-menu");
 
             let products = [];
-            let originalProducts = [];
             let currentCategory = "all";
             let currentSearch = "";
             let currentSort = "featured";
@@ -1084,7 +1082,7 @@
                         String(a.name || "").localeCompare(String(b.name || ""))
                     );
                 } else if (currentSort === "featured") {
-                    result.sort((a, b) => originalProducts.indexOf(a) - originalProducts.indexOf(b));
+                    // Preserves original fetched order from products.json without indexOf overhead
                 }
 
                 return result;
@@ -1110,6 +1108,11 @@
 
                 image.src = product.image || "";
                 image.alt = product.name ? `Image of ${product.name}` : "Product image";
+                image.onerror = function () {
+                    this.onerror = null;
+                    this.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='180' viewBox='0 0 240 180'%3E%3Crect width='240' height='180' fill='%23f4f4f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a1a1aa' font-family='sans-serif' font-size='14'%3ENo Image%3C/text%3E%3C/svg%3E";
+                };
+
                 category.textContent = product.category ? product.category.toUpperCase() : "GENERAL";
                 title.textContent = product.name || "Untitled Product";
                 description.textContent = product.description || "";
@@ -1212,10 +1215,20 @@
                 renderProducts();
             });
 
-            searchInput?.addEventListener("input", event => {
+            function debounce(func, wait) {
+                let timeout;
+                return function (...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+
+            const handleSearchInput = debounce(event => {
                 currentSearch = event.target.value;
                 renderProducts();
-            });
+            }, 200);
+
+            searchInput?.addEventListener("input", handleSearchInput);
 
             searchForm?.addEventListener("submit", event => {
                 event.preventDefault();
@@ -1271,8 +1284,48 @@
                 }
             }
 
+            function addToCart(productId) {
+                const product = products.find(p => String(p.id) === String(productId));
+                if (!product) return;
+                try {
+                    const raw = localStorage.getItem("cart");
+                    let cart = [];
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed)) cart = parsed;
+                    }
+                    const existingIndex = cart.findIndex(item => String(item.id) === String(product.id));
+                    if (existingIndex > -1) {
+                        cart[existingIndex].quantity = (Number(cart[existingIndex].quantity) || 1) + 1;
+                    } else {
+                        cart.push({
+                            id: product.id,
+                            name: product.name,
+                            price: product.price,
+                            image: product.image,
+                            category: product.category,
+                            quantity: 1
+                        });
+                    }
+                    localStorage.setItem("cart", JSON.stringify(cart));
+                    updateCartCount();
+                    window.dispatchEvent(new Event("storage"));
+                } catch (error) {
+                    console.error("Cart update error:", error);
+                }
+            }
+
+            productGrid?.addEventListener("click", event => {
+                const button = event.target.closest('[data-action="cart"]');
+                if (!button) return;
+                const productId = button.dataset.id;
+                if (productId) {
+                    addToCart(productId);
+                }
+            });
+
             window.addEventListener("storage", event => {
-                if (event.key === "cart") {
+                if (!event.key || event.key === "cart") {
                     updateCartCount();
                 }
             });
@@ -1289,8 +1342,15 @@
                     if (!Array.isArray(data)) {
                         throw new Error("products.json must contain an array.");
                     }
-                    products = data;
-                    originalProducts = [...data];
+                    
+                    products = data.filter(p =>
+                        p &&
+                        (p.id !== undefined && p.id !== null && p.id !== "") &&
+                        typeof p.name === "string" &&
+                        p.name.trim() !== "" &&
+                        !isNaN(Number(p.price))
+                    );
+
                     currentCategory = getCategoryFromURL();
                     updateActiveCategory();
                     renderProducts();
