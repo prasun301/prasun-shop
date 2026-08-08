@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shopping Cart — PRASUN SHOP</title>
-  <meta name="description" content="Review your shopping cart items and proceed to checkout." />
+  <title>Review Your Bag — PRASUN SHOP</title>
+  <meta name="description" content="Review your shopping bag at PRASUN SHOP." />
   <style>
     :root {
       --apple-bg: #f5f5f7;
+      --apple-card-bg: #ffffff;
       --apple-text: #1d1d1f;
       --apple-gray: #86868b;
       --apple-border: #d2d2d7;
-      --apple-blue: #0071e3;
-      --apple-blue-hover: #0077ed;
-      --apple-danger: #ff3b30;
+      --apple-dark: #1d1d1f;
+      --apple-dark-hover: #333336;
     }
 
     body {
-      background-color: #ffffff;
+      background-color: var(--apple-card-bg);
       color: var(--apple-text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
       margin: 0;
@@ -30,6 +30,7 @@
       top: 0;
       background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       z-index: 100;
     }
 
@@ -63,7 +64,7 @@
       transition: color 0.2s;
     }
 
-    .nav-links a:hover {
+    .nav-links a:hover, .nav-links a.active {
       color: var(--apple-text);
     }
 
@@ -79,7 +80,7 @@
       position: absolute;
       top: -8px;
       right: -10px;
-      background-color: var(--apple-blue);
+      background-color: var(--apple-dark);
       color: white;
       font-size: 0.7rem;
       font-weight: 600;
@@ -91,238 +92,186 @@
       align-items: center;
     }
 
-    .cart-page {
+    .main-container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 3rem 2rem 5rem 2rem;
+      padding: 3rem 2rem;
     }
 
-    .cart-header-row {
+    .page-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
     }
 
-    .cart-page h1 {
+    .page-title {
       font-size: 2.25rem;
-      font-weight: 600;
-      letter-spacing: -0.015em;
+      font-weight: 700;
       margin: 0;
+      letter-spacing: -0.015em;
     }
 
     .btn-clear {
-      background: none;
+      background: transparent;
       border: 1px solid var(--apple-border);
       color: var(--apple-gray);
-      font-size: 0.85rem;
       padding: 0.5rem 1rem;
       border-radius: 8px;
+      font-size: 0.85rem;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .btn-clear:hover {
-      border-color: var(--apple-danger);
-      color: var(--apple-danger);
+      border-color: var(--apple-dark);
+      color: var(--apple-dark);
     }
 
-    .cart-layout {
-      display: grid;
-      grid-template-columns: 1fr 380px;
-      gap: 3rem;
-      align-items: start;
-    }
-
-    @media (max-width: 900px) {
-      .cart-layout {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-      }
-    }
-
-    .cart-items-container {
+    .cart-card {
+      background-color: var(--apple-bg);
+      border: 1px solid var(--apple-border);
+      border-radius: 20px;
+      padding: 3rem 2rem;
+      min-height: 350px;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    .cart-item-card {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      padding: 1.5rem;
-      background-color: var(--apple-bg);
-      border-radius: 16px;
-      border: 1px solid var(--apple-border);
-    }
-
-    .cart-item-image {
-      width: 90px;
-      height: 90px;
-      background-color: #fff;
-      border-radius: 10px;
-      display: flex;
       justify-content: center;
       align-items: center;
-      padding: 0.5rem;
-      flex-shrink: 0;
+      text-align: center;
     }
 
-    .cart-item-image img {
+    .empty-state h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .empty-state p {
+      color: var(--apple-gray);
+      font-size: 0.95rem;
+      margin: 0 0 1.5rem 0;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background-color: var(--apple-dark);
+      color: #ffffff;
+      padding: 0.8rem 2rem;
+      border-radius: 980px;
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: background-color 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--apple-dark-hover);
+    }
+
+    /* Cart Items Table / List View */
+    .cart-items-wrapper {
       width: 100%;
-      height: 100%;
-      object-fit: contain;
-      mix-blend-mode: multiply;
+      text-align: left;
     }
 
-    .cart-item-details {
-      flex: 1;
+    .cart-item-row {
       display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid var(--apple-border);
     }
 
-    .cart-item-title {
+    .cart-item-info {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .cart-item-info img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid var(--apple-border);
+      padding: 6px;
+    }
+
+    .cart-item-info h4 {
+      margin: 0 0 0.3rem 0;
       font-size: 1.05rem;
       font-weight: 600;
-      color: var(--apple-text);
-      text-decoration: none;
     }
 
-    .cart-item-title:hover {
-      color: var(--apple-blue);
-    }
-
-    .cart-item-price {
-      font-size: 0.95rem;
+    .cart-item-info p {
+      margin: 0;
       color: var(--apple-gray);
+      font-size: 0.9rem;
     }
 
     .cart-item-actions {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      margin-top: 0.5rem;
+      gap: 2rem;
     }
 
-    .quantity-selector {
-      display: flex;
-      align-items: center;
-      border: 1px solid var(--apple-border);
-      border-radius: 8px;
-      background: #fff;
-      overflow: hidden;
-    }
-
-    .qty-btn {
-      background: none;
-      border: none;
-      padding: 0.4rem 0.8rem;
-      cursor: pointer;
-      font-size: 1rem;
-      color: var(--apple-text);
-    }
-
-    .qty-btn:hover {
-      background-color: var(--apple-bg);
-    }
-
-    .qty-value {
-      padding: 0 0.5rem;
-      font-size: 0.9rem;
-      font-weight: 500;
-      min-width: 20px;
-      text-align: center;
+    .item-price {
+      font-weight: 600;
+      font-size: 1.05rem;
     }
 
     .btn-remove {
       background: none;
       border: none;
-      color: var(--apple-danger);
-      font-size: 0.85rem;
+      color: var(--apple-gray);
       cursor: pointer;
-      padding: 0;
-      text-decoration: underline;
+      font-size: 0.9rem;
+      transition: color 0.2s;
     }
 
-    .order-summary {
-      background-color: var(--apple-bg);
-      border: 1px solid var(--apple-border);
-      border-radius: 18px;
-      padding: 2rem;
+    .btn-remove:hover {
+      color: #ff3b30;
+    }
+
+    .cart-summary-footer {
+      width: 100%;
+      margin-top: 2rem;
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
+      align-items: flex-end;
+      gap: 1rem;
+      border-top: 1px solid var(--apple-border);
+      padding-top: 1.5rem;
     }
 
-    .order-summary h2 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .summary-row {
+    .summary-line {
       display: flex;
       justify-content: space-between;
-      font-size: 0.95rem;
+      width: 300px;
+      font-size: 1rem;
       color: var(--apple-gray);
     }
 
-    .summary-row.total {
-      font-size: 1.15rem;
-      font-weight: 600;
+    .summary-line.total {
+      font-size: 1.25rem;
+      font-weight: 700;
       color: var(--apple-text);
       border-top: 1px solid var(--apple-border);
-      padding-top: 1rem;
-      margin-top: 0.5rem;
+      padding-top: 0.8rem;
     }
 
-    .btn-apple-primary {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      background-color: var(--apple-blue);
-      color: #ffffff;
-      font-size: 1rem;
-      font-weight: 500;
-      padding: 0.9rem 2rem;
-      border-radius: 980px;
-      border: none;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background-color 0.2s ease;
-      box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3);
+    .footer {
+      border-top: 1px solid var(--apple-border);
+      background-color: var(--apple-bg);
+      padding: 2rem;
       text-align: center;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .btn-apple-primary:hover {
-      background-color: var(--apple-blue-hover);
-    }
-
-    .empty-cart {
-      text-align: center;
-      padding: 4rem 1rem;
-      background: var(--apple-bg);
-      border-radius: 18px;
-      border: 1px solid var(--apple-border);
-    }
-
-    .empty-cart h2 {
-      font-size: 1.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .empty-cart p {
       color: var(--apple-gray);
-      margin-bottom: 1.5rem;
-    }
-
-    .empty-cart .btn-apple-primary {
-      max-width: 220px;
-      margin: 0 auto;
+      font-size: 0.85rem;
+      margin-top: 4rem;
     }
   </style>
 </head>
@@ -331,23 +280,23 @@
   <!-- Header -->
   <header class="header">
     <div class="header-container">
-      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <a href="index.html" class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <path d="M16 10a4 4 0 0 1-8 0"></path>
         </svg>
         <span>PRASUN SHOP</span>
       </a>
-      <nav class="nav-links" aria-label="Main Navigation">
+      <nav class="nav-links">
         <a href="index.html">Shop</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
         <a href="checkout.html">Checkout</a>
       </nav>
       <div class="header-actions">
-        <a href="cart.html" class="cart-icon-wrap" aria-label="View Shopping Cart">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <a href="cart.html" class="cart-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="9" cy="21" r="1"></circle>
             <circle cx="20" cy="21" r="1"></circle>
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
@@ -359,158 +308,114 @@
   </header>
 
   <!-- Main Content -->
-  <main class="cart-page">
-    <div class="cart-header-row">
-      <h1>Review Your Bag</h1>
-      <button type="button" class="btn-clear" onclick="clearEntireCart()">Clear Cart</button>
+  <main class="main-container">
+    <div class="page-header">
+      <h1 class="page-title">Review Your Bag</h1>
+      <button class="btn-clear" onclick="clearCart()">Clear Cart</button>
     </div>
-    <div id="cart-content-area">Loading bag...</div>
+
+    <div class="cart-card" id="cart-card-content">
+      <!-- Injected via JavaScript -->
+    </div>
   </main>
 
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
+  </footer>
+
   <script>
-    function getCart() {
-      try {
-        const data = localStorage.getItem('prasun_cart');
-        return data ? JSON.parse(data) : [];
-      } catch (e) {
-        console.error("Cart storage parse error:", e);
-        return [];
-      }
-    }
-
-    function saveCart(cart) {
-      try {
-        localStorage.setItem('prasun_cart', JSON.stringify(cart));
-      } catch (e) {
-        console.error("Cart storage save error:", e);
-      }
-      renderCart();
-    }
-
     function updateCartBadge() {
-      const cart = getCart();
-      const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
-      const badge = document.getElementById('cart-count');
-      if (badge) {
-        badge.textContent = totalItems;
+      try {
+        const cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
+        const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+        const badge = document.getElementById('cart-count');
+        if (badge) badge.textContent = totalItems;
+      } catch (e) {
+        console.error(e);
       }
     }
 
     function renderCart() {
       updateCartBadge();
-      const container = document.getElementById('cart-content-area');
-      if (!container) return;
-
+      let cart = [];
       try {
-        const cart = getCart();
-        if (!Array.isArray(cart) || cart.length === 0) {
-          container.innerHTML = `
-            <div class="empty-cart">
-              <h2>Your cart is empty</h2>
-              <p>Discover our latest products and add something you love to your cart.</p>
-              <a href="index.html" class="btn-apple-primary">Continue Shopping</a>
-            </div>
-          `;
-          return;
-        }
+        cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
+      } catch (e) {
+        cart = [];
+      }
 
-        let subtotal = 0;
-        let itemsHTML = '';
+      const container = document.getElementById('cart-card-content');
 
-        cart.forEach((item, index) => {
-          const title = item.title || "Selected Item";
-          const priceStr = item.price || "$0.00";
-          const priceNum = parseFloat(priceStr.toString().replace('$', '')) || 0;
-          const qty = Number(item.quantity) || 1;
-          const itemTotal = priceNum * qty;
-          subtotal += itemTotal;
-          const image = item.image || "";
-          const id = item.id || "smart-lamp";
-
-          itemsHTML += `
-            <div class="cart-item-card">
-              <div class="cart-item-image">
-                <img src="${image}" alt="${title}" width="90" height="90" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'90\' height=\'90\'><rect width=\'90\' height=\'90\' fill=\'%23eee\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23aaa\' font-size=\'12\'>No Image</text></svg>'" />
-              </div>
-              <div class="cart-item-details">
-                <a href="product.html?id=${id}" class="cart-item-title">${title}</a>
-                <span class="cart-item-price">${priceStr}</span>
-                <div class="cart-item-actions">
-                  <div class="quantity-selector">
-                    <button type="button" class="qty-btn" onclick="updateQty(${index}, -1)">−</button>
-                    <span class="qty-value">${qty}</span>
-                    <button type="button" class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
-                  </div>
-                  <button type="button" class="btn-remove" onclick="removeItem(${index})">Remove</button>
-                </div>
-              </div>
-            </div>
-          `;
-        });
-
+      if (cart.length === 0) {
         container.innerHTML = `
-          <div class="cart-layout">
-            <div class="cart-items-container">
-              ${itemsHTML}
+          <div class="empty-state">
+            <h3>Your cart is empty</h3>
+            <p>Discover our latest products and add something you love to your cart.</p>
+            <a href="index.html" class="btn-primary">Continue Shopping</a>
+          </div>
+        `;
+        return;
+      }
+
+      let itemsHTML = '<div class="cart-items-wrapper">';
+      let subtotal = 0;
+
+      cart.forEach((item, index) => {
+        const priceNum = parseFloat(item.price.replace('$', '')) || 0;
+        const qty = Number(item.quantity) || 1;
+        subtotal += priceNum * qty;
+
+        itemsHTML += `
+          <div class="cart-item-row">
+            <div class="cart-item-info">
+              <img src="${item.image}" alt="${item.title}" />
+              <div>
+                <h4>${item.title}</h4>
+                <p>Qty: ${qty}</p>
+              </div>
             </div>
-            <div class="order-summary">
-              <h2>Order Summary</h2>
-              <div class="summary-row">
-                <span>Subtotal</span>
-                <span>$${subtotal.toFixed(2)}</span>
-              </div>
-              <div class="summary-row">
-                <span>Shipping & Taxes</span>
-                <span>Calculated at checkout</span>
-              </div>
-              <div class="summary-row total">
-                <span>Total</span>
-                <span>$${subtotal.toFixed(2)}</span>
-              </div>
-              <a href="checkout.html" class="btn-apple-primary">Proceed to Checkout</a>
+            <div class="cart-item-actions">
+              <span class="item-price">$${(priceNum * qty).toFixed(2)}</span>
+              <button class="btn-remove" onclick="removeItem(${index})">Remove</button>
             </div>
           </div>
         `;
-      } catch (err) {
-        console.error("Cart render runtime error:", err);
-        container.innerHTML = `
-          <div class="empty-cart">
-            <h2>Unable to load cart items</h2>
-            <p>Your local cart storage encountered an error.</p>
-            <button type="button" class="btn-apple-primary" onclick="clearEntireCart()" style="max-width: 220px; margin: 0 auto;">Reset Cart</button>
-          </div>
-        `;
-      }
-    }
+      });
 
-    function updateQty(index, change) {
-      let cart = getCart();
-      if (cart[index]) {
-        cart[index].quantity = (Number(cart[index].quantity) || 1) + change;
-        if (cart[index].quantity <= 0) {
-          cart.splice(index, 1);
-        }
-        saveCart(cart);
-      }
+      itemsHTML += `</div>`;
+
+      const shipping = 5.00;
+      const total = subtotal + shipping;
+
+      itemsHTML += `
+        <div class="cart-summary-footer">
+          <div class="summary-line"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+          <div class="summary-line"><span>Shipping</span><span>$${shipping.toFixed(2)}</span></div>
+          <div class="summary-line total"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+          <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <a href="index.html" class="btn-primary" style="background: transparent; color: var(--apple-text); border: 1px solid var(--apple-border);">Continue Shopping</a>
+            <a href="checkout.html" class="btn-primary">Proceed to Checkout</a>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = itemsHTML;
     }
 
     function removeItem(index) {
-      let cart = getCart();
+      let cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
       cart.splice(index, 1);
-      saveCart(cart);
+      localStorage.setItem('prasun_cart', JSON.stringify(cart));
+      renderCart();
     }
 
-    function clearEntireCart() {
+    function clearCart() {
       localStorage.removeItem('prasun_cart');
       renderCart();
     }
 
-    // Execute immediately if DOM is ready, otherwise wait
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', renderCart);
-    } else {
-      renderCart();
-    }
+    document.addEventListener('DOMContentLoaded', renderCart);
   </script>
 </body>
 </html>
