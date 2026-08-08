@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Checkout — PRASUN SHOP</title>
-  <meta name="description" content="Complete your purchase securely at PRASUN SHOP." />
+  <meta name="description" content="Secure checkout at PRASUN SHOP." />
   <style>
     :root {
       --apple-bg: #f5f5f7;
@@ -14,7 +14,6 @@
       --apple-border: #d2d2d7;
       --apple-dark: #1d1d1f;
       --apple-dark-hover: #333336;
-      --apple-success: #34c759;
     }
 
     body {
@@ -65,7 +64,7 @@
       transition: color 0.2s;
     }
 
-    .nav-links a:hover {
+    .nav-links a:hover, .nav-links a.active {
       color: var(--apple-text);
     }
 
@@ -93,81 +92,42 @@
       align-items: center;
     }
 
-    .checkout-page {
+    .checkout-container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 2.5rem 2rem 5rem 2rem;
-    }
-
-    .breadcrumbs {
-      font-size: 0.85rem;
-      color: var(--apple-gray);
-      margin-bottom: 1.5rem;
-    }
-
-    .breadcrumbs a {
-      color: var(--apple-gray);
-      text-decoration: none;
-    }
-
-    .breadcrumbs a:hover {
-      color: var(--apple-text);
-    }
-
-    .checkout-page h1 {
-      font-size: 2.25rem;
-      font-weight: 600;
-      letter-spacing: -0.015em;
-      margin-top: 0;
-      margin-bottom: 2.5rem;
-    }
-
-    .checkout-layout {
+      padding: 3rem 2rem;
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
       gap: 3rem;
-      align-items: start;
     }
 
     @media (max-width: 900px) {
-      .checkout-layout {
+      .checkout-container {
         grid-template-columns: 1fr;
-        gap: 2rem;
       }
     }
 
-    .checkout-form-section {
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-    }
-
-    .form-card {
+    .section-box {
       background-color: var(--apple-bg);
       border: 1px solid var(--apple-border);
       border-radius: 20px;
       padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
+      margin-bottom: 2rem;
     }
 
-    .form-card h2 {
+    .section-title {
       font-size: 1.25rem;
       font-weight: 600;
-      margin: 0 0 0.5rem 0;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      color: var(--apple-text);
     }
 
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
+      margin-bottom: 1.2rem;
     }
 
     @media (max-width: 600px) {
@@ -176,164 +136,163 @@
       }
     }
 
-    label {
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .form-group label {
       font-size: 0.85rem;
       font-weight: 500;
       color: var(--apple-text);
     }
 
-    input, select {
+    .form-group input, 
+    .select-wrapper select {
       width: 100%;
       padding: 0.85rem 1rem;
+      background-color: #ffffff;
       border: 1px solid var(--apple-border);
       border-radius: 12px;
-      background-color: #ffffff;
       font-size: 0.95rem;
       color: var(--apple-text);
       box-sizing: border-box;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    input:focus, select:focus {
       outline: none;
-      border-color: var(--apple-dark);
-      box-shadow: 0 0 0 3px rgba(29, 29, 31, 0.1);
+      transition: border-color 0.2s;
+      font-family: inherit;
     }
 
-    /* Order Summary Sidebar */
-    .order-summary-card {
+    .form-group input:focus, 
+    .select-wrapper select:focus {
+      border-color: var(--apple-dark);
+    }
+
+    /* Standardized Dropdown Arrow Positioning */
+    .select-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .select-wrapper select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      padding-right: 2.5rem;
+      cursor: pointer;
+    }
+
+    .select-wrapper::after {
+      content: "";
+      position: absolute;
+      right: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid var(--apple-text);
+      pointer-events: none;
+    }
+
+    /* Order Summary Card */
+    .order-summary {
       background-color: var(--apple-bg);
       border: 1px solid var(--apple-border);
       border-radius: 20px;
       padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
+      height: fit-content;
       position: sticky;
-      top: 5.5rem;
-    }
-
-    .order-summary-card h2 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .summary-items-list {
-      max-height: 250px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      padding-right: 0.5rem;
+      top: 6rem;
     }
 
     .summary-item {
       display: flex;
       align-items: center;
       gap: 1rem;
-      font-size: 0.95rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--apple-border);
+      margin-bottom: 1.5rem;
     }
 
     .summary-item img {
-      width: 50px;
-      height: 50px;
+      width: 60px;
+      height: 60px;
       object-fit: contain;
-      background: #fff;
+      background: #ffffff;
       border-radius: 10px;
       border: 1px solid var(--apple-border);
-      padding: 2px;
+      padding: 4px;
     }
 
-    .summary-item-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .summary-item-title {
-      font-weight: 500;
-      color: var(--apple-text);
-    }
-
-    .summary-item-qty {
-      font-size: 0.8rem;
-      color: var(--apple-gray);
-    }
-
-    .summary-item-price {
+    .summary-details h4 {
+      margin: 0 0 0.2rem 0;
+      font-size: 0.95rem;
       font-weight: 600;
     }
 
-    .summary-divider {
-      height: 1px;
-      background-color: var(--apple-border);
-      border: none;
+    .summary-details p {
       margin: 0;
+      font-size: 0.85rem;
+      color: var(--apple-gray);
     }
 
     .summary-row {
       display: flex;
       justify-content: space-between;
+      margin-bottom: 0.8rem;
       font-size: 0.95rem;
       color: var(--apple-gray);
     }
 
-    .summary-row.total {
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1.2rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--apple-border);
       font-size: 1.15rem;
       font-weight: 600;
       color: var(--apple-text);
-      padding-top: 0.5rem;
     }
 
-    .btn-apple-primary {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
+    .btn-place-order {
+      display: block;
+      width: 100%;
       background-color: var(--apple-dark);
       color: #ffffff;
       font-size: 1rem;
       font-weight: 500;
-      padding: 0.9rem 2rem;
+      text-align: center;
+      padding: 0.95rem;
       border-radius: 980px;
       border: none;
       cursor: pointer;
-      text-decoration: none;
-      transition: background-color 0.2s ease, transform 0.1s ease;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-      width: 100%;
-      box-sizing: border-box;
-      margin-top: 0.5rem;
+      margin-top: 1.5rem;
+      transition: background-color 0.2s;
     }
 
-    .btn-apple-primary:hover {
+    .btn-place-order:hover {
       background-color: var(--apple-dark-hover);
     }
 
-    .btn-apple-primary:active {
-      transform: scale(0.98);
-    }
-
-    .success-container {
-      text-align: center;
-      padding: 4rem 2rem;
-      background: var(--apple-bg);
-      border-radius: 20px;
-      border: 1px solid var(--apple-border);
-      max-width: 600px;
-      margin: 2rem auto;
-    }
-
-    .success-container h2 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      color: var(--apple-success);
-    }
-
-    .success-container p {
+    .empty-cart-msg {
       color: var(--apple-gray);
-      margin-bottom: 2rem;
-      line-height: 1.5;
+      text-align: center;
+      padding: 2rem 0;
+      font-size: 0.95rem;
+    }
+
+    .footer {
+      border-top: 1px solid var(--apple-border);
+      background-color: var(--apple-bg);
+      padding: 2rem;
+      text-align: center;
+      color: var(--apple-gray);
+      font-size: 0.85rem;
+      margin-top: 4rem;
     }
   </style>
 </head>
@@ -342,23 +301,23 @@
   <!-- Header -->
   <header class="header">
     <div class="header-container">
-      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <a href="index.html" class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <path d="M16 10a4 4 0 0 1-8 0"></path>
         </svg>
         <span>PRASUN SHOP</span>
       </a>
-      <nav class="nav-links" aria-label="Main Navigation">
+      <nav class="nav-links">
         <a href="index.html">Shop</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
-        <a href="checkout.html" style="color: var(--apple-text); font-weight: 500;">Checkout</a>
+        <a href="checkout.html" class="active">Checkout</a>
       </nav>
       <div class="header-actions">
-        <a href="cart.html" class="cart-icon-wrap" aria-label="View Shopping Cart">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <a href="cart.html" class="cart-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="9" cy="21" r="1"></circle>
             <circle cx="20" cy="21" r="1"></circle>
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
@@ -369,373 +328,150 @@
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="checkout-page">
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="index.html">Home</a> / <a href="cart.html">Cart</a> / <span style="color: var(--apple-text);">Checkout</span>
-    </nav>
-    
-    <h1>Checkout</h1>
+  <!-- Checkout Main Content -->
+  <main class="checkout-container">
+    <div class="checkout-form-section">
+      
+      <!-- Contact Information -->
+      <div class="section-box">
+        <h3 class="section-title">Contact Information</h3>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" placeholder="+1 (555) 000-0000" />
+        </div>
+      </div>
 
-    <div id="checkout-content">
-      <!-- Dynamically filled layout -->
+      <!-- Shipping Address -->
+      <div class="section-box">
+        <h3 class="section-title">Shipping Address</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fname">First Name</label>
+            <input type="text" id="fname" placeholder="John" />
+          </div>
+          <div class="form-group">
+            <label for="lname">Last Name</label>
+            <input type="text" id="lname" placeholder="Doe" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="address">Street Address</label>
+          <input type="text" id="address" placeholder="123 Main St, Apartment or Suite" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" id="city" placeholder="New York" />
+          </div>
+          <div class="form-group">
+            <label for="zip">Postal / ZIP Code</label>
+            <input type="text" id="zip" placeholder="10001" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="country">Country / Region</label>
+          <div class="select-wrapper">
+            <select id="country">
+              <option value="United States" selected>United States</option>
+              <option value="Canada">Canada</option>
+              <option value="United Kingdom">United Kingdom</option>
+              <option value="Australia">Australia</option>
+              <option value="Bangladesh">Bangladesh</option>
+              <option value="Germany">Germany</option>
+              <option value="France">France</option>
+              <option value="Japan">Japan</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Order Summary Section -->
+    <div class="order-summary">
+      <h3 class="section-title">Order Summary</h3>
+      <div id="summary-items-container">
+        <!-- Injected via JavaScript -->
+      </div>
     </div>
   </main>
 
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
+  </footer>
+
   <script>
-    function getCart() {
-      try {
-        const data = localStorage.getItem('prasun_cart');
-        return data ? JSON.parse(data) : [];
-      } catch (e) {
-        return [];
-      }
-    }
-
     function updateCartBadge() {
-      const cart = getCart();
-      const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
-      const badge = document.getElementById('cart-count');
-      if (badge) {
-        badge.textContent = totalItems;
+      try {
+        const cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
+        const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+        const badge = document.getElementById('cart-count');
+        if (badge) badge.textContent = totalItems;
+      } catch (e) {
+        console.error(e);
       }
     }
 
-    function renderCheckout() {
+    function renderCheckoutSummary() {
       updateCartBadge();
-      const container = document.getElementById('checkout-content');
-      const cart = getCart();
+      let cart = [];
+      try {
+        cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
+      } catch (e) {
+        cart = [];
+      }
 
-      if (!Array.isArray(cart) || cart.length === 0) {
+      const container = document.getElementById('summary-items-container');
+
+      if (cart.length === 0) {
         container.innerHTML = `
-          <div class="success-container">
-            <h2>Your cart is empty</h2>
-            <p>You cannot proceed to checkout without any items in your bag.</p>
-            <a href="index.html" class="btn-apple-primary" style="max-width: 220px; margin: 0 auto;">Return to Shop</a>
-          </div>
+          <div class="empty-cart-msg">Your bag is empty.</div>
+          <div class="summary-row"><span>Subtotal</span><span>$0.00</span></div>
+          <div class="summary-row"><span>Shipping</span><span>$0.00</span></div>
+          <div class="summary-total"><span>Total</span><span>$0.00</span></div>
+          <button class="btn-place-order" onclick="window.location.href='index.html'">Return to Shop</button>
         `;
         return;
       }
 
+      let itemsHTML = '';
       let subtotal = 0;
-      let summaryItemsHTML = '';
 
       cart.forEach(item => {
-        const title = item.title || "Item";
-        const priceStr = item.price || "$0.00";
-        const priceNum = parseFloat(priceStr.toString().replace('$', '')) || 0;
+        const priceNum = parseFloat(item.price.replace('$', '')) || 0;
         const qty = Number(item.quantity) || 1;
-        const itemTotal = priceNum * qty;
-        subtotal += itemTotal;
-        const image = item.image || "";
+        subtotal += priceNum * qty;
 
-        summaryItemsHTML += `
+        itemsHTML += `
           <div class="summary-item">
-            <img src="${image}" alt="${title}" onerror="this.style.display='none'" />
-            <div class="summary-item-info">
-              <span class="summary-item-title">${title}</span>
-              <span class="summary-item-qty">Qty: ${qty}</span>
+            <img src="${item.image}" alt="${item.title}" />
+            <div class="summary-details">
+              <h4>${item.title}</h4>
+              <p>Qty: ${qty}</p>
             </div>
-            <span class="summary-item-price">$${itemTotal.toFixed(2)}</span>
+            <div style="margin-left: auto; font-weight: 600; font-size: 0.95rem;">$${(priceNum * qty).toFixed(2)}</div>
           </div>
         `;
       });
 
-      const shippingCost = 5.00;
-      const total = subtotal + shippingCost;
+      const shipping = 5.00;
+      const total = subtotal + shipping;
 
       container.innerHTML = `
-        <form id="checkout-form" onsubmit="handlePlaceOrder(event)">
-          <div class="checkout-layout">
-            <!-- Left Side: Form Fields -->
-            <div class="checkout-form-section">
-              <div class="form-card">
-                <h2>Contact Information</h2>
-                <div class="form-group">
-                  <label for="email">Email Address</label>
-                  <input type="email" id="email" required placeholder="you@example.com" />
-                </div>
-                <div class="form-group">
-                  <label for="phone">Phone Number</label>
-                  <input type="tel" id="phone" required placeholder="+1 (555) 000-0000" />
-                </div>
-              </div>
-
-              <div class="form-card">
-                <h2>Shipping Address</h2>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="firstname">First Name</label>
-                    <input type="text" id="firstname" required placeholder="John" />
-                  </div>
-                  <div class="form-group">
-                    <label for="lastname">Last Name</label>
-                    <input type="text" id="lastname" required placeholder="Doe" />
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="address">Street Address</label>
-                  <input type="text" id="address" required placeholder="123 Main St, Apartment or Suite" />
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label for="city">City</label>
-                    <input type="text" id="city" required placeholder="New York" />
-                  </div>
-                  <div class="form-group">
-                    <label for="zip">Postal / ZIP Code</label>
-                    <input type="text" id="zip" required placeholder="10001" />
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="country">Country / Region</label>
-                  <select id="country" required>
-                    <option value="">Select a country</option>
-                    <option value="AF">Afghanistan</option>
-                    <option value="AL">Albania</option>
-                    <option value="DZ">Algeria</option>
-                    <option value="AD">Andorra</option>
-                    <option value="AO">Angola</option>
-                    <option value="AG">Antigua and Barbuda</option>
-                    <option value="AR">Argentina</option>
-                    <option value="AM">Armenia</option>
-                    <option value="AU">Australia</option>
-                    <option value="AT">Austria</option>
-                    <option value="AZ">Azerbaijan</option>
-                    <option value="BS">Bahamas</option>
-                    <option value="BH">Bahrain</option>
-                    <option value="BD" selected>Bangladesh</option>
-                    <option value="BB">Barbados</option>
-                    <option value="BY">Belarus</option>
-                    <option value="BE">Belgium</option>
-                    <option value="BZ">Belize</option>
-                    <option value="BJ">Benin</option>
-                    <option value="BT">Bhutan</option>
-                    <option value="BO">Bolivia</option>
-                    <option value="BA">Bosnia and Herzegovina</option>
-                    <option value="BW">Botswana</option>
-                    <option value="BR">Brazil</option>
-                    <option value="BN">Brunei</option>
-                    <option value="BG">Bulgaria</option>
-                    <option value="BF">Burkina Faso</option>
-                    <option value="BI">Burundi</option>
-                    <option value="CV">Cabo Verde</option>
-                    <option value="KH">Cambodia</option>
-                    <option value="CM">Cameroon</option>
-                    <option value="CA">Canada</option>
-                    <option value="CF">Central African Republic</option>
-                    <option value="TD">Chad</option>
-                    <option value="CL">Chile</option>
-                    <option value="CN">China</option>
-                    <option value="CO">Colombia</option>
-                    <option value="KM">Comoros</option>
-                    <option value="CG">Congo</option>
-                    <option value="CR">Costa Rica</option>
-                    <option value="HR">Croatia</option>
-                    <option value="CU">Cuba</option>
-                    <option value="CY">Cyprus</option>
-                    <option value="CZ">Czechia</option>
-                    <option value="DK">Denmark</option>
-                    <option value="DJ">Djibouti</option>
-                    <option value="DM">Dominica</option>
-                    <option value="DO">Dominican Republic</option>
-                    <option value="EC">Ecuador</option>
-                    <option value="EG">Egypt</option>
-                    <option value="SV">El Salvador</option>
-                    <option value="GQ">Equatorial Guinea</option>
-                    <option value="ER">Eritrea</option>
-                    <option value="EE">Estonia</option>
-                    <option value="SZ">Eswatini</option>
-                    <option value="ET">Ethiopia</option>
-                    <option value="FJ">Fiji</option>
-                    <option value="FI">Finland</option>
-                    <option value="FR">France</option>
-                    <option value="GA">Gabon</option>
-                    <option value="GM">Gambia</option>
-                    <option value="GE">Georgia</option>
-                    <option value="DE">Germany</option>
-                    <option value="GH">Ghana</option>
-                    <option value="GR">Greece</option>
-                    <option value="GD">Grenada</option>
-                    <option value="GT">Guatemala</option>
-                    <option value="GN">Guinea</option>
-                    <option value="GW">Guinea-Bissau</option>
-                    <option value="GY">Guyana</option>
-                    <option value="HT">Haiti</option>
-                    <option value="HN">Honduras</option>
-                    <option value="HU">Hungary</option>
-                    <option value="IS">Iceland</option>
-                    <option value="IN">India</option>
-                    <option value="ID">Indonesia</option>
-                    <option value="IR">Iran</option>
-                    <option value="IQ">Iraq</option>
-                    <option value="IE">Ireland</option>
-                    <option value="IL">Israel</option>
-                    <option value="IT">Italy</option>
-                    <option value="JM">Jamaica</option>
-                    <option value="JP">Japan</option>
-                    <option value="JO">Jordan</option>
-                    <option value="KZ">Kazakhstan</option>
-                    <option value="KE">Kenya</option>
-                    <option value="KI">Kiribati</option>
-                    <option value="KP">Korea, North</option>
-                    <option value="KR">Korea, South</option>
-                    <option value="KW">Kuwait</option>
-                    <option value="KG">Kyrgyzstan</option>
-                    <option value="LA">Laos</option>
-                    <option value="LV">Latvia</option>
-                    <option value="LB">Lebanon</option>
-                    <option value="LS">Lesotho</option>
-                    <option value="LR">Liberia</option>
-                    <option value="LY">Libya</option>
-                    <option value="LI">Liechtenstein</option>
-                    <option value="LT">Lithuania</option>
-                    <option value="LU">Luxembourg</option>
-                    <option value="MG">Madagascar</option>
-                    <option value="MW">Malawi</option>
-                    <option value="MY">Malaysia</option>
-                    <option value="MV">Maldives</option>
-                    <option value="ML">Mali</option>
-                    <option value="MT">Malta</option>
-                    <option value="MH">Marshall Islands</option>
-                    <option value="MR">Mauritania</option>
-                    <option value="MU">Mauritius</option>
-                    <option value="MX">Mexico</option>
-                    <option value="FM">Micronesia</option>
-                    <option value="MD">Moldova</option>
-                    <option value="MC">Monaco</option>
-                    <option value="MN">Mongolia</option>
-                    <option value="ME">Montenegro</option>
-                    <option value="MA">Morocco</option>
-                    <option value="MZ">Mozambique</option>
-                    <option value="MM">Myanmar</option>
-                    <option value="NA">Namibia</option>
-                    <option value="NR">Nauru</option>
-                    <option value="NP">Nepal</option>
-                    <option value="NL">Netherlands</option>
-                    <option value="NZ">New Zealand</option>
-                    <option value="NI">Nicaragua</option>
-                    <option value="NE">Niger</option>
-                    <option value="NG">Nigeria</option>
-                    <option value="MK">North Macedonia</option>
-                    <option value="NO">Norway</option>
-                    <option value="OM">Oman</option>
-                    <option value="PK">Pakistan</option>
-                    <option value="PW">Palau</option>
-                    <option value="PA">Panama</option>
-                    <option value="PG">Papua New Guinea</option>
-                    <option value="PY">Paraguay</option>
-                    <option value="PE">Peru</option>
-                    <option value="PH">Philippines</option>
-                    <option value="PL">Poland</option>
-                    <option value="PT">Portugal</option>
-                    <option value="QA">Qatar</option>
-                    <option value="RO">Romania</option>
-                    <option value="RU">Russia</option>
-                    <option value="RW">Rwanda</option>
-                    <option value="KN">Saint Kitts and Nevis</option>
-                    <option value="LC">Saint Lucia</option>
-                    <option value="VC">Saint Vincent and the Grenadines</option>
-                    <option value="WS">Samoa</option>
-                    <option value="SM">San Marino</option>
-                    <option value="ST">Sao Tome and Principe</option>
-                    <option value="SA">Saudi Arabia</option>
-                    <option value="SN">Senegal</option>
-                    <option value="RS">Serbia</option>
-                    <option value="SC">Seychelles</option>
-                    <option value="SL">Sierra Leone</option>
-                    <option value="SG">Singapore</option>
-                    <option value="SK">Slovakia</option>
-                    <option value="SI">Slovenia</option>
-                    <option value="SB">Solomon Islands</option>
-                    <option value="SO">Somalia</option>
-                    <option value="ZA">South Africa</option>
-                    <option value="SS">South Sudan</option>
-                    <option value="ES">Spain</option>
-                    <option value="LK">Sri Lanka</option>
-                    <option value="SD">Sudan</option>
-                    <option value="SR">Suriname</option>
-                    <option value="SE">Sweden</option>
-                    <option value="CH">Switzerland</option>
-                    <option value="SY">Syria</option>
-                    <option value="TW">Taiwan</option>
-                    <option value="TJ">Tajikistan</option>
-                    <option value="TZ">Tanzania</option>
-                    <option value="TH">Thailand</option>
-                    <option value="TL">Timor-Leste</option>
-                    <option value="TG">Togo</option>
-                    <option value="TO">Tonga</option>
-                    <option value="TT">Trinidad and Tobago</option>
-                    <option value="TN">Tunisia</option>
-                    <option value="TR">Turkey</option>
-                    <option value="TM">Turkmenistan</option>
-                    <option value="TV">Tuvalu</option>
-                    <option value="UG">Uganda</option>
-                    <option value="UA">Ukraine</option>
-                    <option value="AE">United Arab Emirates</option>
-                    <option value="GB">United Kingdom</option>
-                    <option value="US">United States</option>
-                    <option value="UY">Uruguay</option>
-                    <option value="UZ">Uzbekistan</option>
-                    <option value="VU">Vanuatu</option>
-                    <option value="VA">Vatican City</option>
-                    <option value="VE">Venezuela</option>
-                    <option value="VN">Vietnam</option>
-                    <option value="YE">Yemen</option>
-                    <option value="ZM">Zambia</option>
-                    <option value="ZW">Zimbabwe</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right Side: Order Summary Sidebar -->
-            <div class="order-summary-card">
-              <h2>Order Summary</h2>
-              <div class="summary-items-list">
-                ${summaryItemsHTML}
-              </div>
-              <hr class="summary-divider" />
-              <div class="summary-row">
-                <span>Subtotal</span>
-                <span>$${subtotal.toFixed(2)}</span>
-              </div>
-              <div class="summary-row">
-                <span>Shipping</span>
-                <span>$${shippingCost.toFixed(2)}</span>
-              </div>
-              <hr class="summary-divider" />
-              <div class="summary-row total">
-                <span>Total</span>
-                <span>$${total.toFixed(2)}</span>
-              </div>
-              <button type="submit" class="btn-apple-primary">Place Order</button>
-            </div>
-          </div>
-        </form>
+        ${itemsHTML}
+        <div class="summary-row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+        <div class="summary-row"><span>Shipping</span><span>$${shipping.toFixed(2)}</span></div>
+        <div class="summary-total"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+        <button class="btn-place-order" onclick="alert('Order placed successfully!'); localStorage.removeItem('prasun_cart'); window.location.href='index.html';">Place Order</button>
       `;
     }
 
-    function handlePlaceOrder(event) {
-      event.preventDefault();
-      localStorage.removeItem('prasun_cart');
-      updateCartBadge();
-
-      const container = document.getElementById('checkout-content');
-      container.innerHTML = `
-        <div class="success-container">
-          <h2>Order Placed Successfully! 🎉</h2>
-          <p>Thank you for shopping with PRASUN SHOP. We have received your order and are getting it ready for shipment. A confirmation email has been sent to your inbox.</p>
-          <a href="index.html" class="btn-apple-primary" style="max-width: 240px; margin: 0 auto;">Continue Shopping</a>
-        </div>
-      `;
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', renderCheckout);
-    } else {
-      renderCheckout();
-    }
+    document.addEventListener('DOMContentLoaded', renderCheckoutSummary);
   </script>
 </body>
 </html>
