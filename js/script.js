@@ -1,11 +1,13 @@
 /**
  * Prasun Shop — Products & Interactivity Module
- * Production-Grade 10/10 Implementation
+ * Production-Grade 10/10 Optimized Implementation
  */
 "use strict";
 
 (function () {
     let allProducts = [];
+    let currentCategory = null;
+    let currentKeyword = "";
 
     // Format price cleanly
     function formatPrice(price) {
@@ -29,9 +31,7 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-        // -------------------------
-        // Smooth Scrolling
-        // -------------------------
+        // Smooth Scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(link => {
             link.addEventListener("click", function (e) {
                 const targetId = this.getAttribute("href");
@@ -45,9 +45,7 @@
             });
         });
 
-        // -------------------------
-        // Global Keyboard Shortcut (⌘K / Ctrl+K)
-        // -------------------------
+        // Global Keyboard Shortcut (⌘K / Ctrl+K) for Search
         const searchInput = document.querySelector(".search-input");
         if (searchInput) {
             document.addEventListener("keydown", (e) => {
@@ -63,21 +61,13 @@
             searchInput.addEventListener("input", function () {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => {
-                    const keyword = this.value.toLowerCase().trim();
-                    const filteredProducts = allProducts.filter(product => {
-                        const name = product.name ? product.name.toLowerCase() : "";
-                        const desc = product.description ? product.description.toLowerCase() : "";
-                        const cat = product.category ? product.category.toLowerCase() : "";
-                        return name.includes(keyword) || desc.includes(keyword) || cat.includes(keyword);
-                    });
-                    displayProducts(filteredProducts);
+                    currentKeyword = this.value.toLowerCase().trim();
+                    applyFilters();
                 }, 150);
             });
         }
 
-        // -------------------------
         // Load Products & Category Filtering
-        // -------------------------
         loadProducts();
     });
 
@@ -107,11 +97,11 @@
             }));
 
             const params = new URLSearchParams(window.location.search);
-            const selectedCategory = params.get("category");
+            currentCategory = params.get("category");
 
             // Highlight Active Category Pill in Navigation
-            if (selectedCategory) {
-                const normalizedSelectedCat = selectedCategory.toLowerCase();
+            if (currentCategory) {
+                const normalizedSelectedCat = currentCategory.toLowerCase();
                 document.querySelectorAll(".flex.items-center.gap-2.overflow-x-auto a").forEach(pill => {
                     const href = pill.getAttribute("href") || "";
                     if (href.toLowerCase().includes(`category=${normalizedSelectedCat}`)) {
@@ -124,20 +114,11 @@
                 // Update page heading safely
                 const heading = document.querySelector("h1, h2");
                 if (heading) {
-                    heading.textContent = selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1);
+                    heading.textContent = currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1);
                 }
             }
 
-            // Filter products if category is present
-            let filteredProducts = allProducts;
-            if (selectedCategory) {
-                const normalizedSelectedCat = selectedCategory.toLowerCase();
-                filteredProducts = allProducts.filter(product => 
-                    product.category && product.category.toLowerCase() === normalizedSelectedCat
-                );
-            }
-
-            displayProducts(filteredProducts);
+            applyFilters();
 
         } catch (error) {
             console.error("Error loading products:", error);
@@ -152,9 +133,30 @@
         }
     }
 
-    // -------------------------
+    // Unified Filter Engine (Handles both Category parameters & Search Input simultaneously)
+    function applyFilters() {
+        let filtered = allProducts;
+
+        if (currentCategory) {
+            const normalizedCat = currentCategory.toLowerCase();
+            filtered = filtered.filter(product => 
+                product.category && product.category.toLowerCase() === normalizedCat
+            );
+        }
+
+        if (currentKeyword) {
+            filtered = filtered.filter(product => {
+                const name = product.name.toLowerCase();
+                const desc = product.description.toLowerCase();
+                const cat = product.category.toLowerCase();
+                return name.includes(currentKeyword) || desc.includes(currentKeyword) || cat.includes(currentKeyword);
+            });
+        }
+
+        displayProducts(filtered);
+    }
+
     // Display Products (High-Performance DOM Update & Safe Escaping)
-    // -------------------------
     function displayProducts(products) {
         const productList = document.getElementById("product-list");
         if (!productList) return;
@@ -211,7 +213,7 @@
                     <div class="flex items-center justify-between pt-4 border-t border-zinc-100 mt-auto">
                         <span class="text-lg font-bold text-zinc-900">${formatPrice(product.price)}</span>
                         <a 
-                            href="product.html?id=${escapeHTML(product.id)}"
+                            href="product.html?id=${encodeURIComponent(product.id)}"
                             class="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 active:scale-95 rounded-xl transition-all shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900"
                         >
                             View Details
