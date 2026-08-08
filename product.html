@@ -4,20 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Product Details — PRASUN SHOP</title>
-  <meta name="description" content="View high-performance smart gadgets and accessories." />
+  <meta name="description" content="View product details and purchase securely at PRASUN SHOP." />
   <style>
     :root {
       --apple-bg: #f5f5f7;
+      --apple-card-bg: #ffffff;
       --apple-text: #1d1d1f;
       --apple-gray: #86868b;
       --apple-border: #d2d2d7;
+      --apple-dark: #1d1d1f;
+      --apple-dark-hover: #333336;
       --apple-blue: #0071e3;
-      --apple-blue-hover: #0077ed;
-      --apple-success: #34c759;
     }
 
     body {
-      background-color: #ffffff;
+      background-color: var(--apple-card-bg);
       color: var(--apple-text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
       margin: 0;
@@ -30,6 +31,7 @@
       top: 0;
       background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       z-index: 100;
     }
 
@@ -79,7 +81,7 @@
       position: absolute;
       top: -8px;
       right: -10px;
-      background-color: var(--apple-blue);
+      background-color: var(--apple-dark);
       color: white;
       font-size: 0.7rem;
       font-weight: 600;
@@ -91,16 +93,16 @@
       align-items: center;
     }
 
-    .product-detail-page {
-      max-width: 1200px;
+    .product-main {
+      max-width: 1100px;
       margin: 0 auto;
-      padding: 2rem 2rem 5rem 2rem;
+      padding: 3rem 2rem 5rem 2rem;
     }
 
     .breadcrumbs {
       font-size: 0.85rem;
       color: var(--apple-gray);
-      margin-bottom: 2.5rem;
+      margin-bottom: 2rem;
     }
 
     .breadcrumbs a {
@@ -112,77 +114,61 @@
       color: var(--apple-text);
     }
 
-    .product-detail-container {
+    .product-grid {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: 1fr 1fr;
       gap: 4rem;
-      align-items: start;
+      align-items: center;
     }
 
-    @media (max-width: 850px) {
-      .product-detail-container {
+    @media (max-width: 768px) {
+      .product-grid {
         grid-template-columns: 1fr;
         gap: 2rem;
       }
     }
 
-    .product-detail-image {
+    .product-image-container {
       background-color: var(--apple-bg);
-      border-radius: 18px;
+      border: 1px solid var(--apple-border);
+      border-radius: 24px;
       padding: 3rem;
       display: flex;
       justify-content: center;
       align-items: center;
+      height: 380px;
+      box-sizing: border-box;
     }
 
-    .product-detail-image img {
-      width: 100%;
-      max-width: 500px;
-      height: auto;
+    .product-image-container img {
+      max-width: 100%;
+      max-height: 100%;
       object-fit: contain;
-      mix-blend-mode: multiply;
     }
 
-    .product-detail-info {
+    .product-details {
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
-      padding-top: 1rem;
+      gap: 1.5rem;
     }
 
-    .product-category-tag {
-      font-size: 0.85rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--apple-blue);
-    }
-
-    .product-detail-info h1 {
+    .product-title {
       font-size: 2.5rem;
-      font-weight: 600;
-      line-height: 1.1;
+      font-weight: 700;
       letter-spacing: -0.015em;
       margin: 0;
     }
 
-    .product-detail-price {
-      font-size: 1.75rem;
-      font-weight: 400;
-      letter-spacing: -0.01em;
+    .product-price {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--apple-text);
     }
 
-    .product-divider {
-      height: 1px;
-      background-color: var(--apple-border);
-      border: none;
-      margin: 0.5rem 0;
-    }
-
-    .product-detail-description {
+    .product-description {
       font-size: 1.05rem;
-      line-height: 1.6;
       color: var(--apple-gray);
+      line-height: 1.5;
       margin: 0;
     }
 
@@ -190,9 +176,9 @@
       display: inline-flex;
       justify-content: center;
       align-items: center;
-      background-color: var(--apple-blue);
+      background-color: var(--apple-dark);
       color: #ffffff;
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: 500;
       padding: 0.9rem 2rem;
       border-radius: 980px;
@@ -200,22 +186,25 @@
       cursor: pointer;
       text-decoration: none;
       transition: background-color 0.2s ease, transform 0.1s ease;
-      box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
       margin-top: 1rem;
-      width: 100%;
     }
 
     .btn-apple-primary:hover {
-      background-color: var(--apple-blue-hover);
+      background-color: var(--apple-dark-hover);
     }
 
     .btn-apple-primary:active {
       transform: scale(0.98);
     }
 
-    .product-not-found {
+    .footer {
+      border-top: 1px solid var(--apple-border);
+      background-color: var(--apple-bg);
+      padding: 2rem;
       text-align: center;
-      padding: 5rem 1rem;
+      color: var(--apple-gray);
+      font-size: 0.85rem;
     }
   </style>
 </head>
@@ -225,7 +214,7 @@
   <header class="header">
     <div class="header-container">
       <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <path d="M16 10a4 4 0 0 1-8 0"></path>
@@ -251,137 +240,113 @@
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main id="main-content" class="product-detail-page">
+  <!-- Product Main Content -->
+  <main class="product-main">
     <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="index.html">Home</a> / <a href="index.html">Products</a> / <span id="breadcrumb-title" style="color: var(--apple-text);">Details</span>
+      <a href="index.html">Home</a> / <span id="breadcrumb-title" style="color: var(--apple-text);">Product</span>
     </nav>
 
-    <div id="product-detail-container" class="product-detail-container"></div>
-
-    <div id="product-not-found" class="product-not-found" style="display: none;">
-      <h1>Product Not Found</h1>
-      <p style="color: var(--apple-gray); margin-bottom: 2rem;">The product you're looking for doesn't exist or has been removed.</p>
-      <a href="index.html" class="btn-apple-primary" style="max-width: 200px; margin: 0 auto;">Back to Products</a>
+    <div class="product-grid" id="product-container">
+      <!-- Dynamically injected product info -->
     </div>
   </main>
 
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
+  </footer>
+
   <script>
+    // Product Database Registry
     const productsData = {
       "smart-lamp": {
-        title: "G-Shaped Smart LED Atmosphere Lamp",
-        category: "Smart Lighting",
-        price: "$29.99",
-        description: "Includes built-in Bluetooth speaker and fast wireless charger pad. Designed to elevate your workspace or bedside with multi-color ambient lighting and crystal-clear audio.",
+        id: "smart-lamp",
+        title: "Smart Lamp LED",
+        price: "$49.00",
+        description: "Adaptive lighting engineered with seamless touch response and multiple color temperatures to suit your environment.",
         image: "images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png"
       },
-      "power-bank": {
-        title: "Mini 5000mAh Magnetic Wireless Power Bank",
-        category: "Power & Charging",
-        price: "$39.99",
-        description: "Compact fast-charging portable battery pack for mobile devices. Snaps securely onto your phone for seamless, cable-free power while on the move.",
-        image: "images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg"
-      },
-      "earbuds": {
-        title: "Wireless Noise-Cancelling Sports Earbuds",
-        category: "Audio",
-        price: "$49.99",
-        description: "High-fidelity Bluetooth audio with ergonomic sweat-resistant fit. Engineered for deep bass clarity and stable wear during workouts or daily commutes.",
+      "wireless-buds": {
+        id: "wireless-buds",
+        title: "Wireless Pro Earbuds",
+        price: "$129.00",
+        description: "Immersive spatial audio with active noise cancellation, custom acoustic drivers, and all-day battery life.",
         image: "images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg"
+      },
+      "power-bank": {
+        id: "power-bank",
+        title: "Ultra-Slim Power Bank",
+        price: "$59.00",
+        description: "High-capacity portable charging packed into an ultra-slim aerospace aluminum shell with fast-delivery power output.",
+        image: "images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg"
       }
     };
 
-    function getCart() {
-      try {
-        return JSON.parse(localStorage.getItem('prasun_cart')) || [];
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function saveCart(cart) {
-      localStorage.setItem('prasun_cart', JSON.stringify(cart));
-      updateCartBadge();
-    }
-
     function updateCartBadge() {
-      const cart = getCart();
-      const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-      const badge = document.getElementById('cart-count');
-      if (badge) {
-        badge.textContent = totalItems;
+      try {
+        const cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
+        const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+        const badge = document.getElementById('cart-count');
+        if (badge) {
+          badge.textContent = totalItems;
+        }
+      } catch (e) {
+        console.error(e);
       }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      updateCartBadge();
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const productId = urlParams.get('id');
-      const container = document.getElementById('product-detail-container');
-      const notFound = document.getElementById('product-not-found');
-      const breadcrumbTitle = document.getElementById('breadcrumb-title');
-
-      if (productId && productsData[productId]) {
-        const product = productsData[productId];
-        breadcrumbTitle.textContent = product.title;
-        container.innerHTML = `
-          <div class="product-detail-image">
-            <img src="${product.image}" alt="${product.title}" width="600" height="600" />
-          </div>
-          <div class="product-detail-info">
-            <span class="product-category-tag">${product.category}</span>
-            <h1>${product.title}</h1>
-            <div class="product-detail-price">${product.price}</div>
-            <hr class="product-divider" />
-            <p class="product-detail-description">${product.description}</p>
-            <button type="button" class="btn-apple-primary" data-action="add-cart" data-id="${productId}">
-              Add to Cart
-            </button>
-          </div>
-        `;
-      } else {
-        container.style.display = 'none';
-        notFound.style.display = 'block';
-      }
-    });
-
-    // Global Event Delegation for Add to Cart Buttons
-    document.addEventListener('click', function(event) {
-      const btn = event.target.closest('[data-action="add-cart"]');
-      if (!btn) return;
-
-      const productId = btn.getAttribute('data-id');
+    function addToCart(productId) {
       const product = productsData[productId];
       if (!product) return;
 
-      let cart = getCart();
+      let cart = [];
+      try {
+        cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
+      } catch (e) {
+        cart = [];
+      }
+
       const existingIndex = cart.findIndex(item => item.id === productId);
-      
       if (existingIndex > -1) {
-        cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+        cart[existingIndex].quantity = (Number(cart[existingIndex].quantity) || 1) + 1;
       } else {
         cart.push({
-          id: productId,
+          id: product.id,
           title: product.title,
           price: product.price,
           image: product.image,
           quantity: 1
         });
       }
-      
-      saveCart(cart);
 
-      // Visual feedback
-      const originalText = btn.textContent;
-      btn.textContent = 'Added to Cart ✓';
-      btn.style.backgroundColor = 'var(--apple-success)';
+      localStorage.setItem('prasun_cart', JSON.stringify(cart));
+      updateCartBadge();
+      alert(`Added ${product.title} to your bag!`);
+    }
+
+    function loadProduct() {
+      updateCartBadge();
+      const params = new URLSearchParams(window.location.search);
+      const productId = params.get('id') || 'smart-lamp';
+      const product = productsData[productId] || productsData['smart-lamp'];
+
+      document.getElementById('breadcrumb-title').textContent = product.title;
       
-      setTimeout(() => {
-        btn.textContent = originalText;
-        btn.style.backgroundColor = '';
-      }, 1500);
-    });
+      const container = document.getElementById('product-container');
+      container.innerHTML = `
+        <div class="product-image-container">
+          <img src="${product.image}" alt="${product.title}" />
+        </div>
+        <div class="product-details">
+          <h1 class="product-title">${product.title}</h1>
+          <div class="product-price">${product.price}</div>
+          <p class="product-description">${product.description}</p>
+          <button class="btn-apple-primary" onclick="addToCart('${product.id}')">Add to Bag</button>
+        </div>
+      `;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProduct);
   </script>
 </body>
 </html>
