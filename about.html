@@ -4,86 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>About — PRASUN SHOP</title>
-  <meta name="description" content="Learn more about Prasun Barua and the mission behind PRASUN SHOP." />
-
-  <!-- Favicon Links -->
-  <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: #f8fafc;
-      color: #334155;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      line-height: 1.6;
-    }
-    .header {
-      border-bottom: 1px solid #e2e8f0;
-      position: sticky;
-      top: 0;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(12px);
-      z-index: 100;
-    }
-    .header-container {
-      max-width: 1080px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 1.5rem;
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: #0f172a;
-      font-weight: 700;
-      font-size: 1.15rem;
-    }
+    body { background-color: #f8fafc; color: #334155; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; }
+    .header { border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); z-index: 100; }
+    .header-container { max-width: 1080px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #0f172a; font-weight: 700; font-size: 1.15rem; }
     .nav-links { display: flex; gap: 2rem; }
-    .nav-links a {
-      text-decoration: none;
-      color: #64748b;
-      font-size: 0.95rem;
-      font-weight: 500;
-      transition: color 0.2s ease;
-    }
-    .nav-links a:hover, .nav-links a.active {
-      color: #0f172a;
-      font-weight: 600;
-    }
-    .main-container {
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 0 1.5rem;
-    }
-    h1 { color: #0f172a; font-size: 2rem; font-weight: 800; margin-bottom: 1rem; }
-    p { margin-bottom: 1.25rem; color: #475569; font-size: 1.05rem; }
-    .footer {
-      border-top: 1px solid #e2e8f0;
-      background-color: #ffffff;
-      padding: 2rem;
-      text-align: center;
-      color: #64748b;
-      font-size: 0.85rem;
-      margin-top: 4rem;
-    }
+    .nav-links a { text-decoration: none; color: #64748b; font-size: 0.95rem; font-weight: 500; }
+    .nav-links a:hover, .nav-links a.active { color: #0f172a; font-weight: 600; }
+    .content-card { max-width: 800px; margin: 40px auto; padding: 2.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    h1 { color: #0f172a; font-size: 2.2rem; margin-bottom: 0.5rem; }
+    .subtitle { color: #64748b; font-size: 1.05rem; margin-bottom: 2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; }
+    h2 { color: #0f172a; font-size: 1.3rem; margin: 1.5rem 0 0.5rem 0; }
+    p { margin-bottom: 1rem; color: #334155; font-size: 0.975rem; }
+    a { color: #2563eb; text-decoration: none; }
+    .footer { border-top: 1px solid #e2e8f0; background-color: #ffffff; padding: 2.5rem 1.5rem; text-align: center; color: #64748b; font-size: 0.875rem; margin-top: 4rem; }
+    .footer-container { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 1.25rem; }
+    .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; }
+    .footer-links a { color: #64748b; text-decoration: none; font-weight: 500; }
   </style>
 </head>
 <body>
-
-  <!-- HEADER -->
   <header class="header">
     <div class="header-container">
-      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-        </svg>
+      <a href="index.html" class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
         <span>PRASUN SHOP</span>
       </a>
       <nav class="nav-links">
@@ -94,23 +40,32 @@
     </div>
   </header>
 
-  <!-- MAIN CONTENT -->
-  <main class="main-container">
+  <main class="content-card">
     <h1>About PRASUN SHOP</h1>
-    <p>Welcome to PRASUN SHOP, a dedicated digital bookstore providing clear, intuitive, and practical guides on engineering, technology, and renewable energy.</p>
-    <p>Authored by <strong>Prasun Barua</strong>, each eBook is crafted to simplify complex technical topics—ranging from solar PV testing and semiconductor manufacturing to fundamental electrical engineering principles.</p>
+    <p class="subtitle">Technical literature & practical guides designed for clarity and intuitive understanding.</p>
+
+    <p><strong>PRASUN SHOP</strong> is an independent digital bookstore created and curated by engineer and technical author <strong>Prasun Barua</strong>. The store focuses on delivering structured, practical, and accessible educational guides across engineering disciplines, modern technology, and renewable energy concepts.</p>
+
+    <h2>Author Background & Mission</h2>
+    <p>Engineered topics can often feel unnecessarily complex. The objective of every eBook available in this store is to demystify technical subjects—whether covering solar PV testing, semiconductor manufacturing, or fundamental electrical engineering—through intuitive explanations and clear structure.</p>
+
+    <h2>Digital Delivery & Security</h2>
+    <p>To provide a smooth, safe, and instant purchasing experience, all transactions on PRASUN SHOP are processed through merchant partner Lemon Squeezy, ensuring encrypted checkout and immediate delivery of downloadable PDF files.</p>
+
+    <p>For inquiries, feedback, or licensing options, please visit our <a href="contact.html">Contact Page</a> or visit the author's primary website at <a href="https://prasunbarua.com" target="_blank" rel="noopener">prasunbarua.com</a>.</p>
   </main>
 
-  <!-- Footer -->
   <footer class="footer">
-    <div style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
-      <a href="privacy.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Privacy Policy</a>
-      <a href="terms.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Terms of Service</a>
-      <a href="refund.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Refund Policy</a>
-      <a href="contact.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Contact</a>
+    <div class="footer-container">
+      <div class="footer-links">
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="refund.html">Refund Policy</a>
+      </div>
+      <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener">Prasun Barua</a>. All rights reserved.</p>
     </div>
-    <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color: var(--apple-text); text-decoration: underline; font-weight: 500;">Prasun Barua</a>. All rights reserved.</p>
   </footer>
-
 </body>
 </html>
