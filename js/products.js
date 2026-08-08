@@ -1,6 +1,6 @@
 /**
  * Prasun Shop — Products Page Module
- * Production-Grade 10/10 Implementation (Enhanced with Robust Fallbacks)
+ * Production-Grade Implementation (Embedded with your exact JSON inventory & robust path handling)
  */
 "use strict";
 
@@ -30,18 +30,110 @@
 
     const CART_KEY = "prasunShopCart";
 
-    // Fallback product dataset (prevents breakage when running via file:// protocol or missing products.json)
+    // Your exact products dataset (acts as instant fallback for file:// protocol or missing json)
     const FALLBACK_PRODUCTS = [
-        { id: 1, name: "Advanced UI Kit Pro", category: "electronics", price: 49.00, description: "Enterprise-grade UI components for modern web apps.", image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80" },
-        { id: 2, name: "Minimalist Desk Pad", category: "lifestyle", price: 29.00, description: "Smooth waterproof PU leather desk mat for productivity.", image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=600&q=80" },
-        { id: 3, name: "Ergonomic Laptop Stand", category: "accessories", price: 39.00, description: "Adjustable aluminum stand for improved posture.", image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=600&q=80" },
-        { id: 4, name: "Smart Wireless Hub", category: "smart", price: 89.00, description: "Multi-port connectivity hub with fast charging support.", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80" },
-        { id: 5, name: "Developer Icon Pack", category: "electronics", price: 19.00, description: "Vector icon sets optimized for software developers.", image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80" }
+        {
+            id: "001",
+            sku: "CJSN188416414NM",
+            name: "G-Shaped Smart LED Atmosphere Lamp with Bluetooth Speaker & Wireless Charger",
+            category: "Smart Lighting",
+            price: 29.99,
+            image: "images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png",
+            description: "Upgrade your living space with this multifunctional G-shaped Smart LED Atmosphere Lamp. It combines stylish lighting, Bluetooth music, wireless charging, alarm clock, and smart control features in one modern device. Perfect for bedrooms, living rooms, offices, and gaming spaces.",
+            features: [
+                "15W fast wireless charging",
+                "Built-in Bluetooth speaker",
+                "RGB atmosphere lighting",
+                "APP, voice, remote and button control",
+                "Adjustable brightness (1%-100%)",
+                "Multiple light color modes",
+                "Smart wake-up and sleep mode",
+                "Modern decorative design"
+            ],
+            specifications: {
+                "Material": "Plastic",
+                "Product Type": "Electronic Smart Lamp",
+                "Color Options": "Black, Light Grey, White",
+                "Size": "22.5 × 8.2 × 23 cm",
+                "Package Size": "227 × 86 × 240 mm",
+                "Wireless Charging": "15W",
+                "Control": "APP / Voice / Remote / Button",
+                "Power Input": "100-240V"
+            },
+            rating: 5
+        },
+        {
+            id: "002",
+            sku: "CJCD135893009IR",
+            name: "Mini 5000mAh Magnetic Wireless Power Bank Fast Charging Portable Battery",
+            category: "Power & Charging",
+            price: 39.99,
+            image: "images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg",
+            description: "Stay powered wherever you go with this compact 5000mAh Magnetic Wireless Power Bank. Designed with strong magnetic attachment, fast charging capability, LED power display, and portable lightweight design, it is perfect for travel, work, and daily use.",
+            features: [
+                "5000mAh battery capacity",
+                "Strong magnetic wireless charging",
+                "Six-level magnetic adsorption system",
+                "Fast charging technology",
+                "LED battery display",
+                "Supports wireless and wired charging",
+                "Compact and travel-friendly design",
+                "Airplane safe portable battery"
+            ],
+            specifications: {
+                "Material": "Plastic",
+                "Product Type": "Portable Power Bank",
+                "Battery": "955465 × 1 piece",
+                "Capacity": "5000mAh",
+                "Input": "2.1A",
+                "Output": "2.1A",
+                "Wireless Charging": "5W",
+                "Size": "91 × 64 × 15 mm",
+                "Colors": "Cool Black, Retro Green, Ivory White, Cherry Blossom Pink",
+                "Compatibility": "Apple and compatible mobile devices"
+            },
+            rating: 5
+        },
+        {
+            id: "003",
+            sku: "CJYP270967903CX",
+            name: "High-Quality Noise Cancelling Wireless Bluetooth Sports Earbuds",
+            category: "Audio",
+            price: 49.99,
+            image: "images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg",
+            description: "Experience clear and immersive sound with these stylish Noise Cancelling Wireless Bluetooth Sports Earbuds. Designed for sports, travel, gaming, and everyday listening, they provide comfortable wearing, stable connection, and long battery performance.",
+            features: [
+                "Noise cancellation technology",
+                "Bluetooth wireless connection",
+                "Water-resistant design",
+                "Low-latency gaming mode",
+                "Voice control support",
+                "Hands-free calling",
+                "Long battery life",
+                "Comfortable in-ear design"
+            ],
+            specifications: {
+                "Material": "PC + ABS",
+                "Product Type": "Wireless Bluetooth Earbuds",
+                "Wearing Style": "In-ear",
+                "Transmission Distance": "10 meters",
+                "Battery Life": "4-8 hours",
+                "Colors": "White, Skin Tone, Black",
+                "Features": "Waterproof, Noise Cancellation, Music Playback, Gaming Mode",
+                "Package Size": "120 × 100 × 60 mm"
+            },
+            rating: 5
+        }
     ];
 
     // Helpers
     function normalize(value) {
         return String(value || "").trim().toLowerCase();
+    }
+
+    // Creates a robust slug for matching categories with spaces, symbols, and casing (e.g. "Smart Lighting" -> "smartlighting")
+    function slugifyCategory(value) {
+        return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     }
 
     function formatPrice(price) {
@@ -53,7 +145,6 @@
         }).format(num);
     }
 
-    // Category validation & URL sync
     function getValidCategories() {
         const categories = new Set(["all"]);
         categoryLinks.forEach(link => {
@@ -67,8 +158,7 @@
     function getCategoryFromURL() {
         const params = new URLSearchParams(window.location.search);
         const cat = normalize(params.get("category") || "all");
-        const validCategories = getValidCategories();
-        return validCategories.has(cat) ? cat : "all";
+        return cat;
     }
 
     currentCategory = getCategoryFromURL();
@@ -77,7 +167,7 @@
         categoryLinks.forEach(link => {
             const href = link.getAttribute("href") || "";
             const cat = normalize(link.dataset.category || new URLSearchParams(href.split("?")[1] || "").get("category") || "all");
-            const active = cat === normalize(currentCategory);
+            const active = cat === normalize(currentCategory) || slugifyCategory(cat) === slugifyCategory(currentCategory);
             link.classList.toggle("active", active);
             if (active) {
                 link.setAttribute("aria-current", "page");
@@ -92,47 +182,24 @@
         menuToggle.addEventListener("click", () => {
             const isOpen = mobileMenu.classList.toggle("open");
             menuToggle.setAttribute("aria-expanded", String(isOpen));
-            menuToggle.setAttribute("aria-label", isOpen ? "Close navigation menu" : "Open navigation menu");
         });
 
         mobileMenu.addEventListener("click", event => {
             if (event.target.tagName === "A") {
                 mobileMenu.classList.remove("open");
                 menuToggle.setAttribute("aria-expanded", "false");
-                menuToggle.setAttribute("aria-label", "Open navigation menu");
             }
         });
     }
 
-    // Cart Architecture & Reliability
+    // Cart Architecture
     function getCart() {
         try {
             const stored = localStorage.getItem(CART_KEY);
             if (!stored) return [];
             const parsed = JSON.parse(stored);
-            if (!Array.isArray(parsed)) return [];
-
-            const validCart = [];
-            const seenIds = new Set();
-            for (const item of parsed) {
-                if (!item || item.id === undefined || item.id === null) continue;
-                const idStr = String(item.id);
-                if (seenIds.has(idStr)) continue;
-                seenIds.add(idStr);
-
-                const qty = Number(item.quantity);
-                validCart.push({
-                    id: item.id,
-                    name: String(item.name || "Product"),
-                    price: Number.isFinite(Number(item.price)) ? Number(item.price) : 0,
-                    image: String(item.image || ""),
-                    category: String(item.category || ""),
-                    quantity: Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 1
-                });
-            }
-            return validCart;
+            return Array.isArray(parsed) ? parsed : [];
         } catch (error) {
-            console.error("Error reading cart from localStorage:", error);
             return [];
         }
     }
@@ -142,7 +209,6 @@
             localStorage.setItem(CART_KEY, JSON.stringify(cart));
             return true;
         } catch (error) {
-            console.error("Failed to save cart to localStorage:", error);
             return false;
         }
     }
@@ -205,12 +271,10 @@
         if (skeletonTemplate) {
             productGrid.innerHTML = "";
             const fragment = document.createDocumentFragment();
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < 3; i++) {
                 fragment.appendChild(skeletonTemplate.content.cloneNode(true));
             }
             productGrid.appendChild(fragment);
-        } else {
-            productGrid.innerHTML = `<article class="product-skeleton"><div class="skeleton-image"></div><div class="skeleton-content"><div class="skeleton-line short"></div><div class="skeleton-line medium"></div><div class="skeleton-line long"></div><div class="skeleton-line medium"></div></div></article>`.repeat(4);
         }
     }
 
@@ -222,51 +286,12 @@
         if (emptyState) emptyState.classList.add("hidden");
     }
 
-    function getOrCreateErrorState() {
-        let errEl = document.getElementById("error-state");
-        if (!errEl && emptyState && emptyState.parentNode) {
-            errEl = document.createElement("div");
-            errEl.id = "error-state";
-            errEl.className = "products-empty hidden";
-            errEl.innerHTML = `
-                <div class="products-empty-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                </div>
-                <h2>Unable to load products</h2>
-                <p>Please check your connection and try again.</p>
-                <button type="button" id="retry-button" class="products-empty-button">Try Again</button>
-            `;
-            emptyState.parentNode.insertBefore(errEl, emptyState.nextSibling);
-            errEl.querySelector("#retry-button")?.addEventListener("click", () => {
-                loadProducts();
-            });
-        }
-        return errEl;
-    }
-
-    function showErrorState() {
-        hideEmptyState();
-        if (productGrid) {
-            productGrid.innerHTML = "";
-            productGrid.setAttribute("aria-busy", "false");
-        }
-        if (productCount) {
-            productCount.textContent = "Error loading products";
-        }
-        const errEl = getOrCreateErrorState();
-        errEl?.classList.remove("hidden");
-    }
-
     function hideErrorState() {
         const errEl = document.getElementById("error-state");
         if (errEl) errEl.classList.add("hidden");
     }
 
-    // Product Card Creation (with fallback if <template> is absent)
+    // Product Card Creation
     function createProductCard(product) {
         const productId = product.id !== undefined && product.id !== null ? String(product.id) : "";
 
@@ -279,7 +304,7 @@
             article.innerHTML = `
                 <a class="product-card-link" href="product.html?id=${encodeURIComponent(productId)}">
                     <div class="product-card-image">
-                        <img src="${product.image || ""}" alt="${product.name ? `Image of ${product.name}` : "Product image"}" loading="lazy" decoding="async">
+                        <img src="${product.image || ""}" alt="${product.name ? `Image of ${product.name}` : "Product image"}" loading="lazy">
                     </div>
                 </a>
                 <div class="product-card-body">
@@ -288,7 +313,7 @@
                     <p class="product-description">${product.description || ""}</p>
                     <div class="product-bottom">
                         <p class="product-price">${formatPrice(product.price)}</p>
-                        <button type="button" class="product-cart-button" data-action="cart" data-id="${productId}" aria-label="Add ${product.name || "product"} to cart">
+                        <button type="button" class="product-cart-button" data-action="cart" data-id="${productId}" aria-label="Add to cart">
                             <span>Add to Cart</span>
                         </button>
                     </div>
@@ -309,15 +334,12 @@
 
         if (link && productId) {
             link.href = `product.html?id=${encodeURIComponent(productId)}`;
-        } else if (link) {
-            link.removeAttribute("href");
         }
 
         if (image) {
             image.src = product.image || "";
             image.alt = product.name ? `Image of ${product.name}` : "Product image";
             image.loading = "lazy";
-            image.decoding = "async";
             image.onerror = function () {
                 this.onerror = null;
                 this.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='180' viewBox='0 0 240 180'%3E%3Crect width='240' height='180' fill='%23f4f4f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a1a1aa' font-family='sans-serif' font-size='14'%3ENo Image%3C/text%3E%3C/svg%3E";
@@ -337,29 +359,24 @@
             price.textContent = formatPrice(product.price);
         }
 
-        if (button) {
-            button.type = "button";
-            if (productId) button.dataset.id = productId;
+        if (button && productId) {
+            button.dataset.id = productId;
             button.dataset.action = "cart";
-            button.setAttribute("aria-label", `Add ${product.name || "product"} to cart`);
-        }
-
-        if (article) {
-            if (productId) article.dataset.id = productId;
-            article.dataset.category = product.category || "";
         }
 
         return fragment;
     }
 
-    // Filtering, Search & Stable Sorting
+    // Filtering, Search & Sorting
     function getVisibleProducts() {
         let result = products.map((item, index) => ({ item, index }));
 
         if (normalize(currentCategory) !== "all") {
-            result = result.filter(({ item }) =>
-                normalize(item.category) === normalize(currentCategory)
-            );
+            result = result.filter(({ item }) => {
+                const itemCatSlug = slugifyCategory(item.category);
+                const currentCatSlug = slugifyCategory(currentCategory);
+                return itemCatSlug === currentCatSlug || normalize(item.category) === normalize(currentCategory);
+            });
         }
 
         const keyword = currentSearch.trim().toLowerCase();
@@ -368,31 +385,16 @@
                 const name = normalize(item.name);
                 const category = normalize(item.category);
                 const description = normalize(item.description);
-                return (
-                    name.includes(keyword) ||
-                    category.includes(keyword) ||
-                    description.includes(keyword)
-                );
+                return name.includes(keyword) || category.includes(keyword) || description.includes(keyword);
             });
         }
 
         if (currentSort === "price-low") {
-            result.sort((a, b) => {
-                const diff = (Number(a.item.price) || 0) - (Number(b.item.price) || 0);
-                return diff !== 0 ? diff : a.index - b.index;
-            });
+            result.sort((a, b) => (Number(a.item.price) || 0) - (Number(b.item.price) || 0));
         } else if (currentSort === "price-high") {
-            result.sort((a, b) => {
-                const diff = (Number(b.item.price) || 0) - (Number(a.item.price) || 0);
-                return diff !== 0 ? diff : a.index - b.index;
-            });
+            result.sort((a, b) => (Number(b.item.price) || 0) - (Number(a.item.price) || 0));
         } else if (currentSort === "name") {
-            result.sort((a, b) => {
-                const res = String(a.item.name || "").localeCompare(String(b.item.name || ""));
-                return res !== 0 ? res : a.index - b.index;
-            });
-        } else if (currentSort === "featured") {
-            result.sort((a, b) => a.index - b.index);
+            result.sort((a, b) => String(a.item.name || "").localeCompare(String(b.item.name || "")));
         }
 
         return result.map(({ item }) => item);
@@ -406,9 +408,7 @@
         const visibleProducts = getVisibleProducts();
 
         if (productCount) {
-            productCount.textContent = `${visibleProducts.length} ${
-                visibleProducts.length === 1 ? "product" : "products"
-            } found`;
+            productCount.textContent = `${visibleProducts.length} ${visibleProducts.length === 1 ? "product" : "products"} found`;
         }
 
         if (!visibleProducts.length) {
@@ -427,17 +427,12 @@
         productGrid.appendChild(fragment);
     }
 
-    // Debounce Utility with cancel support
     function debounce(func, wait) {
         let timeout;
-        const debounced = function (...args) {
+        return function (...args) {
             clearTimeout(timeout);
             timeout = setTimeout(() => func.apply(this, args), wait);
         };
-        debounced.cancel = function () {
-            clearTimeout(timeout);
-        };
-        return debounced;
     }
 
     const handleSearchInput = debounce(event => {
@@ -445,32 +440,21 @@
         renderProducts();
     }, 200);
 
-    // Event Listeners setup
+    // Event Listeners
     if (categoryContainer) {
         categoryContainer.addEventListener("click", event => {
             const pill = event.target.closest(".category-pill");
             if (!pill) return;
             event.preventDefault();
 
-            handleSearchInput.cancel();
             if (searchInput) searchInput.value = "";
             currentSearch = "";
 
             const cat = pill.dataset.category || new URLSearchParams((pill.getAttribute("href") || "").split("?")[1] || "").get("category") || "all";
-            const newCategory = normalize(cat);
-            
-            if (newCategory === currentCategory) return;
-            currentCategory = newCategory;
+            currentCategory = normalize(cat);
 
-            const newUrl =
-                currentCategory === "all"
-                    ? "products.html"
-                    : `products.html?category=${encodeURIComponent(currentCategory)}`;
-            
-            const expectedSearch = currentCategory === "all" ? "" : `?category=${encodeURIComponent(currentCategory)}`;
-            if (window.location.search !== expectedSearch) {
-                history.pushState({ category: currentCategory }, "", newUrl);
-            }
+            const newUrl = currentCategory === "all" ? "products.html" : `products.html?category=${encodeURIComponent(currentCategory)}`;
+            history.pushState({ category: currentCategory }, "", newUrl);
 
             updateActiveCategory();
             renderProducts();
@@ -478,7 +462,6 @@
     }
 
     window.addEventListener("popstate", () => {
-        handleSearchInput.cancel();
         if (searchInput) searchInput.value = "";
         currentSearch = "";
         currentCategory = getCategoryFromURL();
@@ -491,21 +474,16 @@
     }
 
     if (searchForm) {
-        searchForm.addEventListener("submit", event => {
-            event.preventDefault();
-        });
+        searchForm.addEventListener("submit", event => event.preventDefault());
     }
 
     if (emptyResetBtn) {
         emptyResetBtn.addEventListener("click", event => {
             event.preventDefault();
-            handleSearchInput.cancel();
             currentCategory = "all";
             currentSearch = "";
             if (searchInput) searchInput.value = "";
-            if (window.location.search !== "") {
-                history.pushState({ category: "all" }, "", "products.html");
-            }
+            history.pushState({ category: "all" }, "", "products.html");
             updateActiveCategory();
             renderProducts();
         });
@@ -518,90 +496,52 @@
         });
     }
 
-    document.addEventListener("keydown", event => {
-        const isShortcut =
-            (event.metaKey || event.ctrlKey) &&
-            event.key.toLowerCase() === "k";
-        if (!isShortcut) return;
-        event.preventDefault();
-        if (searchInput) {
-            searchInput.focus();
-            searchInput.select();
-        }
-    });
-
     if (productGrid) {
         productGrid.addEventListener("click", event => {
             const button = event.target.closest('[data-action="cart"]');
             if (!button) return;
             event.preventDefault();
-            event.stopPropagation();
             const productId = button.dataset.id;
-            if (!productId) return;
-            addToCart(productId);
+            if (productId) addToCart(productId);
         });
     }
 
-    window.addEventListener("storage", event => {
-        if (!event.key || event.key === CART_KEY) {
-            updateCartCount();
-        }
-    });
-
-    // Load Products with sequence tracking & robust fetch/fallback handling
+    // Load Products (Tries multiple relative paths to avoid 404s/CORS issues)
     async function loadProducts() {
         const currentSequence = ++loadSequence;
         try {
             showSkeletons();
             hideErrorState();
-            
+
             let data = null;
-            try {
-                const response = await fetch("data/products.json", {
-                    cache: "no-cache"
-                });
-                if (response.ok) {
-                    data = await response.json();
+            const pathsToTry = ["data/products.json", "products.json"];
+
+            for (const path of pathsToTry) {
+                try {
+                    const response = await fetch(path, { cache: "no-cache" });
+                    if (response.ok) {
+                        data = await response.json();
+                        break;
+                    }
+                } catch (e) {
+                    // Try next path
                 }
-            } catch (fetchErr) {
-                console.warn("Fetch failed (likely file:// protocol CORS restriction), using fallback products.", fetchErr);
             }
 
             if (currentSequence !== loadSequence) return;
 
+            // If fetch fails completely (e.g. strict file:// CORS), use your fallback products JSON
             if (!Array.isArray(data)) {
                 data = FALLBACK_PRODUCTS;
             }
 
-            const seenIds = new Set();
-            const validProducts = [];
-            for (const p of data) {
-                if (!p || p.id === undefined || p.id === null || String(p.id).trim() === "") continue;
-                const idStr = String(p.id);
-                if (seenIds.has(idStr)) continue;
-                seenIds.add(idStr);
-                if (typeof p.name !== "string" || p.name.trim() === "") continue;
-                const parsedPrice = Number(p.price);
-                if (isNaN(parsedPrice)) continue;
-
-                validProducts.push({
-                    id: p.id,
-                    name: p.name.trim(),
-                    price: parsedPrice,
-                    image: String(p.image || ""),
-                    category: String(p.category || "general").trim(),
-                    description: String(p.description || "")
-                });
-            }
-
-            products = validProducts;
+            products = data;
             currentCategory = getCategoryFromURL();
             updateActiveCategory();
             renderProducts();
             updateCartCount();
         } catch (error) {
             if (currentSequence !== loadSequence) return;
-            console.error("Product loading error, applying fallback dataset:", error);
             products = FALLBACK_PRODUCTS;
             currentCategory = getCategoryFromURL();
             updateActiveCategory();
