@@ -55,8 +55,7 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
           </svg>
-          <!-- Hidden via JS if quantity is 0 -->
-          <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold text-white bg-zinc-900 rounded-full shadow-sm transition-opacity duration-200">0</span>
+          <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold text-white bg-zinc-900 rounded-full shadow-sm transition-opacity duration-200 opacity-0 invisible">0</span>
         </a>
 
         <!-- Mobile Menu Toggle Button -->
@@ -95,7 +94,7 @@
       
       <!-- Left Column: Form -->
       <div class="lg:col-span-7 space-y-8">
-        <form id="checkout-form" class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm space-y-8" method="POST">
+        <form id="checkout-form" class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm space-y-8" method="POST" novalidate>
           
           <!-- Contact Information -->
           <section aria-labelledby="contact-heading">
@@ -110,6 +109,7 @@
                   name="email"
                   autocomplete="email" 
                   required
+                  placeholder="you@example.com"
                   class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
                 >
               </div>
@@ -122,6 +122,7 @@
                   name="phone"
                   autocomplete="tel" 
                   required
+                  placeholder="+1 (555) 000-0000"
                   class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
                 >
               </div>
@@ -144,6 +145,7 @@
                   name="name"
                   autocomplete="name" 
                   required
+                  placeholder="John Doe"
                   class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
                 >
               </div>
@@ -155,63 +157,37 @@
                   name="country"
                   autocomplete="country" 
                   required
-                  class="appearance-none w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm cursor-pointer"
-                  style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2371717a%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E'); background-position: right 0.75rem center; background-repeat: no-repeat; background-size: 1.25rem; padding-right: 2.5rem;"
+                  class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm cursor-pointer"
                 >
                   <option value="" disabled selected>Select a country</option>
-                  <!-- Base fallback; JS will dynamically populate valid shipping destinations -->
                   <option value="US">United States</option>
                   <option value="CA">Canada</option>
                   <option value="GB">United Kingdom</option>
                   <option value="AU">Australia</option>
+                  <option value="BD">Bangladesh</option>
                 </select>
               </div>
 
               <div class="sm:col-span-2">
-                <label for="address1" class="block text-sm font-medium text-zinc-700 mb-1.5">Address Line 1</label>
+                <label for="address" class="block text-sm font-medium text-zinc-700 mb-1.5">Street Address</label>
                 <input 
                   type="text" 
-                  id="address1" 
-                  name="address1"
-                  autocomplete="address-line1" 
+                  id="address" 
+                  name="address"
+                  autocomplete="street-address" 
                   required
+                  placeholder="123 Main St, Apartment or suite"
                   class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
                 >
               </div>
 
-              <div class="sm:col-span-2">
-                <label for="address2" class="block text-sm font-medium text-zinc-700 mb-1.5">
-                  Address Line 2 <span class="text-zinc-500 font-normal">(Optional)</span>
-                </label>
-                <input 
-                  type="text" 
-                  id="address2" 
-                  name="address2"
-                  autocomplete="address-line2"
-                  placeholder="Apartment, suite, unit, etc."
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
-                >
-              </div>
-
-              <div class="sm:col-span-2">
+              <div>
                 <label for="city" class="block text-sm font-medium text-zinc-700 mb-1.5">City</label>
                 <input 
                   type="text" 
                   id="city" 
                   name="city"
                   autocomplete="address-level2" 
-                  required
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
-                >
-              </div>
-
-              <div>
-                <label for="state" class="block text-sm font-medium text-zinc-700 mb-1.5">State / Province / Region</label>
-                <input 
-                  type="text" 
-                  id="state" 
-                  name="state"
-                  autocomplete="address-level1"
                   required
                   class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
                 >
@@ -236,9 +212,9 @@
             <button 
               type="submit" 
               id="submit-button"
-              class="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white font-medium rounded-lg text-base transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 disabled:opacity-60 disabled:cursor-not-allowed"
+              class="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white font-medium rounded-lg text-base transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Continue to Payment
+              Place Order
             </button>
 
             <!-- Trust Indicator -->
@@ -246,7 +222,7 @@
               <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
               </svg>
-              <span>Secure payment processing</span>
+              <span>Secure encrypted checkout</span>
             </div>
           </div>
 
@@ -255,51 +231,37 @@
 
       <!-- Right Column: Order Summary (Sticky on Desktop) -->
       <div class="lg:col-span-5">
-        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm lg:sticky lg:top-24">
-          <h2 class="text-lg font-medium text-zinc-900 mb-6">Order Summary</h2>
+        <div id="order-summary" class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm lg:sticky lg:top-24 space-y-6">
+          <h2 class="text-lg font-medium text-zinc-900">Order Summary</h2>
           
-          <div id="order-summary" class="space-y-6">
-            
-            <!-- Dynamic Items Container -->
-            <div id="summary-items" class="space-y-4" aria-live="polite">
-              <!-- Empty state fallback; JS will populate items or update this message -->
-              <p class="text-sm text-zinc-500" id="empty-cart-msg">Loading your order details...</p>
+          <!-- Dynamic Items Container -->
+          <div id="summary-items" class="max-h-72 overflow-y-auto space-y-4 pr-1 divide-y divide-zinc-100" aria-live="polite">
+            <p class="text-sm text-zinc-500 py-4 text-center">Loading your order details...</p>
+          </div>
+
+          <hr class="border-zinc-200">
+
+          <!-- Dynamic Totals -->
+          <dl class="space-y-3 text-sm text-zinc-600">
+            <div class="flex justify-between items-center">
+              <dt>Subtotal</dt>
+              <dd class="font-medium text-zinc-900" id="summary-subtotal">$0.00</dd>
             </div>
 
-            <hr class="border-zinc-200">
+            <div class="flex justify-between items-center">
+              <dt>Shipping</dt>
+              <dd class="font-semibold text-emerald-600" id="summary-shipping">Free</dd>
+            </div>
+          </dl>
 
-            <!-- Dynamic Totals -->
-            <dl class="space-y-3 text-sm text-zinc-600">
-              <div class="flex justify-between items-center">
-                <dt>Subtotal</dt>
-                <dd class="font-medium text-zinc-900" id="summary-subtotal">--</dd>
-              </div>
-              
-              <div class="flex justify-between items-center" id="summary-discount-row" style="display: none;">
-                <dt class="text-zinc-900">Discount</dt>
-                <dd class="font-medium text-zinc-900" id="summary-discount">--</dd>
-              </div>
+          <hr class="border-zinc-200">
 
-              <div class="flex justify-between items-center">
-                <dt>Shipping</dt>
-                <dd class="font-medium text-zinc-900" id="summary-shipping">--</dd>
-              </div>
+          <!-- Final Total -->
+          <dl class="flex justify-between items-center">
+            <dt class="text-base font-semibold text-zinc-900">Total</dt>
+            <dd class="text-xl font-semibold text-zinc-900" id="summary-total">$0.00</dd>
+          </dl>
 
-              <div class="flex justify-between items-center">
-                <dt>Tax</dt>
-                <dd class="font-medium text-zinc-900" id="summary-tax">--</dd>
-              </div>
-            </dl>
-
-            <hr class="border-zinc-200">
-
-            <!-- Final Total -->
-            <dl class="flex justify-between items-center">
-              <dt class="text-base font-semibold text-zinc-900">Total</dt>
-              <dd class="text-xl font-semibold text-zinc-900" id="summary-total">--</dd>
-            </dl>
-
-          </div>
         </div>
       </div>
 
@@ -317,63 +279,7 @@
     </div>
   </footer>
 
-  <!-- Scripts for UI logic & existing JS hooks -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Mobile Navigation Toggle
-      const mobileMenuButton = document.getElementById('mobile-menu-button');
-      const mobileMenu = document.getElementById('mobile-menu');
-      
-      if (mobileMenuButton && mobileMenu) {
-        mobileMenuButton.addEventListener('click', () => {
-          const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
-          mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
-          mobileMenu.classList.toggle('hidden');
-        });
-      }
-
-      // Cart Badge Visibility Logic
-      const cartCount = document.getElementById('cart-count');
-      if (cartCount) {
-        const updateBadgeVisibility = () => {
-          const count = parseInt(cartCount.textContent.trim(), 10) || 0;
-          if (count === 0) {
-            cartCount.classList.add('opacity-0', 'invisible');
-            cartCount.classList.remove('opacity-100', 'visible');
-          } else {
-            cartCount.classList.remove('opacity-0', 'invisible');
-            cartCount.classList.add('opacity-100', 'visible');
-          }
-        };
-
-        updateBadgeVisibility();
-        const observer = new MutationObserver(updateBadgeVisibility);
-        observer.observe(cartCount, { childList: true, characterData: true, subtree: true });
-      }
-
-      // Checkout Form UI State handling for submission
-      const checkoutForm = document.getElementById('checkout-form');
-      const submitBtn = document.getElementById('submit-button');
-      
-      if (checkoutForm && submitBtn) {
-        checkoutForm.addEventListener('submit', () => {
-          if (checkoutForm.checkValidity()) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `
-              <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>Processing...</span>
-            `;
-          }
-        });
-      }
-    });
-  </script>
-
-  <!-- External JS Modules (Deferred) -->
-  <script src="js/cart-count.js" defer></script>
+  <!-- External JS Modules -->
   <script src="js/checkout.js" defer></script>
 
 </body>
