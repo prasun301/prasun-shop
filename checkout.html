@@ -1,296 +1,552 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
-
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Complete your secure purchase at Prasun Shop.">
-  <title>Checkout — Prasun Shop</title>
-  <link rel="canonical" href="https://prasunshop.com/checkout.html">
-  <meta name="theme-color" content="#ffffff">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout — PRASUN SHOP</title>
+  <meta name="description" content="Complete your purchase securely at PRASUN SHOP." />
+  <style>
+    :root {
+      --apple-bg: #f5f5f7;
+      --apple-text: #1d1d1f;
+      --apple-gray: #86868b;
+      --apple-border: #d2d2d7;
+      --apple-blue: #0071e3;
+      --apple-blue-hover: #0077ed;
+      --apple-success: #34c759;
+    }
 
-  <!-- Open Graph / Social Media -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://prasunshop.com/checkout.html">
-  <meta property="og:title" content="Checkout — Prasun Shop">
-  <meta property="og:description" content="Complete your secure purchase at Prasun Shop.">
-  <meta property="og:image" content="https://prasunshop.com/assets/og-image.jpg">
+    body {
+      background-color: #ffffff;
+      color: var(--apple-text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
 
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Checkout — Prasun Shop">
-  <meta name="twitter:description" content="Complete your secure purchase at Prasun Shop.">
+    .header {
+      border-bottom: 1px solid var(--apple-border);
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+    }
 
-  <!-- Favicon Links -->
-  <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
 
-  <!-- Resource Hints for Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--apple-text);
+      font-weight: 600;
+    }
 
-  <!-- Production Compiled Tailwind CSS -->
-  <link rel="stylesheet" href="css/tailwind.css">
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
 
-  <!-- Custom CSS Override -->
-  <link rel="stylesheet" href="css/style.css">
+    .nav-links a {
+      text-decoration: none;
+      color: var(--apple-gray);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--apple-text);
+    }
+
+    .cart-icon-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      color: var(--apple-text);
+      text-decoration: none;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -10px;
+      background-color: var(--apple-blue);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .checkout-page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem 5rem 2rem;
+    }
+
+    .breadcrumbs {
+      font-size: 0.85rem;
+      color: var(--apple-gray);
+      margin-bottom: 1.5rem;
+    }
+
+    .breadcrumbs a {
+      color: var(--apple-gray);
+      text-decoration: none;
+    }
+
+    .breadcrumbs a:hover {
+      color: var(--apple-text);
+    }
+
+    .checkout-page h1 {
+      font-size: 2.25rem;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      margin-top: 0;
+      margin-bottom: 2.5rem;
+    }
+
+    .checkout-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .checkout-layout {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+    }
+
+    .checkout-form-section {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .form-card {
+      background-color: var(--apple-bg);
+      border: 1px solid var(--apple-border);
+      border-radius: 18px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .form-card h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--apple-text);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--apple-border);
+      border-radius: 10px;
+      background-color: #ffffff;
+      font-size: 0.95rem;
+      color: var(--apple-text);
+      box-sizing: border-box;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--apple-blue);
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+    }
+
+    /* Order Summary Sidebar */
+    .order-summary-card {
+      background-color: var(--apple-bg);
+      border: 1px solid var(--apple-border);
+      border-radius: 18px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      position: sticky;
+      top: 5.5rem;
+    }
+
+    .order-summary-card h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .summary-items-list {
+      max-height: 250px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding-right: 0.5rem;
+    }
+
+    .summary-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .summary-item img {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid var(--apple-border);
+      padding: 2px;
+    }
+
+    .summary-item-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .summary-item-title {
+      font-weight: 500;
+      color: var(--apple-text);
+    }
+
+    .summary-item-qty {
+      font-size: 0.8rem;
+      color: var(--apple-gray);
+    }
+
+    .summary-item-price {
+      font-weight: 600;
+    }
+
+    .summary-divider {
+      height: 1px;
+      background-color: var(--apple-border);
+      border: none;
+      margin: 0;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95rem;
+      color: var(--apple-gray);
+    }
+
+    .summary-row.total {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--apple-text);
+      padding-top: 0.5rem;
+    }
+
+    .btn-apple-primary {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--apple-blue);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 0.9rem 2rem;
+      border-radius: 980px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3);
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 0.5rem;
+    }
+
+    .btn-apple-primary:hover {
+      background-color: var(--apple-blue-hover);
+    }
+
+    .btn-apple-primary:active {
+      transform: scale(0.98);
+    }
+
+    .success-container {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: var(--apple-bg);
+      border-radius: 18px;
+      border: 1px solid var(--apple-border);
+      max-width: 600px;
+      margin: 2rem auto;
+    }
+
+    .success-container h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--apple-success);
+    }
+
+    .success-container p {
+      color: var(--apple-gray);
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+  </style>
 </head>
+<body>
 
-<body class="bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-zinc-900 selection:text-white min-h-screen flex flex-col">
-
-  <!-- Modern Header -->
-  <header class="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-zinc-200 transition-all">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      
-      <!-- Brand Logo -->
-      <a href="index.html" class="text-lg font-semibold tracking-tight text-zinc-900 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">
-        Prasun Shop<span class="text-zinc-400">.</span>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span>PRASUN SHOP</span>
       </a>
-
-      <!-- Desktop Navigation Links -->
-      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-600" aria-label="Primary Navigation">
-        <a href="index.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
-        <a href="products.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Products</a>
-        <a href="cart.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Cart</a>
+      <nav class="nav-links" aria-label="Main Navigation">
+        <a href="index.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="checkout.html" style="color: var(--apple-text); font-weight: 500;">Checkout</a>
       </nav>
-
-      <!-- Right Action Items -->
-      <div class="flex items-center gap-3">
-        <!-- Shopping Cart Icon Badge -->
-        <a href="cart.html" class="relative p-2 text-zinc-700 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-full" aria-label="Shopping Cart">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+      <div class="header-actions">
+        <a href="cart.html" class="cart-icon-wrap" aria-label="View Shopping Cart">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
           </svg>
-          <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold text-white bg-zinc-900 rounded-full shadow-sm transition-opacity duration-200 opacity-0 invisible">0</span>
+          <span id="cart-count" class="cart-badge">0</span>
         </a>
-
-        <!-- Mobile Menu Toggle Button -->
-        <button id="mobile-menu-button" type="button" class="md:hidden p-2 text-zinc-700 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-lg" aria-expanded="false" aria-controls="mobile-menu" aria-label="Toggle navigation menu">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-        </button>
       </div>
     </div>
-
-    <!-- Mobile Navigation Drawer -->
-    <nav id="mobile-menu" class="hidden md:hidden border-b border-zinc-200 bg-white px-4 pt-3 pb-5 space-y-2" aria-label="Mobile Navigation" hidden>
-      <a href="index.html" class="block text-sm font-medium text-zinc-700 hover:text-zinc-900 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
-      <a href="products.html" class="block text-sm font-medium text-zinc-700 hover:text-zinc-900 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Products</a>
-      <a href="cart.html" class="block text-sm font-medium text-zinc-700 hover:text-zinc-900 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Cart</a>
-    </nav>
   </header>
 
   <!-- Main Content -->
-  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
-    
-    <!-- Breadcrumb Nav -->
-    <nav class="flex items-center gap-2 text-sm font-medium text-zinc-500 mb-8" aria-label="Breadcrumb">
-      <a href="index.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
-      <span aria-hidden="true" class="text-zinc-300">/</span>
-      <a href="cart.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Cart</a>
-      <span aria-hidden="true" class="text-zinc-300">/</span>
-      <span class="text-zinc-900" aria-current="page">Checkout</span>
+  <main class="checkout-page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="index.html">Home</a> / <a href="cart.html">Cart</a> / <span style="color: var(--apple-text);">Checkout</span>
     </nav>
+    
+    <h1>Checkout</h1>
 
-    <h1 class="text-3xl font-semibold tracking-tight text-zinc-900 mb-8 sm:mb-10">Checkout</h1>
-
-    <!-- Checkout Layout Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-      
-      <!-- Left Column: Form -->
-      <div class="lg:col-span-7 space-y-8">
-        <form id="checkout-form" class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm space-y-8" method="POST" novalidate>
-          
-          <!-- Contact Information -->
-          <section aria-labelledby="contact-heading">
-            <h2 id="contact-heading" class="text-lg font-medium text-zinc-900 mb-5">Contact Information</h2>
-            <div class="grid grid-cols-1 gap-5">
-              
-              <div>
-                <label for="email" class="block text-sm font-medium text-zinc-700 mb-1.5">Email Address</label>
-                <input 
-                  type="email" 
-                  id="email" 
-                  name="email"
-                  autocomplete="email" 
-                  required
-                  placeholder="you@example.com"
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
-                >
-              </div>
-
-              <div>
-                <label for="phone" class="block text-sm font-medium text-zinc-700 mb-1.5">Phone Number</label>
-                <input 
-                  type="tel" 
-                  id="phone" 
-                  name="phone"
-                  autocomplete="tel" 
-                  required
-                  placeholder="+1 (555) 000-0000"
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
-                >
-              </div>
-
-            </div>
-          </section>
-
-          <hr class="border-zinc-200">
-
-          <!-- Shipping Information -->
-          <section aria-labelledby="shipping-heading">
-            <h2 id="shipping-heading" class="text-lg font-medium text-zinc-900 mb-5">Shipping Address</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              
-              <div class="sm:col-span-2">
-                <label for="name" class="block text-sm font-medium text-zinc-700 mb-1.5">Full Name</label>
-                <input 
-                  type="text" 
-                  id="name" 
-                  name="name"
-                  autocomplete="name" 
-                  required
-                  placeholder="John Doe"
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
-                >
-              </div>
-
-              <div class="sm:col-span-2">
-                <label for="country" class="block text-sm font-medium text-zinc-700 mb-1.5">Country / Region</label>
-                <select 
-                  id="country" 
-                  name="country"
-                  autocomplete="country" 
-                  required
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm cursor-pointer"
-                >
-                  <option value="" disabled selected>Select a country</option>
-                  <option value="US">United States</option>
-                  <option value="CA">Canada</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="AU">Australia</option>
-                  <option value="BD">Bangladesh</option>
-                </select>
-              </div>
-
-              <div class="sm:col-span-2">
-                <label for="address" class="block text-sm font-medium text-zinc-700 mb-1.5">Street Address</label>
-                <input 
-                  type="text" 
-                  id="address" 
-                  name="address"
-                  autocomplete="street-address" 
-                  required
-                  placeholder="123 Main St, Apartment or suite"
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
-                >
-              </div>
-
-              <div>
-                <label for="city" class="block text-sm font-medium text-zinc-700 mb-1.5">City</label>
-                <input 
-                  type="text" 
-                  id="city" 
-                  name="city"
-                  autocomplete="address-level2" 
-                  required
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
-                >
-              </div>
-
-              <div>
-                <label for="zip" class="block text-sm font-medium text-zinc-700 mb-1.5">Postal / ZIP Code</label>
-                <input 
-                  type="text" 
-                  id="zip" 
-                  name="zip"
-                  autocomplete="postal-code" 
-                  required
-                  class="w-full px-4 py-2.5 bg-white border border-zinc-300 rounded-lg text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-shadow shadow-sm"
-                >
-              </div>
-
-            </div>
-          </section>
-
-          <div class="pt-2">
-            <button 
-              type="submit" 
-              id="submit-button"
-              class="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-zinc-900 hover:bg-zinc-800 text-white font-medium rounded-lg text-base transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              Place Order
-            </button>
-
-            <!-- Trust Indicator -->
-            <div class="mt-4 flex items-center justify-center gap-2 text-sm text-zinc-500">
-              <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-              </svg>
-              <span>Secure encrypted checkout</span>
-            </div>
-          </div>
-
-        </form>
-      </div>
-
-      <!-- Right Column: Order Summary (Sticky on Desktop) -->
-      <div class="lg:col-span-5">
-        <div id="order-summary" class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm lg:sticky lg:top-24 space-y-6">
-          <h2 class="text-lg font-medium text-zinc-900">Order Summary</h2>
-          
-          <!-- Dynamic Items Container -->
-          <div id="summary-items" class="max-h-72 overflow-y-auto space-y-4 pr-1 divide-y divide-zinc-100" aria-live="polite">
-            <p class="text-sm text-zinc-500 py-4 text-center">Loading your order details...</p>
-          </div>
-
-          <hr class="border-zinc-200">
-
-          <!-- Dynamic Totals -->
-          <dl class="space-y-3 text-sm text-zinc-600">
-            <div class="flex justify-between items-center">
-              <dt>Subtotal</dt>
-              <dd class="font-medium text-zinc-900" id="summary-subtotal">$0.00</dd>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <dt>Shipping</dt>
-              <dd class="font-semibold text-emerald-600" id="summary-shipping">Free</dd>
-            </div>
-          </dl>
-
-          <hr class="border-zinc-200">
-
-          <!-- Final Total -->
-          <div class="flex justify-between items-center">
-            <span class="text-base font-semibold text-zinc-900">Total</span>
-            <span class="text-xl font-semibold text-zinc-900" id="summary-total">$0.00</span>
-          </div>
-
-        </div>
-      </div>
-
+    <div id="checkout-content">
+      <!-- Dynamically filled layout -->
     </div>
   </main>
 
-  <!-- Minimal Footer -->
-  <footer class="border-t border-zinc-200 bg-white py-8 mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
-      <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
-      <div class="flex items-center gap-6">
-        <a href="#" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Privacy Policy</a>
-        <a href="#" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Terms of Service</a>
-      </div>
-    </div>
-  </footer>
+  <script>
+    function getCart() {
+      try {
+        const data = localStorage.getItem('prasun_cart');
+        return data ? JSON.parse(data) : [];
+      } catch (e) {
+        return [];
+      }
+    }
 
-  <!-- External JS Modules -->
-  <script src="js/checkout.js" defer></script>
+    function updateCartBadge() {
+      const cart = getCart();
+      const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+      const badge = document.getElementById('cart-count');
+      if (badge) {
+        badge.textContent = totalItems;
+      }
+    }
 
+    function renderCheckout() {
+      updateCartBadge();
+      const container = document.getElementById('checkout-content');
+      const cart = getCart();
+
+      if (!Array.isArray(cart) || cart.length === 0) {
+        container.innerHTML = `
+          <div class="success-container" style="background: var(--apple-bg);">
+            <h2>Your cart is empty</h2>
+            <p>You cannot proceed to checkout without any items in your bag.</p>
+            <a href="index.html" class="btn-apple-primary" style="max-width: 220px; margin: 0 auto;">Return to Shop</a>
+          </div>
+        `;
+        return;
+      }
+
+      let subtotal = 0;
+      let summaryItemsHTML = '';
+
+      cart.forEach(item => {
+        const title = item.title || "Item";
+        const priceStr = item.price || "$0.00";
+        const priceNum = parseFloat(priceStr.toString().replace('$', '')) || 0;
+        const qty = Number(item.quantity) || 1;
+        const itemTotal = priceNum * qty;
+        subtotal += itemTotal;
+        const image = item.image || "";
+
+        summaryItemsHTML += `
+          <div class="summary-item">
+            <img src="${image}" alt="${title}" onerror="this.style.display='none'" />
+            <div class="summary-item-info">
+              <span class="summary-item-title">${title}</span>
+              <span class="summary-item-qty">Qty: ${qty}</span>
+            </div>
+            <span class="summary-item-price">$${itemTotal.toFixed(2)}</span>
+          </div>
+        `;
+      });
+
+      const shippingCost = 5.00;
+      const total = subtotal + shippingCost;
+
+      container.innerHTML = `
+        <form id="checkout-form" onsubmit="handlePlaceOrder(event)">
+          <div class="checkout-layout">
+            <!-- Left Side: Form Fields -->
+            <div class="checkout-form-section">
+              <div class="form-card">
+                <h2>Contact Information</h2>
+                <div class="form-group">
+                  <label for="email">Email Address</label>
+                  <input type="email" id="email" required placeholder="you@example.com" />
+                </div>
+                <div class="form-group">
+                  <label for="phone">Phone Number</label>
+                  <input type="tel" id="phone" required placeholder="+1 (555) 000-0000" />
+                </div>
+              </div>
+
+              <div class="form-card">
+                <h2>Shipping Address</h2>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="firstname">First Name</label>
+                    <input type="text" id="firstname" required placeholder="John" />
+                  </div>
+                  <div class="form-group">
+                    <label for="lastname">Last Name</label>
+                    <input type="text" id="lastname" required placeholder="Doe" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="address">Street Address</label>
+                  <input type="text" id="address" required placeholder="123 Main St, Apartment or Suite" />
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="city">City</label>
+                    <input type="text" id="city" required placeholder="New York" />
+                  </div>
+                  <div class="form-group">
+                    <label for="zip">Postal / ZIP Code</label>
+                    <input type="text" id="zip" required placeholder="10001" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="country">Country / Region</label>
+                  <select id="country" required>
+                    <option value="">Select a country</option>
+                    <option value="US">United States</option>
+                    <option value="CA">Canada</option>
+                    <option value="UK">United Kingdom</option>
+                    <option value="AU">Australia</option>
+                    <option value="BD" selected>Bangladesh</option>
+                    <option value="OT">Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Side: Order Summary Sidebar -->
+            <div class="order-summary-card">
+              <h2>Order Summary</h2>
+              <div class="summary-items-list">
+                ${summaryItemsHTML}
+              </div>
+              <hr class="summary-divider" />
+              <div class="summary-row">
+                <span>Subtotal</span>
+                <span>$${subtotal.toFixed(2)}</span>
+              </div>
+              <div class="summary-row">
+                <span>Shipping</span>
+                <span>$${shippingCost.toFixed(2)}</span>
+              </div>
+              <hr class="summary-divider" />
+              <div class="summary-row total">
+                <span>Total</span>
+                <span>$${total.toFixed(2)}</span>
+              </div>
+              <button type="submit" class="btn-apple-primary">Place Order</button>
+            </div>
+          </div>
+        </form>
+      `;
+    }
+
+    function handlePlaceOrder(event) {
+      event.preventDefault();
+      localStorage.removeItem('prasun_cart');
+      updateCartBadge();
+
+      const container = document.getElementById('checkout-content');
+      container.innerHTML = `
+        <div class="success-container">
+          <h2>Order Placed Successfully! 🎉</h2>
+          <p>Thank you for shopping with PRASUN SHOP. We have received your order and are getting it ready for shipment. A confirmation email has been sent to your inbox.</p>
+          <a href="index.html" class="btn-apple-primary" style="max-width: 240px; margin: 0 auto;">Continue Shopping</a>
+        </div>
+      `;
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderCheckout);
+    } else {
+      renderCheckout();
+    }
+  </script>
 </body>
 </html>
