@@ -21,6 +21,7 @@
 
   <!-- Stylesheets & Scripts -->
   <link rel="stylesheet" href="css/style.css" />
+  <script src="js/cart-count.js" defer></script>
   <script src="js/script.js" defer></script>
 </head>
 <body>
@@ -29,7 +30,7 @@
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
   <!-- Live Region for Screen Readers -->
-  <div id="a11y-status-region" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+  <div id="a11y-status-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
   <!-- ================= HEADER / NAVIGATION ================= -->
   <header class="header">
@@ -55,13 +56,13 @@
 
       <!-- Action Icons (Cart & Mobile Toggle) -->
       <div class="header-actions">
-        <a href="cart.html" class="cart-icon-wrap" aria-label="View Shopping Cart, 3 items">
+        <a href="cart.html" class="cart-icon-wrap" aria-label="View Shopping Cart">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="9" cy="21" r="1"></circle>
             <circle cx="20" cy="21" r="1"></circle>
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
           </svg>
-          <span class="cart-badge" data-count="3" aria-hidden="true">3</span>
+          <span id="cart-count" class="cart-badge" aria-hidden="true">0</span>
         </a>
 
         <button 
@@ -97,7 +98,6 @@
     
     <!-- Hero Banner -->
     <section class="products-hero">
-      <p class="products-eyebrow">Curated Electronics</p>
       <h1 id="products-heading" class="products-heading">Find Products Instantly</h1>
       <p class="products-intro">Explore high-performance smart gadgets designed for daily productivity.</p>
     </section>
@@ -119,16 +119,17 @@
           id="product-search"
           name="q"
           class="products-search-input" 
-          placeholder="Search products (Press ⌘K or Ctrl+K)" 
+          placeholder="Search products..." 
           autocomplete="off"
         />
-        <button type="button" id="search-clear" class="search-clear-btn" aria-label="Clear search query" hidden>
+        <button type="button" id="search-clear" class="search-clear" aria-label="Clear search query" hidden>
           &times;
         </button>
+        <span class="products-search-shortcut" aria-hidden="true">⌘K</span>
       </form>
 
       <!-- Sort Controls & Results Counter -->
-      <div class="products-controls">
+      <div class="products-results-bar">
         <span id="products-count" class="products-result-count" aria-live="polite">3 products</span>
         
         <div class="products-sort-wrap">
@@ -158,30 +159,29 @@
       
       <!-- Card 1 -->
       <article class="product-card" data-id="smart-lamp">
-        <div class="product-card-inner">
-          <a class="product-card-link" href="product.html?id=smart-lamp" aria-label="View G-Shaped Smart LED Atmosphere Lamp">
-            <div class="product-card-image">
-              <img 
-                src="images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png" 
-                alt="G-Shaped Smart LED Atmosphere Lamp" 
-                loading="lazy" 
-                decoding="async"
-                width="600" 
-                height="600" 
-              />
-              <span class="product-category">Smart Lighting</span>
-            </div>
-            <div class="product-card-body">
-              <h2 class="product-title">G-Shaped Smart LED Atmosphere Lamp</h2>
-              <p class="product-description">Includes built-in Bluetooth speaker and fast wireless charger pad.</p>
-              <div class="product-bottom">
-                <span class="product-price">$29.99</span>
-                <span class="product-view-button">View Details</span>
-              </div>
-            </div>
-          </a>
-          <div class="product-card-actions">
-            <button type="button" class="btn-add-to-cart" data-action="add-cart" data-id="smart-lamp">
+        <span class="product-category">Smart Lighting</span>
+        <div class="product-card-image">
+          <img 
+            src="images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png" 
+            alt="G-Shaped Smart LED Atmosphere Lamp" 
+            loading="lazy" 
+            decoding="async"
+            width="600" 
+            height="600" 
+          />
+        </div>
+        <div class="product-card-body">
+          <div class="product-meta">
+            <span class="product-brand">Prasun</span>
+            <span class="product-rating">★ 4.8</span>
+          </div>
+          <h2 class="product-title">
+            <a href="product.html?id=smart-lamp" class="product-title-link">G-Shaped Smart LED Atmosphere Lamp</a>
+          </h2>
+          <p class="product-description">Includes built-in Bluetooth speaker and fast wireless charger pad.</p>
+          <div class="product-bottom">
+            <span class="product-price">$29.99</span>
+            <button type="button" class="product-add-btn" data-action="add-cart" data-id="smart-lamp">
               Add to Cart
             </button>
           </div>
@@ -190,30 +190,29 @@
 
       <!-- Card 2 -->
       <article class="product-card" data-id="power-bank">
-        <div class="product-card-inner">
-          <a class="product-card-link" href="product.html?id=power-bank" aria-label="View Mini 5000mAh Magnetic Wireless Power Bank">
-            <div class="product-card-image">
-              <img 
-                src="images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg" 
-                alt="Mini 5000mAh Magnetic Wireless Power Bank" 
-                loading="lazy" 
-                decoding="async"
-                width="600" 
-                height="600" 
-              />
-              <span class="product-category">Power &amp; Charging</span>
-            </div>
-            <div class="product-card-body">
-              <h2 class="product-title">Mini 5000mAh Magnetic Wireless Power Bank</h2>
-              <p class="product-description">Compact fast-charging portable battery pack for mobile devices.</p>
-              <div class="product-bottom">
-                <span class="product-price">$39.99</span>
-                <span class="product-view-button">View Details</span>
-              </div>
-            </div>
-          </a>
-          <div class="product-card-actions">
-            <button type="button" class="btn-add-to-cart" data-action="add-cart" data-id="power-bank">
+        <span class="product-category">Power &amp; Charging</span>
+        <div class="product-card-image">
+          <img 
+            src="images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg" 
+            alt="Mini 5000mAh Magnetic Wireless Power Bank" 
+            loading="lazy" 
+            decoding="async"
+            width="600" 
+            height="600" 
+          />
+        </div>
+        <div class="product-card-body">
+          <div class="product-meta">
+            <span class="product-brand">Prasun</span>
+            <span class="product-rating">★ 4.9</span>
+          </div>
+          <h2 class="product-title">
+            <a href="product.html?id=power-bank" class="product-title-link">Mini 5000mAh Magnetic Wireless Power Bank</a>
+          </h2>
+          <p class="product-description">Compact fast-charging portable battery pack for mobile devices.</p>
+          <div class="product-bottom">
+            <span class="product-price">$39.99</span>
+            <button type="button" class="product-add-btn" data-action="add-cart" data-id="power-bank">
               Add to Cart
             </button>
           </div>
@@ -222,30 +221,29 @@
 
       <!-- Card 3 -->
       <article class="product-card" data-id="earbuds">
-        <div class="product-card-inner">
-          <a class="product-card-link" href="product.html?id=earbuds" aria-label="View Wireless Noise-Cancelling Sports Earbuds">
-            <div class="product-card-image">
-              <img 
-                src="images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg" 
-                alt="Wireless Noise-Cancelling Sports Earbuds" 
-                loading="lazy" 
-                decoding="async"
-                width="600" 
-                height="600" 
-              />
-              <span class="product-category">Audio</span>
-            </div>
-            <div class="product-card-body">
-              <h2 class="product-title">Wireless Noise-Cancelling Sports Earbuds</h2>
-              <p class="product-description">High-fidelity Bluetooth audio with ergonomic sweat-resistant fit.</p>
-              <div class="product-bottom">
-                <span class="product-price">$49.99</span>
-                <span class="product-view-button">View Details</span>
-              </div>
-            </div>
-          </a>
-          <div class="product-card-actions">
-            <button type="button" class="btn-add-to-cart" data-action="add-cart" data-id="earbuds">
+        <span class="product-category">Audio</span>
+        <div class="product-card-image">
+          <img 
+            src="images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg" 
+            alt="Wireless Noise-Cancelling Sports Earbuds" 
+            loading="lazy" 
+            decoding="async"
+            width="600" 
+            height="600" 
+          />
+        </div>
+        <div class="product-card-body">
+          <div class="product-meta">
+            <span class="product-brand">Prasun</span>
+            <span class="product-rating">★ 4.7</span>
+          </div>
+          <h2 class="product-title">
+            <a href="product.html?id=earbuds" class="product-title-link">Wireless Noise-Cancelling Sports Earbuds</a>
+          </h2>
+          <p class="product-description">High-fidelity Bluetooth audio with ergonomic sweat-resistant fit.</p>
+          <div class="product-bottom">
+            <span class="product-price">$49.99</span>
+            <button type="button" class="product-add-btn" data-action="add-cart" data-id="earbuds">
               Add to Cart
             </button>
           </div>
@@ -260,12 +258,12 @@
     <div class="footer-content">
       
       <div class="footer-col">
-        <h2 class="footer-heading">PRASUN SHOP</h2>
+        <h4 class="footer-heading">PRASUN SHOP</h4>
         <p>Premium technology and everyday accessories built with clean, modern design.</p>
       </div>
 
       <div class="footer-col">
-        <h3>Navigation</h3>
+        <h4 class="footer-heading">Navigation</h4>
         <ul>
           <li><a href="index.html">Shop All</a></li>
           <li><a href="about.html">About Us</a></li>
@@ -276,7 +274,7 @@
       </div>
 
       <div class="footer-col">
-        <h3>Customer Care</h3>
+        <h4 class="footer-heading">Customer Care</h4>
         <ul>
           <li><a href="privacy-policy.html">Privacy Policy</a></li>
           <li><a href="terms-of-service.html">Terms of Service</a></li>
@@ -286,7 +284,7 @@
       </div>
 
       <div class="footer-col">
-        <h3>Connect</h3>
+        <h4 class="footer-heading">Connect</h4>
         <ul>
           <li><a href="mailto:support@prasunshop.com">support@prasunshop.com</a></li>
           <li><a href="contact.html">Contact Form</a></li>
