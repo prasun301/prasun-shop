@@ -703,7 +703,7 @@
     <!-- EMBEDDED APPLICATION SCRIPT -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Sample dataset (Replace or fetch from backend API / JSON)
+            // Sample dataset
             const products = [
                 { id: 1, name: "Advanced UI Kit Pro", category: "electronics", price: 49.00, description: "Enterprise-grade UI components for modern web apps.", image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80" },
                 { id: 2, name: "Minimalist Desk Pad", category: "lifestyle", price: 29.00, description: "Smooth waterproof PU leather desk mat for productivity.", image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=600&q=80" },
@@ -790,15 +790,12 @@
                     clone.querySelector('.product-title').textContent = product.name;
                     clone.querySelector('.product-description').textContent = product.description;
                     clone.querySelector('.product-price').textContent = `$${product.price.toFixed(2)}`;
-                    
-                    const link = clone.querySelector('.product-card-link');
-                    link.href = `product-detail.html?id=${product.id}`;
 
-                    // Add to cart handler
+                    // Cart button interaction
                     const cartBtn = clone.querySelector('.product-cart-button');
                     cartBtn.addEventListener('click', () => {
                         let cart = JSON.parse(localStorage.getItem('prasun_cart') || '[]');
-                        const existing = cart.find(i => i.id === product.id);
+                        const existing = cart.find(item => item.id === product.id);
                         if (existing) {
                             existing.quantity = (existing.quantity || 1) + 1;
                         } else {
@@ -806,11 +803,22 @@
                         }
                         localStorage.setItem('prasun_cart', JSON.stringify(cart));
                         updateCartBadge();
-                        
-                        // Visual feedback
-                        const originalText = cartBtn.querySelector('span').textContent;
-                        cartBtn.querySelector('span').textContent = 'Added!';
-                        setTimeout(() => { cartBtn.querySelector('span').textContent = originalText; }, 1200);
+
+                        // Visual feedback state
+                        const originalHTML = cartBtn.innerHTML;
+                        cartBtn.innerHTML = `<span>Added!</span> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;"><path d="M20 6 9 17l-5-5"/></svg>`;
+                        cartBtn.style.background = '#10b981';
+                        setTimeout(() => {
+                            cartBtn.innerHTML = originalHTML;
+                            cartBtn.style.background = '';
+                        }, 1200);
+                    });
+
+                    // Card link behavior
+                    const cardLink = clone.querySelector('.product-card-link');
+                    cardLink.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        window.location.href = `product-detail.html?id=${product.id}`;
                     });
 
                     fragment.appendChild(clone);
@@ -820,10 +828,24 @@
                 gridEl.setAttribute('aria-busy', 'false');
             }
 
-            // Event Listeners for Filters & Search
+            // Initial render
+            setTimeout(() => {
+                renderProducts();
+            }, 250);
+
+            // Event Listeners
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.trim();
+                renderProducts();
+            });
+
+            sortSelect.addEventListener('change', (e) => {
+                currentSort = e.target.value;
+                renderProducts();
+            });
+
             categoryPills.forEach(pill => {
-                pill.addEventListener('click', (e) => {
-                    e.preventDefault();
+                pill.addEventListener('click', () => {
                     categoryPills.forEach(p => {
                         p.classList.remove('active');
                         p.removeAttribute('aria-current');
@@ -835,38 +857,32 @@
                 });
             });
 
-            searchInput?.addEventListener('input', (e) => {
-                searchQuery = e.target.value.trim();
-                renderProducts();
-            });
-
-            sortSelect?.addEventListener('change', (e) => {
-                currentSort = e.target.value;
-                renderProducts();
-            });
-
-            emptyResetBtn?.addEventListener('click', () => {
+            emptyResetBtn.addEventListener('click', () => {
                 currentCategory = 'all';
                 searchQuery = '';
-                if (searchInput) searchInput.value = '';
+                searchInput.value = '';
+                currentSort = 'featured';
+                sortSelect.value = 'featured';
                 categoryPills.forEach(p => {
-                    p.classList.toggle('active', p.getAttribute('data-category') === 'all');
+                    if (p.getAttribute('data-category') === 'all') {
+                        p.classList.add('active');
+                        p.setAttribute('aria-current', 'page');
+                    } else {
+                        p.classList.remove('active');
+                        p.removeAttribute('aria-current');
+                    }
                 });
                 renderProducts();
             });
 
-            // Global shortcut handler (⌘K or Ctrl+K for search)
-            window.addEventListener('keydown', (e) => {
+            // Keyboard shortcut (Cmd+K / Ctrl+K) for search focus
+            document.addEventListener('keydown', (e) => {
                 if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
                     e.preventDefault();
-                    searchInput?.focus();
+                    searchInput.focus();
+                    searchInput.select();
                 }
             });
-
-            // Initial Load Simulation
-            setTimeout(() => {
-                renderProducts();
-            }, 300);
         });
     </script>
 </body>
