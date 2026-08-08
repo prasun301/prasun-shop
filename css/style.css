@@ -97,6 +97,39 @@ img {
   display: none !important;
 }
 
+/* Fallback Utility Classes for JS State Toggles */
+.hidden {
+  display: none !important;
+}
+
+.invisible {
+  visibility: hidden !important;
+}
+
+.visible {
+  visibility: visible !important;
+}
+
+.opacity-0 {
+  opacity: 0 !important;
+  transition: opacity 0.15s ease;
+}
+
+.opacity-100 {
+  opacity: 1 !important;
+  transition: opacity 0.15s ease;
+}
+
+.shrink-0 {
+  flex-shrink: 0;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Accessible Focus States */
 :focus-visible {
   outline: none;
@@ -224,6 +257,7 @@ img {
   align-items: center;
   justify-content: center;
   padding: 0 4px;
+  transition: var(--transition-fast);
 }
 
 .mobile-menu-btn {
