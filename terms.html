@@ -1,27 +1,254 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Terms of Service — PRASUN SHOP</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --apple-bg: #f5f5f7;
+      --apple-card-bg: #ffffff;
+      --apple-text: #1d1d1f;
+      --apple-gray: #86868b;
+      --apple-border: #d2d2d7;
+      --apple-dark: #1d1d1f;
+      --apple-dark-hover: #333336;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--apple-card-bg);
+      color: var(--apple-text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .header {
+      border-bottom: 1px solid var(--apple-border);
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 100;
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--apple-text);
+      font-weight: 600;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--apple-gray);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--apple-text);
+    }
+
+    .cart-icon-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      color: var(--apple-text);
+      text-decoration: none;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -10px;
+      background-color: var(--apple-dark);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem 2rem 2rem;
+    }
+
+    .hero h1 {
+      font-size: 2.75rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -0.015em;
+    }
+
+    .hero p {
+      color: var(--apple-gray);
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    .main-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem 2rem;
+      line-height: 1.7;
+      color: #48484a;
+    }
+
+    .main-container h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--apple-text);
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .main-container p, .main-container li {
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+
+    .main-container ul {
+      padding-left: 1.25rem;
+    }
+
+    .main-container a {
+      color: var(--apple-text);
+      font-weight: 500;
+    }
+
+    .footer {
+      border-top: 1px solid var(--apple-border);
+      background-color: var(--apple-bg);
+      padding: 2rem;
+      text-align: center;
+      color: var(--apple-gray);
+      font-size: 0.85rem;
+      margin-top: 4rem;
+    }
+  </style>
 </head>
 <body>
-  <main class="main-container" style="max-width: 800px; margin: 0 auto; padding: 4rem 2rem; line-height: 1.6; color: #1d1d1f;">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <a href="index.html" class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span>PRASUN SHOP</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="header-actions">
+        <a href="cart.html" class="cart-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span id="cart-count" class="cart-badge">0</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
     <h1>Terms of Service</h1>
-    <p><em>Last updated: August 2026</em></p>
+    <p>Last updated: August 2026</p>
+  </section>
 
-    <h2>1. Digital Products & Licensing</h2>
-    <p>All products sold on Prasun Shop are digital ebooks in PDF format. When you purchase an ebook, you are granted a non-exclusive, non-transferable, single-user license to access and read the content for personal or professional educational use.</p>
+  <!-- Main Content -->
+  <main class="main-container">
+    <p>Welcome to <strong>PRASUN SHOP</strong>. Throughout the site, the terms "we", "us", and "our" refer to PRASUN SHOP. By visiting our site and/or purchasing products from us, you engage in our "Service" and agree to be bound by the following Terms of Service.</p>
 
-    <h2>2. Prohibited Use</h2>
-    <p>You may not redistribute, resell, share, upload to public file-sharing networks, or commercially exploit any digital files purchased from Prasun Shop without explicit written permission from the author, Prasun Barua.</p>
+    <h2>1. General Conditions</h2>
+    <p>By agreeing to these Terms of Service, you represent that you are at least the age of majority in your state or province of residence. You may not use our products for any illegal or unauthorized purpose nor may you, in the use of the Service, violate any laws in your jurisdiction.</p>
 
-    <h2>3. Purchases and Payments</h2>
-    <p>All orders are processed securely through our Merchant of Record, Lemon Squeezy. By completing a checkout, you agree to provide accurate billing and contact information.</p>
+    <h2>2. Products & Pricing</h2>
+    <p>Prices for our products are subject to change without notice. We reserve the right at any time to modify or discontinue the Service (or any part or content thereof) without notice. We have made every effort to display as accurately as possible the colors and images of our products that appear at the store.</p>
 
-    <h2>4. Support</h2>
-    <p>If you encounter any issues accessing your files, reach out to us directly at <a href="mailto:contact@prasunbarua.com">contact@prasunbarua.com</a>.</p>
+    <h2>3. Accuracy of Billing and Account Information</h2>
+    <p>We reserve the right to refuse any order you place with us. In the event that we make a change to or cancel an order, we may attempt to notify you by contacting the email address or phone number provided at the time the order was made.</p>
+
+    <h2>4. Third-Party Links & Advertisements</h2>
+    <p>Certain content, products, and services available via our Service may include materials from third parties. Third-party links or advertisements (including Google AdSense placements) on this site may direct you to third-party websites that are not affiliated with us. We are not responsible for examining or evaluating the content or accuracy and we do not warrant and will not have any liability or responsibility for any third-party materials or websites.</p>
+
+    <h2>5. Prohibited Uses</h2>
+    <p>In addition to other prohibitions as set forth in the Terms of Service, you are prohibited from using the site or its content:</p>
+    <ul>
+      <li>For any unlawful purpose or to solicit others to perform or participate in any unlawful acts.</li>
+      <li>To violate any international, federal, or state regulations, rules, or laws.</li>
+      <li>To infringe upon or violate our intellectual property rights or the intellectual property rights of others.</li>
+      <li>To upload or transmit viruses or any other type of malicious code.</li>
+    </ul>
+
+    <h2>6. Limitation of Liability</h2>
+    <p>PRASUN SHOP shall not be liable for any injury, loss, claim, or any direct, indirect, incidental, punitive, special, or consequential damages of any kind arising from your use of any of the service or any products procured using the service.</p>
+
+    <h2>7. Governing Law</h2>
+    <p>These Terms of Service and any separate agreements shall be governed by and construed in accordance with applicable laws.</p>
+
+    <h2>8. Contact Information</h2>
+    <p>Questions about the Terms of Service should be sent to us at <a href="mailto:contact@prasunbarua.com">contact@prasunbarua.com</a>.</p>
   </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+      <a href="privacy.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Privacy Policy</a>
+      <a href="terms.html" style="color: var(--apple-text); text-decoration: none; font-size: 0.85rem; font-weight: 600;">Terms of Service</a>
+      <a href="refund.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Refund Policy</a>
+      <a href="contact.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Contact</a>
+    </div>
+    <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
+  </footer>
+
+  <script>
+    function updateCartBadge() {
+      try {
+        const cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
+        const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+        const badge = document.getElementById('cart-count');
+        if (badge) badge.textContent = totalItems;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    document.addEventListener('DOMContentLoaded', updateCartBadge);
+  </script>
 </body>
 </html>
