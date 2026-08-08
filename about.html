@@ -43,6 +43,7 @@
       padding: 1rem 2rem;
     }
 
+    /* Locked-down logo styles to prevent shifts/resizing */
     .logo {
       display: flex;
       align-items: center;
@@ -50,6 +51,13 @@
       text-decoration: none;
       color: var(--apple-text);
       font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .logo svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
     }
 
     .nav-links {
@@ -116,7 +124,7 @@
   <header class="header">
     <div class="header-container">
       <a href="index.html" class="logo">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-0.5-0.5Z"/>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>
         </svg>
