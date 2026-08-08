@@ -1,7 +1,7 @@
 /**
  * ============================================================================
- * PRASUN SHOP — PRODUCTS & INTERACTIVITY
- * Production-ready product listing, async fetch, search, filtering, and sorting.
+ * PRASUN SHOP — PRODUCTS & INTERACTIVITY (PERFORMANCE OPTIMIZED)
+ * High-performance product listing, async fetch, search, filtering, and sorting.
  * ============================================================================
  */
 
@@ -14,7 +14,7 @@
 
     const CONFIG = {
         STORAGE_KEYS: ["products", "prasun_products"],
-        API_ENDPOINT: "/api/products.json", // Fallback if localStorage is empty
+        API_ENDPOINT: "/api/products.json",
         DEBOUNCE_MS: 150,
         FALLBACK_IMAGE: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
             <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
@@ -26,8 +26,21 @@
         `)}`
     };
 
+    // Reusable Formatters & Collators (Instantiated once to avoid GC pressure)
+    const CURRENCY_FORMATTER = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    const NAME_COLLATOR = new Intl.Collator("en-US", { 
+        numeric: true, 
+        sensitivity: "base" 
+    });
+
     /* =========================================================================
-       STATE
+       STATE & CACHED DOM ELEMENTS
        ========================================================================= */
 
     const state = {
@@ -35,11 +48,20 @@
         currentCategory: "",
         currentKeyword: "",
         currentSort: "featured",
-        searchTimer: null
+        renderFrame: null
+    };
+
+    const elements = {
+        productList: null,
+        searchInput: null,
+        sortSelect: null,
+        resultCount: null,
+        heading: null,
+        categoryPills: []
     };
 
     /* =========================================================================
-       DOM HELPERS & UTILITIES
+       UTILITIES & HELPERS
        ========================================================================= */
 
     const $ = (selector, parent = document) => parent.querySelector(selector);
@@ -61,51 +83,58 @@
 
     function formatPrice(value) {
         const price = Number(value);
-        if (!Number.isFinite(price)) return "$0.00";
+        return Number.isFinite(price) ? CURRENCY_FORMATTER.format(price) : "$0.00";
+    }
 
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(price);
+    function debounce(fn, delay) {
+        let timer = null;
+        return function (...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), delay);
+        };
     }
 
     /* =========================================================================
-       PRODUCT NORMALIZATION
+       PRODUCT NORMALIZATION (Pre-computing Search Index)
        ========================================================================= */
 
     function normalizeProduct(item, index) {
         if (!item || typeof item !== "object") return null;
 
-        const id = item.id ?? item.productId ?? `product-${index + 1}`;
-        const name = item.name ?? item.title ?? "Unnamed Product";
+        const rawId = item.id ?? item.productId ?? `product-${index + 1}`;
+        const id = String(rawId);
+        const name = String(item.name ?? item.title ?? "Unnamed Product").trim();
+        const category = String(item.category ?? "").trim();
+        const description = String(item.description ?? "").trim();
         const price = Number(item.price ?? 0);
         const rating = Number(item.rating ?? 0);
 
         return {
-            id: String(id),
-            name: String(name).trim() || "Unnamed Product",
+            id,
+            safeId: encodeURIComponent(id),
+            name,
             price: Number.isFinite(price) ? price : 0,
             image: String(item.image ?? item.imageUrl ?? item.thumbnail ?? "").trim(),
-            category: String(item.category ?? "").trim(),
-            description: String(item.description ?? "").trim(),
-            rating: Number.isFinite(rating) ? rating : 0
+            category,
+            normalizedCategory: normalize(category),
+            description,
+            rating: Number.isFinite(rating) ? rating : 0,
+            // Pre-computed search text index for O(1) string matching during filters
+            searchIndex: normalize(`${name} ${description} ${category}`)
         };
     }
 
     /* =========================================================================
-       DATA LOADING (LocalStorage with API Fallback)
+       DATA LOADING
        ========================================================================= */
 
     async function loadProducts() {
-        const productList = $("#product-list");
-        if (!productList) return;
+        if (!elements.productList) return;
 
         try {
             let rawData = null;
 
-            // 1. Try LocalStorage
+            // 1. Check LocalStorage
             for (const key of CONFIG.STORAGE_KEYS) {
                 const stored = localStorage.getItem(key);
                 if (stored) {
@@ -115,20 +144,24 @@
             }
 
             if (rawData) {
-                const parsed = JSON.parse(rawData);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    state.allProducts = parsed.map(normalizeProduct).filter(Boolean);
+                try {
+                    const parsed = JSON.parse(rawData);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        state.allProducts = parsed.map(normalizeProduct).filter(Boolean);
+                    }
+                } catch (err) {
+                    console.warn("[Prasun Shop] Invalid JSON in localStorage:", err);
                 }
             }
 
-            // 2. Fetch from API fallback if LocalStorage is empty
+            // 2. Fetch API Fallback
             if (!state.allProducts.length) {
                 const response = await fetch(CONFIG.API_ENDPOINT);
                 if (response.ok) {
                     const json = await response.json();
-                    state.allProducts = Array.isArray(json)
-                        ? json.map(normalizeProduct).filter(Boolean)
-                        : [];
+                    if (Array.isArray(json)) {
+                        state.allProducts = json.map(normalizeProduct).filter(Boolean);
+                    }
                 }
             }
 
@@ -158,12 +191,8 @@
         state.currentKeyword = params.get("q")?.trim() || "";
         state.currentSort = params.get("sort")?.trim() || "featured";
 
-        // Sync inputs with URL
-        const searchInput = $("#searchInput") || $(".search-input") || $(".products-search-input");
-        if (searchInput) searchInput.value = state.currentKeyword;
-
-        const sortSelect = $("#sortSelect") || $(".products-sort-select");
-        if (sortSelect) sortSelect.value = state.currentSort;
+        if (elements.searchInput) elements.searchInput.value = state.currentKeyword;
+        if (elements.sortSelect) elements.sortSelect.value = state.currentSort;
 
         updateCategoryNavigation();
         updatePageHeading();
@@ -188,30 +217,22 @@
     }
 
     function updateCategoryNavigation() {
-        const pills = $$(".category-pill, .products-categories a");
-        if (!pills.length) return;
+        if (!elements.categoryPills.length) return;
 
         const selected = normalize(state.currentCategory);
 
-        pills.forEach(pill => {
-            let category = "";
-            try {
-                const url = new URL(pill.getAttribute("href") || "", window.location.href);
-                category = url.searchParams.get("category") || "";
-            } catch {
-                category = "";
-            }
+        elements.categoryPills.forEach(pill => {
+            const category = pill.dataset.category || "";
+            const active = selected && category === selected;
 
-            const active = selected && normalize(category) === selected;
             pill.classList.toggle("active", Boolean(active));
             pill.setAttribute("aria-current", active ? "page" : "false");
         });
     }
 
     function updatePageHeading() {
-        const heading = $("#products-heading") || $(".products-heading");
-        if (heading) {
-            heading.textContent = state.currentCategory || "All Products";
+        if (elements.heading) {
+            elements.heading.textContent = state.currentCategory || "All Products";
         }
     }
 
@@ -220,24 +241,17 @@
        ========================================================================= */
 
     function applyFilters() {
-        let filtered = [...state.allProducts];
+        const cat = normalize(state.currentCategory);
+        const kw = normalize(state.currentKeyword);
 
-        // 1. Category Filter
-        if (state.currentCategory) {
-            const cat = normalize(state.currentCategory);
-            filtered = filtered.filter(p => normalize(p.category) === cat);
-        }
+        // Fast filtering using pre-computed fields
+        let filtered = state.allProducts.filter(p => {
+            if (cat && p.normalizedCategory !== cat) return false;
+            if (kw && !p.searchIndex.includes(kw)) return false;
+            return true;
+        });
 
-        // 2. Search Keyword Filter
-        if (state.currentKeyword) {
-            const kw = normalize(state.currentKeyword);
-            filtered = filtered.filter(p => {
-                const text = `${p.name} ${p.description} ${p.category}`;
-                return normalize(text).includes(kw);
-            });
-        }
-
-        // 3. Sorting
+        // Fast sorting using reused collator
         switch (state.currentSort) {
             case "price-asc":
                 filtered.sort((a, b) => a.price - b.price);
@@ -249,22 +263,23 @@
                 filtered.sort((a, b) => b.rating - a.rating);
                 break;
             case "name-asc":
-                filtered.sort((a, b) => a.name.localeCompare(b.name));
+                filtered.sort((a, b) => NAME_COLLATOR.compare(a.name, b.name));
                 break;
             default:
                 break;
         }
 
-        renderProducts(filtered);
+        // Schedule batch DOM update
+        if (state.renderFrame) cancelAnimationFrame(state.renderFrame);
+        state.renderFrame = requestAnimationFrame(() => renderProducts(filtered));
     }
 
     /* =========================================================================
-       PRODUCT RENDERING & EVENT DELEGATION
+       PRODUCT RENDERING
        ========================================================================= */
 
     function renderProducts(products) {
-        const productList = $("#product-list");
-        if (!productList) return;
+        if (!elements.productList) return;
 
         updateResultsCount(products.length);
 
@@ -273,11 +288,10 @@
             return;
         }
 
-        productList.innerHTML = products.map(renderProductCard).join("");
+        elements.productList.innerHTML = products.map(renderProductCard).join("");
     }
 
     function renderProductCard(product) {
-        const safeId = encodeURIComponent(product.id);
         const image = product.image || CONFIG.FALLBACK_IMAGE;
 
         const categoryHTML = product.category
@@ -291,8 +305,8 @@
             : "";
 
         return `
-            <article class="product-card" data-id="${safeId}">
-                <a class="product-card-link" href="product.html?id=${safeId}" aria-label="View ${escapeHTML(product.name)}">
+            <article class="product-card" data-id="${product.safeId}">
+                <a class="product-card-link" href="product.html?id=${product.safeId}" aria-label="View ${escapeHTML(product.name)}">
                     <div class="product-card-image">
                         <img 
                             src="${escapeHTML(image)}" 
@@ -316,58 +330,68 @@
         `;
     }
 
-    /**
-     * Event delegation for dynamic image error handling on container level.
-     */
     function setupImageErrorDelegation() {
-        const productList = $("#product-list");
-        if (!productList) return;
+        if (!elements.productList) return;
 
-        productList.addEventListener("error", (event) => {
+        elements.productList.addEventListener("error", (event) => {
             if (event.target && event.target.tagName === "IMG") {
                 const img = event.target;
                 img.src = CONFIG.FALLBACK_IMAGE;
                 img.classList.add("is-fallback");
                 img.closest(".product-card-image")?.classList.add("image-error");
             }
-        }, true); // Capture phase required for standard 'error' events
+        }, true);
     }
 
     /* =========================================================================
-       SEARCH, SORT & CONTROLS
+       CONTROLS & INITIALIZATION
        ========================================================================= */
 
+    function cacheDOMElements() {
+        elements.productList = $("#product-list");
+        elements.searchInput = $("#searchInput") || $(".search-input") || $(".products-search-input");
+        elements.sortSelect = $("#sortSelect") || $(".products-sort-select");
+        elements.resultCount = $(".products-result-count");
+        elements.heading = $("#products-heading") || $(".products-heading");
+
+        // Cache category pills and pre-parse target categories into dataset
+        elements.categoryPills = $$(".category-pill, .products-categories a");
+        elements.categoryPills.forEach(pill => {
+            try {
+                const url = new URL(pill.getAttribute("href") || "", window.location.href);
+                pill.dataset.category = normalize(url.searchParams.get("category") || "");
+            } catch {
+                pill.dataset.category = "";
+            }
+        });
+    }
+
     function initializeControls() {
-        // Search Input
-        const searchInput = $("#searchInput") || $(".search-input") || $(".products-search-input");
-        if (searchInput) {
-            searchInput.addEventListener("input", () => {
-                clearTimeout(state.searchTimer);
-                state.searchTimer = setTimeout(() => {
-                    state.currentKeyword = searchInput.value.trim();
-                    syncStateToURL();
-                    applyFilters();
-                }, CONFIG.DEBOUNCE_MS);
-            });
+        // Search Input with debounced handler
+        if (elements.searchInput) {
+            elements.searchInput.addEventListener("input", debounce(() => {
+                state.currentKeyword = elements.searchInput.value.trim();
+                syncStateToURL();
+                applyFilters();
+            }, CONFIG.DEBOUNCE_MS));
         }
 
         // Sort Select Dropdown
-        const sortSelect = $("#sortSelect") || $(".products-sort-select");
-        if (sortSelect) {
-            sortSelect.addEventListener("change", () => {
-                state.currentSort = sortSelect.value;
+        if (elements.sortSelect) {
+            elements.sortSelect.addEventListener("change", () => {
+                state.currentSort = elements.sortSelect.value;
                 syncStateToURL();
                 applyFilters();
             });
         }
 
-        // Global Keyboard Shortcut (Cmd/Ctrl + K)
+        // Global Shortcut (Cmd/Ctrl + K)
         document.addEventListener("keydown", (event) => {
             if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-                if (searchInput) {
+                if (elements.searchInput) {
                     event.preventDefault();
-                    searchInput.focus();
-                    searchInput.select();
+                    elements.searchInput.focus();
+                    elements.searchInput.select();
                 }
             }
         });
@@ -380,30 +404,27 @@
     }
 
     function updateResultsCount(count) {
-        const resultCount = $(".products-result-count");
-        if (!resultCount) return;
+        if (!elements.resultCount) return;
 
-        // Ensure accessibility Live Region for screen readers
-        if (!resultCount.hasAttribute("aria-live")) {
-            resultCount.setAttribute("aria-live", "polite");
+        if (!elements.resultCount.hasAttribute("aria-live")) {
+            elements.resultCount.setAttribute("aria-live", "polite");
         }
 
-        resultCount.textContent = count === 0
+        elements.resultCount.textContent = count === 0
             ? "No products"
             : `${count} ${count === 1 ? "product" : "products"}`;
     }
 
     /* =========================================================================
-       EMPTY, ERROR STATES & CLEAR FILTERS
+       EMPTY & ERROR STATES
        ========================================================================= */
 
     function renderEmptyState() {
-        const productList = $("#product-list");
-        if (!productList) return;
+        if (!elements.productList) return;
 
         const hasFilters = Boolean(state.currentCategory || state.currentKeyword);
 
-        productList.innerHTML = `
+        elements.productList.innerHTML = `
             <div class="products-empty">
                 <div class="products-empty-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -421,10 +442,9 @@
     }
 
     function renderErrorState() {
-        const productList = $("#product-list");
-        if (!productList) return;
+        if (!elements.productList) return;
 
-        productList.innerHTML = `
+        elements.productList.innerHTML = `
             <div class="products-error">
                 <div class="products-empty-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -447,11 +467,8 @@
         state.currentKeyword = "";
         state.currentSort = "featured";
 
-        const searchInput = $("#searchInput") || $(".search-input") || $(".products-search-input");
-        if (searchInput) searchInput.value = "";
-
-        const sortSelect = $("#sortSelect") || $(".products-sort-select");
-        if (sortSelect) sortSelect.value = "featured";
+        if (elements.searchInput) elements.searchInput.value = "";
+        if (elements.sortSelect) elements.sortSelect.value = "featured";
 
         syncStateToURL();
         updateCategoryNavigation();
@@ -464,6 +481,7 @@
        ========================================================================= */
 
     function initialize() {
+        cacheDOMElements();
         initializeControls();
         setupImageErrorDelegation();
         loadProducts();
