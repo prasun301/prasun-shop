@@ -4,90 +4,33 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Refund Policy — PRASUN SHOP</title>
-  <meta name="description" content="Refund Policy for PRASUN SHOP digital eBook store." />
-
-  <!-- Favicon Links -->
-  <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: #f8fafc;
-      color: #334155;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      line-height: 1.6;
-    }
-    .header {
-      border-bottom: 1px solid #e2e8f0;
-      position: sticky;
-      top: 0;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(12px);
-      z-index: 100;
-    }
-    .header-container {
-      max-width: 1080px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 1.5rem;
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: #0f172a;
-      font-weight: 700;
-      font-size: 1.15rem;
-    }
+    body { background-color: #f8fafc; color: #334155; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; }
+    .header { border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); z-index: 100; }
+    .header-container { max-width: 1080px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #0f172a; font-weight: 700; font-size: 1.15rem; }
     .nav-links { display: flex; gap: 2rem; }
-    .nav-links a {
-      text-decoration: none;
-      color: #64748b;
-      font-size: 0.95rem;
-      font-weight: 500;
-      transition: color 0.2s ease;
-    }
-    .nav-links a:hover, .nav-links a.active {
-      color: #0f172a;
-      font-weight: 600;
-    }
-    .main-container {
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 0 1.5rem;
-    }
-    h1 { color: #0f172a; font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
-    .last-updated { color: #64748b; font-size: 0.875rem; margin-bottom: 2rem; }
-    h2 { color: #0f172a; font-size: 1.25rem; font-weight: 700; margin: 1.5rem 0 0.5rem 0; }
-    p { margin-bottom: 1rem; color: #475569; font-size: 1rem; }
-    ul { margin: 0 0 1rem 1.5rem; color: #475569; }
-    li { margin-bottom: 0.5rem; }
-    .footer {
-      border-top: 1px solid #e2e8f0;
-      background-color: #ffffff;
-      padding: 2rem;
-      text-align: center;
-      color: #64748b;
-      font-size: 0.85rem;
-      margin-top: 4rem;
-    }
+    .nav-links a { text-decoration: none; color: #64748b; font-size: 0.95rem; font-weight: 500; }
+    .nav-links a:hover, .nav-links a.active { color: #0f172a; font-weight: 600; }
+    .content-card { max-width: 800px; margin: 40px auto; padding: 2.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    h1 { color: #0f172a; font-size: 2.2rem; margin-bottom: 0.5rem; }
+    .last-updated { color: #64748b; font-size: 0.875rem; margin-bottom: 2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; }
+    h2 { color: #0f172a; font-size: 1.3rem; margin: 1.5rem 0 0.5rem 0; }
+    p, ul { margin-bottom: 1rem; color: #334155; font-size: 0.975rem; }
+    ul { padding-left: 1.5rem; }
+    a { color: #2563eb; text-decoration: none; }
+    .footer { border-top: 1px solid #e2e8f0; background-color: #ffffff; padding: 2.5rem 1.5rem; text-align: center; color: #64748b; font-size: 0.875rem; margin-top: 4rem; }
+    .footer-container { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 1.25rem; }
+    .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; }
+    .footer-links a { color: #64748b; text-decoration: none; font-weight: 500; }
   </style>
 </head>
 <body>
-
-  <!-- HEADER -->
   <header class="header">
     <div class="header-container">
-      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-        </svg>
+      <a href="index.html" class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
         <span>PRASUN SHOP</span>
       </a>
       <nav class="nav-links">
@@ -98,41 +41,37 @@
     </div>
   </header>
 
-  <!-- MAIN CONTENT -->
-  <main class="main-container">
+  <main class="content-card">
     <h1>Refund & Return Policy</h1>
-    <p class="last-updated">Last updated: August 2026</p>
+    <p class="last-updated">Last Updated: August 2026</p>
 
-    <p>Because PRASUN SHOP offers non-tangible, irrevocable digital goods (PDF eBooks), instant access and downloads are provided immediately upon order confirmation.</p>
+    <p>At <strong>PRASUN SHOP</strong>, we sell downloadable digital products (PDF eBooks). Because digital content is delivered instantly upon payment, our refund policy reflects the non-returnable nature of digital downloads.</p>
 
-    <h2>1. General Refund Terms</h2>
-    <p>All sales of digital eBooks are generally considered final. However, customer satisfaction is extremely important. We consider refund requests under the following conditions:</p>
+    <h2>1. General Sales Policy</h2>
+    <p>Due to the immediate access granted to downloadable PDF files upon purchase completion, all digital eBook sales are generally considered non-refundable.</p>
+
+    <h2>2. Eligible Refund Exceptions</h2>
+    <p>We want to ensure you are completely satisfied with your purchase. Refunds or replacement files will be issued under the following circumstances:</p>
     <ul>
-      <li><strong>Duplicate Purchases:</strong> Accidental double order of the exact same eBook.</li>
-      <li><strong>Technical File Corruptions:</strong> Unresolvable technical issues preventing file download or reading that cannot be resolved by support.</li>
+      <li><strong>Technical File Defects:</strong> If the downloaded PDF file is corrupted, unreadable, or missing pages, and our support team cannot provide a working copy within 48 hours.</li>
+      <li><strong>Duplicate Charges:</strong> If you were accidentally charged twice for the same transaction due to a billing system glitch.</li>
     </ul>
 
-    <h2>2. How to Request Assistance</h2>
-    <p>If you experience an issue with your download link or made a duplicate purchase, please contact support within <strong>14 days</strong> of purchase:</p>
-    <ul>
-      <li>Visit our <a href="contact.html" style="color: #2563eb;">Contact Page</a></li>
-      <li>Include your order receipt email, order ID, and a brief description of the issue.</li>
-    </ul>
-
-    <h2>3. Processing Refund Requests</h2>
-    <p>Approved refunds are processed through <strong>Lemon Squeezy</strong> and returned to your original payment method. Funds typically post to your account within 5 to 10 business days depending on your payment provider.</p>
+    <h2>3. How to Request Support or a Refund</h2>
+    <p>If you experience any issue downloading or opening your purchased eBook, please contact us within 14 days of purchase through our <a href="contact.html">Contact Form</a>. Include your <strong>Lemon Squeezy Order ID</strong> and the email address used at checkout so we can quickly assist you.</p>
   </main>
 
-  <!-- Footer -->
   <footer class="footer">
-    <div style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
-      <a href="privacy.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Privacy Policy</a>
-      <a href="terms.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Terms of Service</a>
-      <a href="refund.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Refund Policy</a>
-      <a href="contact.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Contact</a>
+    <div class="footer-container">
+      <div class="footer-links">
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="refund.html">Refund Policy</a>
+      </div>
+      <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener">Prasun Barua</a>. All rights reserved.</p>
     </div>
-    <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color: var(--apple-text); text-decoration: underline; font-weight: 500;">Prasun Barua</a>. All rights reserved.</p>
   </footer>
-
 </body>
 </html>
