@@ -1,32 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Shopping Cart | Prasun Shop</title>
-  <meta name="description" content="Review your selected products and proceed securely to checkout at Prasun Shop.">
+
+  <meta
+    name="description"
+    content="Review the products in your Prasun Shop shopping cart before checkout."
+  >
 
   <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
-  <!-- Header -->
-  <header>
-    <div class="container nav">
+  <!-- =========================================================
+       HEADER
+       ========================================================= -->
 
-      <a href="index.html" class="logo" aria-label="Prasun Shop home">
+  <header class="header">
+
+    <div class="container header-inner">
+
+      <!-- Brand -->
+      <a
+        href="index.html"
+        class="logo"
+        aria-label="Prasun Shop home"
+      >
         Prasun Shop<span>.</span>
       </a>
 
-      <nav aria-label="Main navigation">
 
-        <a href="index.html">Home</a>
+      <!-- Desktop Navigation -->
+      <nav
+        class="desktop-nav"
+        aria-label="Main navigation"
+      >
 
-        <a href="products.html">Products</a>
+        <a href="index.html" class="nav-link">
+          Home
+        </a>
 
-        <a href="cart.html" class="cart-icon" aria-label="Shopping Cart">
+        <a href="products.html" class="nav-link">
+          Products
+        </a>
+
+        <a
+          href="cart.html"
+          class="nav-cart"
+          aria-label="Shopping Cart"
+          aria-current="page"
+        >
+
           <svg
             width="20"
             height="20"
@@ -34,6 +63,8 @@
             fill="none"
             stroke="currentColor"
             stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
             aria-hidden="true"
           >
             <path d="M6 6h15l-1.5 9h-12z"/>
@@ -42,77 +73,283 @@
             <circle cx="18" cy="20" r="1"/>
           </svg>
 
-          <span id="cart-count" aria-label="Items in cart">0</span>
+          <span
+            id="cart-count"
+            class="cart-badge"
+            aria-label="0 items in cart"
+          >
+            0
+          </span>
+
         </a>
 
       </nav>
 
+
+      <!-- Mobile Actions -->
+      <div class="mobile-actions">
+
+        <a
+          href="cart.html"
+          class="mobile-cart"
+          aria-label="Shopping Cart"
+          aria-current="page"
+        >
+
+          <svg
+            width="21"
+            height="21"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M6 6h15l-1.5 9h-12z"/>
+            <path d="M6 6 5 3H2"/>
+            <circle cx="9" cy="20" r="1"/>
+            <circle cx="18" cy="20" r="1"/>
+          </svg>
+
+          <span
+            id="mobile-cart-count"
+            class="cart-badge"
+            aria-hidden="true"
+          >
+            0
+          </span>
+
+        </a>
+
+
+        <button
+          type="button"
+          id="mobile-menu-button"
+          class="mobile-menu-button"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="mobile-navigation"
+        >
+
+          <svg
+            class="menu-icon"
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <path d="M4 6h16"/>
+            <path d="M4 12h16"/>
+            <path d="M4 18h16"/>
+          </svg>
+
+        </button>
+
+      </div>
+
     </div>
+
+
+    <!-- Mobile Navigation -->
+    <nav
+      id="mobile-navigation"
+      class="mobile-navigation"
+      aria-label="Mobile navigation"
+      hidden
+    >
+
+      <div class="container mobile-navigation-inner">
+
+        <a href="index.html" class="mobile-nav-link">
+          Home
+        </a>
+
+        <a href="products.html" class="mobile-nav-link">
+          Products
+        </a>
+
+        <a
+          href="cart.html"
+          class="mobile-nav-link active"
+          aria-current="page"
+        >
+          Cart
+        </a>
+
+      </div>
+
+    </nav>
+
   </header>
 
 
-  <!-- Cart -->
+  <!-- =========================================================
+       MAIN
+       ========================================================= -->
+
   <main class="cart-page">
 
     <div class="container">
 
+
       <!-- Breadcrumb -->
-      <nav class="cart-breadcrumb" aria-label="Breadcrumb">
-        <a href="index.html">Home</a>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page">Cart</span>
+      <nav
+        class="cart-breadcrumb"
+        aria-label="Breadcrumb"
+      >
+
+        <a href="index.html">
+          Home
+        </a>
+
+        <span aria-hidden="true">
+          /
+        </span>
+
+        <span aria-current="page">
+          Cart
+        </span>
+
       </nav>
 
 
       <!-- Page Heading -->
-      <div class="cart-header">
+      <header class="cart-header">
+
         <div>
-          <h1>Your Shopping Cart</h1>
-          <p>Review your items before checkout.</p>
+
+          <h1>
+            Your Shopping Cart
+          </h1>
+
+          <p>
+            Review your items before checkout.
+          </p>
+
         </div>
-      </div>
+
+      </header>
 
 
       <!-- Cart Layout -->
       <div class="cart-layout">
 
-        <!-- Products -->
-        <section class="cart-products" aria-label="Cart items">
 
-          <div id="cart-items">
+        <!-- =====================================================
+             CART PRODUCTS
+             ===================================================== -->
 
-            <!-- cart.js renders products here -->
+        <section
+          class="cart-products"
+          aria-label="Shopping cart items"
+        >
+
+          <div
+            id="cart-items"
+            class="cart-items"
+            aria-live="polite"
+            aria-busy="true"
+          >
+
+            <!-- cart.js renders items here -->
+
+            <div class="cart-loading" aria-hidden="true">
+
+              <div class="cart-loading-item">
+
+                <div class="skeleton skeleton-image"></div>
+
+                <div class="skeleton-content">
+
+                  <div class="skeleton skeleton-title"></div>
+
+                  <div class="skeleton skeleton-text"></div>
+
+                  <div class="skeleton skeleton-control"></div>
+
+                </div>
+
+              </div>
+
+              <div class="cart-loading-item">
+
+                <div class="skeleton skeleton-image"></div>
+
+                <div class="skeleton-content">
+
+                  <div class="skeleton skeleton-title"></div>
+
+                  <div class="skeleton skeleton-text"></div>
+
+                  <div class="skeleton skeleton-control"></div>
+
+                </div>
+
+              </div>
+
+            </div>
 
           </div>
 
         </section>
 
 
-        <!-- Summary -->
-        <aside class="cart-summary" aria-label="Order summary">
+        <!-- =====================================================
+             ORDER SUMMARY
+             ===================================================== -->
+
+        <aside
+          class="cart-summary"
+          aria-label="Order summary"
+        >
 
           <div class="cart-summary-inner">
 
-            <h2>Order Summary</h2>
+            <h2>
+              Order Summary
+            </h2>
+
 
             <div class="cart-summary-row">
-              <span>Subtotal</span>
-              <strong id="cart-total">--</strong>
+
+              <span>
+                Subtotal
+              </span>
+
+              <strong id="cart-total">
+                --
+              </strong>
+
             </div>
 
+
             <div class="cart-summary-note">
+
               Taxes and payment details are calculated at checkout.
+
             </div>
+
 
             <button
               type="button"
+              id="checkout-button"
               class="checkout-button"
-              onclick="window.location.href='checkout.html'"
+              disabled
             >
               Proceed to Checkout
             </button>
 
-            <a href="products.html" class="continue-shopping">
+
+            <a
+              href="products.html"
+              class="continue-shopping"
+            >
               Continue Shopping
             </a>
 
@@ -127,8 +364,12 @@
   </main>
 
 
+  <!-- =========================================================
+       JAVASCRIPT
+       ========================================================= -->
+
   <script src="js/cart.js"></script>
-  <script src="js/cart-count.js"></script>
 
 </body>
+
 </html>
