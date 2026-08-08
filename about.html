@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>About — PRASUN SHOP</title>
   <style>
     :root {
@@ -15,7 +15,9 @@
       --apple-dark-hover: #333336;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       background-color: var(--apple-card-bg);
@@ -31,6 +33,7 @@
       top: 0;
       background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       z-index: 100;
     }
 
@@ -43,7 +46,6 @@
       padding: 1rem 2rem;
     }
 
-    /* Locked-down logo styles to prevent shifts/resizing */
     .logo {
       display: flex;
       align-items: center;
@@ -51,13 +53,6 @@
       text-decoration: none;
       color: var(--apple-text);
       font-weight: 600;
-      flex-shrink: 0;
-    }
-
-    .logo svg {
-      width: 22px;
-      height: 22px;
-      flex-shrink: 0;
     }
 
     .nav-links {
@@ -72,87 +67,89 @@
       transition: color 0.2s;
     }
 
-    .nav-links a:hover, .nav-links a.active { color: var(--apple-text); }
-
-    .main-container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 4rem 2rem;
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--apple-text);
     }
 
     .hero {
       text-align: center;
-      margin-bottom: 3.5rem;
+      padding: 4rem 2rem 2rem 2rem;
     }
 
     .hero h1 {
-      font-size: 3rem;
+      font-size: 2.75rem;
       font-weight: 700;
-      margin: 0 0 1rem 0;
+      margin: 0 0 0.5rem 0;
       letter-spacing: -0.015em;
     }
 
     .hero p {
-      font-size: 1.15rem;
       color: var(--apple-gray);
+      font-size: 1.1rem;
       margin: 0;
     }
 
-    .content-section {
-      font-size: 1.05rem;
+    .main-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem 2rem;
       line-height: 1.7;
       color: #48484a;
     }
 
-    .content-section p {
+    .main-container p {
       margin-bottom: 1.5rem;
+      font-size: 1.05rem;
     }
 
     .footer {
       border-top: 1px solid var(--apple-border);
       background-color: var(--apple-bg);
-      padding: 2.5rem;
+      padding: 2rem;
       text-align: center;
       color: var(--apple-gray);
       font-size: 0.85rem;
-      margin-top: 6rem;
+      margin-top: 4rem;
     }
   </style>
 </head>
 <body>
 
+  <!-- Header -->
   <header class="header">
     <div class="header-container">
       <a href="index.html" class="logo">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-0.5-0.5Z"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
         </svg>
         <span>PRASUN SHOP</span>
       </a>
       <nav class="nav-links">
-        <a href="index.html">Ebooks</a>
+        <a href="index.html">Shop</a>
         <a href="about.html" class="active">About</a>
         <a href="contact.html">Contact</a>
       </nav>
     </div>
   </header>
 
-  <main class="main-container">
-    <div class="hero">
-      <h1>About Prasun Shop</h1>
-      <p>Independent engineering publications built for clarity and impact.</p>
-    </div>
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>About Prasun Shop</h1>
+    <p>Independent engineering publications built for clarity and impact.</p>
+  </section>
 
-    <div class="content-section">
-      <p><strong>Prasun Shop</strong> is an independent digital publishing platform founded and authored by engineer <strong>Prasun Barua</strong>. Our mission is to bridge the gap between complex industrial theories and practical, everyday application.</p>
-      
-      <p>From the fundamentals of residential solar systems and electrical engineering to the precise science of modern semiconductor manufacturing, every guide is written with one core focus: clarity. We strip away unnecessary academic jargon to deliver structured, highly actionable knowledge that helps professionals, students, and homeowners make confident technical decisions.</p>
-      
-      <p>All books are written exclusively by Prasun Barua and provided as high-resolution digital PDFs, ready for instant download the moment your checkout is complete.</p>
-    </div>
+  <!-- Main Content -->
+  <main class="main-container">
+    <p><strong>Prasun Shop</strong> is an independent digital publishing platform founded and authored by engineer <strong>Prasun Barua</strong>. Our mission is to bridge the gap between complex industrial theories and practical, everyday application.</p>
+    
+    <p>From the fundamentals of residential solar systems and electrical engineering to the precise science of modern semiconductor manufacturing, every guide is written with one core focus: clarity. We strip away unnecessary academic jargon to deliver structured, highly actionable knowledge that helps professionals, students, and homeowners make confident technical decisions.</p>
+    
+    <p>All books are written exclusively by Prasun Barua and provided as high-resolution digital PDFs, ready for instant download the moment your checkout is complete.</p>
   </main>
 
+  <!-- Footer -->
   <footer class="footer">
     <div style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
       <a href="privacy.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Privacy Policy</a>
@@ -160,7 +157,7 @@
       <a href="refund.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Refund Policy</a>
       <a href="contact.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Contact</a>
     </div>
-    <p>&copy; 2026 PRASUN SHOP. All rights reserved. Secure digital delivery powered by Lemon Squeezy.</p>
+    <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
   </footer>
 
 </body>
