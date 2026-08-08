@@ -4,90 +4,35 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy Policy — PRASUN SHOP</title>
-  <meta name="description" content="Privacy Policy for PRASUN SHOP digital eBook store." />
-
-  <!-- Favicon Links -->
-  <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: #f8fafc;
-      color: #334155;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      line-height: 1.6;
-    }
-    .header {
-      border-bottom: 1px solid #e2e8f0;
-      position: sticky;
-      top: 0;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(12px);
-      z-index: 100;
-    }
-    .header-container {
-      max-width: 1080px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 1.5rem;
-    }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: #0f172a;
-      font-weight: 700;
-      font-size: 1.15rem;
-    }
+    body { background-color: #f8fafc; color: #334155; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; }
+    .header { border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); z-index: 100; }
+    .header-container { max-width: 1080px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #0f172a; font-weight: 700; font-size: 1.15rem; }
     .nav-links { display: flex; gap: 2rem; }
-    .nav-links a {
-      text-decoration: none;
-      color: #64748b;
-      font-size: 0.95rem;
-      font-weight: 500;
-      transition: color 0.2s ease;
-    }
-    .nav-links a:hover, .nav-links a.active {
-      color: #0f172a;
-      font-weight: 600;
-    }
-    .main-container {
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 0 1.5rem;
-    }
-    h1 { color: #0f172a; font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
-    .last-updated { color: #64748b; font-size: 0.875rem; margin-bottom: 2rem; }
-    h2 { color: #0f172a; font-size: 1.25rem; font-weight: 700; margin: 1.5rem 0 0.5rem 0; }
-    p { margin-bottom: 1rem; color: #475569; font-size: 1rem; }
-    ul { margin: 0 0 1rem 1.5rem; color: #475569; }
+    .nav-links a { text-decoration: none; color: #64748b; font-size: 0.95rem; font-weight: 500; }
+    .nav-links a:hover, .nav-links a.active { color: #0f172a; font-weight: 600; }
+    .content-card { max-width: 800px; margin: 40px auto; padding: 2.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    h1 { color: #0f172a; font-size: 2.2rem; margin-bottom: 0.5rem; }
+    .last-updated { color: #64748b; font-size: 0.875rem; margin-bottom: 2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; }
+    h2 { color: #0f172a; font-size: 1.3rem; margin: 1.5rem 0 0.5rem 0; }
+    p, ul { margin-bottom: 1rem; color: #334155; font-size: 0.975rem; }
+    ul { padding-left: 1.5rem; }
     li { margin-bottom: 0.5rem; }
-    .footer {
-      border-top: 1px solid #e2e8f0;
-      background-color: #ffffff;
-      padding: 2rem;
-      text-align: center;
-      color: #64748b;
-      font-size: 0.85rem;
-      margin-top: 4rem;
-    }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .footer { border-top: 1px solid #e2e8f0; background-color: #ffffff; padding: 2.5rem 1.5rem; text-align: center; color: #64748b; font-size: 0.875rem; margin-top: 4rem; }
+    .footer-container { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 1.25rem; }
+    .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; }
+    .footer-links a { color: #64748b; text-decoration: none; font-weight: 500; }
   </style>
 </head>
 <body>
-
-  <!-- HEADER -->
   <header class="header">
     <div class="header-container">
-      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-        </svg>
+      <a href="index.html" class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
         <span>PRASUN SHOP</span>
       </a>
       <nav class="nav-links">
@@ -98,50 +43,51 @@
     </div>
   </header>
 
-  <!-- MAIN CONTENT -->
-  <main class="main-container">
+  <main class="content-card">
     <h1>Privacy Policy</h1>
-    <p class="last-updated">Last updated: August 2026</p>
+    <p class="last-updated">Last Updated: August 2026</p>
 
-    <p>At PRASUN SHOP, accessible from <strong>shop.prasunbarua.com</strong>, protecting visitor privacy is one of our top priorities. This document outlines the types of information collected and how it is utilized.</p>
+    <p>At <strong>PRASUN SHOP</strong> (accessible from our website), the privacy of our visitors is one of our top priorities. This Privacy Policy document outlines the types of information collected and recorded by PRASUN SHOP and how we use it.</p>
 
     <h2>1. Information We Collect</h2>
-    <p>When you purchase digital products on PRASUN SHOP, checkout process management and fulfillment are handled securely via our payment processor partner, <strong>Lemon Squeezy</strong> (Merchant of Record).</p>
-    <p>We may receive basic purchase details necessary for customer support and order fulfillment, including:</p>
+    <p>When you browse our store or purchase an eBook, we may collect minimal personal information necessary to process your transaction or respond to support requests. This includes:</p>
     <ul>
-      <li>Your name and email address</li>
-      <li>Transaction timestamps and order details</li>
-      <li>Country location for tax compliance purposes</li>
+      <li>Contact details (such as your name and email address) submitted via contact forms or order checkouts.</li>
+      <li>Technical data such as IP address, browser type, device information, and referring pages.</li>
     </ul>
 
-    <h2>2. Payment Processing Security</h2>
-    <p>We do <strong>not</strong> collect, process, or store your credit card or financial payment details directly on our servers. All financial transactions are processed securely by Lemon Squeezy using industry-standard encryption.</p>
+    <h2>2. Third-Party Payment Processing (Lemon Squeezy)</h2>
+    <p>All payments and eBook fulfillment are processed securely through our merchant of record, <strong>Lemon Squeezy</strong>. PRASUN SHOP does not store, collect, or process your full payment card details on our servers. Your payment transaction data is governed by <a href="https://www.lemonsqueezy.com/privacy" target="_blank" rel="noopener">Lemon Squeezy's Privacy Policy</a>.</p>
 
-    <h2>3. How We Use Your Information</h2>
-    <p>Information provided during purchase is used strictly to:</p>
+    <h2>3. Google AdSense & Third-Party Advertising Cookies</h2>
+    <p>PRASUN SHOP uses third-party advertising services, including <strong>Google AdSense</strong>, to serve advertisements when you visit our website.</p>
     <ul>
-      <li>Deliver digital product files and order receipts</li>
-      <li>Respond to customer support inquiries and download requests</li>
-      <li>Maintain necessary accounting and transaction records</li>
+      <li>Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to PRASUN SHOP or other websites on the Internet.</li>
+      <li>Google's use of advertising cookies enables it and its partners to serve ads to users based on their visit to our site and/or other sites on the Internet.</li>
+      <li>Users may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Google Ad Settings</a>. Alternatively, you can opt out of a third-party vendor's use of cookies for personalized advertising by visiting <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener">www.aboutads.info</a>.</li>
     </ul>
 
-    <h2>4. Third-Party Services</h2>
-    <p>We do not sell, trade, or transfer your personal information to outside third parties. Third-party partners (such as Lemon Squeezy) assist in operating our website and conducting transactions, operating under strict privacy standards.</p>
+    <h2>4. Log Files</h2>
+    <p>PRASUN SHOP follows a standard procedure of using log files. These files log visitors when they visit websites. The information collected by log files includes internet protocol (IP) addresses, browser type, Internet Service Provider (ISP), date and time stamp, referring/exit pages, and possibly the number of clicks. These are not linked to any information that is personally identifiable.</p>
 
-    <h2>5. Contact Us</h2>
-    <p>If you have questions regarding this Privacy Policy, please reach out via our <a href="contact.html" style="color: #2563eb;">Contact page</a> or visit <a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color: #2563eb;">prasunbarua.com</a>.</p>
+    <h2>5. CCPA & GDPR Privacy Rights</h2>
+    <p>Depending on your location, you have the right to request access to, correction of, or deletion of your personal data collected on this site. If you wish to exercise any of these rights, please reach out through our <a href="contact.html">Contact Page</a>.</p>
+
+    <h2>6. Contact Us</h2>
+    <p>If you have additional questions or require more information about our Privacy Policy, do not hesitate to contact us at <a href="https://prasunbarua.com" target="_blank" rel="noopener">prasunbarua.com</a> or via our contact page.</p>
   </main>
 
-  <!-- Footer -->
   <footer class="footer">
-    <div style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
-      <a href="privacy.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Privacy Policy</a>
-      <a href="terms.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Terms of Service</a>
-      <a href="refund.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Refund Policy</a>
-      <a href="contact.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Contact</a>
+    <div class="footer-container">
+      <div class="footer-links">
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms-of-service.html">Terms of Service</a>
+        <a href="refund-policy.html">Refund Policy</a>
+      </div>
+      <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener">Prasun Barua</a>. All rights reserved.</p>
     </div>
-    <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color: var(--apple-text); text-decoration: underline; font-weight: 500;">Prasun Barua</a>. All rights reserved.</p>
   </footer>
-
 </body>
 </html>
