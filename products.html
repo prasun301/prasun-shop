@@ -1,35 +1,31 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Products — Prasun Shop</title>
+    <meta name="description" content="Browse products available from Prasun Shop. Simple, useful products for modern life and work.">
+    <meta name="theme-color" content="#ffffff">
 
-    <meta
-        name="description"
-        content="Browse products available from Prasun Shop."
-    >
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Products — Prasun Shop">
+    <meta property="og:description" content="Browse high-quality products available from Prasun Shop.">
+    <meta property="og:image" content="images/og-products.jpg">
 
-    <meta
-        name="theme-color"
-        content="#ffffff"
-    >
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Products — Prasun Shop">
+    <meta name="twitter:description" content="Browse high-quality products available from Prasun Shop.">
 
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+    <!-- Favicon Links -->
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-    <script
-        src="products.js"
-        defer
-    ></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="products.js" defer></script>
 </head>
 
 <body>
@@ -38,10 +34,7 @@
      SKIP LINK
      ================================================================ -->
 
-<a
-    href="#main-content"
-    class="skip-link"
->
+<a href="#main-content" class="skip-link">
     Skip to content
 </a>
 
@@ -51,71 +44,26 @@
      ================================================================ -->
 
 <header class="header">
-
     <div class="container header-container">
 
         <!-- Logo -->
-
-        <a
-            href="index.html"
-            class="logo"
-            aria-label="Prasun Shop home"
-        >
+        <a href="index.html" class="logo" aria-label="Prasun Shop home">
             Prasun Shop<span aria-hidden="true">.</span>
         </a>
 
-
         <!-- Desktop Navigation -->
-
-        <nav
-            class="nav-links"
-            aria-label="Primary navigation"
-        >
-
-            <a
-                href="index.html"
-                class="nav-link"
-            >
-                Home
-            </a>
-
-            <a
-                href="products.html"
-                class="nav-link active"
-                aria-current="page"
-            >
-                Products
-            </a>
-
-            <a
-                href="about.html"
-                class="nav-link"
-            >
-                About
-            </a>
-
-            <a
-                href="contact.html"
-                class="nav-link"
-            >
-                Contact
-            </a>
-
+        <nav class="nav-links" aria-label="Primary navigation">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="products.html" class="nav-link active" aria-current="page">Products</a>
+            <a href="about.html" class="nav-link">About</a>
+            <a href="contact.html" class="nav-link">Contact</a>
         </nav>
 
-
         <!-- Header Actions -->
-
         <div class="header-actions">
 
             <!-- Cart -->
-
-            <a
-                href="cart.html"
-                class="cart-icon-wrap"
-                aria-label="Shopping cart"
-            >
-
+            <a href="cart.html" class="cart-icon-wrap" id="cart-link" aria-label="Shopping cart, 0 items">
                 <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -125,36 +73,17 @@
                     stroke-linejoin="round"
                     aria-hidden="true"
                 >
-                    <path
-                        d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"
-                    />
-
-                    <circle
-                        cx="10"
-                        cy="20"
-                        r="1.3"
-                    />
-
-                    <circle
-                        cx="18"
-                        cy="20"
-                        r="1.3"
-                    />
+                    <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6" />
+                    <circle cx="10" cy="20" r="1.3" />
+                    <circle cx="18" cy="20" r="1.3" />
                 </svg>
 
-                <span
-                    id="cart-count"
-                    class="cart-badge"
-                    aria-label="Items in cart"
-                >
+                <span id="cart-count" class="cart-badge" aria-hidden="true">
                     0
                 </span>
-
             </a>
 
-
             <!-- Mobile Menu Button -->
-
             <button
                 type="button"
                 class="mobile-menu-btn"
@@ -163,7 +92,6 @@
                 aria-controls="products-mobile-menu"
                 aria-label="Open menu"
             >
-
                 <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -176,57 +104,20 @@
                     <path d="M4 12h16"/>
                     <path d="M4 18h16"/>
                 </svg>
-
             </button>
 
         </div>
 
     </div>
 
-
     <!-- Mobile Navigation -->
-
-    <div
-        id="products-mobile-menu"
-        class="mobile-menu"
-        hidden
-    >
-
-        <nav
-            aria-label="Mobile navigation"
-        >
-
-            <a
-                href="index.html"
-                class="mobile-nav-link"
-            >
-                Home
-            </a>
-
-            <a
-                href="products.html"
-                class="mobile-nav-link active"
-                aria-current="page"
-            >
-                Products
-            </a>
-
-            <a
-                href="about.html"
-                class="mobile-nav-link"
-            >
-                About
-            </a>
-
-            <a
-                href="contact.html"
-                class="mobile-nav-link"
-            >
-                Contact
-            </a>
-
+    <div id="products-mobile-menu" class="mobile-menu" hidden>
+        <nav aria-label="Mobile navigation">
+            <a href="index.html" class="mobile-nav-link">Home</a>
+            <a href="products.html" class="mobile-nav-link active" aria-current="page">Products</a>
+            <a href="about.html" class="mobile-nav-link">About</a>
+            <a href="contact.html" class="mobile-nav-link">Contact</a>
         </nav>
-
     </div>
 
 </header>
@@ -237,100 +128,67 @@
      ================================================================ -->
 
 <main id="main-content">
-
     <div class="container products-page">
 
-
         <!-- ============================================================
-             PRODUCTS HEADER
+             PRODUCTS HERO & SEARCH
              ============================================================ -->
 
-        <section
-            class="products-hero"
-            aria-labelledby="products-heading"
-        >
-
+        <section class="products-hero" aria-labelledby="products-heading">
             <div class="products-hero-content">
-
-                <h1
-                    id="products-heading"
-                    class="products-heading"
-                >
+                <h1 id="products-heading" class="products-heading">
                     Products
                 </h1>
-
                 <p class="products-intro">
-                    Browse our available products.
+                    Browse our collection of modern essentials.
                 </p>
-
             </div>
 
-
             <!-- Search -->
+            <search role="search">
+                <form id="product-search-form" class="products-search">
+                    <label for="product-search" class="sr-only">
+                        Search products
+                    </label>
 
-            <form
-                id="product-search-form"
-                class="products-search"
-                role="search"
-            >
+                    <svg
+                        class="products-search-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        aria-hidden="true"
+                    >
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="m20 20-4-4"/>
+                    </svg>
 
-                <label
-                    for="product-search"
-                    class="sr-only"
-                >
-                    Search products
-                </label>
+                    <input
+                        id="product-search"
+                        class="products-search-input"
+                        type="search"
+                        placeholder="Search products..."
+                        autocomplete="off"
+                        spellcheck="false"
+                        enterkeyhint="search"
+                    >
 
-                <svg
-                    class="products-search-icon"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    aria-hidden="true"
-                >
-                    <circle
-                        cx="11"
-                        cy="11"
-                        r="7"
-                    />
+                    <button
+                        type="button"
+                        id="search-clear"
+                        class="search-clear"
+                        aria-label="Clear search"
+                        hidden
+                    >
+                        <span aria-hidden="true">&times;</span>
+                    </button>
 
-                    <path d="m20 20-4-4"/>
-                </svg>
-
-
-                <input
-                    id="product-search"
-                    class="products-search-input"
-                    type="search"
-                    placeholder="Search products..."
-                    autocomplete="off"
-                    spellcheck="false"
-                    enterkeyhint="search"
-                >
-
-
-                <button
-                    type="button"
-                    id="search-clear"
-                    class="search-clear"
-                    aria-label="Clear search"
-                    hidden
-                >
-                    ×
-                </button>
-
-
-                <span
-                    class="products-search-shortcut"
-                    aria-hidden="true"
-                >
-                    ⌘ K
-                </span>
-
-            </form>
-
+                    <kbd class="products-search-shortcut" aria-hidden="true">
+                        ⌘ K
+                    </kbd>
+                </form>
+            </search>
         </section>
 
 
@@ -338,17 +196,8 @@
              CATEGORY FILTER
              ============================================================ -->
 
-        <section
-            class="products-toolbar"
-            aria-label="Product categories"
-        >
-
-            <div
-                class="products-categories"
-                role="group"
-                aria-label="Filter products by category"
-            >
-
+        <section class="products-toolbar" aria-label="Product categories">
+            <div class="products-categories" role="group" aria-label="Filter products by category">
                 <button
                     type="button"
                     class="category-pill active"
@@ -357,25 +206,7 @@
                 >
                     All
                 </button>
-
-                <!--
-                    Additional category buttons can be added here
-                    if they exist in data/products.json or localStorage.
-
-                    Example:
-
-                    <button
-                        type="button"
-                        class="category-pill"
-                        data-category="Smart Lighting"
-                        aria-pressed="false"
-                    >
-                        Smart Lighting
-                    </button>
-                -->
-
             </div>
-
         </section>
 
 
@@ -384,48 +215,21 @@
              ============================================================ -->
 
         <div class="products-results-bar">
-
-            <p
-                id="products-count"
-                class="products-result-count"
-                aria-live="polite"
-            >
+            <p id="products-count" class="products-result-count" aria-live="polite">
                 Loading products…
             </p>
 
-
-            <label class="products-sort-wrap">
-
-                <span class="sr-only">
+            <div class="products-sort-wrap">
+                <label for="product-sort" class="sr-only">
                     Sort products
-                </span>
-
-                <select
-                    id="product-sort"
-                    class="products-sort"
-                    aria-label="Sort products"
-                >
-
-                    <option value="featured">
-                        Featured
-                    </option>
-
-                    <option value="price-low">
-                        Price: Low to High
-                    </option>
-
-                    <option value="price-high">
-                        Price: High to Low
-                    </option>
-
-                    <option value="name">
-                        Name: A to Z
-                    </option>
-
+                </label>
+                <select id="product-sort" class="products-sort">
+                    <option value="featured">Featured</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="name">Name: A to Z</option>
                 </select>
-
-            </label>
-
+            </div>
         </div>
 
 
@@ -436,142 +240,54 @@
         <section
             id="product-list"
             class="products-grid"
-            aria-label="Products"
+            aria-label="Products list"
             aria-live="polite"
             aria-busy="true"
         >
-
-            <!-- Loading Skeleton 1 -->
-
-            <article class="product-skeleton">
-
+            <!-- Loading Skeletons -->
+            <article class="product-skeleton" aria-hidden="true">
                 <div class="skeleton-image"></div>
-
                 <div class="skeleton-content">
-
-                    <span
-                        class="skeleton-line skeleton-category"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-title"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-description"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-description short"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-price"
-                    ></span>
-
+                    <span class="skeleton-line skeleton-category"></span>
+                    <span class="skeleton-line skeleton-title"></span>
+                    <span class="skeleton-line skeleton-description"></span>
+                    <span class="skeleton-line skeleton-description short"></span>
+                    <span class="skeleton-line skeleton-price"></span>
                 </div>
-
             </article>
 
-
-            <!-- Loading Skeleton 2 -->
-
-            <article class="product-skeleton">
-
+            <article class="product-skeleton" aria-hidden="true">
                 <div class="skeleton-image"></div>
-
                 <div class="skeleton-content">
-
-                    <span
-                        class="skeleton-line skeleton-category"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-title"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-description"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-description short"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-price"
-                    ></span>
-
+                    <span class="skeleton-line skeleton-category"></span>
+                    <span class="skeleton-line skeleton-title"></span>
+                    <span class="skeleton-line skeleton-description"></span>
+                    <span class="skeleton-line skeleton-description short"></span>
+                    <span class="skeleton-line skeleton-price"></span>
                 </div>
-
             </article>
 
-
-            <!-- Loading Skeleton 3 -->
-
-            <article class="product-skeleton">
-
+            <article class="product-skeleton" aria-hidden="true">
                 <div class="skeleton-image"></div>
-
                 <div class="skeleton-content">
-
-                    <span
-                        class="skeleton-line skeleton-category"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-title"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-description"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-description short"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-price"
-                    ></span>
-
+                    <span class="skeleton-line skeleton-category"></span>
+                    <span class="skeleton-line skeleton-title"></span>
+                    <span class="skeleton-line skeleton-description"></span>
+                    <span class="skeleton-line skeleton-description short"></span>
+                    <span class="skeleton-line skeleton-price"></span>
                 </div>
-
             </article>
 
-
-            <!-- Loading Skeleton 4 -->
-
-            <article class="product-skeleton">
-
+            <article class="product-skeleton" aria-hidden="true">
                 <div class="skeleton-image"></div>
-
                 <div class="skeleton-content">
-
-                    <span
-                        class="skeleton-line skeleton-category"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-title"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-description"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-description short"
-                    ></span>
-
-                    <span
-                        class="skeleton-line skeleton-price"
-                    ></span>
-
+                    <span class="skeleton-line skeleton-category"></span>
+                    <span class="skeleton-line skeleton-title"></span>
+                    <span class="skeleton-line skeleton-description"></span>
+                    <span class="skeleton-line skeleton-description short"></span>
+                    <span class="skeleton-line skeleton-price"></span>
                 </div>
-
             </article>
-
         </section>
 
 
@@ -579,15 +295,8 @@
              EMPTY STATE
              ============================================================ -->
 
-        <section
-            id="empty-state"
-            class="products-empty"
-            hidden
-            aria-live="polite"
-        >
-
+        <section id="empty-state" class="products-empty" hidden aria-live="polite">
             <div class="products-empty-icon">
-
                 <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -597,37 +306,15 @@
                     stroke-linejoin="round"
                     aria-hidden="true"
                 >
-                    <circle
-                        cx="11"
-                        cy="11"
-                        r="7"
-                    />
-
+                    <circle cx="11" cy="11" r="7" />
                     <path d="m20 20-4-4"/>
-
                 </svg>
-
             </div>
-
-
-            <h2>
-                No products found
-            </h2>
-
-
-            <p>
-                Try another search or view all products.
-            </p>
-
-
-            <button
-                type="button"
-                class="products-empty-button"
-                id="empty-reset-btn"
-            >
+            <h2>No products found</h2>
+            <p>Try another search query or clear filters to view all products.</p>
+            <button type="button" class="products-empty-button" id="empty-reset-btn">
                 View All Products
             </button>
-
         </section>
 
 
@@ -635,15 +322,8 @@
              ERROR STATE
              ============================================================ -->
 
-        <section
-            id="products-error"
-            class="products-error"
-            hidden
-            aria-live="assertive"
-        >
-
+        <section id="products-error" class="products-error" hidden aria-live="assertive">
             <div class="products-empty-icon">
-
                 <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -653,44 +333,19 @@
                     stroke-linejoin="round"
                     aria-hidden="true"
                 >
-
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="9"
-                    />
-
+                    <circle cx="12" cy="12" r="9" />
                     <path d="M12 8v5"/>
-
                     <path d="M12 16h.01"/>
-
                 </svg>
-
             </div>
-
-
-            <h2>
-                Unable to load products
-            </h2>
-
-
-            <p>
-                Please try again.
-            </p>
-
-
-            <button
-                type="button"
-                class="products-empty-button"
-                id="products-retry-btn"
-            >
+            <h2>Unable to load products</h2>
+            <p>Please check your internet connection and try again.</p>
+            <button type="button" class="products-empty-button" id="products-retry-btn">
                 Try Again
             </button>
-
         </section>
 
     </div>
-
 </main>
 
 
@@ -699,170 +354,101 @@
      ================================================================ -->
 
 <footer class="footer">
-
     <div class="container">
-
         <div class="footer-content">
 
-
             <!-- Brand -->
-
             <div class="footer-col">
-
-                <h4>
-                    Prasun Shop
-                </h4>
-
-                <p>
-                    Simple, useful products for modern life and work.
-                </p>
-
+                <h4>Prasun Shop</h4>
+                <p>Simple, useful products for modern life and work.</p>
             </div>
-
 
             <!-- Shop -->
-
             <div class="footer-col">
-
-                <h4>
-                    Shop
-                </h4>
-
+                <h4>Shop</h4>
                 <ul>
-
-                    <li>
-                        <a href="products.html">
-                            Products
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="cart.html">
-                            Cart
-                        </a>
-                    </li>
-
+                    <li><a href="products.html">Products</a></li>
+                    <li><a href="cart.html">Cart</a></li>
                 </ul>
-
             </div>
-
 
             <!-- Information -->
-
             <div class="footer-col">
-
-                <h4>
-                    Information
-                </h4>
-
+                <h4>Information</h4>
                 <ul>
-
-                    <li>
-                        <a href="about.html">
-                            About
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="contact.html">
-                            Contact
-                        </a>
-                    </li>
-
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="contact.html">Contact</a></li>
                 </ul>
-
             </div>
 
         </div>
 
-
         <!-- Copyright -->
-
         <div class="footer-bottom">
-
-            ©
-            <span id="footer-year"></span>
-            Prasun Shop. All rights reserved.
-
+            &copy; <span id="footer-year"></span> Prasun Shop. All rights reserved.
         </div>
-
     </div>
-
 </footer>
 
 
 <!-- ================================================================
-     MINIMAL PAGE SCRIPT
+     PAGE UI SCRIPT
      ================================================================ -->
 
 <script>
 (function () {
-
     "use strict";
 
-    const year = document.getElementById("footer-year");
-
-    if (year) {
-        year.textContent = new Date().getFullYear();
+    // Set Copyright Year
+    const yearEl = document.getElementById("footer-year");
+    if (yearEl) {
+        yearEl.textContent = new Date().getFullYear();
     }
 
+    // Mobile Navigation Toggle
+    const menuButton = document.getElementById("products-menu-toggle");
+    const mobileMenu = document.getElementById("products-mobile-menu");
 
-    const menuButton =
-        document.getElementById("products-menu-toggle");
-
-    const mobileMenu =
-        document.getElementById("products-mobile-menu");
-
+    function closeMobileMenu() {
+        if (!menuButton || !mobileMenu) return;
+        menuButton.setAttribute("aria-expanded", "false");
+        menuButton.setAttribute("aria-label", "Open menu");
+        mobileMenu.hidden = true;
+    }
 
     if (menuButton && mobileMenu) {
-
         menuButton.addEventListener("click", function () {
-
-            const isOpen =
-                menuButton.getAttribute("aria-expanded") === "true";
-
-            menuButton.setAttribute(
-                "aria-expanded",
-                String(!isOpen)
-            );
-
-            menuButton.setAttribute(
-                "aria-label",
-                isOpen ? "Open menu" : "Close menu"
-            );
-
+            const isOpen = menuButton.getAttribute("aria-expanded") === "true";
+            menuButton.setAttribute("aria-expanded", String(!isOpen));
+            menuButton.setAttribute("aria-label", isOpen ? "Open menu" : "Close menu");
             mobileMenu.hidden = isOpen;
-
         });
 
+        mobileMenu.querySelectorAll("a").forEach(function (link) {
+            link.addEventListener("click", closeMobileMenu);
+        });
 
-        mobileMenu
-            .querySelectorAll("a")
-            .forEach(function (link) {
-
-                link.addEventListener("click", function () {
-
-                    menuButton.setAttribute(
-                        "aria-expanded",
-                        "false"
-                    );
-
-                    menuButton.setAttribute(
-                        "aria-label",
-                        "Open menu"
-                    );
-
-                    mobileMenu.hidden = true;
-
-                });
-
-            });
-
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && menuButton.getAttribute("aria-expanded") === "true") {
+                closeMobileMenu();
+                menuButton.focus();
+            }
+        });
     }
 
+    // Command/Control + K Search Focus Shortcut
+    const searchInput = document.getElementById("product-search");
+    if (searchInput) {
+        document.addEventListener("keydown", function (e) {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
+        });
+    }
 })();
 </script>
 
 </body>
 </html>
-```
