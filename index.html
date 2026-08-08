@@ -6,6 +6,11 @@
   <title>PRASUN SHOP — Digital eBook Store</title>
   <meta name="description" content="Practical guides written by Prasun Barua to help you make informed technical decisions." />
 
+  <!-- Favicon Links -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
   <style type="text/css">
     /* ----------------------------------------------------
        1. BASE / LIGHT MODE VARIABLES
@@ -56,80 +61,28 @@
     }
 
     /* ----------------------------------------------------
-       3. MANUAL LIGHT OVERRIDES
-       ---------------------------------------------------- */
-    :root.light .ebook-store-container,
-    body.light .ebook-store-container,
-    .light .ebook-store-container,
-    [data-theme="light"] .ebook-store-container {
-      --store-text: #334155;
-      --store-heading: #0f172a;
-      --store-subtext: #64748b;
-      --store-divider: #e2e8f0;
-      --store-card-bg: #ffffff;
-      --store-card-border: #e2e8f0;
-      --store-cover-bg: #f8fafc;
-      --store-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-      --store-card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
-      --store-price: #b12704;
-      --store-btn-bg: #ffd814;
-      --store-btn-text: #0f172a;
-      --store-btn-hover: #f7ca00;
-      --store-btn-active: #f0b800;
-      --store-btn-border: #f2c200;
-      --store-link: #0066cc;
-      --store-focus-ring: #2563eb;
-    }
-
-    /* ----------------------------------------------------
-       4. MANUAL DARK OVERRIDES
-       ---------------------------------------------------- */
-    :root.dark .ebook-store-container,
-    body.dark .ebook-store-container,
-    .dark .ebook-store-container,
-    .dark-mode .ebook-store-container,
-    [data-theme="dark"] .ebook-store-container {
-      --store-text: #cbd5e1;
-      --store-heading: #f8fafc;
-      --store-subtext: #94a3b8;
-      --store-divider: #334155;
-      --store-card-bg: #1e293b;
-      --store-card-border: #334155;
-      --store-cover-bg: #0f172a;
-      --store-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
-      --store-card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-      --store-price: #ffa41c;
-      --store-btn-bg: #f7c948;
-      --store-btn-text: #0f172a;
-      --store-btn-hover: #f0b829;
-      --store-btn-active: #e2a81a;
-      --store-btn-border: #c89512;
-      --store-link: #38bdf8;
-      --store-focus-ring: #38bdf8;
-    }
-
-    /* ----------------------------------------------------
-       5. GLOBAL & PAGE STYLES
+       3. GLOBAL & PAGE STYLES
        ---------------------------------------------------- */
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
       background-color: #f8fafc;
       color: #334155;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      margin: 0;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
       line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
+    /* Header & Navigation */
     .header {
       border-bottom: 1px solid #e2e8f0;
       position: sticky;
       top: 0;
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       z-index: 100;
@@ -147,11 +100,12 @@
     .logo {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       text-decoration: none;
       color: #0f172a;
       font-weight: 700;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
+      letter-spacing: -0.01em;
     }
 
     .nav-links {
@@ -164,18 +118,20 @@
       color: #64748b;
       font-size: 0.95rem;
       font-weight: 500;
-      transition: color 0.2s;
+      transition: color 0.2s ease;
     }
 
-    .nav-links a:hover, .nav-links a.active {
+    .nav-links a:hover, 
+    .nav-links a.active {
       color: #0f172a;
+      font-weight: 600;
     }
 
+    /* Main Container */
     .ebook-store-container {
       max-width: 1080px;
       margin: 20px auto 40px auto;
       padding: 24px;
-      box-sizing: border-box;
       color: var(--store-text);
       transition: color 0.25s ease;
     }
@@ -184,14 +140,14 @@
       color: var(--store-heading);
       font-size: 2rem;
       font-weight: 800;
-      margin: 0 0 8px 0;
+      margin-bottom: 8px;
       letter-spacing: -0.02em;
     }
 
     .store-subtitle {
       color: var(--store-subtext);
       font-size: 1.05rem;
-      margin: 0 0 32px 0;
+      margin-bottom: 32px;
     }
 
     .ebook-grid {
@@ -201,24 +157,18 @@
       margin-bottom: 48px;
     }
 
-    /* ----------------------------------------------------
-       6. CARD STYLES
-       ---------------------------------------------------- */
+    /* Cards */
     .ebook-card {
       background-color: var(--store-card-bg);
       border: 1px solid var(--store-card-border);
       border-radius: 12px;
       padding: 20px;
-      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       box-shadow: var(--store-card-shadow);
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
-                  box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-                  background-color 0.25s ease,
-                  border-color 0.25s ease;
-      will-change: transform;
+                  box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .ebook-card:hover {
@@ -238,7 +188,6 @@
       flex-direction: column;
     }
 
-    /* Cover Frame */
     .ebook-cover-wrap {
       text-align: center;
       margin-bottom: 16px;
@@ -251,7 +200,6 @@
       border-radius: 8px;
       background-color: var(--store-cover-bg);
       border: 1px solid var(--store-card-border);
-      transition: background-color 0.25s ease, border-color 0.25s ease;
     }
 
     .ebook-cover-wrap img {
@@ -267,7 +215,6 @@
       transform: scale(1.03);
     }
 
-    /* Metadata Typography */
     .ebook-details {
       display: flex;
       flex-direction: column;
@@ -281,41 +228,37 @@
       letter-spacing: 0.08em;
       color: var(--store-subtext);
       margin-bottom: 4px;
-      transition: color 0.25s ease;
     }
 
     .ebook-title {
       color: var(--store-heading);
       font-size: 17px;
       font-weight: 700;
-      margin: 0 0 6px 0;
+      margin-bottom: 6px;
       line-height: 1.3;
       min-height: 44px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      transition: color 0.25s ease;
     }
 
     .ebook-author {
       color: var(--store-subtext);
       font-size: 13px;
       font-weight: 500;
-      margin: 0 0 10px 0;
-      transition: color 0.25s ease;
+      margin-bottom: 10px;
     }
 
     .ebook-description {
       color: var(--store-text);
       font-size: 13.5px;
       line-height: 1.45;
-      margin: 0 0 12px 0;
+      margin-bottom: 12px;
       display: -webkit-box;
       -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      transition: color 0.25s ease;
     }
 
     .ebook-price {
@@ -324,10 +267,8 @@
       font-weight: 700;
       margin-bottom: 12px;
       line-height: 1;
-      transition: color 0.25s ease;
     }
 
-    /* Action Buttons */
     .btn-buy-now {
       background-color: var(--store-btn-bg);
       border: 1px solid var(--store-btn-border);
@@ -341,23 +282,12 @@
       text-align: center;
       text-decoration: none;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+      transition: background-color 0.15s ease, transform 0.08s ease;
       user-select: none;
     }
 
-    .btn-buy-now:hover {
-      background-color: var(--store-btn-hover);
-    }
-
-    .btn-buy-now:active {
-      background-color: var(--store-btn-active);
-      transform: scale(0.98);
-    }
-
-    .btn-buy-now:focus-visible {
-      outline: 2px solid var(--store-focus-ring);
-      outline-offset: 2px;
-    }
+    .btn-buy-now:hover { background-color: var(--store-btn-hover); }
+    .btn-buy-now:active { background-color: var(--store-btn-active); transform: scale(0.98); }
 
     .store-footer {
       border-top: 1px solid var(--store-divider);
@@ -368,47 +298,72 @@
     .store-footer h3 {
       color: var(--store-heading);
       font-size: 1rem;
-      margin: 0 0 8px 0;
+      margin-bottom: 8px;
     }
 
     .store-footer p {
       color: var(--store-subtext);
       font-size: 0.875rem;
-      margin: 0;
     }
 
+    /* FOOTER STYLES */
     .footer {
       border-top: 1px solid #e2e8f0;
       background-color: #ffffff;
-      padding: 2rem;
+      padding: 2.5rem 1.5rem;
       text-align: center;
       color: #64748b;
-      font-size: 0.85rem;
-      margin-top: 2rem;
+      font-size: 0.875rem;
+      margin-top: 3rem;
     }
 
-    /* Responsive Layout */
+    .footer-container {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+
+    .footer-links a {
+      color: #64748b;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover {
+      color: #0f172a;
+      text-decoration: underline;
+    }
+
+    .copyright a {
+      color: inherit;
+      text-decoration: underline;
+    }
+
     @media (max-width: 640px) {
-      .ebook-store-container {
-        padding: 16px;
-        margin: 16px auto;
-      }
-      .ebook-grid {
-        gap: 20px;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      }
-      .ebook-card {
-        padding: 16px;
-      }
+      .ebook-store-container { padding: 16px; margin: 16px auto; }
+      .ebook-grid { gap: 20px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+      .ebook-card { padding: 16px; }
+      .footer-links { gap: 1rem; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Navigation Header -->
+  <!-- HEADER -->
   <header class="header">
     <div class="header-container">
-      <a href="index.html" class="logo">
+      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
@@ -416,30 +371,29 @@
         <span>PRASUN SHOP</span>
       </a>
       <nav class="nav-links">
-        <a href="index.html" class="active">Shop</a>
+        <a href="index.html" class="active">eBooks</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
       </nav>
     </div>
   </header>
 
-  <!-- eBook Store Container -->
-  <div class="ebook-store-container">
+  <!-- STORE CONTENT -->
+  <main class="ebook-store-container">
 
     <h1 class="store-title">Digital eBook Store</h1>
     <p class="store-subtitle">Practical guides written by Prasun Barua to help you make informed technical decisions.</p>
 
-    <!-- Product Grid Layout -->
     <div class="ebook-grid">
 
-      <!-- BOOK CARD 1: Solar Power for Homeowners -->
-      <div class="ebook-card">
+      <!-- BOOK 1 -->
+      <article class="ebook-card">
         <div class="ebook-card-top">
           <div class="ebook-cover-wrap">
             <img alt="Solar Power for Homeowners eBook Cover" loading="lazy" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiIxfOGUbYa98pQoN_FP6uTG7jBHXlzXAgJSmsO7cOzDJm916VTJFC25oR-osUlnjkUYOmBvcbVoIylf0tJOna6Jce9kxAPcYLLLNum5Cn5RlpLVXaZGbC9tSxxc4O4XFukXwtHJWMd3pMSZl4NWCsKhpaIfDWporp1rHKs2g46ce8egss5ZuKmoYuNBGc/s1536/Solar_Power_for_Homeowners_Cover.png" />
           </div>
           <div class="ebook-details">
-            <div class="ebook-format">PDF eBook</div>
+            <span class="ebook-format">PDF eBook</span>
             <h2 class="ebook-title" title="Solar Power for Homeowners">Solar Power for Homeowners</h2>
             <p class="ebook-author">by Prasun Barua</p>
             <p class="ebook-description">Learn how residential solar systems work and make informed solar investment decisions.</p>
@@ -449,16 +403,16 @@
           <div class="ebook-price">$9.99</div>
           <a class="btn-buy-now lemonsqueezy-button" href="https://prasunshop.lemonsqueezy.com/buy/PRODUCT_OR_VARIANT_ID_1?embed=1">Buy Now</a>
         </div>
-      </div>
+      </article>
 
-      <!-- BOOK CARD 2: Basic Electrical Engineering -->
-      <div class="ebook-card">
+      <!-- BOOK 2 -->
+      <article class="ebook-card">
         <div class="ebook-card-top">
           <div class="ebook-cover-wrap">
             <img alt="Basic Electrical Engineering eBook Cover" loading="lazy" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwQurv7BNGLHSjwz-rjt5AqanGmklvpmutwlcbh4VBT6zguNg14Z1DShVq8lLn4TZq2ctxeOGrCeurTk_vW15FyzUkIpQTLbM3KRhXi0waUGk6DwKaYOZqOTELmqjGkbvYUX-jh6sCe_obdKQnSDhX4hyLhA25mRztDrFiBA_3QbM7Lc8QyHTs8jr8Hwo/s1600/Basic_Electrical_Engineering_A_Complete_Intuitive_Guide_Cover.png" />
           </div>
           <div class="ebook-details">
-            <div class="ebook-format">PDF eBook</div>
+            <span class="ebook-format">PDF eBook</span>
             <h2 class="ebook-title" title="Basic Electrical Engineering: A Complete Intuitive Guide">Basic Electrical Engineering: A Complete Intuitive Guide</h2>
             <p class="ebook-author">by Prasun Barua</p>
             <p class="ebook-description">A beginner-friendly guide to the fundamental concepts of electrical engineering.</p>
@@ -468,16 +422,16 @@
           <div class="ebook-price">$12.99</div>
           <a class="btn-buy-now lemonsqueezy-button" href="https://prasunshop.lemonsqueezy.com/buy/PRODUCT_OR_VARIANT_ID_2?embed=1">Buy Now</a>
         </div>
-      </div>
+      </article>
 
-      <!-- BOOK CARD 3: Solar PV Testing and Commissioning -->
-      <div class="ebook-card">
+      <!-- BOOK 3 -->
+      <article class="ebook-card">
         <div class="ebook-card-top">
           <div class="ebook-cover-wrap">
             <img alt="Solar PV Testing and Commissioning eBook Cover" loading="lazy" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhAd71nCQo13VxXWRcoz-WQUpRA5cktSl5UV0lTz5wzT0zWMZNQyMfeHGRJqanK2jjDh8etDpS2Amiv6pPN2SwVuJ7m3RwhE2784tPaZyCgQ1fy_kUMMbqx0wpReUEBvl_wfGv7uKL5ye9Zy6UFBuMd_34KOqlNBOY6E2W6CnCehOe0WFueXMDHt0ByBJE/s1600/Solar%20PV%20Testing%20and%20Commissioning.png" />
           </div>
           <div class="ebook-details">
-            <div class="ebook-format">PDF eBook</div>
+            <span class="ebook-format">PDF eBook</span>
             <h2 class="ebook-title" title="Solar PV Testing and Commissioning">Solar PV Testing and Commissioning</h2>
             <p class="ebook-author">by Prasun Barua</p>
             <p class="ebook-description">Practical procedures and best practices for testing and commissioning solar PV systems.</p>
@@ -487,16 +441,16 @@
           <div class="ebook-price">$6.99</div>
           <a class="btn-buy-now lemonsqueezy-button" href="https://prasunshop.lemonsqueezy.com/buy/PRODUCT_OR_VARIANT_ID_3?embed=1">Buy Now</a>
         </div>
-      </div>
+      </article>
 
-      <!-- BOOK CARD 4: Semiconductor Manufacturing Explained -->
-      <div class="ebook-card">
+      <!-- BOOK 4 -->
+      <article class="ebook-card">
         <div class="ebook-card-top">
           <div class="ebook-cover-wrap">
             <img alt="Semiconductor Manufacturing Explained eBook Cover" loading="lazy" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKkRpJtcCHXxhFSJ84JOBqjJuTEXwT2BmCPGv8dVVyWiuQgT9Y0JKXA1GczoSuzakmp-bIzO-BmMYbPf6tDGZdASsKVYFNEHWyEAJPPXfesTKxRDvhJMmRe062Y-ZB9MHY3X9FBPjhLBwsEIQEPPhGS5bwjp-836loYiXSlf_GAVpaUgegWZgZi-_uge8/s1600/Semiconductor%20Manufacturing%20Explained.png" />
           </div>
           <div class="ebook-details">
-            <div class="ebook-format">PDF eBook</div>
+            <span class="ebook-format">PDF eBook</span>
             <h2 class="ebook-title" title="Semiconductor Manufacturing Explained">Semiconductor Manufacturing Explained</h2>
             <p class="ebook-author">by Prasun Barua</p>
             <p class="ebook-description">A structured and accessible guide to the science, engineering, and industrial processes behind modern chip manufacturing.</p>
@@ -506,21 +460,30 @@
           <div class="ebook-price">$5.99</div>
           <a class="btn-buy-now lemonsqueezy-button" href="https://prasunshop.lemonsqueezy.com/buy/PRODUCT_OR_VARIANT_ID_4?embed=1">Buy Now</a>
         </div>
-      </div>
+      </article>
 
     </div>
 
-    <!-- Storefront Information Footer -->
+    <!-- DIGITAL DELIVERY NOTICE -->
     <div class="store-footer">
       <h3>Digital Product Delivery Notice</h3>
       <p>All items listed are digital products. No physical products will be shipped. Upon successful payment verification via Lemon Squeezy, you will immediately receive secure access download options for your chosen digital format.</p>
     </div>
 
-  </div>
+  </main>
 
-  <!-- Main Site Footer -->
+  <!-- UPDATED FOOTER WITH LINKS -->
   <footer class="footer">
-    <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">Prasun Barua</a>. All rights reserved.</p>
+    <div class="footer-container">
+      <div class="footer-links">
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms-of-service.html">Terms of Service</a>
+        <a href="refund-policy.html">Refund Policy</a>
+      </div>
+      <p class="copyright">&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener">Prasun Barua</a>. All rights reserved.</p>
+    </div>
   </footer>
 
   <!-- Lemon Squeezy Integration -->
