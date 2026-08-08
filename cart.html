@@ -97,12 +97,34 @@
       padding: 3rem 2rem 5rem 2rem;
     }
 
+    .cart-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
     .cart-page h1 {
       font-size: 2.25rem;
       font-weight: 600;
       letter-spacing: -0.015em;
-      margin-top: 0;
-      margin-bottom: 2rem;
+      margin: 0;
+    }
+
+    .btn-clear {
+      background: none;
+      border: 1px solid var(--apple-border);
+      color: var(--apple-gray);
+      font-size: 0.85rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-clear:hover {
+      border-color: var(--apple-danger);
+      color: var(--apple-danger);
     }
 
     .cart-layout {
@@ -119,7 +141,6 @@
       }
     }
 
-    /* Cart Items List */
     .cart-items-container {
       display: flex;
       flex-direction: column;
@@ -201,7 +222,6 @@
       cursor: pointer;
       font-size: 1rem;
       color: var(--apple-text);
-      transition: background 0.2s;
     }
 
     .qty-btn:hover {
@@ -226,11 +246,6 @@
       text-decoration: underline;
     }
 
-    .btn-remove:hover {
-      opacity: 0.8;
-    }
-
-    /* Order Summary Card */
     .order-summary {
       background-color: var(--apple-bg);
       border: 1px solid var(--apple-border);
@@ -276,7 +291,7 @@
       border: none;
       cursor: pointer;
       text-decoration: none;
-      transition: background-color 0.2s ease, transform 0.1s ease;
+      transition: background-color 0.2s ease;
       box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3);
       text-align: center;
       width: 100%;
@@ -287,7 +302,6 @@
       background-color: var(--apple-blue-hover);
     }
 
-    /* Empty Cart View */
     .empty-cart {
       text-align: center;
       padding: 4rem 1rem;
@@ -346,7 +360,10 @@
 
   <!-- Main Content -->
   <main class="cart-page">
-    <h1>Review Your Bag</h1>
+    <div class="cart-header-row">
+      <h1>Review Your Bag</h1>
+      <button type="button" class="btn-clear" onclick="clearEntireCart()">Clear Cart</button>
+    </div>
     <div id="cart-content-area">
       <!-- Dynamically populated -->
     </div>
@@ -355,21 +372,27 @@
   <script>
     function getCart() {
       try {
-        return JSON.parse(localStorage.getItem('prasun_cart')) || [];
+        const data = localStorage.getItem('prasun_cart');
+        return data ? JSON.parse(data) : [];
       } catch (e) {
+        console.error("Cart storage parse error:", e);
         return [];
       }
     }
 
     function saveCart(cart) {
-      localStorage.setItem('prasun_cart', JSON.stringify(cart));
+      try {
+        localStorage.setItem('prasun_cart', JSON.stringify(cart));
+      } catch (e) {
+        console.error("Cart storage save error:", e);
+      }
       updateCartBadge();
       renderCart();
     }
 
     function updateCartBadge() {
       const cart = getCart();
-      const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
       const badge = document.getElementById('cart-count');
       if (badge) {
         badge.textContent = totalItems;
@@ -378,10 +401,18 @@
 
     function renderCart() {
       updateCartBadge();
-      const cart = getCart();
       const container = document.getElementById('cart-content-area');
+      if (!container) return;
 
-      if (cart.length === 0) {
+      let cart = [];
+      try {
+        cart = getCart();
+      } catch (err) {
+        container.innerHTML = `<div class="empty-cart"><h2>Error loading cart</h2><p>Your cart data appears corrupted.</p><button class="btn-apple-primary" onclick="clearEntireCart()">Reset Cart</button></div>`;
+        return;
+      }
+
+      if (!Array.isArray(cart) || cart.length === 0) {
         container.innerHTML = `
           <div class="empty-cart">
             <h2>Your cart is empty</h2>
@@ -396,22 +427,27 @@
       let itemsHTML = '';
 
       cart.forEach((item, index) => {
-        const itemPriceNum = parseFloat(item.price.replace('$', '')) || 0;
-        const itemTotal = itemPriceNum * (item.quantity || 1);
+        const title = item.title || "Selected Item";
+        const priceStr = item.price || "$0.00";
+        const priceNum = parseFloat(priceStr.toString().replace('$', '')) || 0;
+        const qty = Number(item.quantity) || 1;
+        const itemTotal = priceNum * qty;
         subtotal += itemTotal;
+        const image = item.image || "images/placeholder.jpg";
+        const id = item.id || "#";
 
         itemsHTML += `
           <div class="cart-item-card">
             <div class="cart-item-image">
-              <img src="${item.image}" alt="${item.title}" width="90" height="90" />
+              <img src="${image}" alt="${title}" width="90" height="90" onerror="this.src='images/placeholder.jpg'" />
             </div>
             <div class="cart-item-details">
-              <a href="product.html?id=${item.id}" class="cart-item-title">${item.title}</a>
-              <span class="cart-item-price">${item.price}</span>
+              <a href="product.html?id=${id}" class="cart-item-title">${title}</a>
+              <span class="cart-item-price">${priceStr}</span>
               <div class="cart-item-actions">
                 <div class="quantity-selector">
                   <button type="button" class="qty-btn" onclick="updateQty(${index}, -1)">−</button>
-                  <span class="qty-value">${item.quantity || 1}</span>
+                  <span class="qty-value">${qty}</span>
                   <button type="button" class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
                 </div>
                 <button type="button" class="btn-remove" onclick="removeItem(${index})">Remove</button>
@@ -449,7 +485,7 @@
     function updateQty(index, change) {
       let cart = getCart();
       if (cart[index]) {
-        cart[index].quantity = (cart[index].quantity || 1) + change;
+        cart[index].quantity = (Number(cart[index].quantity) || 1) + change;
         if (cart[index].quantity <= 0) {
           cart.splice(index, 1);
         }
@@ -461,6 +497,11 @@
       let cart = getCart();
       cart.splice(index, 1);
       saveCart(cart);
+    }
+
+    function clearEntireCart() {
+      localStorage.removeItem('prasun_cart');
+      renderCart();
     }
 
     document.addEventListener('DOMContentLoaded', renderCart);
