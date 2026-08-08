@@ -14,7 +14,6 @@
       --apple-border: #d2d2d7;
       --apple-dark: #1d1d1f;
       --apple-dark-hover: #333336;
-      --apple-blue: #0071e3;
     }
 
     body {
@@ -180,18 +179,20 @@
       border-radius: 12px;
       padding: 1rem;
       box-sizing: border-box;
+      border: 1px solid rgba(0,0,0,0.03);
     }
 
-    .product-image-wrap img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      mix-blend-mode: multiply;
+    .product-image-wrap svg {
+      width: 64px;
+      height: 64px;
+      stroke: var(--apple-text);
+      stroke-width: 1.5;
+      fill: none;
       transition: transform 0.3s ease;
     }
 
-    .product-card:hover .product-image-wrap img {
-      transform: scale(1.03);
+    .product-card:hover .product-image-wrap svg {
+      transform: scale(1.08);
     }
 
     .product-info {
@@ -307,10 +308,15 @@
   <main class="main-container">
     <h2 class="section-title">Explore Lineup</h2>
     <div class="products-grid" id="products-grid">
-      <!-- Dynamically populated or static cards -->
+      
+      <!-- Product 1: Smart Lamp -->
       <a href="product.html?id=smart-lamp" class="product-card">
         <div class="product-image-wrap">
-          <img src="images/lamp.png" alt="Smart Ambient Lamp" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\'><rect width=\'120\' height=\'120\' fill=\'%23f0f0f2\' rx=\'12\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23888\' font-size=\'14\'>Smart Lamp</text></svg>'" />
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18h6"></path>
+            <path d="M10 22h4"></path>
+            <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path>
+          </svg>
         </div>
         <div class="product-info">
           <h3 class="product-title">Smart Ambient Lamp</h3>
@@ -322,9 +328,14 @@
         </div>
       </a>
 
+      <!-- Product 2: Wireless Buds -->
       <a href="product.html?id=wireless-buds" class="product-card">
         <div class="product-image-wrap">
-          <img src="images/buds.png" alt="Wireless Pro Buds" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\'><rect width=\'120\' height=\'120\' fill=\'%23f0f0f2\' rx=\'12\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23888\' font-size=\'14\'>Pro Buds</text></svg>'" />
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+            <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"></path>
+            <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+          </svg>
         </div>
         <div class="product-info">
           <h3 class="product-title">Wireless Pro Buds</h3>
@@ -336,9 +347,14 @@
         </div>
       </a>
 
+      <!-- Product 3: Aluminum Stand -->
       <a href="product.html?id=minimal-stand" class="product-card">
         <div class="product-image-wrap">
-          <img src="images/stand.png" alt="Aluminum Desk Stand" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\'><rect width=\'120\' height=\'120\' fill=\'%23f0f0f2\' rx=\'12\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23888\' font-size=\'14\'>Desk Stand</text></svg>'" />
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
         </div>
         <div class="product-info">
           <h3 class="product-title">Aluminum Desk Stand</h3>
@@ -349,6 +365,7 @@
           <span class="btn-apple">View</span>
         </div>
       </a>
+
     </div>
   </main>
 
