@@ -1,769 +1,500 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Explore premium digital products from Prasun Shop.">
-    <meta name="theme-color" content="#ffffff">
-    <title>Products — Prasun Shop</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-/* ==========================================================================
-   PRASUN SHOP — PRODUCTS PAGE STYLESHEET (UNIFIED DESIGN SYSTEM)
-   ========================================================== */
 
-:root {
-    color-scheme: light;
+```
+<title>Products — Prasun Shop</title>
+<meta
+    name="description"
+    content="Explore products from Prasun Shop."
+>
 
-    /* Colors */
-    --color-white: #ffffff;
-    --color-black: #000000;
-    --color-gray-50: #f5f5f7;
-    --color-gray-100: #e5e5e7;
-    --color-gray-200: #d2d2d7;
-    --color-gray-300: #aeaeb2;
-    --color-gray-400: #86868b;
-    --color-gray-500: #6e6e73;
-    --color-gray-600: #48484a;
-    --color-gray-700: #3a3a3c;
-    --color-gray-800: #1d1d1f;
-    --color-gray-900: #111111;
+<link rel="stylesheet" href="style.css">
+<script src="products.js" defer></script>
+```
 
-    /* Accent & Status */
-    --color-accent: #0071e3;
-    --color-accent-hover: #005cbf;
-    --color-danger: #ef4444;
-    --color-success: #166534;
-
-    /* Typography (Exact match from style.css) */
-    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --text-xs: 0.75rem;
-    --text-sm: 0.875rem;
-    --text-body: 1rem;
-    --text-lg: 1.125rem;
-    --text-xl: 1.25rem;
-    --text-h3: 1.5rem;
-    --text-h2: 2rem;
-    --text-h1: clamp(2.25rem, 4vw, 3.25rem);
-
-    /* Spacing */
-    --space-4: 4px;
-    --space-8: 8px;
-    --space-12: 12px;
-    --space-16: 16px;
-    --space-20: 20px;
-    --space-24: 24px;
-    --space-32: 32px;
-    --space-40: 40px;
-    --space-48: 48px;
-    --space-64: 64px;
-    --space-80: 80px;
-
-    /* Layout */
-    --container-width: 1200px;
-    --header-height: 64px;
-
-    /* Radius */
-    --radius-sm: 6px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
-    --radius-full: 999px;
-
-    /* Shadows */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
-    --shadow-book: 0 12px 28px -6px rgba(0, 0, 0, 0.1);
-
-    /* Transitions */
-    --transition: 200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Base Reset & Setup */
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-html {
-    font-size: 16px;
-    font-family: var(--font-sans);
-    color: var(--color-gray-800);
-    background: var(--color-white);
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-    scroll-behavior: smooth;
-}
-
-body {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: var(--color-white);
-    color: var(--color-gray-800);
-    font-family: var(--font-sans);
-}
-
-main {
-    flex: 1;
-}
-
-/* Products Page Specific Layout */
-.products-page {
-    padding: var(--space-48) 0 var(--space-80);
-    font-family: var(--font-sans);
-}
-
-.products-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: var(--space-32);
-    margin-bottom: var(--space-32);
-}
-
-.products-heading {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-size: clamp(2rem, 3.5vw, 2.75rem);
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    color: var(--color-gray-800);
-}
-
-.products-intro {
-    max-width: 580px;
-    margin: var(--space-8) 0 0;
-    font-family: var(--font-sans);
-    color: var(--color-gray-500);
-    font-size: var(--text-body);
-}
-
-/* Search Box */
-.product-search,
-.products-search {
-    position: relative;
-    width: min(100%, 320px);
-    flex-shrink: 0;
-}
-
-.product-search input,
-.products-search input {
-    width: 100%;
-    height: 44px;
-    padding: 0 var(--space-16) 0 40px;
-    background: var(--color-white);
-    border: 1px solid var(--color-gray-200);
-    border-radius: var(--radius-md);
-    font-family: var(--font-sans);
-    font-size: var(--text-body);
-    color: var(--color-gray-800);
-    outline: none;
-    transition: border-color var(--transition), box-shadow var(--transition);
-}
-
-.product-search input::placeholder,
-.products-search input::placeholder {
-    color: var(--color-gray-400);
-}
-
-.product-search input:focus,
-.products-search input:focus {
-    border-color: var(--color-gray-800);
-    box-shadow: 0 0 0 3px rgba(29, 29, 31, 0.08);
-}
-
-.product-search-icon,
-.products-search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    width: 16px;
-    height: 16px;
-    transform: translateY(-50%);
-    color: var(--color-gray-400);
-    pointer-events: none;
-}
-
-/* Categories / Filters */
-.category-navigation,
-.product-categories {
-    display: flex;
-    align-items: center;
-    gap: var(--space-8);
-    margin-bottom: var(--space-32);
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: 4px;
-}
-
-.category-navigation::-webkit-scrollbar,
-.product-categories::-webkit-scrollbar {
-    display: none;
-}
-
-.category-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 38px;
-    padding: 0 var(--space-16);
-    border: 1px solid var(--color-gray-200);
-    border-radius: var(--radius-full);
-    background: var(--color-white);
-    color: var(--color-gray-600);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: background var(--transition), color var(--transition), border-color var(--transition);
-}
-
-.category-pill:hover {
-    background: var(--color-gray-50);
-    border-color: var(--color-gray-300);
-    color: var(--color-gray-800);
-}
-
-.category-pill.active {
-    background: var(--color-gray-800);
-    border-color: var(--color-gray-800);
-    color: var(--color-white);
-}
-
-/* Results Bar */
-.products-results-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--space-16);
-}
-
-.products-result-count {
-    margin: 0;
-    color: var(--color-gray-400);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-}
-
-/* Product Grid */
-.product-grid,
-.products-grid,
-#product-list {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 28px 20px;
-    align-items: stretch;
-}
-
-/* Product Card */
-.product-card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    background: var(--color-white);
-    border: 1px solid var(--color-gray-200);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    height: 100%;
-    font-family: var(--font-sans);
-    transition: border-color var(--transition), box-shadow var(--transition);
-}
-
-.product-card:hover {
-    border-color: var(--color-gray-300);
-    box-shadow: var(--shadow-md);
-}
-
-.product-card:hover img {
-    transform: scale(1.03);
-}
-
-.product-image-wrap,
-.product-card-image {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    overflow: hidden;
-    background: var(--color-gray-50);
-    flex-shrink: 0;
-}
-
-.product-image-wrap img,
-.product-card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.product-category {
-    position: absolute;
-    top: var(--space-12);
-    left: var(--space-12);
-    display: inline-flex;
-    align-items: center;
-    height: 24px;
-    padding: 0 8px;
-    border-radius: var(--radius-full);
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    color: var(--color-gray-600);
-    font-family: var(--font-sans);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    z-index: 2;
-}
-
-.product-info {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    padding: var(--space-16);
-}
-
-.product-title {
-    display: -webkit-box;
-    overflow: hidden;
-    margin: 0 0 var(--space-4);
-    color: var(--color-gray-800);
-    font-family: var(--font-sans);
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 1.35;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-.product-author {
-    margin-bottom: var(--space-8);
-    color: var(--color-gray-400);
-    font-family: var(--font-sans);
-    font-size: var(--text-sm);
-}
-
-.product-description {
-    display: -webkit-box;
-    overflow: hidden;
-    margin: 0 0 var(--space-16);
-    color: var(--color-gray-500);
-    font-family: var(--font-sans);
-    font-size: var(--text-xs);
-    line-height: 1.5;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-.product-bottom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: auto;
-    padding-top: var(--space-8);
-}
-
-.product-price {
-    margin: 0;
-    color: var(--color-gray-800);
-    font-family: var(--font-sans);
-    font-size: 15px;
-    font-weight: 600;
-}
-
-.product-add-btn {
-    width: calc(100% - 24px);
-    min-height: 38px;
-    margin: 0 var(--space-12) var(--space-12);
-    border: 1px solid var(--color-gray-200);
-    border-radius: var(--radius-sm);
-    background: var(--color-white);
-    color: var(--color-gray-800);
-    font-family: var(--font-sans);
-    font-size: var(--text-xs);
-    font-weight: 600;
-    cursor: pointer;
-    transition: background var(--transition), color var(--transition), border-color var(--transition);
-}
-
-.product-add-btn:hover:not(:disabled) {
-    border-color: var(--color-gray-800);
-    background: var(--color-gray-800);
-    color: var(--color-white);
-}
-
-.product-add-btn.is-added {
-    background: var(--color-success);
-    border-color: var(--color-success);
-    color: var(--color-white);
-}
-
-/* Responsive Breakpoints */
-@media (max-width: 1023px) {
-    .product-grid,
-    .products-grid,
-    #product-list {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 767px) {
-    .product-grid,
-    .products-grid,
-    #product-list {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 20px 12px;
-    }
-    .products-header {
-        display: block;
-        margin-bottom: var(--space-20);
-    }
-    .product-search,
-    .products-search {
-        width: 100%;
-        margin-top: var(--space-12);
-    }
-}
-
-@media (max-width: 480px) {
-    .product-grid,
-    .products-grid,
-    #product-list {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px 10px;
-    }
-}
-    </style>
 </head>
+
 <body>
-    <div class="products-page">
-        <!-- HEADER -->
-        <header class="products-header">
-            <div class="products-header-inner">
-                <a href="index.html" class="products-brand" aria-label="Prasun Shop Home">
-                    <span class="products-brand-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M4 9.5h16" />
-                            <path d="M5 9.5V19h14V9.5" />
-                            <path d="M3 9.5l2-5h14l2 5" />
-                            <path d="M8 19v-5h8v5" />
-                        </svg>
-                    </span>
-                    <span>Prasun Shop</span>
-                </a>
-                <nav class="products-nav" aria-label="Primary Navigation">
-                    <a href="index.html">Home</a>
-                    <a href="products.html" class="active" aria-current="page">Products</a>
-                    <a href="about.html">About</a>
-                    <a href="contact.html">Contact</a>
-                </nav>
-                <div class="products-header-actions">
-                    <a href="cart.html" class="products-icon-button" aria-label="Shopping cart">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6" />
-                            <circle cx="10" cy="20" r="1.3" />
-                            <circle cx="18" cy="20" r="1.3" />
-                        </svg>
-                        <span id="cart-count" class="products-cart-badge" aria-live="polite" aria-atomic="true">0</span>
-                    </a>
-                    <button type="button" id="products-menu-toggle" class="products-icon-button products-menu-button" aria-label="Open navigation menu" aria-controls="products-mobile-menu" aria-expanded="false">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-                            <path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div id="products-mobile-menu" class="products-mobile-menu">
-                <a href="index.html">Home</a>
-                <a href="products.html" class="active" aria-current="page">Products</a>
-                <a href="about.html">About</a>
-                <a href="contact.html">Contact</a>
-            </div>
-        </header>
 
-        <!-- MAIN -->
-        <main class="products-main">
-            <section class="products-hero" aria-labelledby="products-heading">
-                <div>
-                    <p class="products-eyebrow">Prasun Shop</p>
-                    <h1 id="products-heading" class="products-heading">Explore Our Products</h1>
-                
-                </div>
-                <form class="products-search" id="product-search-form" role="search" onsubmit="return false;">
-                    <label for="product-search" class="sr-only">Search products</label>
-                    <svg class="products-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                        <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
-                    </svg>
-                    <input id="product-search" class="products-search-input" type="search" placeholder="Search products..." autocomplete="off" spellcheck="false" enterkeyhint="search" aria-label="Search products">
-                    <span class="products-search-shortcut" aria-hidden="true">⌘ K</span>
-                </form>
-            </section>
+```
+<!-- ================================================================
+     HEADER
+     ================================================================ -->
+<header class="header">
+    <div class="container header-container">
 
-            <section class="products-toolbar" aria-label="Product categories">
-                <div class="products-categories">
-                    <button type="button" class="category-pill active" data-category="all" aria-current="page">All Products</button>
-                    <button type="button" class="category-pill" data-category="electronics">Electronics</button>
-                    <button type="button" class="category-pill" data-category="lifestyle">Lifestyle</button>
-                    <button type="button" class="category-pill" data-category="accessories">Accessories</button>
-                    <button type="button" class="category-pill" data-category="smart">Smart Tech</button>
-                </div>
-            </section>
+        <a href="index.html" class="logo" aria-label="Prasun Shop home">
+            Prasun Shop<span aria-hidden="true">.</span>
+        </a>
 
-            <div class="products-results-bar">
-                <p id="products-count" class="products-count" aria-live="polite">Loading products...</p>
-                <label>
-                    <span class="sr-only">Sort products</span>
-                    <select id="product-sort" class="products-sort" aria-label="Sort products">
-                        <option value="featured">Sort by: Featured</option>
-                        <option value="price-low">Price: Low to High</option>
-                        <option value="price-high">Price: High to Low</option>
-                        <option value="name">Name: A to Z</option>
-                    </select>
-                </label>
-            </div>
+        <nav class="nav-links" aria-label="Primary navigation">
+            <a href="index.html">Home</a>
+            <a href="products.html" class="active" aria-current="page">
+                Products
+            </a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+        </nav>
 
-            <!-- PRODUCT GRID -->
-            <section id="product-list" class="products-grid" aria-busy="true" aria-label="Products">
-                <!-- Skeletons rendered initially -->
-                <article class="product-skeleton"><div class="skeleton-image"></div><div class="skeleton-content"><div class="skeleton-line short"></div><div class="skeleton-line medium"></div><div class="skeleton-line long"></div><div class="skeleton-line medium"></div></div></article>
-                <article class="product-skeleton"><div class="skeleton-image"></div><div class="skeleton-content"><div class="skeleton-line short"></div><div class="skeleton-line medium"></div><div class="skeleton-line long"></div><div class="skeleton-line medium"></div></div></article>
-                <article class="product-skeleton"><div class="skeleton-image"></div><div class="skeleton-content"><div class="skeleton-line short"></div><div class="skeleton-line medium"></div><div class="skeleton-line long"></div><div class="skeleton-line medium"></div></div></article>
-                <article class="product-skeleton"><div class="skeleton-image"></div><div class="skeleton-content"><div class="skeleton-line short"></div><div class="skeleton-line medium"></div><div class="skeleton-line long"></div><div class="skeleton-line medium"></div></div></article>
-            </section>
+        <div class="header-actions">
 
-            <div id="empty-state" class="products-empty hidden">
-                <div class="products-empty-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
-                    </svg>
-                </div>
-                <h2>No products found</h2>
-                <p>Try another search term or browse all products.</p>
-                <button type="button" class="products-empty-button" id="empty-reset-btn">View All Products</button>
-            </div>
-        </main>
+            <a
+                href="cart.html"
+                class="cart-icon-wrap"
+                aria-label="Shopping cart"
+            >
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"/>
+                    <circle cx="10" cy="20" r="1.3"/>
+                    <circle cx="18" cy="20" r="1.3"/>
+                </svg>
+
+                <span
+                    id="cart-count"
+                    class="cart-badge"
+                    aria-label="Items in cart"
+                >0</span>
+            </a>
+
+            <button
+                type="button"
+                class="mobile-menu-btn"
+                id="products-menu-toggle"
+                aria-expanded="false"
+                aria-controls="products-mobile-menu"
+                aria-label="Open menu"
+            >
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                >
+                    <path d="M4 6h16"/>
+                    <path d="M4 12h16"/>
+                    <path d="M4 18h16"/>
+                </svg>
+            </button>
+
+        </div>
+
     </div>
 
-    <!-- PRODUCT CARD TEMPLATE -->
-    <template id="product-card-template">
-        <article class="product-card">
-            <a class="product-card-link" href="#">
-                <div class="product-card-image">
-                    <img src="" alt="" loading="lazy" decoding="async">
-                </div>
+    <!-- Mobile Navigation -->
+    <div
+        id="products-mobile-menu"
+        class="mobile-menu"
+        hidden
+    >
+        <nav aria-label="Mobile navigation">
+            <a href="index.html" class="mobile-nav-link">Home</a>
+            <a
+                href="products.html"
+                class="mobile-nav-link active"
+                aria-current="page"
+            >
+                Products
             </a>
-            <div class="product-card-body">
-                <p class="product-category"></p>
-                <h2 class="product-title"></h2>
-                <p class="product-description"></p>
-                <div class="product-bottom">
-                    <p class="product-price"></p>
-                    <button type="button" class="product-cart-button" data-action="cart" aria-label="Add product to cart">
-                        <span>Add to Cart</span>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6" />
-                            <circle cx="10" cy="20" r="1.3" />
-                            <circle cx="18" cy="20" r="1.3" />
-                        </svg>
-                    </button>
-                </div>
+            <a href="about.html" class="mobile-nav-link">About</a>
+            <a href="contact.html" class="mobile-nav-link">Contact</a>
+        </nav>
+    </div>
+</header>
+
+
+<!-- ================================================================
+     MAIN
+     ================================================================ -->
+<main>
+
+    <div class="container products-page">
+
+        <!-- Products Hero -->
+        <section
+            class="products-hero"
+            aria-labelledby="products-heading"
+        >
+            <div class="products-hero-content">
+                <p class="products-eyebrow">Prasun Shop</p>
+
+                <h1
+                    id="products-heading"
+                    class="products-heading"
+                >
+                    Explore Our Products
+                </h1>
+
+                <p class="products-intro">
+                    Discover carefully selected products designed for
+                    modern work, everyday life, and technology.
+                </p>
             </div>
-        </article>
-    </template>
 
-    <!-- EMBEDDED APPLICATION SCRIPT -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Sample dataset
-            const products = [
-                { id: 1, name: "Advanced UI Kit Pro", category: "electronics", price: 49.00, description: "Enterprise-grade UI components for modern web apps.", image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80" },
-                { id: 2, name: "Minimalist Desk Pad", category: "lifestyle", price: 29.00, description: "Smooth waterproof PU leather desk mat for productivity.", image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=600&q=80" },
-                { id: 3, name: "Ergonomic Laptop Stand", category: "accessories", price: 39.00, description: "Adjustable aluminum stand for improved posture.", image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=600&q=80" },
-                { id: 4, name: "Smart Wireless Hub", category: "smart", price: 89.00, description: "Multi-port connectivity hub with fast charging support.", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80" },
-                { id: 5, name: "Developer Icon Pack", category: "electronics", price: 19.00, description: "Vector icon sets optimized for software developers.", image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80" }
-            ];
+            <!-- Search -->
+            <form
+                class="products-search"
+                id="product-search-form"
+                role="search"
+            >
+                <label
+                    for="product-search"
+                    class="sr-only"
+                >
+                    Search products
+                </label>
 
-            // State management
-            let currentCategory = 'all';
-            let searchQuery = '';
-            let currentSort = 'featured';
+                <svg
+                    class="products-search-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    aria-hidden="true"
+                >
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="m20 20-4-4"/>
+                </svg>
 
-            // DOM Elements
-            const gridEl = document.getElementById('product-list');
-            const countEl = document.getElementById('products-count');
-            const emptyEl = document.getElementById('empty-state');
-            const searchInput = document.getElementById('product-search');
-            const sortSelect = document.getElementById('product-sort');
-            const categoryPills = document.querySelectorAll('.category-pill');
-            const menuToggle = document.getElementById('products-menu-toggle');
-            const mobileMenu = document.getElementById('products-mobile-menu');
-            const cartCountEl = document.getElementById('cart-count');
-            const emptyResetBtn = document.getElementById('empty-reset-btn');
-            const template = document.getElementById('product-card-template');
+                <input
+                    id="product-search"
+                    class="products-search-input"
+                    type="search"
+                    placeholder="Search products..."
+                    autocomplete="off"
+                    spellcheck="false"
+                    enterkeyhint="search"
+                >
 
-            // Mobile Menu Toggle
-            menuToggle?.addEventListener('click', () => {
-                const expanded = menuToggle.getAttribute('aria-expanded') === 'true';
-                menuToggle.setAttribute('aria-expanded', !expanded);
-                mobileMenu.classList.toggle('open');
-            });
+                <button
+                    type="button"
+                    id="search-clear"
+                    class="search-clear"
+                    aria-label="Clear search"
+                    hidden
+                >
+                    ×
+                </button>
 
-            // Cart badge sync
-            function updateCartBadge() {
-                const cart = JSON.parse(localStorage.getItem('prasun_cart') || '[]');
-                const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-                if (cartCountEl) cartCountEl.textContent = totalItems;
-            }
-            updateCartBadge();
+                <span
+                    class="products-search-shortcut"
+                    aria-hidden="true"
+                >
+                    ⌘ K
+                </span>
+            </form>
+        </section>
 
-            // Render products function
-            function renderProducts() {
-                gridEl.setAttribute('aria-busy', 'true');
-                
-                // Filter logic
-                let filtered = products.filter(item => {
-                    const matchesCat = currentCategory === 'all' || item.category === currentCategory;
-                    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
-                    return matchesCat && matchesSearch;
-                });
 
-                // Sort logic
-                if (currentSort === 'price-low') {
-                    filtered.sort((a, b) => a.price - b.price);
-                } else if (currentSort === 'price-high') {
-                    filtered.sort((a, b) => b.price - a.price);
-                } else if (currentSort === 'name') {
-                    filtered.sort((a, b) => a.name.localeCompare(b.name));
-                }
+        <!-- Category Navigation -->
+        <section
+            class="products-toolbar"
+            aria-label="Product categories"
+        >
+            <div
+                class="products-categories"
+                role="group"
+                aria-label="Filter by category"
+            >
+                <button
+                    type="button"
+                    class="category-pill active"
+                    data-category="all"
+                    aria-pressed="true"
+                >
+                    All Products
+                </button>
 
-                gridEl.innerHTML = '';
+                <button
+                    type="button"
+                    class="category-pill"
+                    data-category="electronics"
+                    aria-pressed="false"
+                >
+                    Electronics
+                </button>
 
-                if (filtered.length === 0) {
-                    emptyEl.classList.remove('hidden');
-                    countEl.textContent = '0 products found';
-                    gridEl.setAttribute('aria-busy', 'false');
-                    return;
-                }
+                <button
+                    type="button"
+                    class="category-pill"
+                    data-category="lifestyle"
+                    aria-pressed="false"
+                >
+                    Lifestyle
+                </button>
 
-                emptyEl.classList.add('hidden');
-                countEl.textContent = `Showing ${filtered.length} product${filtered.length === 1 ? '' : 's'}`;
+                <button
+                    type="button"
+                    class="category-pill"
+                    data-category="accessories"
+                    aria-pressed="false"
+                >
+                    Accessories
+                </button>
 
-                const fragment = document.createDocumentFragment();
-                filtered.forEach(product => {
-                    const clone = template.content.cloneNode(true);
-                    
-                    const img = clone.querySelector('img');
-                    img.src = product.image;
-                    img.alt = product.name;
+                <button
+                    type="button"
+                    class="category-pill"
+                    data-category="smart"
+                    aria-pressed="false"
+                >
+                    Smart Tech
+                </button>
+            </div>
+        </section>
 
-                    clone.querySelector('.product-category').textContent = product.category;
-                    clone.querySelector('.product-title').textContent = product.name;
-                    clone.querySelector('.product-description').textContent = product.description;
-                    clone.querySelector('.product-price').textContent = `$${product.price.toFixed(2)}`;
 
-                    // Cart button interaction
-                    const cartBtn = clone.querySelector('.product-cart-button');
-                    cartBtn.addEventListener('click', () => {
-                        let cart = JSON.parse(localStorage.getItem('prasun_cart') || '[]');
-                        const existing = cart.find(item => item.id === product.id);
-                        if (existing) {
-                            existing.quantity = (existing.quantity || 1) + 1;
-                        } else {
-                            cart.push({ ...product, quantity: 1 });
-                        }
-                        localStorage.setItem('prasun_cart', JSON.stringify(cart));
-                        updateCartBadge();
+        <!-- Results / Sorting -->
+        <div class="products-results-bar">
 
-                        // Visual feedback state
-                        const originalHTML = cartBtn.innerHTML;
-                        cartBtn.innerHTML = `<span>Added!</span> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;"><path d="M20 6 9 17l-5-5"/></svg>`;
-                        cartBtn.style.background = '#10b981';
-                        setTimeout(() => {
-                            cartBtn.innerHTML = originalHTML;
-                            cartBtn.style.background = '';
-                        }, 1200);
-                    });
+            <p
+                id="products-count"
+                class="products-result-count"
+                aria-live="polite"
+            >
+                Loading products…
+            </p>
 
-                    // Card link behavior
-                    const cardLink = clone.querySelector('.product-card-link');
-                    cardLink.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        window.location.href = `product-detail.html?id=${product.id}`;
-                    });
+            <label class="products-sort-wrap">
+                <span class="sr-only">
+                    Sort products
+                </span>
 
-                    fragment.appendChild(clone);
-                });
+                <select
+                    id="product-sort"
+                    class="products-sort"
+                    aria-label="Sort products"
+                >
+                    <option value="featured">
+                        Sort by: Featured
+                    </option>
 
-                gridEl.appendChild(fragment);
-                gridEl.setAttribute('aria-busy', 'false');
-            }
+                    <option value="price-low">
+                        Price: Low to High
+                    </option>
 
-            // Initial render
-            setTimeout(() => {
-                renderProducts();
-            }, 250);
+                    <option value="price-high">
+                        Price: High to Low
+                    </option>
 
-            // Event Listeners
-            searchInput.addEventListener('input', (e) => {
-                searchQuery = e.target.value.trim();
-                renderProducts();
-            });
+                    <option value="name">
+                        Name: A to Z
+                    </option>
+                </select>
+            </label>
 
-            sortSelect.addEventListener('change', (e) => {
-                currentSort = e.target.value;
-                renderProducts();
-            });
+        </div>
 
-            categoryPills.forEach(pill => {
-                pill.addEventListener('click', () => {
-                    categoryPills.forEach(p => {
-                        p.classList.remove('active');
-                        p.removeAttribute('aria-current');
-                    });
-                    pill.classList.add('active');
-                    pill.setAttribute('aria-current', 'page');
-                    currentCategory = pill.getAttribute('data-category');
-                    renderProducts();
-                });
-            });
 
-            emptyResetBtn.addEventListener('click', () => {
-                currentCategory = 'all';
-                searchQuery = '';
-                searchInput.value = '';
-                currentSort = 'featured';
-                sortSelect.value = 'featured';
-                categoryPills.forEach(p => {
-                    if (p.getAttribute('data-category') === 'all') {
-                        p.classList.add('active');
-                        p.setAttribute('aria-current', 'page');
-                    } else {
-                        p.classList.remove('active');
-                        p.removeAttribute('aria-current');
-                    }
-                });
-                renderProducts();
-            });
+        <!-- ============================================================
+             PRODUCT GRID
+             ============================================================ -->
+        <section
+            id="product-list"
+            class="products-grid"
+            aria-label="Products"
+            aria-live="polite"
+            aria-busy="true"
+        >
 
-            // Keyboard shortcut (Cmd+K / Ctrl+K) for search focus
-            document.addEventListener('keydown', (e) => {
-                if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-                    e.preventDefault();
-                    searchInput.focus();
-                    searchInput.select();
-                }
-            });
-        });
-    </script>
+            <!-- Loading Skeleton -->
+            <article class="product-skeleton">
+                <div class="skeleton-image"></div>
+
+                <div class="skeleton-content">
+                    <span class="skeleton-line skeleton-category"></span>
+                    <span class="skeleton-line skeleton-title"></span>
+                    <span class="skeleton-line skeleton-description"></span>
+                    <span class="skeleton-line skeleton-description short"></span>
+                    <span class="skeleton-line skeleton-price"></span>
+                </div>
+            </article>
+
+            <article class="product-skeleton">
+                <div class="skeleton-image"></div>
+
+                <div class="skeleton-content">
+                    <span class="skeleton-line skeleton-category"></span>
+                    <span class="skeleton-line skeleton-title"></span>
+                    <span class="skeleton-line skeleton-description"></span>
+                    <span class="skeleton-line skeleton-description short"></span>
+                    <span class="skeleton-line skeleton-price"></span>
+                </div>
+            </article>
+
+            <article class="product-skeleton">
+                <div class="skeleton-image"></div>
+
+                <div class="skeleton-content">
+                    <span class="skeleton-line skeleton-category"></span>
+                    <span class="skeleton-line skeleton-title"></span>
+                    <span class="skeleton-line skeleton-description"></span>
+                    <span class="skeleton-line skeleton-description short"></span>
+                    <span class="skeleton-line skeleton-price"></span>
+                </div>
+            </article>
+
+            <article class="product-skeleton">
+                <div class="skeleton-image"></div>
+
+                <div class="skeleton-content">
+                    <span class="skeleton-line skeleton-category"></span>
+                    <span class="skeleton-line skeleton-title"></span>
+                    <span class="skeleton-line skeleton-description"></span>
+                    <span class="skeleton-line skeleton-description short"></span>
+                    <span class="skeleton-line skeleton-price"></span>
+                </div>
+            </article>
+
+        </section>
+
+
+        <!-- Empty State -->
+        <section
+            id="empty-state"
+            class="products-empty"
+            hidden
+            aria-live="polite"
+        >
+            <div class="products-empty-icon">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="m20 20-4-4"/>
+                </svg>
+            </div>
+
+            <h2>No products found</h2>
+
+            <p>
+                Try another search term or browse all products.
+            </p>
+
+            <button
+                type="button"
+                class="products-empty-button"
+                id="empty-reset-btn"
+            >
+                View All Products
+            </button>
+        </section>
+
+
+        <!-- Error State -->
+        <section
+            id="products-error"
+            class="products-error"
+            hidden
+            aria-live="assertive"
+        >
+            <div class="products-empty-icon">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M12 8v5"/>
+                    <path d="M12 16h.01"/>
+                </svg>
+            </div>
+
+            <h2>Unable to load products</h2>
+
+            <p>
+                Please refresh the page and try again.
+            </p>
+
+            <button
+                type="button"
+                class="products-empty-button"
+                id="products-retry-btn"
+            >
+                Try Again
+            </button>
+        </section>
+
+    </div>
+
+</main>
+
+
+<!-- ================================================================
+     FOOTER
+     ================================================================ -->
+<footer class="footer">
+    <div class="container">
+
+        <div class="footer-content">
+
+            <div class="footer-col">
+                <h4>Prasun Shop</h4>
+
+                <p>
+                    Simple, useful products for modern life and work.
+                </p>
+            </div>
+
+            <div class="footer-col">
+                <h4>Shop</h4>
+
+                <ul>
+                    <li>
+                        <a href="products.html">All Products</a>
+                    </li>
+                    <li>
+                        <a href="cart.html">Shopping Cart</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Information</h4>
+
+                <ul>
+                    <li>
+                        <a href="about.html">About</a>
+                    </li>
+                    <li>
+                        <a href="contact.html">Contact</a>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            © <span id="footer-year"></span> Prasun Shop. All rights reserved.
+        </div>
+
+    </div>
+</footer>
+```
+
 </body>
 </html>
