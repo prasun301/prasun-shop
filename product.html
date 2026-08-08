@@ -30,244 +30,104 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-zinc-900 selection:text-white min-h-screen flex flex-col">
+<body class="bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-zinc-950 selection:text-white min-h-screen flex flex-col">
 
-  <!-- Modern Header -->
- <!-- ==========================================================
-     HEADER
-========================================================== -->
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
 
-<header class="header">
-
-  <div class="container">
-
-    <!-- Brand -->
-    <a
-      href="index.html"
-      class="logo"
-      aria-label="Prasun Shop Home">
-
-      <!-- Shop Icon -->
-      <svg
-        class="logo-icon"
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true">
-
-        <path d="M4 10h16"/>
-        <path d="M5 10v10h14V10"/>
-        <path d="M3 10l2-6h14l2 6"/>
-        <path d="M9 20v-5h6v5"/>
-        <path d="M3 10c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2"/>
-
-      </svg>
-
-      <span>Prasun Shop</span>
-
-    </a>
-
-
-    <!-- Desktop Navigation -->
-    <nav
-      class="nav"
-      aria-label="Primary Navigation">
-
-      <ul class="nav-list">
-
-        <li>
-          <a
-            href="index.html"
-            class="nav-link">
-            Home
-          </a>
-        </li>
-
-        <li>
-          <a
-            href="products.html"
-            class="nav-link">
-            Products
-          </a>
-        </li>
-
-        <li>
-          <a
-            href="about.html"
-            class="nav-link">
-            About
-          </a>
-        </li>
-
-        <li>
-          <a
-            href="contact.html"
-            class="nav-link">
-            Contact
-          </a>
-        </li>
-
-      </ul>
-
-    </nav>
-
-
-    <!-- Header Actions -->
-    <div class="header-actions">
-
-      <!-- Cart -->
-      <a
-        href="cart.html"
-        class="cart-icon-wrap"
-        aria-label="Shopping cart">
-
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true">
-
-          <path d="M6 7h12l1 13H5L6 7Z"/>
-          <path d="M9 7V5a3 3 0 0 1 6 0v2"/>
-
+      <!-- Brand -->
+      <a href="index.html" class="logo" aria-label="Prasun Shop Home">
+        <svg class="logo-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 10h16"/>
+          <path d="M5 10v10h14V10"/>
+          <path d="M3 10l2-6h14l2 6"/>
+          <path d="M9 20v-5h6v5"/>
+          <path d="M3 10c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2"/>
         </svg>
-
-        <span
-          id="cart-count"
-          class="cart-badge"
-          aria-live="polite"
-          aria-atomic="true">
-          0
-        </span>
-
+        <span>Prasun Shop</span>
       </a>
 
+      <!-- Desktop Navigation -->
+      <nav class="nav" aria-label="Primary Navigation">
+        <ul class="nav-list">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="products.html" class="nav-link">Products</a></li>
+          <li><a href="about.html" class="nav-link">About</a></li>
+          <li><a href="contact.html" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
 
-      <!-- Mobile Menu -->
-      <button
-        type="button"
-        id="mobile-menu-button"
-        class="mobile-menu-btn"
-        aria-controls="mobile-menu"
-        aria-expanded="false"
-        aria-label="Open navigation menu">
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <!-- Cart -->
+        <a href="cart.html" class="cart-icon-wrap" aria-label="Shopping cart">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 7h12l1 13H5L6 7Z"/>
+            <path d="M9 7V5a3 3 0 0 1 6 0v2"/>
+          </svg>
+          <span id="cart-count" class="cart-badge" aria-live="polite" aria-atomic="true" hidden>0</span>
+        </a>
 
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          aria-hidden="true">
-
-          <path d="M4 6h16"/>
-          <path d="M4 12h16"/>
-          <path d="M4 18h16"/>
-
-        </svg>
-
-      </button>
-
-    </div>
-
-  </div>
-
-
-  <!-- Mobile Navigation -->
-  <div
-    id="mobile-menu"
-    class="mobile-menu"
-    hidden>
-
-    <nav aria-label="Mobile Navigation">
-
-      <a
-        href="index.html"
-        class="mobile-nav-link">
-        Home
-      </a>
-
-      <a
-        href="products.html"
-        class="mobile-nav-link">
-        Products
-      </a>
-
-      <a
-        href="about.html"
-        class="mobile-nav-link">
-        About
-      </a>
-
-      <a
-        href="contact.html"
-        class="mobile-nav-link">
-        Contact
-      </a>
-
-      <a
-        href="cart.html"
-        class="mobile-nav-link">
-        Cart
-      </a>
-
-    </nav>
-
-  </div>
-
-</header>
- <!-- Breadcrumb -->
-<nav class="product-breadcrumb" aria-label="Breadcrumb">
-  <a href="index.html">Home</a>
-  <span aria-hidden="true">/</span>
-  <a href="products.html">Products</a>
-  <span aria-hidden="true">/</span>
-  <span aria-current="page">Details</span>
-</nav>
-
-<!-- Product Details -->
-<section class="product-page">
-  <div class="container">
-
-    <div id="product-detail">
-
-      <!-- Loading Skeleton -->
-      <div class="product-detail-loading" aria-hidden="true">
-
-        <div class="product-loading-image"></div>
-
-        <div class="product-loading-info">
-          <div class="loading-line loading-category"></div>
-          <div class="loading-line loading-title"></div>
-          <div class="loading-line loading-price"></div>
-
-          <div class="loading-description">
-            <div class="loading-line"></div>
-            <div class="loading-line"></div>
-            <div class="loading-line short"></div>
-          </div>
-
-          <div class="loading-button"></div>
-        </div>
-
+        <!-- Mobile Menu Toggle -->
+        <button type="button" id="mobile-menu-button" class="mobile-menu-btn" aria-controls="mobile-menu" aria-expanded="false" aria-label="Open navigation menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M4 6h16"/>
+            <path d="M4 12h16"/>
+            <path d="M4 18h16"/>
+          </svg>
+        </button>
       </div>
 
     </div>
 
-  </div>
-</section>
+    <!-- Mobile Navigation -->
+    <div id="mobile-menu" class="mobile-menu" hidden>
+      <nav aria-label="Mobile Navigation">
+        <a href="index.html" class="mobile-nav-link">Home</a>
+        <a href="products.html" class="mobile-nav-link">Products</a>
+        <a href="about.html" class="mobile-nav-link">About</a>
+        <a href="contact.html" class="mobile-nav-link">Contact</a>
+        <a href="cart.html" class="mobile-nav-link">Cart</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Breadcrumb -->
+  <nav class="product-breadcrumb" aria-label="Breadcrumb">
+    <div class="container">
+      <a href="index.html">Home</a>
+      <span aria-hidden="true">/</span>
+      <a href="products.html">Products</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">Details</span>
+    </div>
+  </nav>
+
+  <!-- Product Details -->
+  <main class="flex-grow">
+    <section class="product-page">
+      <div class="container">
+        <div id="product-detail">
+          <!-- Loading Skeleton -->
+          <div class="product-detail-loading" aria-hidden="true">
+            <div class="product-loading-image"></div>
+            <div class="product-loading-info">
+              <div class="loading-line loading-category"></div>
+              <div class="loading-line loading-title"></div>
+              <div class="loading-line loading-price"></div>
+              <div class="loading-description">
+                <div class="loading-line"></div>
+                <div class="loading-line"></div>
+                <div class="loading-line short"></div>
+              </div>
+              <div class="loading-button"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 
   <!-- Minimal Footer -->
   <footer class="border-t border-zinc-200/80 bg-white py-8 mt-auto">
@@ -288,7 +148,9 @@
       mobileMenuButton.addEventListener('click', () => {
         const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
         mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
-        mobileMenu.classList.toggle('hidden');
+        mobileMenuButton.setAttribute('aria-label', !isExpanded ? 'Close navigation menu' : 'Open navigation menu');
+        mobileMenu.hidden = isExpanded;
+        mobileMenu.classList.toggle('open', !isExpanded);
       });
     }
   </script>
