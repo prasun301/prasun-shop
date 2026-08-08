@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Product Details — PRASUN SHOP</title>
   <meta name="description" content="View high-performance smart gadgets and accessories." />
-  <link rel="stylesheet" href="css/style.css" />
   <style>
-    /* Apple-Store Inspired Minimalist Design Overrides */
     :root {
       --apple-bg: #f5f5f7;
       --apple-text: #1d1d1f;
@@ -26,6 +24,73 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    .header {
+      border-bottom: 1px solid var(--apple-border);
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--apple-text);
+      font-weight: 600;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--apple-gray);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--apple-text);
+    }
+
+    .cart-icon-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      color: var(--apple-text);
+      text-decoration: none;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -10px;
+      background-color: var(--apple-blue);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     .product-detail-page {
       max-width: 1200px;
       margin: 0 auto;
@@ -41,14 +106,12 @@
     .breadcrumbs a {
       color: var(--apple-gray);
       text-decoration: none;
-      transition: color 0.2s;
     }
 
     .breadcrumbs a:hover {
       color: var(--apple-text);
     }
 
-    /* Two-Column Apple Grid */
     .product-detail-container {
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
@@ -70,7 +133,6 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      overflow: hidden;
     }
 
     .product-detail-image img {
@@ -79,11 +141,6 @@
       height: auto;
       object-fit: contain;
       mix-blend-mode: multiply;
-      transition: transform 0.5s ease;
-    }
-
-    .product-detail-image img:hover {
-      transform: scale(1.03);
     }
 
     .product-detail-info {
@@ -107,13 +164,11 @@
       line-height: 1.1;
       letter-spacing: -0.015em;
       margin: 0;
-      color: var(--apple-text);
     }
 
     .product-detail-price {
       font-size: 1.75rem;
       font-weight: 400;
-      color: var(--apple-text);
       letter-spacing: -0.01em;
     }
 
@@ -131,7 +186,6 @@
       margin: 0;
     }
 
-    /* Apple-Style Pill Action Button */
     .btn-apple-primary {
       display: inline-flex;
       justify-content: center;
@@ -159,39 +213,9 @@
       transform: scale(0.98);
     }
 
-    /* Cart Badge Style */
-    .cart-icon-wrap {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      color: var(--apple-text);
-      text-decoration: none;
-    }
-
-    .cart-badge {
-      position: absolute;
-      top: -8px;
-      right: -10px;
-      background-color: var(--apple-blue);
-      color: white;
-      font-size: 0.7rem;
-      font-weight: 600;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-    }
-
     .product-not-found {
       text-align: center;
       padding: 5rem 1rem;
-    }
-
-    .product-not-found h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
     }
   </style>
 </head>
@@ -199,8 +223,8 @@
 
   <!-- Header -->
   <header class="header">
-    <div class="header-container" style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 2rem;">
-      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #1d1d1f; font-weight: 600;">
+    <div class="header-container">
+      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
           <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -208,11 +232,11 @@
         </svg>
         <span>PRASUN SHOP</span>
       </a>
-      <nav class="nav-links" aria-label="Main Navigation" style="display: flex; gap: 2rem;">
-        <a href="index.html" style="text-decoration: none; color: #1d1d1f;">Shop</a>
-        <a href="about.html" style="text-decoration: none; color: #86868b;">About</a>
-        <a href="contact.html" style="text-decoration: none; color: #86868b;">Contact</a>
-        <a href="checkout.html" style="text-decoration: none; color: #86868b;">Checkout</a>
+      <nav class="nav-links" aria-label="Main Navigation">
+        <a href="index.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="checkout.html">Checkout</a>
       </nav>
       <div class="header-actions">
         <a href="cart.html" class="cart-icon-wrap" aria-label="View Shopping Cart">
@@ -229,46 +253,18 @@
 
   <!-- Main Content -->
   <main id="main-content" class="product-detail-page">
-    
-    <!-- Breadcrumbs -->
     <nav class="breadcrumbs" aria-label="Breadcrumb">
       <a href="index.html">Home</a> / <a href="index.html">Products</a> / <span id="breadcrumb-title" style="color: var(--apple-text);">Details</span>
     </nav>
 
-    <!-- Product Detail Container -->
-    <div id="product-detail-container" class="product-detail-container">
-      <!-- Populated dynamically via JS -->
-    </div>
+    <div id="product-detail-container" class="product-detail-container"></div>
 
-    <!-- Fallback View -->
     <div id="product-not-found" class="product-not-found" style="display: none;">
       <h1>Product Not Found</h1>
       <p style="color: var(--apple-gray); margin-bottom: 2rem;">The product you're looking for doesn't exist or has been removed.</p>
       <a href="index.html" class="btn-apple-primary" style="max-width: 200px; margin: 0 auto;">Back to Products</a>
     </div>
-
   </main>
-
-  <!-- Footer -->
-  <footer class="footer" style="border-top: 1px solid var(--apple-border); padding: 3rem 2rem; font-size: 0.85rem; color: var(--apple-gray);">
-    <div class="footer-content" style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
-      <div class="footer-col">
-        <h4 class="footer-heading" style="color: var(--apple-text); margin-bottom: 0.75rem;">PRASUN SHOP</h4>
-        <p>Premium technology and everyday accessories built with clean, modern design.</p>
-      </div>
-      <div class="footer-col">
-        <h4 style="color: var(--apple-text); margin-bottom: 0.75rem;">Navigation</h4>
-        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
-          <li><a href="index.html" style="color: var(--apple-gray); text-decoration: none;">Shop All</a></li>
-          <li><a href="about.html" style="color: var(--apple-gray); text-decoration: none;">About Us</a></li>
-          <li><a href="contact.html" style="color: var(--apple-gray); text-decoration: none;">Contact Us</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom" style="max-width: 1200px; margin: 2rem auto 0 auto; border-top: 1px solid var(--apple-border); padding-top: 1.5rem;">
-      <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
-    </div>
-  </footer>
 
   <script>
     const productsData = {
@@ -295,7 +291,6 @@
       }
     };
 
-    // Cart Logic Management
     function getCart() {
       try {
         return JSON.parse(localStorage.getItem('prasun_cart')) || [];
@@ -318,69 +313,75 @@
       }
     }
 
-    // Initialize badge count on page load
-    document.addEventListener('DOMContentLoaded', updateCartBadge);
+    document.addEventListener('DOMContentLoaded', () => {
+      updateCartBadge();
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('id');
-    const container = document.getElementById('product-detail-container');
-    const notFound = document.getElementById('product-not-found');
-    const breadcrumbTitle = document.getElementById('breadcrumb-title');
+      const urlParams = new URLSearchParams(window.location.search);
+      const productId = urlParams.get('id');
+      const container = document.getElementById('product-detail-container');
+      const notFound = document.getElementById('product-not-found');
+      const breadcrumbTitle = document.getElementById('breadcrumb-title');
 
-    if (productId && productsData[productId]) {
+      if (productId && productsData[productId]) {
+        const product = productsData[productId];
+        breadcrumbTitle.textContent = product.title;
+        container.innerHTML = `
+          <div class="product-detail-image">
+            <img src="${product.image}" alt="${product.title}" width="600" height="600" />
+          </div>
+          <div class="product-detail-info">
+            <span class="product-category-tag">${product.category}</span>
+            <h1>${product.title}</h1>
+            <div class="product-detail-price">${product.price}</div>
+            <hr class="product-divider" />
+            <p class="product-detail-description">${product.description}</p>
+            <button type="button" class="btn-apple-primary" data-action="add-cart" data-id="${productId}">
+              Add to Cart
+            </button>
+          </div>
+        `;
+      } else {
+        container.style.display = 'none';
+        notFound.style.display = 'block';
+      }
+    });
+
+    // Global Event Delegation for Add to Cart Buttons
+    document.addEventListener('click', function(event) {
+      const btn = event.target.closest('[data-action="add-cart"]');
+      if (!btn) return;
+
+      const productId = btn.getAttribute('data-id');
       const product = productsData[productId];
-      breadcrumbTitle.textContent = product.title;
-      container.innerHTML = `
-        <div class="product-detail-image">
-          <img src="${product.image}" alt="${product.title}" width="600" height="600" />
-        </div>
-        <div class="product-detail-info">
-          <span class="product-category-tag">${product.category}</span>
-          <h1>${product.title}</h1>
-          <div class="product-detail-price">${product.price}</div>
-          <hr class="product-divider" />
-          <p class="product-detail-description">${product.description}</p>
-          <button type="button" id="add-to-cart-btn" class="btn-apple-primary" data-id="${productId}">
-            Add to Cart
-          </button>
-        </div>
-      `;
+      if (!product) return;
 
-      // Attach event listener to the dynamically rendered button
-      document.getElementById('add-to-cart-btn').addEventListener('click', function() {
-        let cart = getCart();
-        const existingIndex = cart.findIndex(item => item.id === productId);
-        
-        if (existingIndex > -1) {
-          cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
-        } else {
-          cart.push({
-            id: productId,
-            title: product.title,
-            price: product.price,
-            image: product.image,
-            quantity: 1
-          });
-        }
-        
-        saveCart(cart);
+      let cart = getCart();
+      const existingIndex = cart.findIndex(item => item.id === productId);
+      
+      if (existingIndex > -1) {
+        cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+      } else {
+        cart.push({
+          id: productId,
+          title: product.title,
+          price: product.price,
+          image: product.image,
+          quantity: 1
+        });
+      }
+      
+      saveCart(cart);
 
-        // Success state feedback styling
-        const btn = this;
-        const originalText = btn.textContent;
-        btn.textContent = 'Added to Cart ✓';
-        btn.style.backgroundColor = 'var(--apple-success)';
-        
-        setTimeout(() => {
-          btn.textContent = originalText;
-          btn.style.backgroundColor = '';
-        }, 1500);
-      });
-
-    } else {
-      container.style.display = 'none';
-      notFound.style.display = 'block';
-    }
+      // Visual feedback
+      const originalText = btn.textContent;
+      btn.textContent = 'Added to Cart ✓';
+      btn.style.backgroundColor = 'var(--apple-success)';
+      
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.backgroundColor = '';
+      }, 1500);
+    });
   </script>
 </body>
 </html>
