@@ -1,7 +1,7 @@
 /**
  * ============================================================================
  * PRASUN SHOP — PRODUCTS & INTERACTIVITY (PERFORMANCE & A11Y OPTIMIZED)
- * Production-ready async fetch, tokenized search, filtering, and robust image handling.
+ * Production-ready async fetch, tokenized search, filtering, and local image mapping.
  * ============================================================================
  */
 
@@ -9,8 +9,14 @@
 
 (() => {
     /* =========================================================================
-       CONFIG & CONSTANTS
+       CONFIG & CONSTANTS (Strict Local Image Overrides)
        ========================================================================= */
+
+    const PRODUCT_IMAGE_OVERRIDES = {
+        "smart-lamp": "images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png",
+        "power-bank": "images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg",
+        "earbuds": "images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg"
+    };
 
     const CONFIG = {
         STORAGE_KEYS: ["products", "prasun_products"],
@@ -20,12 +26,6 @@
         FETCH_TIMEOUT_MS: 8000,
         DEBOUNCE_MS: 150,
         ITEMS_PER_PAGE: 24,
-        DEFAULT_IMAGES: {
-            "Smart Lighting": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80",
-            "Power & Charging": "https://images.unsplash.com/photo-1609592424109-dd9892f1b177?auto=format&fit=crop&w=600&q=80",
-            "Audio": "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80",
-            "default": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80"
-        },
         FALLBACK_IMAGE: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
             <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
                 <rect width="800" height="600" fill="#f4f4f5"/>
@@ -105,12 +105,38 @@
             const cart = rawCart ? JSON.parse(rawCart) : [];
             const totalCount = Array.isArray(cart) 
                 ? cart.reduce((acc, item) => acc + Number(item.quantity || 1), 0)
-                : 3; // Default to 3 matching initial markup if empty
+                : 3;
 
             DOM.cartBadge.textContent = String(totalCount);
             DOM.cartBadge.hidden = totalCount === 0;
         } catch (e) {
             console.warn("[Prasun Shop] Failed to update cart badge count:", e);
+        }
+    }
+
+    function addToCart(productId) {
+        const product = state.allProducts.find(p => p.id === productId);
+        if (!product) return;
+
+        try {
+            const rawCart = localStorage.getItem(CONFIG.CART_KEY);
+            const cart = rawCart ? JSON.parse(rawCart) : [];
+            const existingIndex = cart.findIndex(item => item.id === productId);
+
+            if (existingIndex > -1) {
+                cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+
+            localStorage.setItem(CONFIG.CART_KEY, JSON.stringify(cart));
+            updateCartBadge();
+
+            if (DOM.liveRegion) {
+                DOM.liveRegion.textContent = `${product.name} added to cart.`;
+            }
+        } catch (e) {
+            console.error("[Prasun Shop] Failed to add item to cart:", e);
         }
     }
 
@@ -121,15 +147,15 @@
     function normalizeProduct(item, index) {
         if (!item || typeof item !== "object") return null;
 
-        const id = item.id ?? item.productId ?? `product-${index + 1}`;
+        const id = String(item.id ?? item.productId ?? `product-${index + 1}`).trim();
         const name = String(item.name ?? item.title ?? "Unnamed Product").trim();
         const price = Number(item.price ?? 0);
         const rating = Number(item.rating ?? 0);
         const category = String(item.category ?? "").trim();
         const description = String(item.description ?? "").trim();
 
-        // Robust image property checks covering multiple naming conventions
-        let rawImage = String(
+        // Enforce strict mapping to your exact local images if ID matches, else fallback to properties or placeholder
+        let rawImage = PRODUCT_IMAGE_OVERRIDES[id] || String(
             item.image ?? 
             item.imageUrl ?? 
             item.thumbnail ?? 
@@ -139,16 +165,15 @@
             ""
         ).trim();
 
-        // Fallback to category-based Unsplash placeholder if image is missing
         if (!rawImage) {
-            rawImage = CONFIG.DEFAULT_IMAGES[category] || CONFIG.DEFAULT_IMAGES["default"];
+            rawImage = CONFIG.FALLBACK_IMAGE;
         }
 
         const normalizedCategory = normalize(category);
         const searchIndex = `${normalize(name)} ${normalize(description)} ${normalizedCategory}`;
 
         return {
-            id: String(id),
+            id,
             name: name || "Unnamed Product",
             price: Number.isFinite(price) ? price : 0,
             image: rawImage,
@@ -160,14 +185,13 @@
         };
     }
 
-    // Fallback static products parsed directly from HTML markup if API/fetch fails
     function getFallbackStaticProducts() {
         return [
             {
                 id: "smart-lamp",
                 name: "G-Shaped Smart LED Atmosphere Lamp",
                 price: 29.99,
-                image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80",
+                image: "images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png",
                 category: "Smart Lighting",
                 description: "Includes built-in Bluetooth speaker and fast wireless charger pad.",
                 rating: 4.8,
@@ -178,7 +202,7 @@
                 id: "power-bank",
                 name: "Mini 5000mAh Magnetic Wireless Power Bank",
                 price: 39.99,
-                image: "https://images.unsplash.com/photo-1609592424109-dd9892f1b177?auto=format&fit=crop&w=600&q=80",
+                image: "images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg",
                 category: "Power & Charging",
                 description: "Compact fast-charging portable battery pack for mobile devices.",
                 rating: 4.7,
@@ -189,7 +213,7 @@
                 id: "earbuds",
                 name: "Wireless Noise-Cancelling Sports Earbuds",
                 price: 49.99,
-                image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80",
+                image: "images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg",
                 category: "Audio",
                 description: "High-fidelity Bluetooth audio with ergonomic sweat-resistant fit.",
                 rating: 4.9,
@@ -200,7 +224,7 @@
     }
 
     /* =========================================================================
-       DATA LOADING & FETCHING
+       DATA FETCHING & STORAGE
        ========================================================================= */
 
     function getCachedProducts() {
@@ -261,7 +285,7 @@
             return normalized;
         } catch (error) {
             if (error.name !== "AbortError") {
-                console.warn("[Prasun Shop] API fetch unavailable, falling back to static markup products.");
+                console.warn("[Prasun Shop] API fetch unavailable, falling back to static products.");
             }
             return getFallbackStaticProducts();
         }
@@ -272,7 +296,6 @@
 
         DOM.productList.setAttribute("aria-busy", "true");
 
-        // 1. Try Cache First
         const cached = getCachedProducts();
         if (cached && cached.length > 0) {
             state.allProducts = cached;
@@ -282,7 +305,6 @@
             return;
         }
 
-        // 2. Fallback to API or Static Markup Defaults
         try {
             state.allProducts = await fetchProductsFromAPI();
             if (!state.allProducts.length) {
@@ -409,7 +431,7 @@
     }
 
     /* =========================================================================
-       PRODUCT RENDERING
+       PRODUCT RENDERING & DELEGATION
        ========================================================================= */
 
     function renderProducts(products) {
@@ -443,32 +465,39 @@
 
         return `
             <article class="product-card" data-id="${safeId}">
-                <a class="product-card-link" href="product.html?id=${safeId}" aria-label="View ${escapeHTML(product.name)}">
-                    <div class="product-card-image">
-                        <img 
-                            src="${escapeHTML(image)}" 
-                            alt="${escapeHTML(product.name)}" 
-                            loading="lazy" 
-                            decoding="async"
-                            width="600" 
-                            height="600" 
-                        />
-                        ${categoryHTML}
-                    </div>
-                    <div class="product-card-body">
-                        <h2 class="product-title">${escapeHTML(product.name)}</h2>
-                        ${product.description ? `<p class="product-description">${escapeHTML(product.description)}</p>` : ""}
-                        <div class="product-bottom">
-                            <span class="product-price">${formatPrice(product.price)}</span>
-                            <span class="product-view-button">View Details</span>
+                <div class="product-card-inner">
+                    <a class="product-card-link" href="product.html?id=${safeId}" aria-label="View ${escapeHTML(product.name)}">
+                        <div class="product-card-image">
+                            <img 
+                                src="${escapeHTML(image)}" 
+                                alt="${escapeHTML(product.name)}" 
+                                loading="lazy" 
+                                decoding="async"
+                                width="600" 
+                                height="600" 
+                            />
+                            ${categoryHTML}
                         </div>
+                        <div class="product-card-body">
+                            <h2 class="product-title">${escapeHTML(product.name)}</h2>
+                            ${product.description ? `<p class="product-description">${escapeHTML(product.description)}</p>` : ""}
+                            <div class="product-bottom">
+                                <span class="product-price">${formatPrice(product.price)}</span>
+                                <span class="product-view-button">View Details</span>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="product-card-actions">
+                        <button type="button" class="btn-add-to-cart" data-action="add-cart" data-id="${safeId}">
+                            Add to Cart
+                        </button>
                     </div>
-                </a>
+                </div>
             </article>
         `;
     }
 
-    function setupImageErrorDelegation() {
+    function setupProductListDelegation() {
         if (!DOM.productList) return;
 
         DOM.productList.addEventListener("error", (event) => {
@@ -479,6 +508,15 @@
                 img.closest(".product-card-image")?.classList.add("image-error");
             }
         }, true);
+
+        DOM.productList.addEventListener("click", (event) => {
+            const cartBtn = event.target.closest('[data-action="add-cart"]');
+            if (cartBtn) {
+                event.preventDefault();
+                const productId = decodeURIComponent(cartBtn.dataset.id);
+                addToCart(productId);
+            }
+        });
     }
 
     /* =========================================================================
@@ -563,6 +601,12 @@
             readStateFromURL();
             applyFilters();
         });
+
+        window.addEventListener("storage", (e) => {
+            if (e.key === CONFIG.CART_KEY) {
+                updateCartBadge();
+            }
+        });
     }
 
     function renderEmptyState() {
@@ -608,7 +652,7 @@
         DOM.resultsCount = $("#products-count");
         DOM.heading = $("#products-heading");
         DOM.categoryPills = $$(".category-pill");
-        DOM.cartBadge = $(".cart-badge");
+        DOM.cartBadge = $(".cart-badge") || $("#cart-count");
 
         let liveRegion = $("#a11y-status-region");
         if (!liveRegion) {
@@ -625,7 +669,7 @@
         cacheDOM();
         updateCartBadge();
         initializeControls();
-        setupImageErrorDelegation();
+        setupProductListDelegation();
         loadProducts();
     }
 
