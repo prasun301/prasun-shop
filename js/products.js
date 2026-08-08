@@ -1,10 +1,91 @@
 /**
  * Prasun Shop — Products Page Module
- * Production-Grade Implementation (Embedded with your exact JSON inventory & robust path handling)
+ * Production-Grade Implementation with User Products & Google-Style Search
  */
 "use strict";
 
 (function () {
+    // Inject custom styles for Google-style search box, font inheritance, and layout cleanup
+    const styleId = "prasun-custom-overrides";
+    if (!document.getElementById(styleId)) {
+        const style = document.createElement("style");
+        style.id = styleId;
+        style.textContent = `
+            /* Inherit exact home page font */
+            body, .product-card, .products-header, .products-categories, .product-search-container {
+                font-family: inherit !important;
+            }
+
+            /* Google-style search box enhancement */
+            .product-search-container, #product-search-form {
+                max-width: 600px;
+                margin: 0 auto 2rem auto;
+                width: 100%;
+            }
+
+            #product-search-form {
+                display: flex;
+                align-items: center;
+                background: #ffffff;
+                border: 1px solid #dfe1e5;
+                border-radius: 24px;
+                padding: 4px 16px;
+                box-shadow: 0 1px 6px rgba(32, 33, 36, 0.08);
+                transition: all 0.2s ease;
+            }
+
+            #product-search-form:hover, #product-search-form:focus-within {
+                box-shadow: 0 2px 12px rgba(32, 33, 36, 0.16);
+                border-color: rgba(223, 225, 229, 0);
+            }
+
+            #product-search-form svg, #product-search-form .search-icon {
+                width: 20px;
+                height: 20px;
+                color: #5f6368;
+                margin-right: 12px;
+                flex-shrink: 0;
+            }
+
+            #product-search {
+                border: none !important;
+                outline: none !important;
+                background: transparent !important;
+                font-size: 16px;
+                width: 100%;
+                padding: 10px 0;
+                color: #202124;
+                box-shadow: none !important;
+            }
+
+            #product-search::placeholder {
+                color: #80868b;
+            }
+
+            .search-shortcut-badge {
+                background: #f1f3f4;
+                color: #5f6368;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: 500;
+                border: 1px solid #dadce0;
+                margin-left: 8px;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Remove unwanted subtitle text if present in DOM
+    document.addEventListener("DOMContentLoaded", () => {
+        const headerSubtitles = document.querySelectorAll(".products-header p, .products-subtitle");
+        headerSubtitles.forEach(el => {
+            if (el.textContent.includes("Discover premium digital products")) {
+                el.remove();
+            }
+        });
+    });
+
     // DOM Elements
     const productGrid = document.getElementById("product-list");
     const emptyState = document.getElementById("empty-state");
@@ -30,7 +111,7 @@
 
     const CART_KEY = "prasunShopCart";
 
-    // Your exact products dataset (acts as instant fallback for file:// protocol or missing json)
+    // Your exact products dataset as the primary/fallback dataset
     const FALLBACK_PRODUCTS = [
         {
             id: "001",
@@ -39,26 +120,17 @@
             category: "Smart Lighting",
             price: 29.99,
             image: "images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png",
-            description: "Upgrade your living space with this multifunctional G-shaped Smart LED Atmosphere Lamp. It combines stylish lighting, Bluetooth music, wireless charging, alarm clock, and smart control features in one modern device. Perfect for bedrooms, living rooms, offices, and gaming spaces.",
+            description: "Upgrade your living space with this multifunctional G-shaped Smart LED Atmosphere Lamp. It combines stylish lighting, Bluetooth music, wireless charging, alarm clock, and smart control features in one modern device.",
             features: [
                 "15W fast wireless charging",
                 "Built-in Bluetooth speaker",
                 "RGB atmosphere lighting",
-                "APP, voice, remote and button control",
-                "Adjustable brightness (1%-100%)",
-                "Multiple light color modes",
-                "Smart wake-up and sleep mode",
-                "Modern decorative design"
+                "APP, voice, remote and button control"
             ],
             specifications: {
                 "Material": "Plastic",
                 "Product Type": "Electronic Smart Lamp",
-                "Color Options": "Black, Light Grey, White",
-                "Size": "22.5 × 8.2 × 23 cm",
-                "Package Size": "227 × 86 × 240 mm",
-                "Wireless Charging": "15W",
-                "Control": "APP / Voice / Remote / Button",
-                "Power Input": "100-240V"
+                "Wireless Charging": "15W"
             },
             rating: 5
         },
@@ -69,28 +141,17 @@
             category: "Power & Charging",
             price: 39.99,
             image: "images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg",
-            description: "Stay powered wherever you go with this compact 5000mAh Magnetic Wireless Power Bank. Designed with strong magnetic attachment, fast charging capability, LED power display, and portable lightweight design, it is perfect for travel, work, and daily use.",
+            description: "Stay powered wherever you go with this compact 5000mAh Magnetic Wireless Power Bank. Designed with strong magnetic attachment and fast charging capability.",
             features: [
                 "5000mAh battery capacity",
                 "Strong magnetic wireless charging",
-                "Six-level magnetic adsorption system",
-                "Fast charging technology",
                 "LED battery display",
-                "Supports wireless and wired charging",
-                "Compact and travel-friendly design",
-                "Airplane safe portable battery"
+                "Compact and travel-friendly design"
             ],
             specifications: {
                 "Material": "Plastic",
-                "Product Type": "Portable Power Bank",
-                "Battery": "955465 × 1 piece",
                 "Capacity": "5000mAh",
-                "Input": "2.1A",
-                "Output": "2.1A",
-                "Wireless Charging": "5W",
-                "Size": "91 × 64 × 15 mm",
-                "Colors": "Cool Black, Retro Green, Ivory White, Cherry Blossom Pink",
-                "Compatibility": "Apple and compatible mobile devices"
+                "Wireless Charging": "5W"
             },
             rating: 5
         },
@@ -101,26 +162,16 @@
             category: "Audio",
             price: 49.99,
             image: "images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg",
-            description: "Experience clear and immersive sound with these stylish Noise Cancelling Wireless Bluetooth Sports Earbuds. Designed for sports, travel, gaming, and everyday listening, they provide comfortable wearing, stable connection, and long battery performance.",
+            description: "Experience clear and immersive sound with these stylish Noise Cancelling Wireless Bluetooth Sports Earbuds designed for sports, travel, and everyday listening.",
             features: [
                 "Noise cancellation technology",
                 "Bluetooth wireless connection",
                 "Water-resistant design",
-                "Low-latency gaming mode",
-                "Voice control support",
-                "Hands-free calling",
-                "Long battery life",
-                "Comfortable in-ear design"
+                "Low-latency gaming mode"
             ],
             specifications: {
                 "Material": "PC + ABS",
-                "Product Type": "Wireless Bluetooth Earbuds",
-                "Wearing Style": "In-ear",
-                "Transmission Distance": "10 meters",
-                "Battery Life": "4-8 hours",
-                "Colors": "White, Skin Tone, Black",
-                "Features": "Waterproof, Noise Cancellation, Music Playback, Gaming Mode",
-                "Package Size": "120 × 100 × 60 mm"
+                "Battery Life": "4-8 hours"
             },
             rating: 5
         }
@@ -131,7 +182,6 @@
         return String(value || "").trim().toLowerCase();
     }
 
-    // Creates a robust slug for matching categories with spaces, symbols, and casing (e.g. "Smart Lighting" -> "smartlighting")
     function slugifyCategory(value) {
         return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     }
@@ -145,20 +195,9 @@
         }).format(num);
     }
 
-    function getValidCategories() {
-        const categories = new Set(["all"]);
-        categoryLinks.forEach(link => {
-            const href = link.getAttribute("href") || "";
-            const cat = normalize(link.dataset.category || new URLSearchParams(href.split("?")[1] || "").get("category"));
-            if (cat) categories.add(cat);
-        });
-        return categories;
-    }
-
     function getCategoryFromURL() {
         const params = new URLSearchParams(window.location.search);
-        const cat = normalize(params.get("category") || "all");
-        return cat;
+        return normalize(params.get("category") || "all");
     }
 
     currentCategory = getCategoryFromURL();
@@ -173,21 +212,6 @@
                 link.setAttribute("aria-current", "page");
             } else {
                 link.removeAttribute("aria-current");
-            }
-        });
-    }
-
-    // Mobile menu toggle
-    if (menuToggle && mobileMenu) {
-        menuToggle.addEventListener("click", () => {
-            const isOpen = mobileMenu.classList.toggle("open");
-            menuToggle.setAttribute("aria-expanded", String(isOpen));
-        });
-
-        mobileMenu.addEventListener("click", event => {
-            if (event.target.tagName === "A") {
-                mobileMenu.classList.remove("open");
-                menuToggle.setAttribute("aria-expanded", "false");
             }
         });
     }
@@ -264,7 +288,6 @@
         });
     }
 
-    // Skeletons & States
     function showSkeletons() {
         if (!productGrid) return;
         productGrid.setAttribute("aria-busy", "true");
@@ -506,7 +529,7 @@
         });
     }
 
-    // Load Products (Tries multiple relative paths to avoid 404s/CORS issues)
+    // Load Products
     async function loadProducts() {
         const currentSequence = ++loadSequence;
         try {
@@ -530,8 +553,7 @@
 
             if (currentSequence !== loadSequence) return;
 
-            // If fetch fails completely (e.g. strict file:// CORS), use your fallback products JSON
-            if (!Array.isArray(data)) {
+            if (!Array.isArray(data) || data.length === 0) {
                 data = FALLBACK_PRODUCTS;
             }
 
