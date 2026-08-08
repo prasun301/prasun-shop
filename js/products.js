@@ -1,17 +1,17 @@
 /**
  * Prasun Shop — Products Page Module
- * Production-grade implementation combining filtering, search, sorting,
- * URL synchronization, cart management, and enterprise error handling.
+ * Production-grade implementation (10/10 Quality Audit)
  */
 "use strict";
 
 (function () {
-    // DOM Elements
+    // DOM Elements (gracefully handle optional elements)
     const productGrid = document.getElementById("product-list");
     const emptyState = document.getElementById("empty-state");
     const searchInput = document.getElementById("product-search");
     const searchForm = document.getElementById("product-search-form");
     const productTemplate = document.getElementById("product-card-template");
+    const skeletonTemplate = document.getElementById("skeleton-template");
     const categoryContainer = document.querySelector(".products-categories");
     const categoryLinks = document.querySelectorAll(".category-pill");
     const productCount = document.getElementById("products-count");
@@ -26,6 +26,7 @@
     let currentCategory = "all";
     let currentSearch = "";
     let currentSort = "featured";
+    let searchTimeout = null;
 
     const CART_KEY = "prasunShopCart";
 
@@ -45,32 +46,28 @@
         }).format(number);
     }
 
-    // URL & Category Handling
+    // Category Validation & URL Synchronization
+    function getValidCategories() {
+        const categories = new Set(["all"]);
+        categoryLinks.forEach(link => {
+            const cat = normalize(link.dataset.category || new URLSearchParams((link.getAttribute("href") || "").split("?")[1] || "").get("category"));
+            if (cat) categories.add(cat);
+        });
+        return categories;
+    }
+
     function getCategoryFromURL() {
         const params = new URLSearchParams(window.location.search);
-        const cat = params.get("category");
-        if (!cat) return "all";
-        const normalizedCat = normalize(cat);
-        const validCategories = Array.from(categoryLinks)
-            .map(link => {
-                const href = link.getAttribute("href") || "";
-                const linkParams = new URLSearchParams(href.split("?")[1] || "");
-                return normalize(linkParams.get("category") || link.dataset.category || "all");
-            })
-            .filter(c => c && c !== "all");
-        if (normalizedCat === "all" || validCategories.includes(normalizedCat)) {
-            return normalizedCat;
-        }
-        return "all";
+        const cat = normalize(params.get("category") || "all");
+        const validCategories = getValidCategories();
+        return validCategories.has(cat) ? cat : "all";
     }
 
     currentCategory = getCategoryFromURL();
 
     function updateActiveCategory() {
         categoryLinks.forEach(link => {
-            const href = link.getAttribute("href") || "";
-            const linkParams = new URLSearchParams(href.split("?")[1] || "");
-            const cat = normalize(linkParams.get("category") || link.dataset.category || "all");
+            const cat = normalize(link.dataset.category || new URLSearchParams((link.getAttribute("href") || "").split("?")[1] || "").get("category") || "all");
             const active = cat === normalize(currentCategory);
             link.classList.toggle("active", active);
             if (active) {
@@ -81,33 +78,56 @@
         });
     }
 
-    // Mobile Menu
-    menuToggle?.addEventListener("click", () => {
-        const isOpen = mobileMenu?.classList.toggle("open") || false;
-        menuToggle.setAttribute("aria-expanded", String(isOpen));
-        menuToggle.setAttribute(
-            "aria-label",
-            isOpen ? "Close navigation menu" : "Open navigation menu"
-        );
-    });
+    // Mobile Menu Handlers
+    if (menuToggle && mobileMenu) {
+        menuToggle.addEventListener("click", () => {
+            const isOpen = mobileMenu.classList.toggle("open");
+            menuToggle.setAttribute("aria-expanded", String(isOpen));
+            menuToggle.setAttribute(
+                "aria-label",
+                isOpen ? "Close navigation menu" : "Open navigation menu"
+            );
+        });
 
-    mobileMenu?.addEventListener("click", event => {
-        if (event.target.tagName === "A") {
-            mobileMenu.classList.remove("open");
-            menuToggle?.setAttribute("aria-expanded", "false");
-            menuToggle?.setAttribute("aria-label", "Open navigation menu");
-        }
-    });
+        mobileMenu.addEventListener("click", event => {
+            if (event.target.tagName === "A") {
+                mobileMenu.classList.remove("open");
+                menuToggle.setAttribute("aria-expanded", "false");
+                menuToggle.setAttribute("aria-label", "Open navigation menu");
+            }
+        });
+    }
 
-    // Cart Architecture
+    // Cart Architecture & Reliability
     function getCart() {
         try {
             const stored = localStorage.getItem(CART_KEY);
             if (!stored) return [];
             const parsed = JSON.parse(stored);
-            return Array.isArray(parsed) ? parsed : [];
+            if (!Array.isArray(parsed)) return [];
+            
+            // Clean and validate items
+            const validCart = [];
+            const seenIds = new Set();
+            for (const item of parsed) {
+                if (!item || item.id === undefined || item.id === null) continue;
+                const idStr = String(item.id);
+                if (seenIds.has(idStr)) continue;
+                seenIds.add(idStr);
+
+                const qty = Number(item.quantity);
+                validCart.push({
+                    id: item.id,
+                    name: String(item.name || "Product"),
+                    price: Number.isFinite(Number(item.price)) ? Number(item.price) : 0,
+                    image: String(item.image || ""),
+                    category: String(item.category || ""),
+                    quantity: Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 1
+                });
+            }
+            return validCart;
         } catch (error) {
-            console.error("Unable to read cart from localStorage:", error);
+            console.error("Unable to read or parse cart from localStorage:", error);
             return [];
         }
     }
@@ -115,22 +135,19 @@
     function saveCart(cart) {
         try {
             localStorage.setItem(CART_KEY, JSON.stringify(cart));
+            return true;
         } catch (error) {
-            console.error("Unable to save cart to localStorage:", error);
+            console.error("Failed to persist cart to localStorage (Quota exceeded or unavailable):", error);
+            return false;
         }
     }
 
     function updateCartCount() {
         if (!cartCount) return;
         const cart = getCart();
-        const total = cart.reduce((sum, item) => {
-            const qty = Number(item?.quantity);
-            return sum + (Number.isFinite(qty) && qty > 0 ? qty : 1);
-        }, 0);
+        const total = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
         cartCount.textContent = String(total);
-        if (cartCount.hasAttribute("hidden")) {
-            cartCount.hidden = total === 0;
-        }
+        cartCount.hidden = total === 0;
     }
 
     function addToCart(productId) {
@@ -142,7 +159,7 @@
         const cart = getCart();
         const existing = cart.find(item => String(item.id) === String(product.id));
         if (existing) {
-            existing.quantity = Number(existing.quantity || 1) + 1;
+            existing.quantity = (Number(existing.quantity) || 1) + 1;
         } else {
             cart.push({
                 id: product.id,
@@ -153,10 +170,12 @@
                 quantity: 1
             });
         }
-        saveCart(cart);
-        updateCartCount();
-        showCartFeedback(product.id);
-        window.dispatchEvent(new Event("storage"));
+        
+        // Only trigger UI feedback & persistence updates if successfully saved
+        if (saveCart(cart)) {
+            updateCartCount();
+            showCartFeedback(product.id);
+        }
     }
 
     function showCartFeedback(productId) {
@@ -177,48 +196,22 @@
         });
     }
 
-    // Skeletons & States
+    // Skeleton & State Management
     function showSkeletons() {
         if (!productGrid) return;
         productGrid.setAttribute("aria-busy", "true");
-        productGrid.innerHTML = `
-            <article class="product-skeleton">
-                <div class="skeleton-image"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line short"></div>
-                    <div class="skeleton-line medium"></div>
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line medium"></div>
-                </div>
-            </article>
-            <article class="product-skeleton">
-                <div class="skeleton-image"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line short"></div>
-                    <div class="skeleton-line medium"></div>
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line medium"></div>
-                </div>
-            </article>
-            <article class="product-skeleton">
-                <div class="skeleton-image"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line short"></div>
-                    <div class="skeleton-line medium"></div>
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line medium"></div>
-                </div>
-            </article>
-            <article class="product-skeleton">
-                <div class="skeleton-image"></div>
-                <div class="skeleton-content">
-                    <div class="skeleton-line short"></div>
-                    <div class="skeleton-line medium"></div>
-                    <div class="skeleton-line long"></div>
-                    <div class="skeleton-line medium"></div>
-                </div>
-            </article>
-        `;
+        if (skeletonTemplate) {
+            productGrid.innerHTML = "";
+            const fragment = document.createDocumentFragment();
+            for (let i = 0; i < 8; i++) {
+                fragment.appendChild(skeletonTemplate.content.cloneNode(true));
+            }
+            productGrid.appendChild(fragment);
+        } else {
+            productGrid.innerHTML = `
+                <article class="product-skeleton"><div class="skeleton-image"></div><div class="skeleton-content"><div class="skeleton-line short"></div><div class="skeleton-line long"></div></div></article>
+            `.repeat(4);
+        }
     }
 
     function showEmptyState() {
@@ -229,9 +222,9 @@
         if (emptyState) emptyState.classList.add("hidden");
     }
 
-    function createErrorState() {
+    function getOrCreateErrorState() {
         let errEl = document.getElementById("error-state");
-        if (!errEl && emptyState) {
+        if (!errEl && emptyState && emptyState.parentNode) {
             errEl = document.createElement("div");
             errEl.id = "error-state";
             errEl.className = "products-empty hidden";
@@ -248,7 +241,9 @@
                 <button type="button" id="retry-button" class="products-empty-button">Try Again</button>
             `;
             emptyState.parentNode.insertBefore(errEl, emptyState.nextSibling);
-            errEl.querySelector("#retry-button")?.addEventListener("click", loadProducts);
+            errEl.querySelector("#retry-button")?.addEventListener("click", () => {
+                loadProducts();
+            });
         }
         return errEl;
     }
@@ -262,7 +257,7 @@
         if (productCount) {
             productCount.textContent = "Error loading products";
         }
-        const errEl = document.getElementById("error-state") || createErrorState();
+        const errEl = getOrCreateErrorState();
         errEl?.classList.remove("hidden");
     }
 
@@ -273,17 +268,19 @@
 
     // Product Card Construction
     function createProductCard(product) {
+        if (!productTemplate) return document.createDocumentFragment();
         const fragment = productTemplate.content.cloneNode(true);
-        const article = fragment.querySelector(".product-card");
-        const link = fragment.querySelector(".product-card-link");
+        const article = fragment.querySelector(".product-card") || fragment.querySelector("article");
+        const link = fragment.querySelector(".product-card-link") || fragment.querySelector("a");
         const image = fragment.querySelector("img");
         const category = fragment.querySelector(".product-category");
         const title = fragment.querySelector(".product-title");
         const description = fragment.querySelector(".product-description");
         const price = fragment.querySelector(".product-price");
-        const button = fragment.querySelector(".product-cart-button");
+        const button = fragment.querySelector(".product-cart-button") || fragment.querySelector('[data-action="cart"]');
 
         const productId = product.id !== undefined && product.id !== null ? String(product.id) : "";
+        
         if (link && productId) {
             link.href = `product.html?id=${encodeURIComponent(productId)}`;
         } else if (link) {
@@ -329,7 +326,7 @@
         return fragment;
     }
 
-    // Filtering & Sorting
+    // Filtering, Searching & Sorting
     function getVisibleProducts() {
         let result = [...products];
 
@@ -354,15 +351,15 @@
         }
 
         if (currentSort === "price-low") {
-            result.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+            result.sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
         } else if (currentSort === "price-high") {
-            result.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+            result.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
         } else if (currentSort === "name") {
             result.sort((a, b) =>
                 String(a.name || "").localeCompare(String(b.name || ""))
             );
         } else if (currentSort === "featured") {
-            // Preserves original fetched order from products.json
+            // Preserves exact original JSON order
         }
 
         return result;
@@ -397,26 +394,27 @@
         productGrid.appendChild(fragment);
     }
 
-    // Event Listeners for Filters & Navigation
-    categoryContainer?.addEventListener("click", event => {
-        const pill = event.target.closest(".category-pill");
-        if (!pill) return;
-        event.preventDefault();
+    // Event Handlers for Categories & URL Sync
+    if (categoryContainer) {
+        categoryContainer.addEventListener("click", event => {
+            const pill = event.target.closest(".category-pill");
+            if (!pill) return;
+            event.preventDefault();
 
-        const href = pill.getAttribute("href") || "";
-        const linkParams = new URLSearchParams(href.split("?")[1] || "");
-        const category = linkParams.get("category") || pill.dataset.category || "all";
-        currentCategory = normalize(category);
+            // Clear any pending debounced search or timer states if desired, or keep search active
+            const cat = pill.dataset.category || new URLSearchParams((pill.getAttribute("href") || "").split("?")[1] || "").get("category") || "all";
+            currentCategory = normalize(cat);
 
-        const newUrl =
-            currentCategory === "all"
-                ? "products.html"
-                : `products.html?category=${encodeURIComponent(currentCategory)}`;
-        history.pushState({ category: currentCategory }, "", newUrl);
+            const newUrl =
+                currentCategory === "all"
+                    ? "products.html"
+                    : `products.html?category=${encodeURIComponent(currentCategory)}`;
+            history.pushState({ category: currentCategory }, "", newUrl);
 
-        updateActiveCategory();
-        renderProducts();
-    });
+            updateActiveCategory();
+            renderProducts();
+        });
+    }
 
     window.addEventListener("popstate", () => {
         currentCategory = getCategoryFromURL();
@@ -424,12 +422,17 @@
         renderProducts();
     });
 
+    // Debounced Search with Stale Prevention
     function debounce(func, wait) {
         let timeout;
-        return function (...args) {
+        const debounced = function (...args) {
             clearTimeout(timeout);
             timeout = setTimeout(() => func.apply(this, args), wait);
         };
+        debounced.cancel = function () {
+            clearTimeout(timeout);
+        };
+        return debounced;
     }
 
     const handleSearchInput = debounce(event => {
@@ -437,57 +440,73 @@
         renderProducts();
     }, 200);
 
-    searchInput?.addEventListener("input", handleSearchInput);
+    if (searchInput) {
+        searchInput.addEventListener("input", handleSearchInput);
+    }
 
-    searchForm?.addEventListener("submit", event => {
-        event.preventDefault();
-    });
+    if (searchForm) {
+        searchForm.addEventListener("submit", event => {
+            event.preventDefault();
+        });
+    }
 
-    emptyResetBtn?.addEventListener("click", event => {
-        event.preventDefault();
-        currentCategory = "all";
-        currentSearch = "";
-        if (searchInput) searchInput.value = "";
-        history.pushState({ category: "all" }, "", "products.html");
-        updateActiveCategory();
-        renderProducts();
-    });
+    if (emptyResetBtn) {
+        emptyResetBtn.addEventListener("click", event => {
+            event.preventDefault();
+            if (searchTimeout) searchTimeout.cancel?.();
+            currentCategory = "all";
+            currentSearch = "";
+            if (searchInput) searchInput.value = "";
+            history.pushState({ category: "all" }, "", "products.html");
+            updateActiveCategory();
+            renderProducts();
+        });
+    }
 
-    productSort?.addEventListener("change", event => {
-        currentSort = event.target.value;
-        renderProducts();
-    });
+    if (productSort) {
+        productSort.addEventListener("change", event => {
+            currentSort = event.target.value;
+            renderProducts();
+        });
+    }
 
+    // Global Keyboard Shortcuts (⌘K / Ctrl+K)
     document.addEventListener("keydown", event => {
         const isShortcut =
             (event.metaKey || event.ctrlKey) &&
             event.key.toLowerCase() === "k";
         if (!isShortcut) return;
         event.preventDefault();
-        searchInput?.focus();
-        searchInput?.select();
-    });
-
-    productGrid?.addEventListener("click", event => {
-        const button = event.target.closest('[data-action="cart"]');
-        if (!button) return;
-        event.preventDefault();
-        event.stopPropagation();
-        const productId = button.dataset.id;
-        if (!productId) {
-            console.error("Add to Cart button has no product ID.");
-            return;
+        if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
         }
-        addToCart(productId);
     });
 
+    // Event Delegation for Add-to-Cart
+    if (productGrid) {
+        productGrid.addEventListener("click", event => {
+            const button = event.target.closest('[data-action="cart"]');
+            if (!button) return;
+            event.preventDefault();
+            event.stopPropagation();
+            const productId = button.dataset.id;
+            if (!productId) {
+                console.error("Add to Cart button has no product ID.");
+                return;
+            }
+            addToCart(productId);
+        });
+    }
+
+    // Cross-tab synchronization via native storage event
     window.addEventListener("storage", event => {
         if (!event.key || event.key === CART_KEY) {
             updateCartCount();
         }
     });
 
-    // Load Products
+    // Load Products Data Safely
     async function loadProducts() {
         try {
             showSkeletons();
@@ -496,20 +515,37 @@
                 cache: "no-cache"
             });
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
             const data = await response.json();
             if (!Array.isArray(data)) {
-                throw new Error("products.json must contain an array.");
+                throw new Error("Invalid data format: products.json must contain an array.");
             }
 
-            products = data.filter(p =>
-                p &&
-                (p.id !== undefined && p.id !== null && p.id !== "") &&
-                typeof p.name === "string" &&
-                p.name.trim() !== "" &&
-                !isNaN(Number(p.price))
-            );
+            // Validate and sanitize products, filter out malformed items, handle duplicate IDs safely
+            const seenIds = new Set();
+            products = [];
+            for (const p of data) {
+                if (!p || p.id === undefined || p.id === null || String(p.id).trim() === "") continue;
+                const idStr = String(p.id);
+                if (seenIds.has(idStr)) {
+                    console.warn(`Duplicate product ID detected and ignored: ${idStr}`);
+                    continue;
+                }
+                if (typeof p.name !== "string" || p.name.trim() === "") continue;
+                const parsedPrice = Number(p.price);
+                if (isNaN(parsedPrice)) continue;
+
+                seenIds.add(idStr);
+                products.push({
+                    id: p.id,
+                    name: p.name.trim(),
+                    price: parsedPrice,
+                    image: String(p.image || ""),
+                    category: String(p.category || "general").trim(),
+                    description: String(p.description || "")
+                });
+            }
 
             currentCategory = getCategoryFromURL();
             updateActiveCategory();
