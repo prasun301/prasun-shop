@@ -8,16 +8,17 @@
   <style>
     :root {
       --apple-bg: #f5f5f7;
+      --apple-card-bg: #ffffff;
       --apple-text: #1d1d1f;
       --apple-gray: #86868b;
       --apple-border: #d2d2d7;
-      --apple-blue: #0071e3;
-      --apple-blue-hover: #0077ed;
+      --apple-dark: #1d1d1f;
+      --apple-dark-hover: #333336;
       --apple-success: #34c759;
     }
 
     body {
-      background-color: #ffffff;
+      background-color: var(--apple-card-bg);
       color: var(--apple-text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
       margin: 0;
@@ -30,6 +31,7 @@
       top: 0;
       background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       z-index: 100;
     }
 
@@ -79,7 +81,7 @@
       position: absolute;
       top: -8px;
       right: -10px;
-      background-color: var(--apple-blue);
+      background-color: var(--apple-dark);
       color: white;
       font-size: 0.7rem;
       font-weight: 600;
@@ -143,7 +145,7 @@
     .form-card {
       background-color: var(--apple-bg);
       border: 1px solid var(--apple-border);
-      border-radius: 18px;
+      border-radius: 20px;
       padding: 2rem;
       display: flex;
       flex-direction: column;
@@ -184,7 +186,7 @@
       width: 100%;
       padding: 0.85rem 1rem;
       border: 1px solid var(--apple-border);
-      border-radius: 10px;
+      border-radius: 12px;
       background-color: #ffffff;
       font-size: 0.95rem;
       color: var(--apple-text);
@@ -194,15 +196,15 @@
 
     input:focus, select:focus {
       outline: none;
-      border-color: var(--apple-blue);
-      box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+      border-color: var(--apple-dark);
+      box-shadow: 0 0 0 3px rgba(29, 29, 31, 0.1);
     }
 
     /* Order Summary Sidebar */
     .order-summary-card {
       background-color: var(--apple-bg);
       border: 1px solid var(--apple-border);
-      border-radius: 18px;
+      border-radius: 20px;
       padding: 2rem;
       display: flex;
       flex-direction: column;
@@ -238,7 +240,7 @@
       height: 50px;
       object-fit: contain;
       background: #fff;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid var(--apple-border);
       padding: 2px;
     }
@@ -288,7 +290,7 @@
       display: inline-flex;
       justify-content: center;
       align-items: center;
-      background-color: var(--apple-blue);
+      background-color: var(--apple-dark);
       color: #ffffff;
       font-size: 1rem;
       font-weight: 500;
@@ -298,14 +300,14 @@
       cursor: pointer;
       text-decoration: none;
       transition: background-color 0.2s ease, transform 0.1s ease;
-      box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
       width: 100%;
       box-sizing: border-box;
       margin-top: 0.5rem;
     }
 
     .btn-apple-primary:hover {
-      background-color: var(--apple-blue-hover);
+      background-color: var(--apple-dark-hover);
     }
 
     .btn-apple-primary:active {
@@ -316,7 +318,7 @@
       text-align: center;
       padding: 4rem 2rem;
       background: var(--apple-bg);
-      border-radius: 18px;
+      border-radius: 20px;
       border: 1px solid var(--apple-border);
       max-width: 600px;
       margin: 2rem auto;
@@ -341,7 +343,7 @@
   <header class="header">
     <div class="header-container">
       <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <path d="M16 10a4 4 0 0 1-8 0"></path>
@@ -406,7 +408,7 @@
 
       if (!Array.isArray(cart) || cart.length === 0) {
         container.innerHTML = `
-          <div class="success-container" style="background: var(--apple-bg);">
+          <div class="success-container">
             <h2>Your cart is empty</h2>
             <p>You cannot proceed to checkout without any items in your bag.</p>
             <a href="index.html" class="btn-apple-primary" style="max-width: 220px; margin: 0 auto;">Return to Shop</a>
@@ -489,12 +491,199 @@
                   <label for="country">Country / Region</label>
                   <select id="country" required>
                     <option value="">Select a country</option>
-                    <option value="US">United States</option>
-                    <option value="CA">Canada</option>
-                    <option value="UK">United Kingdom</option>
+                    <option value="AF">Afghanistan</option>
+                    <option value="AL">Albania</option>
+                    <option value="DZ">Algeria</option>
+                    <option value="AD">Andorra</option>
+                    <option value="AO">Angola</option>
+                    <option value="AG">Antigua and Barbuda</option>
+                    <option value="AR">Argentina</option>
+                    <option value="AM">Armenia</option>
                     <option value="AU">Australia</option>
+                    <option value="AT">Austria</option>
+                    <option value="AZ">Azerbaijan</option>
+                    <option value="BS">Bahamas</option>
+                    <option value="BH">Bahrain</option>
                     <option value="BD" selected>Bangladesh</option>
-                    <option value="OT">Other</option>
+                    <option value="BB">Barbados</option>
+                    <option value="BY">Belarus</option>
+                    <option value="BE">Belgium</option>
+                    <option value="BZ">Belize</option>
+                    <option value="BJ">Benin</option>
+                    <option value="BT">Bhutan</option>
+                    <option value="BO">Bolivia</option>
+                    <option value="BA">Bosnia and Herzegovina</option>
+                    <option value="BW">Botswana</option>
+                    <option value="BR">Brazil</option>
+                    <option value="BN">Brunei</option>
+                    <option value="BG">Bulgaria</option>
+                    <option value="BF">Burkina Faso</option>
+                    <option value="BI">Burundi</option>
+                    <option value="CV">Cabo Verde</option>
+                    <option value="KH">Cambodia</option>
+                    <option value="CM">Cameroon</option>
+                    <option value="CA">Canada</option>
+                    <option value="CF">Central African Republic</option>
+                    <option value="TD">Chad</option>
+                    <option value="CL">Chile</option>
+                    <option value="CN">China</option>
+                    <option value="CO">Colombia</option>
+                    <option value="KM">Comoros</option>
+                    <option value="CG">Congo</option>
+                    <option value="CR">Costa Rica</option>
+                    <option value="HR">Croatia</option>
+                    <option value="CU">Cuba</option>
+                    <option value="CY">Cyprus</option>
+                    <option value="CZ">Czechia</option>
+                    <option value="DK">Denmark</option>
+                    <option value="DJ">Djibouti</option>
+                    <option value="DM">Dominica</option>
+                    <option value="DO">Dominican Republic</option>
+                    <option value="EC">Ecuador</option>
+                    <option value="EG">Egypt</option>
+                    <option value="SV">El Salvador</option>
+                    <option value="GQ">Equatorial Guinea</option>
+                    <option value="ER">Eritrea</option>
+                    <option value="EE">Estonia</option>
+                    <option value="SZ">Eswatini</option>
+                    <option value="ET">Ethiopia</option>
+                    <option value="FJ">Fiji</option>
+                    <option value="FI">Finland</option>
+                    <option value="FR">France</option>
+                    <option value="GA">Gabon</option>
+                    <option value="GM">Gambia</option>
+                    <option value="GE">Georgia</option>
+                    <option value="DE">Germany</option>
+                    <option value="GH">Ghana</option>
+                    <option value="GR">Greece</option>
+                    <option value="GD">Grenada</option>
+                    <option value="GT">Guatemala</option>
+                    <option value="GN">Guinea</option>
+                    <option value="GW">Guinea-Bissau</option>
+                    <option value="GY">Guyana</option>
+                    <option value="HT">Haiti</option>
+                    <option value="HN">Honduras</option>
+                    <option value="HU">Hungary</option>
+                    <option value="IS">Iceland</option>
+                    <option value="IN">India</option>
+                    <option value="ID">Indonesia</option>
+                    <option value="IR">Iran</option>
+                    <option value="IQ">Iraq</option>
+                    <option value="IE">Ireland</option>
+                    <option value="IL">Israel</option>
+                    <option value="IT">Italy</option>
+                    <option value="JM">Jamaica</option>
+                    <option value="JP">Japan</option>
+                    <option value="JO">Jordan</option>
+                    <option value="KZ">Kazakhstan</option>
+                    <option value="KE">Kenya</option>
+                    <option value="KI">Kiribati</option>
+                    <option value="KP">Korea, North</option>
+                    <option value="KR">Korea, South</option>
+                    <option value="KW">Kuwait</option>
+                    <option value="KG">Kyrgyzstan</option>
+                    <option value="LA">Laos</option>
+                    <option value="LV">Latvia</option>
+                    <option value="LB">Lebanon</option>
+                    <option value="LS">Lesotho</option>
+                    <option value="LR">Liberia</option>
+                    <option value="LY">Libya</option>
+                    <option value="LI">Liechtenstein</option>
+                    <option value="LT">Lithuania</option>
+                    <option value="LU">Luxembourg</option>
+                    <option value="MG">Madagascar</option>
+                    <option value="MW">Malawi</option>
+                    <option value="MY">Malaysia</option>
+                    <option value="MV">Maldives</option>
+                    <option value="ML">Mali</option>
+                    <option value="MT">Malta</option>
+                    <option value="MH">Marshall Islands</option>
+                    <option value="MR">Mauritania</option>
+                    <option value="MU">Mauritius</option>
+                    <option value="MX">Mexico</option>
+                    <option value="FM">Micronesia</option>
+                    <option value="MD">Moldova</option>
+                    <option value="MC">Monaco</option>
+                    <option value="MN">Mongolia</option>
+                    <option value="ME">Montenegro</option>
+                    <option value="MA">Morocco</option>
+                    <option value="MZ">Mozambique</option>
+                    <option value="MM">Myanmar</option>
+                    <option value="NA">Namibia</option>
+                    <option value="NR">Nauru</option>
+                    <option value="NP">Nepal</option>
+                    <option value="NL">Netherlands</option>
+                    <option value="NZ">New Zealand</option>
+                    <option value="NI">Nicaragua</option>
+                    <option value="NE">Niger</option>
+                    <option value="NG">Nigeria</option>
+                    <option value="MK">North Macedonia</option>
+                    <option value="NO">Norway</option>
+                    <option value="OM">Oman</option>
+                    <option value="PK">Pakistan</option>
+                    <option value="PW">Palau</option>
+                    <option value="PA">Panama</option>
+                    <option value="PG">Papua New Guinea</option>
+                    <option value="PY">Paraguay</option>
+                    <option value="PE">Peru</option>
+                    <option value="PH">Philippines</option>
+                    <option value="PL">Poland</option>
+                    <option value="PT">Portugal</option>
+                    <option value="QA">Qatar</option>
+                    <option value="RO">Romania</option>
+                    <option value="RU">Russia</option>
+                    <option value="RW">Rwanda</option>
+                    <option value="KN">Saint Kitts and Nevis</option>
+                    <option value="LC">Saint Lucia</option>
+                    <option value="VC">Saint Vincent and the Grenadines</option>
+                    <option value="WS">Samoa</option>
+                    <option value="SM">San Marino</option>
+                    <option value="ST">Sao Tome and Principe</option>
+                    <option value="SA">Saudi Arabia</option>
+                    <option value="SN">Senegal</option>
+                    <option value="RS">Serbia</option>
+                    <option value="SC">Seychelles</option>
+                    <option value="SL">Sierra Leone</option>
+                    <option value="SG">Singapore</option>
+                    <option value="SK">Slovakia</option>
+                    <option value="SI">Slovenia</option>
+                    <option value="SB">Solomon Islands</option>
+                    <option value="SO">Somalia</option>
+                    <option value="ZA">South Africa</option>
+                    <option value="SS">South Sudan</option>
+                    <option value="ES">Spain</option>
+                    <option value="LK">Sri Lanka</option>
+                    <option value="SD">Sudan</option>
+                    <option value="SR">Suriname</option>
+                    <option value="SE">Sweden</option>
+                    <option value="CH">Switzerland</option>
+                    <option value="SY">Syria</option>
+                    <option value="TW">Taiwan</option>
+                    <option value="TJ">Tajikistan</option>
+                    <option value="TZ">Tanzania</option>
+                    <option value="TH">Thailand</option>
+                    <option value="TL">Timor-Leste</option>
+                    <option value="TG">Togo</option>
+                    <option value="TO">Tonga</option>
+                    <option value="TT">Trinidad and Tobago</option>
+                    <option value="TN">Tunisia</option>
+                    <option value="TR">Turkey</option>
+                    <option value="TM">Turkmenistan</option>
+                    <option value="TV">Tuvalu</option>
+                    <option value="UG">Uganda</option>
+                    <option value="UA">Ukraine</option>
+                    <option value="AE">United Arab Emirates</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="US">United States</option>
+                    <option value="UY">Uruguay</option>
+                    <option value="UZ">Uzbekistan</option>
+                    <option value="VU">Vanuatu</option>
+                    <option value="VA">Vatican City</option>
+                    <option value="VE">Venezuela</option>
+                    <option value="VN">Vietnam</option>
+                    <option value="YE">Yemen</option>
+                    <option value="ZM">Zambia</option>
+                    <option value="ZW">Zimbabwe</option>
                   </select>
                 </div>
               </div>
