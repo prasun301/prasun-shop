@@ -1,178 +1,142 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Details — Prasun Shop</title>
-  <meta name="description" content="View product details and add smart products to your Prasun Shop cart.">
-  <link rel="canonical" href="https://prasunshop.com/product.html">
-  <meta name="theme-color" content="#ffffff">
-
-  <!-- Open Graph / Social Media -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://prasunshop.com/product.html">
-  <meta property="og:title" content="Product Details — Prasun Shop">
-  <meta property="og:description" content="View product details and add smart products to your Prasun Shop cart.">
-  <meta property="og:image" content="https://prasunshop.com/assets/og-image.jpg">
-
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Product Details — Prasun Shop">
-  <meta name="twitter:description" content="View product details and add smart products to your Prasun Shop cart.">
-
-  <!-- Favicon Links -->
-  <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-
-  <!-- Early Connection Hints for External Assets -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-  <!-- Preload Critical Google Font Stylesheet -->
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
-  <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  </noscript>
-
-  <!-- Compiled Tailwind CSS -->
-  <link rel="stylesheet" href="css/tailwind.css">
-
-  <!-- Custom CSS Overrides -->
-  <link rel="stylesheet" href="css/style.css">
-
-  <!-- JavaScript Modules -->
-  <script src="js/cart-count.js" defer></script>
-  <script src="js/product.js" defer></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Details — PRASUN SHOP</title>
+  <meta name="description" content="View high-performance smart gadgets and accessories." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/script.js" defer></script>
 </head>
+<body>
 
-<body class="bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-zinc-950 selection:text-white min-h-screen flex flex-col">
+  <!-- Keyboard Accessibility Skip Link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
 
   <!-- Header -->
   <header class="header">
-    <div class="container header-container">
-
-      <!-- Brand -->
-      <a href="index.html" class="logo" aria-label="Prasun Shop Home">
-        <svg class="logo-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M4 10h16"/>
-          <path d="M5 10v10h14V10"/>
-          <path d="M3 10l2-6h14l2 6"/>
-          <path d="M9 20v-5h6v5"/>
-          <path d="M3 10c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2c0 1.1.9 2 2 2s2-.9 2-2"/>
+    <div class="header-container">
+      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
         </svg>
-        <span>Prasun Shop</span>
+        <span>PRASUN SHOP</span>
       </a>
-
-      <!-- Desktop Navigation -->
-      <nav class="nav" aria-label="Primary Navigation">
-        <ul class="nav-list">
-          <li><a href="index.html" class="nav-link">Home</a></li>
-          <li><a href="products.html" class="nav-link">Products</a></li>
-          <li><a href="about.html" class="nav-link">About</a></li>
-          <li><a href="contact.html" class="nav-link">Contact</a></li>
-        </ul>
+      <nav class="nav-links" aria-label="Main Navigation">
+        <a href="index.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="checkout.html">Checkout</a>
       </nav>
-
-      <!-- Header Actions -->
       <div class="header-actions">
-        <!-- Cart -->
-        <a href="cart.html" class="cart-icon-wrap" aria-label="Shopping cart">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M6 7h12l1 13H5L6 7Z"/>
-            <path d="M9 7V5a3 3 0 0 1 6 0v2"/>
+        <a href="cart.html" class="cart-icon-wrap" aria-label="View Shopping Cart">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
           </svg>
-          <span id="cart-count" class="cart-badge" aria-live="polite" aria-atomic="true" hidden>0</span>
+          <span id="cart-count" class="cart-badge" aria-hidden="true">0</span>
         </a>
-
-        <!-- Mobile Menu Toggle -->
-        <button type="button" id="mobile-menu-button" class="mobile-menu-btn" aria-controls="mobile-menu" aria-expanded="false" aria-label="Open navigation menu">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-            <path d="M4 6h16"/>
-            <path d="M4 12h16"/>
-            <path d="M4 18h16"/>
-          </svg>
-        </button>
       </div>
-
-    </div>
-
-    <!-- Mobile Navigation -->
-    <div id="mobile-menu" class="mobile-menu" hidden>
-      <nav aria-label="Mobile Navigation">
-        <a href="index.html" class="mobile-nav-link">Home</a>
-        <a href="products.html" class="mobile-nav-link">Products</a>
-        <a href="about.html" class="mobile-nav-link">About</a>
-        <a href="contact.html" class="mobile-nav-link">Contact</a>
-        <a href="cart.html" class="mobile-nav-link">Cart</a>
-      </nav>
     </div>
   </header>
 
-  <!-- Breadcrumb -->
-  <nav class="product-breadcrumb" aria-label="Breadcrumb">
-    <div class="container">
-      <a href="index.html">Home</a>
-      <span aria-hidden="true">/</span>
-      <a href="products.html">Products</a>
-      <span aria-hidden="true">/</span>
-      <span aria-current="page">Details</span>
-    </div>
-  </nav>
+  <!-- Main Content -->
+  <main id="main-content" class="product-detail-page">
+    
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="index.html">Home</a> / <a href="index.html">Products</a> / <span id="breadcrumb-title">Details</span>
+    </nav>
 
-  <!-- Product Details -->
-  <main class="flex-grow">
-    <section class="product-page py-8">
-      <div class="container">
-        <div id="product-detail" aria-live="polite">
-          <!-- Loading Skeleton with Aspect Ratio Reserved Space (CLS Prevention) -->
-          <div class="product-detail-loading grid grid-cols-1 md:grid-cols-2 gap-8 animate-pulse" aria-hidden="true">
-            <div class="product-loading-image w-full aspect-square bg-zinc-200 rounded-lg"></div>
-            <div class="product-loading-info flex flex-col justify-center space-y-4">
-              <div class="h-4 bg-zinc-200 rounded w-1/4"></div>
-              <div class="h-8 bg-zinc-200 rounded w-3/4"></div>
-              <div class="h-6 bg-zinc-200 rounded w-1/3"></div>
-              <div class="space-y-2 pt-4">
-                <div class="h-4 bg-zinc-200 rounded w-full"></div>
-                <div class="h-4 bg-zinc-200 rounded w-5/6"></div>
-                <div class="h-4 bg-zinc-200 rounded w-2/3"></div>
-              </div>
-              <div class="h-12 bg-zinc-200 rounded-md w-full sm:w-48 mt-6"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Product Detail Container -->
+    <div id="product-detail-container" class="product-detail-container">
+      <!-- Populated dynamically via JS or shows fallback if not found -->
+    </div>
+
+    <!-- Fallback View (Hidden by default, shown via JS if product ID is invalid) -->
+    <div id="product-not-found" class="product-not-found" style="display: none;">
+      <h1>Product Not Found</h1>
+      <p>The product you're looking for doesn't exist or has been removed.</p>
+      <a href="index.html" class="btn-primary">Back to Products</a>
+    </div>
+
   </main>
 
   <!-- Footer -->
-  <footer class="border-t border-zinc-200/80 bg-white py-8 mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-medium">
-      <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
-      <div class="flex items-center gap-6">
-        <a href="#" class="hover:text-zinc-900 transition-colors">Privacy Policy</a>
-        <a href="#" class="hover:text-zinc-900 transition-colors">Terms of Service</a>
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-col">
+        <h4 class="footer-heading">PRASUN SHOP</h4>
+        <p>Premium technology and everyday accessories built with clean, modern design.</p>
       </div>
+      <div class="footer-col">
+        <h4 class="footer-heading">Navigation</h4>
+        <ul>
+          <li><a href="index.html">Shop All</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
     </div>
   </footer>
 
-  <!-- Mobile Menu Logic (Non-blocking IIFE) -->
   <script>
-    (() => {
-      const btn = document.getElementById('mobile-menu-button');
-      const menu = document.getElementById('mobile-menu');
-      if (!btn || !menu) return;
+    // Simple inline router script to handle sample product loading
+    const productsData = {
+      "smart-lamp": {
+        title: "G-Shaped Smart LED Atmosphere Lamp",
+        category: "Smart Lighting",
+        price: "$29.99",
+        description: "Includes built-in Bluetooth speaker and fast wireless charger pad.",
+        image: "images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png"
+      },
+      "power-bank": {
+        title: "Mini 5000mAh Magnetic Wireless Power Bank",
+        category: "Power & Charging",
+        price: "$39.99",
+        description: "Compact fast-charging portable battery pack for mobile devices.",
+        image: "images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg"
+      },
+      "earbuds": {
+        title: "Wireless Noise-Cancelling Sports Earbuds",
+        category: "Audio",
+        price: "$49.99",
+        description: "High-fidelity Bluetooth audio with ergonomic sweat-resistant fit.",
+        image: "images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg"
+      }
+    };
 
-      btn.addEventListener('click', () => {
-        const isExpanded = btn.getAttribute('aria-expanded') === 'true';
-        btn.setAttribute('aria-expanded', !isExpanded);
-        btn.setAttribute('aria-label', !isExpanded ? 'Close navigation menu' : 'Open navigation menu');
-        menu.hidden = isExpanded;
-        menu.classList.toggle('open', !isExpanded);
-      });
-    })();
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('id');
+    const container = document.getElementById('product-detail-container');
+    const notFound = document.getElementById('product-not-found');
+    const breadcrumbTitle = document.getElementById('breadcrumb-title');
+
+    if (productId && productsData[productId]) {
+      const product = productsData[productId];
+      breadcrumbTitle.textContent = product.title;
+      container.innerHTML = `
+        <div class="product-detail-image">
+          <img src="${product.image}" alt="${product.title}" width="600" height="600" />
+        </div>
+        <div class="product-detail-info">
+          <span class="product-category">${product.category}</span>
+          <h1>${product.title}</h1>
+          <p class="product-price">${product.price}</p>
+          <p class="product-description">${product.description}</p>
+          <button type="button" class="btn-primary" data-action="add-cart" data-id="${productId}">Add to Cart</button>
+        </div>
+      `;
+    } else {
+      container.style.display = 'none';
+      notFound.style.display = 'block';
+    }
   </script>
-
 </body>
 </html>
