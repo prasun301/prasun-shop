@@ -3,300 +3,374 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PRASUN SHOP — Premium Tech & Accessories</title>
-  <meta name="description" content="Discover high-performance smart gadgets, lighting, power accessories, and audio gear designed for daily productivity." />
-  <link rel="canonical" href="https://prasunshop.com/" />
+  <title>PRASUN SHOP — Official Store</title>
+  <meta name="description" content="Explore innovative products designed with minimal, modern Apple-inspired aesthetics." />
+  <style>
+    :root {
+      --apple-bg: #f5f5f7;
+      --apple-card-bg: #ffffff;
+      --apple-text: #1d1d1f;
+      --apple-gray: #86868b;
+      --apple-border: #d2d2d7;
+      --apple-dark: #1d1d1f;
+      --apple-dark-hover: #333336;
+      --apple-blue: #0071e3;
+    }
 
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://prasunshop.com/" />
-  <meta property="og:title" content="PRASUN SHOP — Premium Tech & Accessories" />
-  <meta property="og:description" content="Discover high-performance smart gadgets, lighting, power accessories, and audio gear." />
-  <meta property="og:image" content="https://prasunshop.com/assets/og-image.jpg" />
+    body {
+      background-color: var(--apple-card-bg);
+      color: var(--apple-text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
 
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="PRASUN SHOP — Premium Tech & Accessories" />
-  <meta name="twitter:description" content="Discover high-performance smart gadgets, lighting, power accessories, and audio gear." />
+    /* Header */
+    .header {
+      border-bottom: 1px solid var(--apple-border);
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 100;
+    }
 
-  <!-- Stylesheets & Scripts -->
-  <link rel="stylesheet" href="css/style.css" />
-  <script src="js/cart-count.js" defer></script>
-  <script src="js/script.js" defer></script>
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--apple-text);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--apple-gray);
+      font-size: 0.9rem;
+      font-weight: 400;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--apple-text);
+    }
+
+    .cart-icon-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      color: var(--apple-text);
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .cart-icon-wrap:hover {
+      opacity: 0.7;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -10px;
+      background-color: var(--apple-dark);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Hero Section */
+    .hero {
+      background-color: var(--apple-bg);
+      text-align: center;
+      padding: 5rem 2rem 4rem 2rem;
+      border-bottom: 1px solid var(--apple-border);
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      margin: 0 0 1rem 0;
+      color: var(--apple-text);
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--apple-gray);
+      font-weight: 400;
+      max-width: 600px;
+      margin: 0 auto 2rem auto;
+      line-height: 1.4;
+    }
+
+    /* Main Shop Container */
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 2rem;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+
+    /* Product Card - Apple Minimalist Box Style */
+    .product-card {
+      background-color: var(--apple-bg);
+      border: 1px solid var(--apple-border);
+      border-radius: 20px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+      border-color: #b0b0b5;
+    }
+
+    .product-image-wrap {
+      width: 100%;
+      height: 220px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
+
+    .product-image-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      mix-blend-mode: multiply;
+      transition: transform 0.3s ease;
+    }
+
+    .product-card:hover .product-image-wrap img {
+      transform: scale(1.03);
+    }
+
+    .product-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .product-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--apple-text);
+      margin: 0;
+    }
+
+    .product-desc {
+      font-size: 0.9rem;
+      color: var(--apple-gray);
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .product-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+    }
+
+    .product-price {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--apple-text);
+    }
+
+    /* Apple-style Black Pill Button */
+    .btn-apple {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--apple-dark);
+      color: #ffffff;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.65rem 1.4rem;
+      border-radius: 980px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-apple:hover {
+      background-color: var(--apple-dark-hover);
+    }
+
+    .btn-apple:active {
+      transform: scale(0.97);
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--apple-border);
+      background-color: var(--apple-bg);
+      padding: 2rem;
+      text-align: center;
+      color: var(--apple-gray);
+      font-size: 0.85rem;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Keyboard Accessibility Skip Link -->
-  <a href="#main-content" class="skip-link">Skip to main content</a>
-
-  <!-- Live Region for Screen Readers -->
-  <div id="a11y-status-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-
-  <!-- ================= HEADER / NAVIGATION ================= -->
+  <!-- Header -->
   <header class="header">
     <div class="header-container">
-      
-      <!-- Brand Logo -->
       <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <path d="M16 10a4 4 0 0 1-8 0"></path>
         </svg>
         <span>PRASUN SHOP</span>
       </a>
-
-      <!-- Primary Navigation -->
       <nav class="nav-links" aria-label="Main Navigation">
-        <a href="index.html" class="active" aria-current="page">Shop</a>
+        <a href="index.html" class="active">Shop</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
         <a href="checkout.html">Checkout</a>
       </nav>
-
-      <!-- Action Icons (Cart & Mobile Toggle) -->
       <div class="header-actions">
         <a href="cart.html" class="cart-icon-wrap" aria-label="View Shopping Cart">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="9" cy="21" r="1"></circle>
             <circle cx="20" cy="21" r="1"></circle>
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
           </svg>
-          <span id="cart-count" class="cart-badge" aria-hidden="true">0</span>
+          <span id="cart-count" class="cart-badge">0</span>
         </a>
-
-        <button 
-          type="button" 
-          id="mobile-menu-toggle"
-          class="mobile-menu-btn" 
-          aria-label="Toggle navigation menu" 
-          aria-expanded="false" 
-          aria-controls="mobile-navigation"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
       </div>
-
     </div>
-
-    <!-- Mobile Dropdown Navigation -->
-    <nav id="mobile-navigation" class="mobile-menu" aria-label="Mobile Navigation" hidden>
-      <a href="index.html" class="active" aria-current="page">Shop</a>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-      <a href="cart.html">Cart</a>
-      <a href="checkout.html">Checkout</a>
-    </nav>
   </header>
 
-  <!-- ================= MAIN CONTENT ================= -->
-  <main id="main-content" class="products-page">
-    
-    <!-- Hero Banner -->
-    <section class="products-hero">
-      <h1 id="products-heading" class="products-heading">Find Products Instantly</h1>
-      <p class="products-intro">Explore high-performance smart gadgets designed for daily productivity.</p>
-    </section>
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Innovative Design. Effortless Experience.</h1>
+    <p>Discover our curated collection of minimalist hardware and accessories engineered for performance.</p>
+  </section>
 
-    <!-- Toolbar: Search & Controls -->
-    <section class="products-toolbar" aria-label="Product Controls">
-      
-      <!-- Search Bar -->
-      <form class="products-search" role="search" action="/search" method="GET">
-        <label for="product-search" class="sr-only">Search products</label>
-        <span class="products-search-icon" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </span>
-        <input 
-          type="search" 
-          id="product-search"
-          name="q"
-          class="products-search-input" 
-          placeholder="Search products..." 
-          autocomplete="off"
-        />
-        <button type="button" id="search-clear" class="search-clear" aria-label="Clear search query" hidden>
-          &times;
-        </button>
-        <span class="products-search-shortcut" aria-hidden="true">⌘K</span>
-      </form>
-
-      <!-- Sort Controls & Results Counter -->
-      <div class="products-results-bar">
-        <span id="products-count" class="products-result-count" aria-live="polite">3 products</span>
-        
-        <div class="products-sort-wrap">
-          <label for="product-sort" class="sr-only">Sort products</label>
-          <select id="product-sort" class="products-sort">
-            <option value="featured">Sort by: Featured</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="rating">Highest Rated</option>
-            <option value="name">Name: A–Z</option>
-          </select>
+  <!-- Products Main Content -->
+  <main class="main-container">
+    <h2 class="section-title">Explore Lineup</h2>
+    <div class="products-grid" id="products-grid">
+      <!-- Dynamically populated or static cards -->
+      <a href="product.html?id=smart-lamp" class="product-card">
+        <div class="product-image-wrap">
+          <img src="images/lamp.png" alt="Smart Ambient Lamp" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\'><rect width=\'120\' height=\'120\' fill=\'%23f0f0f2\' rx=\'12\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23888\' font-size=\'14\'>Smart Lamp</text></svg>'" />
         </div>
-      </div>
+        <div class="product-info">
+          <h3 class="product-title">Smart Ambient Lamp</h3>
+          <p class="product-desc">Adaptive lighting engineered with seamless touch response.</p>
+        </div>
+        <div class="product-footer">
+          <span class="product-price">$49.00</span>
+          <span class="btn-apple">View</span>
+        </div>
+      </a>
 
-    </section>
+      <a href="product.html?id=wireless-buds" class="product-card">
+        <div class="product-image-wrap">
+          <img src="images/buds.png" alt="Wireless Pro Buds" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\'><rect width=\'120\' height=\'120\' fill=\'%23f0f0f2\' rx=\'12\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23888\' font-size=\'14\'>Pro Buds</text></svg>'" />
+        </div>
+        <div class="product-info">
+          <h3 class="product-title">Wireless Pro Buds</h3>
+          <p class="product-desc">Immersive spatial audio with active noise cancellation.</p>
+        </div>
+        <div class="product-footer">
+          <span class="product-price">$129.00</span>
+          <span class="btn-apple">View</span>
+        </div>
+      </a>
 
-    <!-- Category Filters -->
-    <div class="products-categories" role="group" aria-label="Filter products by category">
-      <button type="button" class="category-pill active" data-category="all" aria-pressed="true">All</button>
-      <button type="button" class="category-pill" data-category="Smart Lighting" aria-pressed="false">Smart Lighting</button>
-      <button type="button" class="category-pill" data-category="Power &amp; Charging" aria-pressed="false">Power &amp; Charging</button>
-      <button type="button" class="category-pill" data-category="Audio" aria-pressed="false">Audio</button>
+      <a href="product.html?id=minimal-stand" class="product-card">
+        <div class="product-image-wrap">
+          <img src="images/stand.png" alt="Aluminum Desk Stand" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\'><rect width=\'120\' height=\'120\' fill=\'%23f0f0f2\' rx=\'12\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23888\' font-size=\'14\'>Desk Stand</text></svg>'" />
+        </div>
+        <div class="product-info">
+          <h3 class="product-title">Aluminum Desk Stand</h3>
+          <p class="product-desc">Precision-milled aerospace aluminum stand for all devices.</p>
+        </div>
+        <div class="product-footer">
+          <span class="product-price">$39.00</span>
+          <span class="btn-apple">View</span>
+        </div>
+      </a>
     </div>
-
-    <!-- Dynamic Product Grid Hook -->
-    <section id="product-list" class="products-grid" aria-label="Product listings" aria-busy="false">
-      
-      <!-- Card 1 -->
-      <article class="product-card" data-id="smart-lamp">
-        <span class="product-category">Smart Lighting</span>
-        <div class="product-card-image">
-          <img 
-            src="images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png" 
-            alt="G-Shaped Smart LED Atmosphere Lamp" 
-            loading="lazy" 
-            decoding="async"
-            width="600" 
-            height="600" 
-          />
-        </div>
-        <div class="product-card-body">
-          <div class="product-meta">
-            <span class="product-brand">Prasun</span>
-            <span class="product-rating">★ 4.8</span>
-          </div>
-          <h2 class="product-title">
-            <a href="product.html?id=smart-lamp" class="product-title-link">G-Shaped Smart LED Atmosphere Lamp</a>
-          </h2>
-          <p class="product-description">Includes built-in Bluetooth speaker and fast wireless charger pad.</p>
-          <div class="product-bottom">
-            <span class="product-price">$29.99</span>
-            <button type="button" class="product-add-btn" data-action="add-cart" data-id="smart-lamp">
-              Add to Cart
-            </button>
-          </div>
-        </div>
-      </article>
-
-      <!-- Card 2 -->
-      <article class="product-card" data-id="power-bank">
-        <span class="product-category">Power &amp; Charging</span>
-        <div class="product-card-image">
-          <img 
-            src="images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg" 
-            alt="Mini 5000mAh Magnetic Wireless Power Bank" 
-            loading="lazy" 
-            decoding="async"
-            width="600" 
-            height="600" 
-          />
-        </div>
-        <div class="product-card-body">
-          <div class="product-meta">
-            <span class="product-brand">Prasun</span>
-            <span class="product-rating">★ 4.9</span>
-          </div>
-          <h2 class="product-title">
-            <a href="product.html?id=power-bank" class="product-title-link">Mini 5000mAh Magnetic Wireless Power Bank</a>
-          </h2>
-          <p class="product-description">Compact fast-charging portable battery pack for mobile devices.</p>
-          <div class="product-bottom">
-            <span class="product-price">$39.99</span>
-            <button type="button" class="product-add-btn" data-action="add-cart" data-id="power-bank">
-              Add to Cart
-            </button>
-          </div>
-        </div>
-      </article>
-
-      <!-- Card 3 -->
-      <article class="product-card" data-id="earbuds">
-        <span class="product-category">Audio</span>
-        <div class="product-card-image">
-          <img 
-            src="images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg" 
-            alt="Wireless Noise-Cancelling Sports Earbuds" 
-            loading="lazy" 
-            decoding="async"
-            width="600" 
-            height="600" 
-          />
-        </div>
-        <div class="product-card-body">
-          <div class="product-meta">
-            <span class="product-brand">Prasun</span>
-            <span class="product-rating">★ 4.7</span>
-          </div>
-          <h2 class="product-title">
-            <a href="product.html?id=earbuds" class="product-title-link">Wireless Noise-Cancelling Sports Earbuds</a>
-          </h2>
-          <p class="product-description">High-fidelity Bluetooth audio with ergonomic sweat-resistant fit.</p>
-          <div class="product-bottom">
-            <span class="product-price">$49.99</span>
-            <button type="button" class="product-add-btn" data-action="add-cart" data-id="earbuds">
-              Add to Cart
-            </button>
-          </div>
-        </div>
-      </article>
-
-    </section>
   </main>
 
-  <!-- ================= FOOTER ================= -->
+  <!-- Footer -->
   <footer class="footer">
-    <div class="footer-content">
-      
-      <div class="footer-col">
-        <h4 class="footer-heading">PRASUN SHOP</h4>
-        <p>Premium technology and everyday accessories built with clean, modern design.</p>
-      </div>
-
-      <div class="footer-col">
-        <h4 class="footer-heading">Navigation</h4>
-        <ul>
-          <li><a href="index.html">Shop All</a></li>
-          <li><a href="about.html">About Us</a></li>
-          <li><a href="contact.html">Contact Us</a></li>
-          <li><a href="cart.html">Shopping Cart</a></li>
-          <li><a href="checkout.html">Checkout</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h4 class="footer-heading">Customer Care</h4>
-        <ul>
-          <li><a href="privacy-policy.html">Privacy Policy</a></li>
-          <li><a href="terms-of-service.html">Terms of Service</a></li>
-          <li><a href="refund-policy.html">Refund &amp; Return Policy</a></li>
-          <li><a href="shipping-policy.html">Shipping Information</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h4 class="footer-heading">Connect</h4>
-        <ul>
-          <li><a href="mailto:support@prasunshop.com">support@prasunshop.com</a></li>
-          <li><a href="contact.html">Contact Form</a></li>
-        </ul>
-      </div>
-
-    </div>
-
-    <div class="footer-bottom">
-      <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
-    </div>
+    <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
   </footer>
 
+  <script>
+    function updateCartBadge() {
+      try {
+        const cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
+        const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+        const badge = document.getElementById('cart-count');
+        if (badge) {
+          badge.textContent = totalItems;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    document.addEventListener('DOMContentLoaded', updateCartBadge);
+  </script>
 </body>
 </html>
