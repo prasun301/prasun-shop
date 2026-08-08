@@ -1,378 +1,192 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 
 <head>
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Review your shopping cart and proceed securely to checkout at Prasun Shop.">
+  <title>Shopping Cart — Prasun Shop</title>
 
-  <title>Shopping Cart | Prasun Shop</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <meta
-    name="description"
-    content="Review your shopping cart and proceed securely to checkout at Prasun Shop."
-  >
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
 
+  <!-- Custom CSS Override -->
   <link rel="stylesheet" href="css/style.css">
-
 </head>
 
+<body class="bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-zinc-900 selection:text-white min-h-screen flex flex-col">
 
-<body>
-
-
-<!-- =========================================================
-     HEADER
-========================================================= -->
-
-<header class="site-header">
-
-  <div class="container header-inner">
-
-
-    <!-- Brand -->
-
-    <a
-      href="index.html"
-      class="brand"
-      aria-label="Prasun Shop home"
-    >
-
-      <span class="brand-icon" aria-hidden="true">
-
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-        >
-          <path d="M3 5h2l2.2 10.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 8H6"/>
-          <circle cx="10" cy="20" r="1"/>
-          <circle cx="18" cy="20" r="1"/>
-        </svg>
-
-      </span>
-
-      <span class="brand-name">
-        Prasun Shop
-      </span>
-
-      <span class="brand-dot" aria-hidden="true">.</span>
-
-    </a>
-
-
-    <!-- Desktop Navigation -->
-
-    <nav
-      class="desktop-nav"
-      aria-label="Main navigation"
-    >
-
-      <a href="index.html">
-        Home
+  <!-- Modern Header -->
+  <header class="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-zinc-200 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="index.html" class="text-lg font-semibold tracking-tight text-zinc-900 hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">
+        Prasun Shop<span class="text-zinc-400">.</span>
       </a>
 
-      <a href="products.html">
-        Products
-      </a>
+      <!-- Desktop Navigation Links -->
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-600">
+        <a href="index.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
+        <a href="products.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Products</a>
+        <a href="cart.html" class="text-zinc-900 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Cart</a>
+      </nav>
 
-    </nav>
+      <!-- Right Action Items -->
+      <div class="flex items-center gap-3">
+        <!-- Shopping Cart Icon Badge -->
+        <a href="cart.html" class="relative p-2 text-zinc-900 hover:text-zinc-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-full" aria-label="Shopping Cart">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
+          <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold text-white bg-zinc-900 rounded-full shadow-sm transition-opacity duration-200 opacity-0 invisible">0</span>
+        </a>
 
-
-    <!-- Header Actions -->
-
-    <div class="header-actions">
-
-
-      <!-- Cart -->
-
-      <a
-        href="cart.html"
-        class="header-cart"
-        aria-label="Shopping Cart"
-      >
-
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          aria-hidden="true"
-        >
-          <path d="M6 6h15l-1.5 9h-12z"/>
-          <path d="M6 6 5 3H2"/>
-          <circle cx="9" cy="20" r="1"/>
-          <circle cx="18" cy="20" r="1"/>
-        </svg>
-
-        <span
-          id="cart-count"
-          class="cart-badge"
-          aria-label="Items in cart"
-        >
-          0
-        </span>
-
-      </a>
-
-
-      <!-- Mobile Menu -->
-
-      <button
-        type="button"
-        id="mobile-menu-button"
-        class="mobile-menu-button"
-        aria-expanded="false"
-        aria-controls="mobile-menu"
-        aria-label="Open navigation menu"
-      >
-
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          aria-hidden="true"
-        >
-          <path d="M4 6h16"/>
-          <path d="M4 12h16"/>
-          <path d="M4 18h16"/>
-        </svg>
-
-      </button>
-
+        <!-- Mobile Menu Toggle Button -->
+        <button id="mobile-menu-button" type="button" class="md:hidden p-2 text-zinc-700 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-lg" aria-expanded="false" aria-controls="mobile-menu" aria-label="Toggle navigation menu">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
-  </div>
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobile-menu" class="hidden md:hidden border-b border-zinc-200 bg-white px-4 pt-3 pb-5 space-y-2">
+      <a href="index.html" class="block text-sm font-medium text-zinc-700 hover:text-zinc-900 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
+      <a href="products.html" class="block text-sm font-medium text-zinc-700 hover:text-zinc-900 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Products</a>
+      <a href="cart.html" class="block text-sm font-semibold text-zinc-900 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Cart</a>
+    </div>
+  </header>
 
-
-  <!-- Mobile Navigation -->
-
-  <div
-    id="mobile-menu"
-    class="mobile-menu"
-    hidden
-  >
-
-    <a href="index.html">
-      Home
-    </a>
-
-    <a href="products.html">
-      Products
-    </a>
-
-    <a href="cart.html">
-      Cart
-    </a>
-
-  </div>
-
-</header>
-
-
-
-<!-- =========================================================
-     MAIN
-========================================================= -->
-
-<main class="cart-page">
-
-  <div class="container">
-
-
-    <!-- Breadcrumb -->
-
-    <nav
-      class="cart-breadcrumb"
-      aria-label="Breadcrumb"
-    >
-
-      <a href="index.html">
-        Home
-      </a>
-
-      <span aria-hidden="true">
-        /
-      </span>
-
-      <span aria-current="page">
-        Cart
-      </span>
-
+  <!-- Main Content -->
+  <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
+    
+    <!-- Breadcrumb Nav -->
+    <nav class="flex items-center gap-2 text-sm font-medium text-zinc-500 mb-8" aria-label="Breadcrumb">
+      <a href="index.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
+      <span aria-hidden="true" class="text-zinc-300">/</span>
+      <span class="text-zinc-900" aria-current="page">Cart</span>
     </nav>
 
-
     <!-- Page Header -->
+    <div class="mb-8 sm:mb-10">
+      <h1 class="text-3xl font-semibold tracking-tight text-zinc-900 mb-2">Your Shopping Cart</h1>
+      <p class="text-sm text-zinc-500">Review your items before checkout.</p>
+    </div>
 
-    <header class="cart-header">
-
-      <h1>
-        Your Shopping Cart
-      </h1>
-
-      <p>
-        Review your items before checkout.
-      </p>
-
-    </header>
-
-
-    <!-- Cart Layout -->
-
-    <div class="cart-layout">
-
-
-      <!-- =====================================================
-           CART ITEMS
-      ====================================================== -->
-
-      <section
-        class="cart-products"
-        aria-label="Shopping cart items"
-      >
-
-        <div id="cart-items">
-
-          <!-- cart.js renders items here -->
-
+    <!-- Cart Layout Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+      
+      <!-- Left Column: Cart Items List -->
+      <section class="lg:col-span-7" aria-label="Shopping cart items">
+        <div id="cart-items" class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm space-y-6 divide-y divide-zinc-100" aria-live="polite">
+          <!-- cart.js dynamically renders cart items here -->
+          <div class="py-8 text-center">
+            <p class="text-sm text-zinc-500 font-medium">Loading your cart...</p>
+          </div>
         </div>
-
       </section>
 
-
-
-      <!-- =====================================================
-           ORDER SUMMARY
-      ====================================================== -->
-
-      <aside
-        class="cart-summary"
-        aria-label="Order summary"
-      >
-
-        <div class="cart-summary-inner">
-
-          <h2>
-            Order Summary
-          </h2>
-
-
-          <div class="cart-summary-row">
-
-            <span>
-              Subtotal
-            </span>
-
-            <strong id="cart-total">
-              $0.00
-            </strong>
-
+      <!-- Right Column: Order Summary (Sticky on Desktop) -->
+      <aside class="lg:col-span-5" aria-label="Order summary">
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm lg:sticky lg:top-24 space-y-6">
+          <h2 class="text-lg font-medium text-zinc-900">Order Summary</h2>
+          
+          <div class="flex justify-between items-center text-sm text-zinc-600">
+            <span>Subtotal</span>
+            <strong id="cart-total" class="text-lg font-semibold text-zinc-900">$0.00</strong>
           </div>
 
+          <p class="text-xs text-zinc-500">Taxes and shipping details are calculated at checkout.</p>
 
-          <p class="cart-summary-note">
-            Taxes and payment details are calculated at checkout.
-          </p>
+          <hr class="border-zinc-200">
 
+          <div class="space-y-3">
+            <button 
+              type="button" 
+              id="checkout-button"
+              class="w-full flex items-center justify-center gap-2 py-3 px-4 bg-zinc-900 hover:bg-zinc-800 text-white font-medium rounded-lg text-sm transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zinc-900 cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
+            >
+              Proceed to Checkout
+            </button>
 
-          <button
-            type="button"
-            id="checkout-button"
-            class="checkout-button"
-          >
-            Proceed to Checkout
-          </button>
-
-
-          <a
-            href="products.html"
-            class="continue-shopping"
-          >
-            Continue Shopping
-          </a>
+            <a 
+              href="products.html" 
+              class="w-full flex items-center justify-center py-2.5 px-4 bg-white hover:bg-zinc-50 text-zinc-700 font-medium rounded-lg text-sm border border-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900"
+            >
+              Continue Shopping
+            </a>
+          </div>
 
         </div>
-
       </aside>
 
     </div>
+  </main>
 
-  </div>
+  <!-- Minimal Footer -->
+  <footer class="border-t border-zinc-200 bg-white py-8 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
+      <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
+      <div class="flex items-center gap-6">
+        <a href="#" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Privacy Policy</a>
+        <a href="#" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
 
-</main>
+  <!-- External & Inline Scripts -->
+  <script src="js/cart.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const menuButton = document.getElementById("mobile-menu-button");
+      const mobileMenu = document.getElementById("mobile-menu");
+      const checkoutButton = document.getElementById("checkout-button");
 
-
-
-<!-- =========================================================
-     SCRIPTS
-========================================================= -->
-
-<script src="js/cart.js"></script>
-
-<script>
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  const menuButton =
-    document.getElementById("mobile-menu-button");
-
-  const mobileMenu =
-    document.getElementById("mobile-menu");
-
-  const checkoutButton =
-    document.getElementById("checkout-button");
-
-
-  /* Mobile menu */
-
-  if (menuButton && mobileMenu) {
-
-    menuButton.addEventListener("click", () => {
-
-      const isOpen =
-        menuButton.getAttribute("aria-expanded") === "true";
-
-      menuButton.setAttribute(
-        "aria-expanded",
-        String(!isOpen)
-      );
-
-      mobileMenu.hidden = isOpen;
-
-    });
-
-  }
-
-
-  /* Checkout */
-
-  if (checkoutButton) {
-
-    checkoutButton.addEventListener("click", () => {
-
-      const cart =
-        JSON.parse(
-          localStorage.getItem("cart") || "[]"
-        );
-
-      if (!cart.length) {
-
-        return;
-
+      // Mobile Menu Toggle Handler with Accessibility
+      if (menuButton && mobileMenu) {
+        menuButton.addEventListener("click", () => {
+          const isOpen = menuButton.getAttribute("aria-expanded") === "true";
+          menuButton.setAttribute("aria-expanded", String(!isOpen));
+          mobileMenu.classList.toggle("hidden", isOpen);
+        });
       }
 
-      window.location.href = "checkout.html";
-
+      // Checkout Navigation Logic with Validation
+      if (checkoutButton) {
+        checkoutButton.addEventListener("click", () => {
+          try {
+            const cart = JSON.parse(localStorage.getItem("prasunShopCart") || localStorage.getItem("cart") || "[]");
+            if (!Array.isArray(cart) || cart.length === 0) {
+              alert("Your cart is empty. Please add items before proceeding.");
+              return;
+            }
+            window.location.href = "checkout.html";
+          } catch (e) {
+            console.error("Error checking cart state:", e);
+            window.location.href = "checkout.html";
+          }
+        });
+      }
     });
-
-  }
-
-});
-
-</script>
-
+  </script>
 
 </body>
 
