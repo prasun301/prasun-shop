@@ -6,6 +6,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Review your shopping cart and proceed securely to checkout at Prasun Shop.">
   <title>Shopping Cart — Prasun Shop</title>
+  <link rel="canonical" href="https://prasunshop.com/cart.html">
+  <meta name="theme-color" content="#ffffff">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://prasunshop.com/cart.html">
+  <meta property="og:title" content="Shopping Cart — Prasun Shop">
+  <meta property="og:description" content="Review your shopping cart and proceed securely to checkout at Prasun Shop.">
+  <meta property="og:image" content="https://prasunshop.com/assets/og-image.jpg">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Shopping Cart — Prasun Shop">
+  <meta name="twitter:description" content="Review your shopping cart and proceed securely to checkout at Prasun Shop.">
+
+  <!-- Favicon Links -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
   <!-- Resource Hints & Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +32,7 @@
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <!-- Production Stylesheet (Replaces heavy Tailwind Runtime CDN) -->
+  <!-- Production Stylesheet -->
   <link rel="stylesheet" href="css/tailwind.min.css">
   <link rel="stylesheet" href="css/style.css">
 
@@ -33,7 +52,7 @@
       </a>
 
       <!-- Desktop Navigation -->
-      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-600">
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-600" aria-label="Primary Navigation">
         <a href="index.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
         <a href="products.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Products</a>
         <a href="cart.html" class="text-zinc-900 font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Cart</a>
@@ -59,11 +78,11 @@
     </div>
 
     <!-- Mobile Navigation Drawer -->
-    <div id="mobile-menu" class="hidden md:hidden border-b border-zinc-200 bg-white px-4 pt-3 pb-5 space-y-2">
+    <nav id="mobile-menu" class="hidden md:hidden border-b border-zinc-200 bg-white px-4 pt-3 pb-5 space-y-2" aria-label="Mobile Navigation" hidden>
       <a href="index.html" class="block text-sm font-medium text-zinc-700 hover:text-zinc-900 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
       <a href="products.html" class="block text-sm font-medium text-zinc-700 hover:text-zinc-900 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Products</a>
       <a href="cart.html" class="block text-sm font-semibold text-zinc-900 py-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Cart</a>
-    </div>
+    </nav>
   </header>
 
   <!-- Main Content -->
@@ -154,6 +173,7 @@
           const isOpen = menuButton.getAttribute("aria-expanded") === "true";
           menuButton.setAttribute("aria-expanded", String(!isOpen));
           mobileMenu.classList.toggle("hidden", isOpen);
+          mobileMenu.toggleAttribute("hidden", isOpen);
         });
       }
 
