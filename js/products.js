@@ -1,1064 +1,1153 @@
+```javascript
+/**
+ * ============================================================================
+ * PRASUN SHOP — PRODUCTS PAGE
+ * ============================================================================
+ * Handles:
+ * - Product loading
+ * - Search
+ * - Category filtering
+ * - Sorting
+ * - Product navigation
+ * - Cart integration
+ * - Cart badge
+ * - Loading / empty / error states
+ * - Keyboard shortcuts
+ * - Mobile navigation
+ * ============================================================================
+ */
+
 "use strict";
 
-/**
+(() => {
+    /* ------------------------------------------------------------------------
+       Configuration
+       ------------------------------------------------------------------------ */
 
-* ============================================================================
-* PRASUN SHOP — Products Page
-* ============================================================================
-* Responsibilities:
-* * Load products from data/products.json
-* * Search
-* * Category filtering
-* * Sorting
-* * Product navigation
-* * Cart integration
-* * Cart badge synchronization
-* * Loading / empty / error states
-* * Keyboard search shortcut
-* ============================================================================
-  */
-
-document.addEventListener("DOMContentLoaded", () => {
-
-```
-/* ------------------------------------------------------------------------
-   Configuration
-   ------------------------------------------------------------------------ */
-
-const PRODUCTS_URL = "data/products.json";
-const CART_KEY = "prasun_cart";
+    const PRODUCTS_URL = "data/products.json";
+    const CART_KEY = "prasun_cart";
 
 
-/* ------------------------------------------------------------------------
-   DOM
-   ------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------
+       State
+       ------------------------------------------------------------------------ */
 
-const grid = document.getElementById("product-list");
-const count = document.getElementById("products-count");
-
-const emptyState = document.getElementById("empty-state");
-const errorState = document.getElementById("products-error");
-
-const searchForm = document.getElementById("product-search-form");
-const searchInput = document.getElementById("product-search");
-const searchClear = document.getElementById("search-clear");
-
-const sortSelect = document.getElementById("product-sort");
-
-const categoryButtons = document.querySelectorAll(
-    ".category-pill"
-);
-
-const resetButton = document.getElementById(
-    "empty-reset-btn"
-);
-
-const retryButton = document.getElementById(
-    "products-retry-btn"
-);
-
-const cartCount = document.getElementById(
-    "cart-count"
-);
-
-const menuToggle = document.getElementById(
-    "products-menu-toggle"
-);
-
-const mobileMenu = document.getElementById(
-    "products-mobile-menu"
-);
-
-const footerYear = document.getElementById(
-    "footer-year"
-);
+    let products = [];
+    let currentCategory = "all";
+    let currentSearch = "";
+    let currentSort = "featured";
 
 
-/* ------------------------------------------------------------------------
-   State
-   ------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------
+       DOM
+       ------------------------------------------------------------------------ */
 
-let products = [];
+    const grid = document.getElementById("product-list");
+    const count = document.getElementById("products-count");
 
-let currentCategory = "all";
-let currentSearch = "";
-let currentSort = "featured";
+    const emptyState = document.getElementById("empty-state");
+    const errorState = document.getElementById("products-error");
+
+    const searchForm = document.getElementById("product-search-form");
+    const searchInput = document.getElementById("product-search");
+    const searchClear = document.getElementById("search-clear");
+
+    const sortSelect = document.getElementById("product-sort");
+
+    const categoryButtons = document.querySelectorAll(
+        ".category-pill"
+    );
+
+    const resetButton = document.getElementById(
+        "empty-reset-btn"
+    );
+
+    const retryButton = document.getElementById(
+        "products-retry-btn"
+    );
+
+    const cartCount = document.getElementById(
+        "cart-count"
+    );
+
+    const menuToggle = document.getElementById(
+        "products-menu-toggle"
+    );
+
+    const mobileMenu = document.getElementById(
+        "products-mobile-menu"
+    );
+
+    const footerYear = document.getElementById(
+        "footer-year"
+    );
 
 
-/* ------------------------------------------------------------------------
-   Utilities
-   ------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------
+       Utilities
+       ------------------------------------------------------------------------ */
 
-function escapeHtml(value) {
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-
-function normalize(value) {
-    return String(value ?? "")
-        .trim()
-        .toLowerCase();
-}
-
-
-function formatPrice(value) {
-    const price = Number(value);
-
-    if (!Number.isFinite(price)) {
-        return "$0.00";
+    function normalize(value) {
+        return String(value ?? "")
+            .trim()
+            .toLowerCase();
     }
 
-    return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD"
-    }).format(price);
-}
+
+    function escapeHTML(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 
 
-function getProductId(product) {
-    return product?.id ?? product?.productId ?? "";
-}
+    function formatPrice(value) {
+        const price = Number(value);
 
-
-function getProductName(product) {
-    return (
-        product?.name ??
-        product?.title ??
-        "Untitled Product"
-    );
-}
-
-
-function getProductCategory(product) {
-    return (
-        product?.category ??
-        "Uncategorized"
-    );
-}
-
-
-function getProductDescription(product) {
-    return (
-        product?.description ??
-        product?.shortDescription ??
-        ""
-    );
-}
-
-
-function getProductImage(product) {
-    return (
-        product?.image ??
-        product?.imageUrl ??
-        product?.thumbnail ??
-        ""
-    );
-}
-
-
-function getProductPrice(product) {
-    const price = Number(
-        product?.price ?? 0
-    );
-
-    return Number.isFinite(price)
-        ? price
-        : 0;
-}
-
-
-/* ------------------------------------------------------------------------
-   Cart
-   ------------------------------------------------------------------------ */
-
-function getCart() {
-    try {
-        const stored = localStorage.getItem(CART_KEY);
-
-        if (!stored) {
-            return [];
+        if (!Number.isFinite(price)) {
+            return "$0.00";
         }
 
-        const cart = JSON.parse(stored);
-
-        return Array.isArray(cart)
-            ? cart
-            : [];
-
-    } catch {
-        return [];
+        return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD"
+        }).format(price);
     }
-}
 
 
-function saveCart(cart) {
-    try {
-        localStorage.setItem(
-            CART_KEY,
-            JSON.stringify(cart)
-        );
-
-    } catch (error) {
-        console.error(
-            "Unable to save cart:",
-            error
+    function productId(product) {
+        return String(
+            product?.id ??
+            product?.productId ??
+            ""
         );
     }
-}
 
 
-function updateCartBadge() {
-    if (!cartCount) {
-        return;
+    function productName(product) {
+        return String(
+            product?.name ??
+            product?.title ??
+            "Untitled Product"
+        );
     }
 
-    const cart = getCart();
 
-    const totalItems = cart.reduce(
-        (total, item) => {
-            const quantity = Number(
-                item?.quantity ?? 1
+    function productCategory(product) {
+        return String(
+            product?.category ??
+            "Uncategorized"
+        );
+    }
+
+
+    function productDescription(product) {
+        return String(
+            product?.description ??
+            product?.shortDescription ??
+            ""
+        );
+    }
+
+
+    function productImage(product) {
+        return String(
+            product?.image ??
+            product?.imageUrl ??
+            product?.thumbnail ??
+            ""
+        );
+    }
+
+
+    function productPrice(product) {
+        const value = Number(product?.price);
+
+        return Number.isFinite(value)
+            ? value
+            : 0;
+    }
+
+
+    /* ------------------------------------------------------------------------
+       Cart
+       ------------------------------------------------------------------------ */
+
+    function getCart() {
+        try {
+            const data = localStorage.getItem(CART_KEY);
+
+            if (!data) {
+                return [];
+            }
+
+            const cart = JSON.parse(data);
+
+            return Array.isArray(cart)
+                ? cart
+                : [];
+
+        } catch {
+            return [];
+        }
+    }
+
+
+    function saveCart(cart) {
+        try {
+            localStorage.setItem(
+                CART_KEY,
+                JSON.stringify(cart)
             );
 
-            return total +
-                (Number.isFinite(quantity)
-                    ? Math.max(quantity, 0)
-                    : 0);
-        },
-        0
-    );
-
-    cartCount.textContent =
-        totalItems > 99
-            ? "99+"
-            : String(totalItems);
-
-    cartCount.hidden = totalItems === 0;
-}
+        } catch (error) {
+            console.error(
+                "Unable to save cart:",
+                error
+            );
+        }
+    }
 
 
-function addToCart(product) {
-    const cart = getCart();
+    function updateCartBadge() {
+        if (!cartCount) {
+            return;
+        }
 
-    const productId = getProductId(product);
+        const total = getCart().reduce(
+            (sum, item) => {
 
-    const existing = cart.find(
-        item =>
-            String(item.id) ===
-            String(productId)
-    );
+                const quantity = Number(
+                    item?.quantity ?? 1
+                );
 
-    if (existing) {
-        existing.quantity =
-            Number(existing.quantity || 1) + 1;
+                return sum + (
+                    Number.isFinite(quantity)
+                        ? Math.max(0, quantity)
+                        : 0
+                );
+            },
+            0
+        );
 
-    } else {
-        cart.push({
-            ...product,
-            id: productId,
-            quantity: 1
+        cartCount.textContent =
+            total > 99
+                ? "99+"
+                : String(total);
+
+        cartCount.hidden = total === 0;
+    }
+
+
+    function addToCart(product) {
+        const id = productId(product);
+
+        if (!id) {
+            return;
+        }
+
+        const cart = getCart();
+
+        const existing = cart.find(
+            item => String(item.id) === id
+        );
+
+        if (existing) {
+            existing.quantity =
+                Math.max(
+                    1,
+                    Number(existing.quantity) || 1
+                ) + 1;
+
+        } else {
+            cart.push({
+                id,
+                name: productName(product),
+                price: productPrice(product),
+                image: productImage(product),
+                category: productCategory(product),
+                quantity: 1
+            });
+        }
+
+        saveCart(cart);
+        updateCartBadge();
+    }
+
+
+    /* ------------------------------------------------------------------------
+       Filtering & Sorting
+       ------------------------------------------------------------------------ */
+
+    function getVisibleProducts() {
+        const query = normalize(currentSearch);
+        const category = normalize(currentCategory);
+
+        const visible = products.filter(product => {
+
+            const productCat =
+                normalize(productCategory(product));
+
+            const name =
+                normalize(productName(product));
+
+            const description =
+                normalize(productDescription(product));
+
+            const matchesCategory =
+                category === "all" ||
+                productCat === category;
+
+            const matchesSearch =
+                !query ||
+                name.includes(query) ||
+                description.includes(query) ||
+                productCat.includes(query);
+
+            return (
+                matchesCategory &&
+                matchesSearch
+            );
         });
-    }
-
-    saveCart(cart);
-    updateCartBadge();
-}
 
 
-/* ------------------------------------------------------------------------
-   Product Filtering
-   ------------------------------------------------------------------------ */
-
-function getFilteredProducts() {
-
-    const query = normalize(
-        currentSearch
-    );
-
-    let filtered = products.filter(product => {
-
-        const category =
-            normalize(
-                getProductCategory(product)
-            );
-
-        const name =
-            normalize(
-                getProductName(product)
-            );
-
-        const description =
-            normalize(
-                getProductDescription(product)
-            );
-
-        const matchesCategory =
-            currentCategory === "all" ||
-            category === normalize(
-                currentCategory
-            );
-
-        const matchesSearch =
-            !query ||
-            name.includes(query) ||
-            description.includes(query) ||
-            category.includes(query);
-
-        return (
-            matchesCategory &&
-            matchesSearch
-        );
-    });
-
-
-    /* --------------------------------------------------------------------
-       Sorting
-       -------------------------------------------------------------------- */
-
-    switch (currentSort) {
-
-        case "price-low":
-            filtered.sort(
+        if (currentSort === "price-low") {
+            visible.sort(
                 (a, b) =>
-                    getProductPrice(a) -
-                    getProductPrice(b)
+                    productPrice(a) -
+                    productPrice(b)
             );
-            break;
+        }
 
-        case "price-high":
-            filtered.sort(
+        if (currentSort === "price-high") {
+            visible.sort(
                 (a, b) =>
-                    getProductPrice(b) -
-                    getProductPrice(a)
+                    productPrice(b) -
+                    productPrice(a)
             );
-            break;
+        }
 
-        case "name":
-            filtered.sort(
+        if (currentSort === "name") {
+            visible.sort(
                 (a, b) =>
-                    getProductName(a).localeCompare(
-                        getProductName(b),
+                    productName(a).localeCompare(
+                        productName(b),
                         undefined,
                         {
                             sensitivity: "base"
                         }
                     )
             );
-            break;
+        }
 
-        case "featured":
-        default:
-            /*
-             * Preserve the original JSON order.
-             */
-            break;
+        return visible;
     }
 
-    return filtered;
-}
 
+    /* ------------------------------------------------------------------------
+       Product Card
+       ------------------------------------------------------------------------ */
 
-/* ------------------------------------------------------------------------
-   Product Card
-   ------------------------------------------------------------------------ */
+    function createProductCard(product) {
+        const id = productId(product);
+        const name = productName(product);
+        const category = productCategory(product);
+        const description = productDescription(product);
+        const image = productImage(product);
+        const price = productPrice(product);
 
-function createProductCard(product) {
 
-    const id = getProductId(product);
-    const name = getProductName(product);
-    const category = getProductCategory(product);
-    const description =
-        getProductDescription(product);
+        const article =
+            document.createElement("article");
 
-    const image =
-        getProductImage(product);
+        article.className = "product-card";
 
-    const price =
-        getProductPrice(product);
 
+        /* Image / Product Link */
 
-    const article =
-        document.createElement("article");
+        const link =
+            document.createElement("a");
 
-    article.className = "product-card";
+        link.className =
+            "product-card-link";
 
+        link.href =
+            `product.html?id=${encodeURIComponent(id)}`;
 
-    /* Product link */
+        link.setAttribute(
+            "aria-label",
+            `View ${name}`
+        );
 
-    const link =
-        document.createElement("a");
 
-    link.className = "product-card-link";
+        const imageWrap =
+            document.createElement("div");
 
-    link.href =
-        `product-detail.html?id=${encodeURIComponent(id)}`;
+        imageWrap.className =
+            "product-image-wrapper";
 
-    link.setAttribute(
-        "aria-label",
-        `View ${name}`
-    );
 
+        const img =
+            document.createElement("img");
 
-    /* Image */
+        img.className =
+            "product-image";
 
-    const imageWrap =
-        document.createElement("div");
+        img.src = image;
 
-    imageWrap.className =
-        "product-card-image";
+        img.alt = name;
 
+        img.loading = "lazy";
 
-    const img =
-        document.createElement("img");
+        img.decoding = "async";
 
-    img.alt = name;
 
-    img.loading = "lazy";
+        img.addEventListener(
+            "error",
+            () => {
 
-    img.decoding = "async";
+                img.removeAttribute("src");
 
-    img.src = image;
+                imageWrap.classList.add(
+                    "image-error"
+                );
 
-    img.addEventListener(
-        "error",
-        () => {
-            imageWrap.classList.add(
-                "image-error"
-            );
-        },
-        { once: true }
-    );
+            },
+            { once: true }
+        );
 
 
-    /* Category badge */
+        imageWrap.appendChild(img);
 
-    const categoryBadge =
-        document.createElement("span");
 
-    categoryBadge.className =
-        "product-category";
+        if (category) {
+            const badge =
+                document.createElement("span");
 
-    categoryBadge.textContent =
-        category;
+            badge.className =
+                "product-category";
 
+            badge.textContent =
+                category;
 
-    imageWrap.appendChild(img);
-    imageWrap.appendChild(categoryBadge);
+            imageWrap.appendChild(badge);
+        }
 
-    link.appendChild(imageWrap);
 
+        link.appendChild(imageWrap);
 
-    /* Body */
 
-    const body =
-        document.createElement("div");
+        /* Product Content */
 
-    body.className =
-        "product-card-body";
+        const details =
+            document.createElement("div");
 
+        details.className =
+            "product-details";
 
-    const title =
-        document.createElement("h2");
 
-    title.className =
-        "product-title";
+        const title =
+            document.createElement("h2");
 
-    title.textContent =
-        name;
+        title.className =
+            "product-title";
 
+        title.textContent =
+            name;
 
-    const descriptionElement =
-        document.createElement("p");
 
-    descriptionElement.className =
-        "product-description";
+        details.appendChild(title);
 
-    descriptionElement.textContent =
-        description;
 
+        if (description) {
+            const descriptionElement =
+                document.createElement("p");
 
-    const bottom =
-        document.createElement("div");
+            descriptionElement.className =
+                "product-description";
 
-    bottom.className =
-        "product-bottom";
+            descriptionElement.textContent =
+                description;
 
-
-    const priceElement =
-        document.createElement("p");
-
-    priceElement.className =
-        "product-price";
-
-    priceElement.textContent =
-        formatPrice(price);
-
-
-    const cartButton =
-        document.createElement("button");
-
-    cartButton.type = "button";
-
-    cartButton.className =
-        "product-cart-button";
-
-    cartButton.setAttribute(
-        "aria-label",
-        `Add ${name} to cart`
-    );
-
-
-    cartButton.innerHTML = `
-        <span>Add to Cart</span>
-
-        <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-        >
-            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"/>
-            <circle cx="10" cy="20" r="1.3"/>
-            <circle cx="18" cy="20" r="1.3"/>
-        </svg>
-    `;
-
-
-    /* Add to cart */
-
-    cartButton.addEventListener(
-        "click",
-        event => {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            addToCart(product);
-
-            cartButton.classList.add(
-                "is-added"
-            );
-
-            cartButton.setAttribute(
-                "aria-label",
-                `${name} added to cart`
-            );
-
-            cartButton.innerHTML = `
-                <span>Added</span>
-
-                <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                >
-                    <path d="M20 6 9 17l-5-5"/>
-                </svg>
-            `;
-
-
-            window.setTimeout(
-                () => {
-
-                    cartButton.classList.remove(
-                        "is-added"
-                    );
-
-                    cartButton.setAttribute(
-                        "aria-label",
-                        `Add ${name} to cart`
-                    );
-
-                    cartButton.innerHTML = `
-                        <span>Add to Cart</span>
-
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                        >
-                            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"/>
-                            <circle cx="10" cy="20" r="1.3"/>
-                            <circle cx="18" cy="20" r="1.3"/>
-                        </svg>
-                    `;
-
-                },
-                1200
+            details.appendChild(
+                descriptionElement
             );
         }
-    );
 
 
-    bottom.appendChild(
-        priceElement
-    );
+        /* Product Footer */
 
-    bottom.appendChild(
-        cartButton
-    );
+        const footer =
+            document.createElement("div");
+
+        footer.className =
+            "product-card-footer";
 
 
-    body.appendChild(title);
+        const priceElement =
+            document.createElement("span");
 
-    if (description) {
-        body.appendChild(
-            descriptionElement
+        priceElement.className =
+            "product-price";
+
+        priceElement.textContent =
+            formatPrice(price);
+
+
+        const cartButton =
+            document.createElement("button");
+
+        cartButton.type = "button";
+
+        cartButton.className =
+            "product-cart-button";
+
+        cartButton.innerHTML = `
+            <span>Add to Cart</span>
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+                <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"/>
+                <circle cx="10" cy="20" r="1.3"/>
+                <circle cx="18" cy="20" r="1.3"/>
+            </svg>
+        `;
+
+        cartButton.setAttribute(
+            "aria-label",
+            `Add ${name} to cart`
         );
+
+
+        cartButton.addEventListener(
+            "click",
+            event => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                addToCart(product);
+
+                cartButton.classList.add(
+                    "is-added"
+                );
+
+                cartButton.setAttribute(
+                    "aria-label",
+                    `${name} added to cart`
+                );
+
+                cartButton.innerHTML = `
+                    <span>Added</span>
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M20 6 9 17l-5-5"/>
+                    </svg>
+                `;
+
+
+                window.setTimeout(
+                    () => {
+
+                        cartButton.classList.remove(
+                            "is-added"
+                        );
+
+                        cartButton.setAttribute(
+                            "aria-label",
+                            `Add ${name} to cart`
+                        );
+
+                        cartButton.innerHTML = `
+                            <span>Add to Cart</span>
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"/>
+                                <circle cx="10" cy="20" r="1.3"/>
+                                <circle cx="18" cy="20" r="1.3"/>
+                            </svg>
+                        `;
+
+                    },
+                    1200
+                );
+            }
+        );
+
+
+        footer.appendChild(
+            priceElement
+        );
+
+        footer.appendChild(
+            cartButton
+        );
+
+
+        details.appendChild(footer);
+
+
+        article.appendChild(link);
+        article.appendChild(details);
+
+
+        return article;
     }
 
-    body.appendChild(bottom);
+
+    /* ------------------------------------------------------------------------
+       Rendering
+       ------------------------------------------------------------------------ */
+
+    function renderProducts() {
+        if (!grid) {
+            return;
+        }
+
+        const visible =
+            getVisibleProducts();
 
 
-    article.appendChild(link);
-    article.appendChild(body);
+        grid.innerHTML = "";
+
+        grid.setAttribute(
+            "aria-busy",
+            "true"
+        );
 
 
-    return article;
-}
+        if (!visible.length) {
+
+            grid.hidden = true;
+
+            if (emptyState) {
+                emptyState.hidden = false;
+            }
+
+            if (count) {
+                count.textContent =
+                    "0 products found";
+            }
+
+            grid.setAttribute(
+                "aria-busy",
+                "false"
+            );
+
+            return;
+        }
 
 
-/* ------------------------------------------------------------------------
-   Render
-   ------------------------------------------------------------------------ */
+        grid.hidden = false;
 
-function renderProducts() {
-
-    const filtered =
-        getFilteredProducts();
+        if (emptyState) {
+            emptyState.hidden = true;
+        }
 
 
-    grid.innerHTML = "";
-
-    grid.setAttribute(
-        "aria-busy",
-        "true"
-    );
+        const fragment =
+            document.createDocumentFragment();
 
 
-    if (!filtered.length) {
+        visible.forEach(product => {
+            fragment.appendChild(
+                createProductCard(product)
+            );
+        });
 
-        grid.hidden = true;
 
-        emptyState.hidden = false;
+        grid.appendChild(fragment);
 
-        count.textContent =
-            "0 products found";
+
+        if (count) {
+            count.textContent =
+                visible.length === 1
+                    ? "1 product"
+                    : `${visible.length} products`;
+        }
+
 
         grid.setAttribute(
             "aria-busy",
             "false"
         );
-
-        return;
     }
 
 
-    emptyState.hidden = true;
+    /* ------------------------------------------------------------------------
+       Loading States
+       ------------------------------------------------------------------------ */
 
-    grid.hidden = false;
+    function setLoadingState() {
 
+        if (grid) {
+            grid.hidden = false;
 
-    const fragment =
-        document.createDocumentFragment();
-
-
-    filtered.forEach(product => {
-
-        fragment.appendChild(
-            createProductCard(product)
-        );
-
-    });
-
-
-    grid.appendChild(fragment);
-
-
-    count.textContent =
-        filtered.length === 1
-            ? "Showing 1 product"
-            : `Showing ${filtered.length} products`;
-
-
-    grid.setAttribute(
-        "aria-busy",
-        "false"
-    );
-}
-
-
-/* ------------------------------------------------------------------------
-   Loading
-   ------------------------------------------------------------------------ */
-
-function setLoadingState() {
-
-    grid.hidden = false;
-
-    emptyState.hidden = true;
-
-    errorState.hidden = true;
-
-    grid.setAttribute(
-        "aria-busy",
-        "true"
-    );
-
-    count.textContent =
-        "Loading products…";
-}
-
-
-function setErrorState() {
-
-    grid.innerHTML = "";
-
-    grid.hidden = true;
-
-    emptyState.hidden = true;
-
-    errorState.hidden = false;
-
-    count.textContent =
-        "Unable to load products";
-
-    grid.setAttribute(
-        "aria-busy",
-        "false"
-    );
-}
-
-
-async function loadProducts() {
-
-    setLoadingState();
-
-    try {
-
-        const response =
-            await fetch(
-                PRODUCTS_URL,
-                {
-                    cache: "no-store"
-                }
-            );
-
-
-        if (!response.ok) {
-            throw new Error(
-                `HTTP ${response.status}`
+            grid.setAttribute(
+                "aria-busy",
+                "true"
             );
         }
 
+        if (emptyState) {
+            emptyState.hidden = true;
+        }
 
-        const data =
-            await response.json();
+        if (errorState) {
+            errorState.hidden = true;
+        }
+
+        if (count) {
+            count.textContent =
+                "Loading products…";
+        }
+    }
 
 
-        if (!Array.isArray(data)) {
-            throw new Error(
-                "products.json must contain an array"
+    function setErrorState() {
+
+        if (grid) {
+            grid.innerHTML = "";
+
+            grid.hidden = true;
+
+            grid.setAttribute(
+                "aria-busy",
+                "false"
             );
         }
 
+        if (emptyState) {
+            emptyState.hidden = true;
+        }
 
-        products = data;
+        if (errorState) {
+            errorState.hidden = false;
+        }
 
-
-        renderProducts();
-
-
-    } catch (error) {
-
-        console.error(
-            "Products loading failed:",
-            error
-        );
-
-        setErrorState();
-    }
-}
-
-
-/* ------------------------------------------------------------------------
-   Search
-   ------------------------------------------------------------------------ */
-
-function updateSearchUI() {
-
-    if (!searchClear) {
-        return;
+        if (count) {
+            count.textContent =
+                "Unable to load products";
+        }
     }
 
-    searchClear.hidden =
-        searchInput.value.length === 0;
-}
+
+    /* ------------------------------------------------------------------------
+       Load Products
+       ------------------------------------------------------------------------ */
+
+    async function loadProducts() {
+
+        setLoadingState();
+
+        try {
+
+            const response =
+                await fetch(PRODUCTS_URL);
 
 
-searchInput?.addEventListener(
-    "input",
-    event => {
+            if (!response.ok) {
+                throw new Error(
+                    `HTTP ${response.status}`
+                );
+            }
 
-        currentSearch =
-            event.target.value.trim();
 
-        updateSearchUI();
+            const data =
+                await response.json();
 
-        renderProducts();
+
+            if (!Array.isArray(data)) {
+                throw new Error(
+                    "products.json must contain an array"
+                );
+            }
+
+
+            products = data.filter(
+                product =>
+                    product &&
+                    productId(product)
+            );
+
+
+            initializeCategoryFromURL();
+
+            renderProducts();
+
+
+        } catch (error) {
+
+            console.error(
+                "Unable to load products:",
+                error
+            );
+
+            setErrorState();
+        }
     }
-);
 
 
-searchForm?.addEventListener(
-    "submit",
-    event => {
-        event.preventDefault();
-    }
-);
+    /* ------------------------------------------------------------------------
+       URL Category
+       ------------------------------------------------------------------------ */
+
+    function initializeCategoryFromURL() {
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+        const category =
+            params.get("category");
 
 
-searchClear?.addEventListener(
-    "click",
-    () => {
-
-        searchInput.value = "";
-
-        currentSearch = "";
-
-        updateSearchUI();
-
-        searchInput.focus();
-
-        renderProducts();
-    }
-);
+        if (!category) {
+            return;
+        }
 
 
-/* ------------------------------------------------------------------------
-   Category
-   ------------------------------------------------------------------------ */
+        const matchingButton =
+            [...categoryButtons].find(
+                button =>
+                    normalize(
+                        button.dataset.category
+                    ) === normalize(category)
+            );
 
-categoryButtons.forEach(button => {
 
-    button.addEventListener(
-        "click",
-        () => {
+        if (matchingButton) {
 
             currentCategory =
-                button.dataset.category ||
-                "all";
+                matchingButton.dataset.category;
+
+            updateCategoryButtons();
+        }
+    }
 
 
-            categoryButtons.forEach(
-                item => {
+    function updateCategoryButtons() {
 
-                    const active =
-                        item === button;
+        categoryButtons.forEach(
+            button => {
 
-                    item.classList.toggle(
-                        "active",
-                        active
+                const active =
+                    normalize(
+                        button.dataset.category
+                    ) === normalize(
+                        currentCategory
                     );
 
-                    item.setAttribute(
-                        "aria-pressed",
-                        String(active)
-                    );
-                }
-            );
+                button.classList.toggle(
+                    "active",
+                    active
+                );
 
+                button.setAttribute(
+                    "aria-pressed",
+                    String(active)
+                );
+            }
+        );
+    }
+
+
+    /* ------------------------------------------------------------------------
+       Search
+       ------------------------------------------------------------------------ */
+
+    function updateSearchUI() {
+
+        if (!searchClear || !searchInput) {
+            return;
+        }
+
+        searchClear.hidden =
+            !searchInput.value.trim();
+    }
+
+
+    searchInput?.addEventListener(
+        "input",
+        event => {
+
+            currentSearch =
+                event.target.value;
+
+            updateSearchUI();
 
             renderProducts();
         }
     );
-});
 
 
-/* ------------------------------------------------------------------------
-   Sorting
-   ------------------------------------------------------------------------ */
-
-sortSelect?.addEventListener(
-    "change",
-    event => {
-
-        currentSort =
-            event.target.value;
-
-        renderProducts();
-    }
-);
+    searchForm?.addEventListener(
+        "submit",
+        event => {
+            event.preventDefault();
+        }
+    );
 
 
-/* ------------------------------------------------------------------------
-   Reset
-   ------------------------------------------------------------------------ */
+    searchClear?.addEventListener(
+        "click",
+        () => {
 
-function resetFilters() {
+            if (!searchInput) {
+                return;
+            }
 
-    currentCategory = "all";
+            searchInput.value = "";
 
-    currentSearch = "";
+            currentSearch = "";
 
-    currentSort = "featured";
+            updateSearchUI();
+
+            searchInput.focus();
+
+            renderProducts();
+        }
+    );
 
 
-    searchInput.value = "";
-
-    sortSelect.value = "featured";
-
+    /* ------------------------------------------------------------------------
+       Category Filtering
+       ------------------------------------------------------------------------ */
 
     categoryButtons.forEach(
         button => {
 
-            const active =
-                button.dataset.category === "all";
+            button.addEventListener(
+                "click",
+                () => {
 
-            button.classList.toggle(
-                "active",
-                active
-            );
+                    currentCategory =
+                        button.dataset.category ||
+                        "all";
 
-            button.setAttribute(
-                "aria-pressed",
-                String(active)
+                    updateCategoryButtons();
+
+                    renderProducts();
+                }
             );
         }
     );
 
 
-    updateSearchUI();
+    /* ------------------------------------------------------------------------
+       Sorting
+       ------------------------------------------------------------------------ */
 
-    renderProducts();
-}
+    sortSelect?.addEventListener(
+        "change",
+        event => {
+
+            currentSort =
+                event.target.value ||
+                "featured";
+
+            renderProducts();
+        }
+    );
 
 
-resetButton?.addEventListener(
-    "click",
-    resetFilters
-);
+    /* ------------------------------------------------------------------------
+       Reset Filters
+       ------------------------------------------------------------------------ */
+
+    function resetFilters() {
+
+        currentCategory = "all";
+
+        currentSearch = "";
+
+        currentSort = "featured";
 
 
-retryButton?.addEventListener(
-    "click",
-    loadProducts
-);
+        if (searchInput) {
+            searchInput.value = "";
+        }
 
-
-/* ------------------------------------------------------------------------
-   Keyboard Shortcut
-   ------------------------------------------------------------------------ */
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            (event.metaKey || event.ctrlKey) &&
-            event.key.toLowerCase() === "k"
-        ) {
-
-            event.preventDefault();
-
-            searchInput?.focus();
-
-            searchInput?.select();
+        if (sortSelect) {
+            sortSelect.value = "featured";
         }
 
 
-        if (
-            event.key === "Escape" &&
-            document.activeElement === searchInput &&
-            searchInput.value
-        ) {
+        updateCategoryButtons();
 
-            searchClear?.click();
-        }
+        updateSearchUI();
+
+        renderProducts();
     }
-);
 
 
-/* ------------------------------------------------------------------------
-   Mobile Menu
-   ------------------------------------------------------------------------ */
-
-menuToggle?.addEventListener(
-    "click",
-    () => {
-
-        const isOpen =
-            menuToggle.getAttribute(
-                "aria-expanded"
-            ) === "true";
+    resetButton?.addEventListener(
+        "click",
+        resetFilters
+    );
 
 
-        menuToggle.setAttribute(
-            "aria-expanded",
-            String(!isOpen)
-        );
+    retryButton?.addEventListener(
+        "click",
+        loadProducts
+    );
 
 
-        if (mobileMenu) {
-            mobileMenu.hidden = isOpen;
+    /* ------------------------------------------------------------------------
+       Keyboard Shortcuts
+       ------------------------------------------------------------------------ */
+
+    document.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                (event.metaKey || event.ctrlKey) &&
+                event.key.toLowerCase() === "k"
+            ) {
+
+                event.preventDefault();
+
+                searchInput?.focus();
+
+                searchInput?.select();
+            }
+
+
+            if (
+                event.key === "Escape" &&
+                document.activeElement === searchInput &&
+                searchInput?.value
+            ) {
+
+                searchClear?.click();
+            }
         }
-    }
-);
+    );
 
 
-/* ------------------------------------------------------------------------
-   Footer Year
-   ------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------
+       Mobile Navigation
+       ------------------------------------------------------------------------ */
 
-if (footerYear) {
-    footerYear.textContent =
-        new Date().getFullYear();
-}
+    menuToggle?.addEventListener(
+        "click",
+        () => {
+
+            if (!mobileMenu) {
+                return;
+            }
+
+            const open =
+                menuToggle.getAttribute(
+                    "aria-expanded"
+                ) === "true";
 
 
-/* ------------------------------------------------------------------------
-   Initial Cart State
-   ------------------------------------------------------------------------ */
+            menuToggle.setAttribute(
+                "aria-expanded",
+                String(!open)
+            );
 
-updateCartBadge();
+            menuToggle.setAttribute(
+                "aria-label",
+                open
+                    ? "Open menu"
+                    : "Close menu"
+            );
 
-
-/* ------------------------------------------------------------------------
-   Cross-tab cart synchronization
-   ------------------------------------------------------------------------ */
-
-window.addEventListener(
-    "storage",
-    event => {
-
-        if (event.key === CART_KEY) {
-            updateCartBadge();
+            mobileMenu.hidden = open;
         }
+    );
+
+
+    /* Close mobile menu after navigation */
+
+    mobileMenu?.querySelectorAll("a").forEach(
+        link => {
+
+            link.addEventListener(
+                "click",
+                () => {
+
+                    if (!menuToggle) {
+                        return;
+                    }
+
+                    menuToggle.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+
+                    menuToggle.setAttribute(
+                        "aria-label",
+                        "Open menu"
+                    );
+
+                    mobileMenu.hidden = true;
+                }
+            );
+        }
+    );
+
+
+    /* ------------------------------------------------------------------------
+       Footer
+       ------------------------------------------------------------------------ */
+
+    if (footerYear) {
+        footerYear.textContent =
+            new Date().getFullYear();
     }
-);
 
 
-/* ------------------------------------------------------------------------
-   Start
-   ------------------------------------------------------------------------ */
+    /* ------------------------------------------------------------------------
+       Cart Synchronization
+       ------------------------------------------------------------------------ */
 
-loadProducts();
+    updateCartBadge();
+
+
+    window.addEventListener(
+        "storage",
+        event => {
+
+            if (event.key === CART_KEY) {
+                updateCartBadge();
+            }
+        }
+    );
+
+
+    /* ------------------------------------------------------------------------
+       Initialize
+       ------------------------------------------------------------------------ */
+
+    loadProducts();
+
+})();
 ```
-
-});
