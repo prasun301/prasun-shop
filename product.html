@@ -6,12 +6,171 @@
   <title>Product Details — PRASUN SHOP</title>
   <meta name="description" content="View high-performance smart gadgets and accessories." />
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* Apple-Store Inspired Minimalist Design Overrides */
+    :root {
+      --apple-bg: #f5f5f7;
+      --apple-text: #1d1d1f;
+      --apple-gray: #86868b;
+      --apple-border: #d2d2d7;
+      --apple-blue: #0071e3;
+      --apple-blue-hover: #0077ed;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: var(--apple-text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .product-detail-page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 2rem 5rem 2rem;
+    }
+
+    .breadcrumbs {
+      font-size: 0.85rem;
+      color: var(--apple-gray);
+      margin-bottom: 2.5rem;
+    }
+
+    .breadcrumbs a {
+      color: var(--apple-gray);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .breadcrumbs a:hover {
+      color: var(--apple-text);
+    }
+
+    /* Two-Column Apple Grid */
+    .product-detail-container {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    @media (max-width: 850px) {
+      .product-detail-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+    }
+
+    .product-detail-image {
+      background-color: var(--apple-bg);
+      border-radius: 18px;
+      padding: 3rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .product-detail-image img {
+      width: 100%;
+      max-width: 500px;
+      height: auto;
+      object-fit: contain;
+      mix-blend-mode: multiply;
+      transition: transform 0.5s ease;
+    }
+
+    .product-detail-image img:hover {
+      transform: scale(1.03);
+    }
+
+    .product-detail-info {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      padding-top: 1rem;
+    }
+
+    .product-category-tag {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--apple-blue);
+    }
+
+    .product-detail-info h1 {
+      font-size: 2.5rem;
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -0.015em;
+      margin: 0;
+      color: var(--apple-text);
+    }
+
+    .product-detail-price {
+      font-size: 1.75rem;
+      font-weight: 400;
+      color: var(--apple-text);
+      letter-spacing: -0.01em;
+    }
+
+    .product-divider {
+      height: 1px;
+      background-color: var(--apple-border);
+      border: none;
+      margin: 0.5rem 0;
+    }
+
+    .product-detail-description {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: var(--apple-gray);
+      margin: 0;
+    }
+
+    /* Apple-Style Pill Action Button */
+    .btn-apple-primary {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--apple-blue);
+      color: #ffffff;
+      font-size: 1.05rem;
+      font-weight: 500;
+      padding: 0.9rem 2rem;
+      border-radius: 980px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      box-shadow: 0 4px 14px rgba(0, 113, 227, 0.3);
+      margin-top: 1rem;
+      width: 100%;
+    }
+
+    .btn-apple-primary:hover {
+      background-color: var(--apple-blue-hover);
+    }
+
+    .btn-apple-primary:active {
+      transform: scale(0.98);
+    }
+
+    .product-not-found {
+      text-align: center;
+      padding: 5rem 1rem;
+    }
+
+    .product-not-found h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+  </style>
   <script src="js/script.js" defer></script>
 </head>
 <body>
-
-  <!-- Keyboard Accessibility Skip Link -->
-  <a href="#main-content" class="skip-link">Skip to main content</a>
 
   <!-- Header -->
   <header class="header">
@@ -48,19 +207,19 @@
     
     <!-- Breadcrumbs -->
     <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="index.html">Home</a> / <a href="index.html">Products</a> / <span id="breadcrumb-title">Details</span>
+      <a href="index.html">Home</a> / <a href="index.html">Products</a> / <span id="breadcrumb-title" style="color: var(--apple-text);">Details</span>
     </nav>
 
     <!-- Product Detail Container -->
     <div id="product-detail-container" class="product-detail-container">
-      <!-- Populated dynamically via JS or shows fallback if not found -->
+      <!-- Populated dynamically via JS -->
     </div>
 
-    <!-- Fallback View (Hidden by default, shown via JS if product ID is invalid) -->
+    <!-- Fallback View -->
     <div id="product-not-found" class="product-not-found" style="display: none;">
       <h1>Product Not Found</h1>
-      <p>The product you're looking for doesn't exist or has been removed.</p>
-      <a href="index.html" class="btn-primary">Back to Products</a>
+      <p style="color: var(--apple-gray); margin-bottom: 2rem;">The product you're looking for doesn't exist or has been removed.</p>
+      <a href="index.html" class="btn-apple-primary" style="max-width: 200px; margin: 0 auto;">Back to Products</a>
     </div>
 
   </main>
@@ -73,7 +232,7 @@
         <p>Premium technology and everyday accessories built with clean, modern design.</p>
       </div>
       <div class="footer-col">
-        <h4 class="footer-heading">Navigation</h4>
+        <h4 class="navigation-heading">Navigation</h4>
         <ul>
           <li><a href="index.html">Shop All</a></li>
           <li><a href="about.html">About Us</a></li>
@@ -87,27 +246,26 @@
   </footer>
 
   <script>
-    // Simple inline router script to handle sample product loading
     const productsData = {
       "smart-lamp": {
         title: "G-Shaped Smart LED Atmosphere Lamp",
         category: "Smart Lighting",
         price: "$29.99",
-        description: "Includes built-in Bluetooth speaker and fast wireless charger pad.",
+        description: "Includes built-in Bluetooth speaker and fast wireless charger pad. Designed to elevate your workspace or bedside with multi-color ambient lighting and crystal-clear audio.",
         image: "images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png"
       },
       "power-bank": {
         title: "Mini 5000mAh Magnetic Wireless Power Bank",
         category: "Power & Charging",
         price: "$39.99",
-        description: "Compact fast-charging portable battery pack for mobile devices.",
+        description: "Compact fast-charging portable battery pack for mobile devices. Snaps securely onto your phone for seamless, cable-free power while on the move.",
         image: "images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg"
       },
       "earbuds": {
         title: "Wireless Noise-Cancelling Sports Earbuds",
         category: "Audio",
         price: "$49.99",
-        description: "High-fidelity Bluetooth audio with ergonomic sweat-resistant fit.",
+        description: "High-fidelity Bluetooth audio with ergonomic sweat-resistant fit. Engineered for deep bass clarity and stable wear during workouts or daily commutes.",
         image: "images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg"
       }
     };
@@ -126,11 +284,14 @@
           <img src="${product.image}" alt="${product.title}" width="600" height="600" />
         </div>
         <div class="product-detail-info">
-          <span class="product-category">${product.category}</span>
+          <span class="product-category-tag">${product.category}</span>
           <h1>${product.title}</h1>
-          <p class="product-price">${product.price}</p>
-          <p class="product-description">${product.description}</p>
-          <button type="button" class="btn-primary" data-action="add-cart" data-id="${productId}">Add to Cart</button>
+          <div class="product-detail-price">${product.price}</div>
+          <hr class="product-divider" />
+          <p class="product-detail-description">${product.description}</p>
+          <button type="button" class="btn-apple-primary" data-action="add-cart" data-id="${productId}">
+            Add to Cart
+          </button>
         </div>
       `;
     } else {
