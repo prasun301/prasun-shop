@@ -1,7 +1,8 @@
 /**
  * ============================================================================
- * PRASUN SHOP — PRODUCTS & INTERACTIVITY (PRODUCTION OPTIMIZED)
- * High-performance product listing, async fetch, search, filtering, and sorting.
+ * PRASUN SHOP — PRODUCTS & INTERACTIVITY (PRODUCTION ENTERPRISE)
+ * High-performance product listing, async fetch, fuzzy/token search,
+ * dynamic pagination, event-driven architecture, and zero-CLS rendering.
  * ============================================================================
  */
 
@@ -16,10 +17,12 @@
         STORAGE_KEYS: ["products", "prasun_products"],
         API_ENDPOINT: "/api/products.json",
         DEBOUNCE_MS: 150,
+        ITEMS_PER_PAGE: 12,
+        EAGER_IMAGE_COUNT: 4, // Prevent LCP degradation on above-the-fold cards
         FALLBACK_IMAGE: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
             <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
                 <rect width="800" height="600" fill="#f4f4f5"/>
-                <text x="400" y="300" text-anchor="middle" dominant-baseline="middle" fill="#a1a1aa" font-family="system-ui, sans-serif" font-size="24">
+                <text x="400" y="300" text-anchor="middle" dominant-baseline="middle" fill="#a1a1aa" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="500">
                     Image unavailable
                 </text>
             </svg>
@@ -45,10 +48,13 @@
 
     const state = {
         allProducts: [],
+        filteredProducts: [],
         currentCategory: "",
         currentKeyword: "",
         currentSort: "featured",
-        renderFrame: null
+        currentPage: 1,
+        renderFrame: null,
+        isLoading: true
     };
 
     const elements = {
@@ -57,6 +63,7 @@
         sortSelect: null,
         resultCount: null,
         heading: null,
+        paginationContainer: null,
         categoryPills: []
     };
 
@@ -77,13 +84,26 @@
             .replace(/'/g, "&#039;");
     }
 
+    // Strips diacritics/accents and normalizes text for search
     function normalize(value) {
-        return String(value ?? "").trim().toLowerCase();
+        return String(value ?? "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim()
+            .toLowerCase();
+    }
+
+    // Parses mixed numeric/string prices (e.g., "$29.99" -> 29.99)
+    function parsePrice(value) {
+        if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+        if (!value) return 0;
+        const cleaned = String(value).replace(/[^0-9.-]+/g, "");
+        const parsed = parseFloat(cleaned);
+        return Number.isFinite(parsed) ? parsed : 0;
     }
 
     function formatPrice(value) {
-        const price = Number(value);
-        return Number.isFinite(price) ? CURRENCY_FORMATTER.format(price) : "$0.00";
+        return CURRENCY_FORMATTER.format(parsePrice(value));
     }
 
     function debounce(fn, delay) {
@@ -94,6 +114,10 @@
         };
     }
 
+    function dispatchCustomEvent(name, detail = {}) {
+        document.dispatchEvent(new CustomEvent(`prasun:${name}`, { detail, bubbles: true }));
+    }
+
     /* =========================================================================
        PRODUCT NORMALIZATION (Pre-computing Search Index)
        ========================================================================= */
@@ -101,26 +125,29 @@
     function normalizeProduct(item, index) {
         if (!item || typeof item !== "object") return null;
 
-        const rawId = item.id ?? item.productId ?? `product-${index + 1}`;
+        const rawId = item.id ?? item.productId ?? item.sku ?? `product-${index + 1}`;
         const id = String(rawId);
         const name = String(item.name ?? item.title ?? "Unnamed Product").trim();
         const category = String(item.category ?? "").trim();
         const description = String(item.description ?? "").trim();
-        const price = Number(item.price ?? 0);
-        const rating = Number(item.rating ?? 0);
+        const brand = String(item.brand ?? item.vendor ?? "").trim();
+        const tags = Array.isArray(item.tags) ? item.tags.join(" ") : String(item.tags ?? "");
+        const price = parsePrice(item.price);
+        const rating = parsePrice(item.rating);
 
         return {
             id,
             safeId: encodeURIComponent(id),
             name,
-            price: Number.isFinite(price) ? price : 0,
+            price,
             image: String(item.image ?? item.imageUrl ?? item.thumbnail ?? "").trim(),
             category,
             normalizedCategory: normalize(category),
             description,
-            rating: Number.isFinite(rating) ? rating : 0,
-            // Pre-computed normalized search index for fast lookup
-            searchIndex: normalize(`${name} ${description} ${category}`)
+            brand,
+            rating,
+            // Pre-computed normalized search index (title, description, category, brand, tags)
+            searchIndex: normalize(`${name} ${description} ${category} ${brand} ${tags}`)
         };
     }
 
@@ -131,10 +158,13 @@
     async function loadProducts() {
         if (!elements.productList) return;
 
+        state.isLoading = true;
+        renderSkeletonState();
+
         try {
             let rawData = null;
 
-            // 1. Check LocalStorage
+            // 1. Check LocalStorage Cache
             for (const key of CONFIG.STORAGE_KEYS) {
                 const stored = localStorage.getItem(key);
                 if (stored) {
@@ -146,24 +176,28 @@
             if (rawData) {
                 try {
                     const parsed = JSON.parse(rawData);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        state.allProducts = parsed.map(normalizeProduct).filter(Boolean);
+                    const list = Array.isArray(parsed) ? parsed : (parsed.products || parsed.data);
+                    if (Array.isArray(list) && list.length > 0) {
+                        state.allProducts = list.map(normalizeProduct).filter(Boolean);
                     }
                 } catch (err) {
                     console.warn("[Prasun Shop] Invalid JSON in localStorage:", err);
                 }
             }
 
-            // 2. Fetch API Fallback
+            // 2. Fallback to API Endpoint
             if (!state.allProducts.length) {
                 const response = await fetch(CONFIG.API_ENDPOINT);
                 if (response.ok) {
                     const json = await response.json();
-                    if (Array.isArray(json)) {
-                        state.allProducts = json.map(normalizeProduct).filter(Boolean);
+                    const list = Array.isArray(json) ? json : (json.products || json.data || []);
+                    if (Array.isArray(list)) {
+                        state.allProducts = list.map(normalizeProduct).filter(Boolean);
                     }
                 }
             }
+
+            state.isLoading = false;
 
             if (!state.allProducts.length) {
                 renderEmptyState();
@@ -173,8 +207,10 @@
 
             readStateFromURL();
             applyFilters();
+            dispatchCustomEvent("products-loaded", { total: state.allProducts.length });
 
         } catch (error) {
+            state.isLoading = false;
             console.error("[Prasun Shop] Unable to load products:", error);
             renderErrorState();
         }
@@ -190,6 +226,9 @@
         state.currentCategory = params.get("category")?.trim() || "";
         state.currentKeyword = params.get("q")?.trim() || "";
         state.currentSort = params.get("sort")?.trim() || "featured";
+        
+        const pageParam = parseInt(params.get("page"), 10);
+        state.currentPage = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
         if (elements.searchInput) elements.searchInput.value = state.currentKeyword;
         if (elements.sortSelect) elements.sortSelect.value = state.currentSort;
@@ -198,7 +237,6 @@
         updatePageHeading();
     }
 
-    // Prevents browser history pollution by using replaceState during filter/search operations
     function syncStateToURL(replace = true) {
         const url = new URL(window.location.href);
 
@@ -212,6 +250,12 @@
             url.searchParams.set("sort", state.currentSort);
         } else {
             url.searchParams.delete("sort");
+        }
+
+        if (state.currentPage > 1) {
+            url.searchParams.set("page", state.currentPage);
+        } else {
+            url.searchParams.delete("page");
         }
 
         if (replace) {
@@ -228,7 +272,7 @@
 
         elements.categoryPills.forEach(pill => {
             const category = pill.dataset.category || "";
-            const active = selected && category === selected;
+            const active = selected ? category === selected : category === "";
 
             pill.classList.toggle("active", Boolean(active));
             pill.setAttribute("aria-current", active ? "page" : "false");
@@ -242,17 +286,16 @@
     }
 
     /* =========================================================================
-       FILTER & SORT ENGINE
+       FILTER, SORT & PAGINATION ENGINE
        ========================================================================= */
 
     function applyFilters() {
         const cat = normalize(state.currentCategory);
         const rawKw = normalize(state.currentKeyword);
-        // Tokenize search query to support non-contiguous word matching
         const kwTokens = rawKw ? rawKw.split(/\s+/).filter(Boolean) : [];
 
-        // Fast filtering using pre-computed fields & token matching
-        let filtered = state.allProducts.filter(p => {
+        // Filter products using token matching & category comparison
+        state.filteredProducts = state.allProducts.filter(p => {
             if (cat && p.normalizedCategory !== cat) return false;
             if (kwTokens.length > 0) {
                 return kwTokens.every(token => p.searchIndex.includes(token));
@@ -260,58 +303,86 @@
             return true;
         });
 
-        // Fast sorting using pre-instantiated collator
+        // Fast sorting
         switch (state.currentSort) {
             case "price-asc":
-                filtered.sort((a, b) => a.price - b.price);
+                state.filteredProducts.sort((a, b) => a.price - b.price);
                 break;
             case "price-desc":
-                filtered.sort((a, b) => b.price - a.price);
+                state.filteredProducts.sort((a, b) => b.price - a.price);
                 break;
             case "rating":
-                filtered.sort((a, b) => b.rating - a.rating);
+                state.filteredProducts.sort((a, b) => b.rating - a.rating);
                 break;
             case "name-asc":
-                filtered.sort((a, b) => NAME_COLLATOR.compare(a.name, b.name));
+                state.filteredProducts.sort((a, b) => NAME_COLLATOR.compare(a.name, b.name));
+                break;
+            case "name-desc":
+                state.filteredProducts.sort((a, b) => NAME_COLLATOR.compare(b.name, a.name));
                 break;
             default:
                 break;
         }
 
-        // Schedule batch DOM update via Animation Frame
+        // Clamp pagination bounds
+        const totalPages = Math.ceil(state.filteredProducts.length / CONFIG.ITEMS_PER_PAGE) || 1;
+        if (state.currentPage > totalPages) state.currentPage = totalPages;
+
+        // Schedule DOM batch update on frame
         if (state.renderFrame) cancelAnimationFrame(state.renderFrame);
-        state.renderFrame = requestAnimationFrame(() => renderProducts(filtered));
+        state.renderFrame = requestAnimationFrame(() => {
+            renderPaginatedProducts();
+            dispatchCustomEvent("filter-changed", {
+                category: state.currentCategory,
+                keyword: state.currentKeyword,
+                sort: state.currentSort,
+                resultsCount: state.filteredProducts.length
+            });
+        });
+    }
+
+    function renderPaginatedProducts() {
+        if (!elements.productList) return;
+
+        updateResultsCount(state.filteredProducts.length);
+
+        if (!state.filteredProducts.length) {
+            renderEmptyState();
+            renderPagination(0);
+            return;
+        }
+
+        const startIndex = (state.currentPage - 1) * CONFIG.ITEMS_PER_PAGE;
+        const pageItems = state.filteredProducts.slice(startIndex, startIndex + CONFIG.ITEMS_PER_PAGE);
+
+        elements.productList.innerHTML = pageItems.map((product, idx) => renderProductCard(product, idx)).join("");
+        renderPagination(state.filteredProducts.length);
+        
+        dispatchCustomEvent("products-rendered", { page: state.currentPage, count: pageItems.length });
     }
 
     /* =========================================================================
        PRODUCT RENDERING
        ========================================================================= */
 
-    function renderProducts(products) {
-        if (!elements.productList) return;
-
-        updateResultsCount(products.length);
-
-        if (!products.length) {
-            renderEmptyState();
-            return;
-        }
-
-        // Fast DOM insertion using single batch HTML string write
-        elements.productList.innerHTML = products.map(renderProductCard).join("");
-    }
-
-    function renderProductCard(product) {
+    function renderProductCard(product, index) {
         const image = product.image || CONFIG.FALLBACK_IMAGE;
+        // Prioritize first N images to optimize Largest Contentful Paint (LCP)
+        const isEager = index < CONFIG.EAGER_IMAGE_COUNT;
+        const loadingAttr = isEager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" decoding="async"';
 
         const categoryHTML = product.category
             ? `<span class="product-category">${escapeHTML(product.category)}</span>`
             : "";
 
-        const ratingHTML = product.rating
+        const ratingHTML = product.rating > 0
             ? `<span class="product-rating" aria-label="Rating ${product.rating} out of 5">
                    ★ ${product.rating.toFixed(1)}
                </span>`
+            : "";
+
+        const brandHTML = product.brand
+            ? `<span class="product-brand">${escapeHTML(product.brand)}</span>`
             : "";
 
         return `
@@ -321,23 +392,58 @@
                         <img 
                             src="${escapeHTML(image)}" 
                             alt="${escapeHTML(product.name)}" 
-                            loading="lazy" 
-                            decoding="async"
+                            ${loadingAttr}
                         />
                         ${categoryHTML}
                     </div>
                     <div class="product-card-body">
-                        ${ratingHTML ? `<div class="product-meta">${ratingHTML}</div>` : ""}
+                        ${(ratingHTML || brandHTML) ? `<div class="product-meta">${brandHTML}${ratingHTML}</div>` : ""}
                         <h3 class="product-title">${escapeHTML(product.name)}</h3>
                         ${product.description ? `<p class="product-description">${escapeHTML(product.description)}</p>` : ""}
                         <div class="product-bottom">
                             <p class="product-price">${formatPrice(product.price)}</p>
-                            <span class="product-view-button">View Details</span>
+                            <button type="button" class="product-add-btn" data-action="add-to-cart" data-id="${product.safeId}" aria-label="Add ${escapeHTML(product.name)} to cart">
+                                Add to Cart
+                            </button>
                         </div>
                     </div>
                 </a>
             </article>
         `;
+    }
+
+    function renderPagination(totalItems) {
+        if (!elements.paginationContainer) {
+            elements.paginationContainer = $(".products-pagination");
+        }
+
+        if (!elements.paginationContainer) return;
+
+        const totalPages = Math.ceil(totalItems / CONFIG.ITEMS_PER_PAGE);
+
+        if (totalPages <= 1) {
+            elements.paginationContainer.innerHTML = "";
+            elements.paginationContainer.style.display = "none";
+            return;
+        }
+
+        elements.paginationContainer.style.display = "flex";
+        let html = `<nav aria-label="Product pagination" class="pagination-nav">`;
+
+        // Previous Button
+        html += `<button type="button" class="pagination-btn prev" ${state.currentPage === 1 ? "disabled" : ""} data-page="${state.currentPage - 1}" aria-label="Previous Page">&laquo; Prev</button>`;
+
+        // Page Number Buttons
+        for (let i = 1; i <= totalPages; i++) {
+            const isCurrent = i === state.currentPage;
+            html += `<button type="button" class="pagination-btn number ${isCurrent ? "active" : ""}" data-page="${i}" aria-current="${isCurrent ? "page" : "false"}">${i}</button>`;
+        }
+
+        // Next Button
+        html += `<button type="button" class="pagination-btn next" ${state.currentPage === totalPages ? "disabled" : ""} data-page="${state.currentPage + 1}" aria-label="Next Page">Next &raquo;</button>`;
+        html += `</nav>`;
+
+        elements.paginationContainer.innerHTML = html;
     }
 
     function setupImageErrorDelegation() {
@@ -354,7 +460,7 @@
     }
 
     /* =========================================================================
-       CONTROLS & INITIALIZATION
+       CONTROLS & DELEGATED EVENTS
        ========================================================================= */
 
     function cacheDOMElements() {
@@ -363,13 +469,21 @@
         elements.sortSelect = $("#sortSelect") || $(".products-sort-select");
         elements.resultCount = $(".products-result-count");
         elements.heading = $("#products-heading") || $(".products-heading");
+        elements.paginationContainer = $(".products-pagination");
 
-        // Cache category pills and pre-parse target categories into dataset
+        // Dynamic category pill parsing
         elements.categoryPills = $$(".category-pill, .products-categories a");
         elements.categoryPills.forEach(pill => {
             try {
-                const url = new URL(pill.getAttribute("href") || "", window.location.href);
-                pill.dataset.category = normalize(url.searchParams.get("category") || "");
+                const href = pill.getAttribute("href") || "";
+                if (href.startsWith("?") || href.includes("category=")) {
+                    const url = new URL(href, window.location.href);
+                    pill.dataset.category = normalize(url.searchParams.get("category") || "");
+                } else if (pill.dataset.category) {
+                    pill.dataset.category = normalize(pill.dataset.category);
+                } else {
+                    pill.dataset.category = normalize(pill.textContent.trim());
+                }
             } catch {
                 pill.dataset.category = "";
             }
@@ -377,44 +491,70 @@
     }
 
     function initializeControls() {
-        // Search Input with debounced handler
+        // Search Input handler with debouncing
         if (elements.searchInput) {
             elements.searchInput.addEventListener("input", debounce(() => {
                 state.currentKeyword = elements.searchInput.value.trim();
-                syncStateToURL(true); // replaceState avoids polluting history during typing
+                state.currentPage = 1;
+                syncStateToURL(true);
                 applyFilters();
             }, CONFIG.DEBOUNCE_MS));
         }
 
-        // Sort Select Dropdown
+        // Sort Select Dropdown handler
         if (elements.sortSelect) {
             elements.sortSelect.addEventListener("change", () => {
                 state.currentSort = elements.sortSelect.value;
+                state.currentPage = 1;
                 syncStateToURL(true);
                 applyFilters();
             });
         }
 
-        // Intercept Category Pill Clicks for instant SPA switching without reloads
-        if (elements.categoryPills.length) {
-            document.addEventListener("click", (event) => {
-                const pill = event.target.closest(".category-pill, .products-categories a");
-                if (!pill) return;
+        // Delegated Click Listener (Handles Category Pills, Pagination & Add-to-Cart)
+        document.addEventListener("click", (event) => {
+            // 1. Add to Cart Button Click
+            const addBtn = event.target.closest('[data-action="add-to-cart"]');
+            if (addBtn) {
+                event.preventDefault();
+                event.stopPropagation();
+                const productId = addBtn.dataset.id;
+                const product = state.allProducts.find(p => p.safeId === productId);
+                dispatchCustomEvent("cart-add", { productId, product });
+                return;
+            }
 
+            // 2. Category Pill Click
+            const pill = event.target.closest(".category-pill, .products-categories a");
+            if (pill) {
                 event.preventDefault();
                 const targetCategory = pill.dataset.category || "";
-
                 if (state.currentCategory === targetCategory) return;
 
                 state.currentCategory = targetCategory;
-                syncStateToURL(false); // pushState for explicit navigation click
+                state.currentPage = 1;
+                syncStateToURL(false);
                 updateCategoryNavigation();
                 updatePageHeading();
                 applyFilters();
-            });
-        }
+                return;
+            }
 
-        // Global Shortcut (Cmd/Ctrl + K)
+            // 3. Pagination Button Click
+            const pageBtn = event.target.closest(".pagination-btn");
+            if (pageBtn && !pageBtn.disabled) {
+                event.preventDefault();
+                const newPage = parseInt(pageBtn.dataset.page, 10);
+                if (newPage && newPage !== state.currentPage) {
+                    state.currentPage = newPage;
+                    syncStateToURL(false);
+                    applyFilters();
+                    elements.productList?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            }
+        });
+
+        // Global Shortcut (Cmd/Ctrl + K to focus search)
         document.addEventListener("keydown", (event) => {
             if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
                 if (elements.searchInput) {
@@ -445,8 +585,26 @@
     }
 
     /* =========================================================================
-       EMPTY & ERROR STATES
+       SKELETON, EMPTY & ERROR STATES
        ========================================================================= */
+
+    function renderSkeletonState() {
+        if (!elements.productList) return;
+
+        const skeletons = Array.from({ length: 6 }).map(() => `
+            <div class="product-card skeleton-card" aria-hidden="true">
+                <div class="skeleton-image"></div>
+                <div class="skeleton-body">
+                    <div class="skeleton-line short"></div>
+                    <div class="skeleton-line title"></div>
+                    <div class="skeleton-line text"></div>
+                    <div class="skeleton-line btn"></div>
+                </div>
+            </div>
+        `).join("");
+
+        elements.productList.innerHTML = skeletons;
+    }
 
     function renderEmptyState() {
         if (!elements.productList) return;
@@ -462,8 +620,8 @@
                     </svg>
                 </div>
                 <h2>${hasFilters ? "No products found" : "No products available"}</h2>
-                <p>${hasFilters ? "Try adjusting your search or category filter." : "Products will appear here when available."}</p>
-                ${hasFilters ? `<button type="button" class="products-empty-button" id="clear-product-filters">Clear Filters</button>` : ""}
+                <p>${hasFilters ? "Try adjusting your search query or active category filter." : "Products will appear here once stocked."}</p>
+                ${hasFilters ? `<button type="button" class="products-empty-button" id="clear-product-filters">Clear All Filters</button>` : ""}
             </div>
         `;
 
@@ -495,6 +653,7 @@
         state.currentCategory = "";
         state.currentKeyword = "";
         state.currentSort = "featured";
+        state.currentPage = 1;
 
         if (elements.searchInput) elements.searchInput.value = "";
         if (elements.sortSelect) elements.sortSelect.value = "featured";
