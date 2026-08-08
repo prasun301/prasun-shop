@@ -75,6 +75,30 @@
       color: var(--apple-text);
     }
 
+    .cart-icon-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      color: var(--apple-text);
+      text-decoration: none;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -10px;
+      background-color: var(--apple-dark);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     .hero {
       text-align: center;
       padding: 4rem 2rem 2rem 2rem;
@@ -201,13 +225,23 @@
         <a href="about.html">About</a>
         <a href="contact.html" class="active">Contact</a>
       </nav>
+      <div class="header-actions">
+        <a href="cart.html" class="cart-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span id="cart-count" class="cart-badge">0</span>
+        </a>
+      </div>
     </div>
   </header>
 
   <!-- Hero Section -->
   <section class="hero">
     <h1>Get in Touch</h1>
-    <p>Have questions about an ebook or need assistance with your download?</p>
+    <p>Have questions about a product or need assistance with your order?</p>
   </section>
 
   <!-- Main Content -->
@@ -251,5 +285,18 @@
     <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
   </footer>
 
+  <script>
+    function updateCartBadge() {
+      try {
+        const cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
+        const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+        const badge = document.getElementById('cart-count');
+        if (badge) badge.textContent = totalItems;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    document.addEventListener('DOMContentLoaded', updateCartBadge);
+  </script>
 </body>
 </html>
