@@ -1,582 +1,1064 @@
-/**
- * Prasun Shop — Products Page Module
- * Production-Grade Implementation with User Products & Google-Style Search
- */
 "use strict";
 
-(function () {
-    // Inject custom styles for Google-style search box, font inheritance, and layout cleanup
-    const styleId = "prasun-custom-overrides";
-    if (!document.getElementById(styleId)) {
-        const style = document.createElement("style");
-        style.id = styleId;
-        style.textContent = `
-            /* Inherit exact home page font */
-            body, .product-card, .products-header, .products-categories, .product-search-container {
-                font-family: inherit !important;
-            }
+/**
 
-            /* Google-style search box enhancement */
-            .product-search-container, #product-search-form {
-                max-width: 600px;
-                margin: 0 auto 2rem auto;
-                width: 100%;
-            }
+* ============================================================================
+* PRASUN SHOP — Products Page
+* ============================================================================
+* Responsibilities:
+* * Load products from data/products.json
+* * Search
+* * Category filtering
+* * Sorting
+* * Product navigation
+* * Cart integration
+* * Cart badge synchronization
+* * Loading / empty / error states
+* * Keyboard search shortcut
+* ============================================================================
+  */
 
-            #product-search-form {
-                display: flex;
-                align-items: center;
-                background: #ffffff;
-                border: 1px solid #dfe1e5;
-                border-radius: 24px;
-                padding: 4px 16px;
-                box-shadow: 0 1px 6px rgba(32, 33, 36, 0.08);
-                transition: all 0.2s ease;
-            }
+document.addEventListener("DOMContentLoaded", () => {
 
-            #product-search-form:hover, #product-search-form:focus-within {
-                box-shadow: 0 2px 12px rgba(32, 33, 36, 0.16);
-                border-color: rgba(223, 225, 229, 0);
-            }
+```
+/* ------------------------------------------------------------------------
+   Configuration
+   ------------------------------------------------------------------------ */
 
-            #product-search-form svg, #product-search-form .search-icon {
-                width: 20px;
-                height: 20px;
-                color: #5f6368;
-                margin-right: 12px;
-                flex-shrink: 0;
-            }
+const PRODUCTS_URL = "data/products.json";
+const CART_KEY = "prasun_cart";
 
-            #product-search {
-                border: none !important;
-                outline: none !important;
-                background: transparent !important;
-                font-size: 16px;
-                width: 100%;
-                padding: 10px 0;
-                color: #202124;
-                box-shadow: none !important;
-            }
 
-            #product-search::placeholder {
-                color: #80868b;
-            }
+/* ------------------------------------------------------------------------
+   DOM
+   ------------------------------------------------------------------------ */
 
-            .search-shortcut-badge {
-                background: #f1f3f4;
-                color: #5f6368;
-                padding: 2px 6px;
-                border-radius: 4px;
-                font-size: 12px;
-                font-weight: 500;
-                border: 1px solid #dadce0;
-                margin-left: 8px;
-            }
-        `;
-        document.head.appendChild(style);
+const grid = document.getElementById("product-list");
+const count = document.getElementById("products-count");
+
+const emptyState = document.getElementById("empty-state");
+const errorState = document.getElementById("products-error");
+
+const searchForm = document.getElementById("product-search-form");
+const searchInput = document.getElementById("product-search");
+const searchClear = document.getElementById("search-clear");
+
+const sortSelect = document.getElementById("product-sort");
+
+const categoryButtons = document.querySelectorAll(
+    ".category-pill"
+);
+
+const resetButton = document.getElementById(
+    "empty-reset-btn"
+);
+
+const retryButton = document.getElementById(
+    "products-retry-btn"
+);
+
+const cartCount = document.getElementById(
+    "cart-count"
+);
+
+const menuToggle = document.getElementById(
+    "products-menu-toggle"
+);
+
+const mobileMenu = document.getElementById(
+    "products-mobile-menu"
+);
+
+const footerYear = document.getElementById(
+    "footer-year"
+);
+
+
+/* ------------------------------------------------------------------------
+   State
+   ------------------------------------------------------------------------ */
+
+let products = [];
+
+let currentCategory = "all";
+let currentSearch = "";
+let currentSort = "featured";
+
+
+/* ------------------------------------------------------------------------
+   Utilities
+   ------------------------------------------------------------------------ */
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+function normalize(value) {
+    return String(value ?? "")
+        .trim()
+        .toLowerCase();
+}
+
+
+function formatPrice(value) {
+    const price = Number(value);
+
+    if (!Number.isFinite(price)) {
+        return "$0.00";
     }
 
-    // Remove unwanted subtitle text if present in DOM
-    document.addEventListener("DOMContentLoaded", () => {
-        const headerSubtitles = document.querySelectorAll(".products-header p, .products-subtitle");
-        headerSubtitles.forEach(el => {
-            if (el.textContent.includes("Discover premium digital products")) {
-                el.remove();
-            }
-        });
-    });
+    return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD"
+    }).format(price);
+}
 
-    // DOM Elements
-    const productGrid = document.getElementById("product-list");
-    const emptyState = document.getElementById("empty-state");
-    const searchInput = document.getElementById("product-search");
-    const searchForm = document.getElementById("product-search-form");
-    const productTemplate = document.getElementById("product-card-template");
-    const skeletonTemplate = document.getElementById("skeleton-template");
-    const categoryContainer = document.querySelector(".products-categories");
-    const categoryLinks = document.querySelectorAll(".category-pill");
-    const productCount = document.getElementById("products-count");
-    const productSort = document.getElementById("product-sort");
-    const cartCount = document.getElementById("cart-count");
-    const menuToggle = document.getElementById("products-menu-toggle");
-    const mobileMenu = document.getElementById("products-mobile-menu");
-    const emptyResetBtn = document.getElementById("empty-reset-btn");
 
-    // State
-    let products = [];
-    let currentCategory = "all";
-    let currentSearch = "";
-    let currentSort = "featured";
-    let loadSequence = 0;
+function getProductId(product) {
+    return product?.id ?? product?.productId ?? "";
+}
 
-    const CART_KEY = "prasunShopCart";
 
-    // Your exact products dataset as the primary/fallback dataset
-    const FALLBACK_PRODUCTS = [
-        {
-            id: "001",
-            sku: "CJSN188416414NM",
-            name: "G-Shaped Smart LED Atmosphere Lamp with Bluetooth Speaker & Wireless Charger",
-            category: "Smart Lighting",
-            price: 29.99,
-            image: "images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png",
-            description: "Upgrade your living space with this multifunctional G-shaped Smart LED Atmosphere Lamp. It combines stylish lighting, Bluetooth music, wireless charging, alarm clock, and smart control features in one modern device.",
-            features: [
-                "15W fast wireless charging",
-                "Built-in Bluetooth speaker",
-                "RGB atmosphere lighting",
-                "APP, voice, remote and button control"
-            ],
-            specifications: {
-                "Material": "Plastic",
-                "Product Type": "Electronic Smart Lamp",
-                "Wireless Charging": "15W"
-            },
-            rating: 5
-        },
-        {
-            id: "002",
-            sku: "CJCD135893009IR",
-            name: "Mini 5000mAh Magnetic Wireless Power Bank Fast Charging Portable Battery",
-            category: "Power & Charging",
-            price: 39.99,
-            image: "images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg",
-            description: "Stay powered wherever you go with this compact 5000mAh Magnetic Wireless Power Bank. Designed with strong magnetic attachment and fast charging capability.",
-            features: [
-                "5000mAh battery capacity",
-                "Strong magnetic wireless charging",
-                "LED battery display",
-                "Compact and travel-friendly design"
-            ],
-            specifications: {
-                "Material": "Plastic",
-                "Capacity": "5000mAh",
-                "Wireless Charging": "5W"
-            },
-            rating: 5
-        },
-        {
-            id: "003",
-            sku: "CJYP270967903CX",
-            name: "High-Quality Noise Cancelling Wireless Bluetooth Sports Earbuds",
-            category: "Audio",
-            price: 49.99,
-            image: "images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg",
-            description: "Experience clear and immersive sound with these stylish Noise Cancelling Wireless Bluetooth Sports Earbuds designed for sports, travel, and everyday listening.",
-            features: [
-                "Noise cancellation technology",
-                "Bluetooth wireless connection",
-                "Water-resistant design",
-                "Low-latency gaming mode"
-            ],
-            specifications: {
-                "Material": "PC + ABS",
-                "Battery Life": "4-8 hours"
-            },
-            rating: 5
-        }
-    ];
+function getProductName(product) {
+    return (
+        product?.name ??
+        product?.title ??
+        "Untitled Product"
+    );
+}
 
-    // Helpers
-    function normalize(value) {
-        return String(value || "").trim().toLowerCase();
-    }
 
-    function slugifyCategory(value) {
-        return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-    }
+function getProductCategory(product) {
+    return (
+        product?.category ??
+        "Uncategorized"
+    );
+}
 
-    function formatPrice(price) {
-        const num = Number(price);
-        if (!Number.isFinite(num)) return "$0.00";
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD"
-        }).format(num);
-    }
 
-    function getCategoryFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        return normalize(params.get("category") || "all");
-    }
+function getProductDescription(product) {
+    return (
+        product?.description ??
+        product?.shortDescription ??
+        ""
+    );
+}
 
-    currentCategory = getCategoryFromURL();
 
-    function updateActiveCategory() {
-        categoryLinks.forEach(link => {
-            const href = link.getAttribute("href") || "";
-            const cat = normalize(link.dataset.category || new URLSearchParams(href.split("?")[1] || "").get("category") || "all");
-            const active = cat === normalize(currentCategory) || slugifyCategory(cat) === slugifyCategory(currentCategory);
-            link.classList.toggle("active", active);
-            if (active) {
-                link.setAttribute("aria-current", "page");
-            } else {
-                link.removeAttribute("aria-current");
-            }
-        });
-    }
+function getProductImage(product) {
+    return (
+        product?.image ??
+        product?.imageUrl ??
+        product?.thumbnail ??
+        ""
+    );
+}
 
-    // Cart Architecture
-    function getCart() {
-        try {
-            const stored = localStorage.getItem(CART_KEY);
-            if (!stored) return [];
-            const parsed = JSON.parse(stored);
-            return Array.isArray(parsed) ? parsed : [];
-        } catch (error) {
+
+function getProductPrice(product) {
+    const price = Number(
+        product?.price ?? 0
+    );
+
+    return Number.isFinite(price)
+        ? price
+        : 0;
+}
+
+
+/* ------------------------------------------------------------------------
+   Cart
+   ------------------------------------------------------------------------ */
+
+function getCart() {
+    try {
+        const stored = localStorage.getItem(CART_KEY);
+
+        if (!stored) {
             return [];
         }
+
+        const cart = JSON.parse(stored);
+
+        return Array.isArray(cart)
+            ? cart
+            : [];
+
+    } catch {
+        return [];
+    }
+}
+
+
+function saveCart(cart) {
+    try {
+        localStorage.setItem(
+            CART_KEY,
+            JSON.stringify(cart)
+        );
+
+    } catch (error) {
+        console.error(
+            "Unable to save cart:",
+            error
+        );
+    }
+}
+
+
+function updateCartBadge() {
+    if (!cartCount) {
+        return;
     }
 
-    function saveCart(cart) {
-        try {
-            localStorage.setItem(CART_KEY, JSON.stringify(cart));
-            return true;
-        } catch (error) {
-            return false;
-        }
-    }
+    const cart = getCart();
 
-    function updateCartCount() {
-        if (!cartCount) return;
-        const cart = getCart();
-        const total = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
-        cartCount.textContent = String(total);
-        cartCount.hidden = total === 0;
-    }
+    const totalItems = cart.reduce(
+        (total, item) => {
+            const quantity = Number(
+                item?.quantity ?? 1
+            );
 
-    function addToCart(productId) {
-        const product = products.find(item => String(item.id) === String(productId));
-        if (!product) return;
+            return total +
+                (Number.isFinite(quantity)
+                    ? Math.max(quantity, 0)
+                    : 0);
+        },
+        0
+    );
 
-        const cart = getCart();
-        const existing = cart.find(item => String(item.id) === String(product.id));
-        if (existing) {
-            existing.quantity = (Number(existing.quantity) || 1) + 1;
-        } else {
-            cart.push({
-                id: product.id,
-                name: product.name,
-                price: Number(product.price) || 0,
-                image: product.image || "",
-                category: product.category || "",
-                quantity: 1
-            });
-        }
+    cartCount.textContent =
+        totalItems > 99
+            ? "99+"
+            : String(totalItems);
 
-        if (saveCart(cart)) {
-            updateCartCount();
-            showCartFeedback(product.id);
-        }
-    }
+    cartCount.hidden = totalItems === 0;
+}
 
-    function showCartFeedback(productId) {
-        if (!productGrid) return;
-        const buttons = productGrid.querySelectorAll('[data-action="cart"]');
-        buttons.forEach(button => {
-            if (String(button.dataset.id) !== String(productId)) return;
-            const span = button.querySelector("span") || button;
-            const originalText = span.textContent;
-            span.textContent = "Added ✓";
-            button.classList.add("is-added");
-            button.disabled = true;
-            setTimeout(() => {
-                span.textContent = originalText;
-                button.classList.remove("is-added");
-                button.disabled = false;
-            }, 1200);
+
+function addToCart(product) {
+    const cart = getCart();
+
+    const productId = getProductId(product);
+
+    const existing = cart.find(
+        item =>
+            String(item.id) ===
+            String(productId)
+    );
+
+    if (existing) {
+        existing.quantity =
+            Number(existing.quantity || 1) + 1;
+
+    } else {
+        cart.push({
+            ...product,
+            id: productId,
+            quantity: 1
         });
     }
 
-    function showSkeletons() {
-        if (!productGrid) return;
-        productGrid.setAttribute("aria-busy", "true");
-        if (skeletonTemplate) {
-            productGrid.innerHTML = "";
-            const fragment = document.createDocumentFragment();
-            for (let i = 0; i < 3; i++) {
-                fragment.appendChild(skeletonTemplate.content.cloneNode(true));
-            }
-            productGrid.appendChild(fragment);
-        }
-    }
+    saveCart(cart);
+    updateCartBadge();
+}
 
-    function showEmptyState() {
-        if (emptyState) emptyState.classList.remove("hidden");
-    }
 
-    function hideEmptyState() {
-        if (emptyState) emptyState.classList.add("hidden");
-    }
+/* ------------------------------------------------------------------------
+   Product Filtering
+   ------------------------------------------------------------------------ */
 
-    function hideErrorState() {
-        const errEl = document.getElementById("error-state");
-        if (errEl) errEl.classList.add("hidden");
-    }
+function getFilteredProducts() {
 
-    // Product Card Creation
-    function createProductCard(product) {
-        const productId = product.id !== undefined && product.id !== null ? String(product.id) : "";
+    const query = normalize(
+        currentSearch
+    );
 
-        if (!productTemplate) {
-            const article = document.createElement("article");
-            article.className = "product-card";
-            if (productId) article.dataset.id = productId;
-            article.dataset.category = product.category || "";
+    let filtered = products.filter(product => {
 
-            article.innerHTML = `
-                <a class="product-card-link" href="product.html?id=${encodeURIComponent(productId)}">
-                    <div class="product-card-image">
-                        <img src="${product.image || ""}" alt="${product.name ? `Image of ${product.name}` : "Product image"}" loading="lazy">
-                    </div>
-                </a>
-                <div class="product-card-body">
-                    <p class="product-category">${product.category ? String(product.category).toUpperCase() : "GENERAL"}</p>
-                    <h2 class="product-title">${product.name || "Untitled Product"}</h2>
-                    <p class="product-description">${product.description || ""}</p>
-                    <div class="product-bottom">
-                        <p class="product-price">${formatPrice(product.price)}</p>
-                        <button type="button" class="product-cart-button" data-action="cart" data-id="${productId}" aria-label="Add to cart">
-                            <span>Add to Cart</span>
-                        </button>
-                    </div>
-                </div>
-            `;
-            return article;
-        }
+        const category =
+            normalize(
+                getProductCategory(product)
+            );
 
-        const fragment = productTemplate.content.cloneNode(true);
-        const article = fragment.querySelector(".product-card") || fragment.querySelector("article");
-        const link = fragment.querySelector(".product-card-link") || fragment.querySelector("a");
-        const image = fragment.querySelector("img");
-        const category = fragment.querySelector(".product-category");
-        const title = fragment.querySelector(".product-title");
-        const description = fragment.querySelector(".product-description");
-        const price = fragment.querySelector(".product-price");
-        const button = fragment.querySelector(".product-cart-button") || fragment.querySelector('[data-action="cart"]');
+        const name =
+            normalize(
+                getProductName(product)
+            );
 
-        if (link && productId) {
-            link.href = `product.html?id=${encodeURIComponent(productId)}`;
-        }
+        const description =
+            normalize(
+                getProductDescription(product)
+            );
 
-        if (image) {
-            image.src = product.image || "";
-            image.alt = product.name ? `Image of ${product.name}` : "Product image";
-            image.loading = "lazy";
-            image.onerror = function () {
-                this.onerror = null;
-                this.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='180' viewBox='0 0 240 180'%3E%3Crect width='240' height='180' fill='%23f4f4f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a1a1aa' font-family='sans-serif' font-size='14'%3ENo Image%3C/text%3E%3C/svg%3E";
-            };
-        }
+        const matchesCategory =
+            currentCategory === "all" ||
+            category === normalize(
+                currentCategory
+            );
 
-        if (category) {
-            category.textContent = product.category ? String(product.category).toUpperCase() : "GENERAL";
-        }
-        if (title) {
-            title.textContent = product.name || "Untitled Product";
-        }
-        if (description) {
-            description.textContent = product.description || "";
-        }
-        if (price) {
-            price.textContent = formatPrice(product.price);
-        }
+        const matchesSearch =
+            !query ||
+            name.includes(query) ||
+            description.includes(query) ||
+            category.includes(query);
 
-        if (button && productId) {
-            button.dataset.id = productId;
-            button.dataset.action = "cart";
-        }
-
-        return fragment;
-    }
-
-    // Filtering, Search & Sorting
-    function getVisibleProducts() {
-        let result = products.map((item, index) => ({ item, index }));
-
-        if (normalize(currentCategory) !== "all") {
-            result = result.filter(({ item }) => {
-                const itemCatSlug = slugifyCategory(item.category);
-                const currentCatSlug = slugifyCategory(currentCategory);
-                return itemCatSlug === currentCatSlug || normalize(item.category) === normalize(currentCategory);
-            });
-        }
-
-        const keyword = currentSearch.trim().toLowerCase();
-        if (keyword) {
-            result = result.filter(({ item }) => {
-                const name = normalize(item.name);
-                const category = normalize(item.category);
-                const description = normalize(item.description);
-                return name.includes(keyword) || category.includes(keyword) || description.includes(keyword);
-            });
-        }
-
-        if (currentSort === "price-low") {
-            result.sort((a, b) => (Number(a.item.price) || 0) - (Number(b.item.price) || 0));
-        } else if (currentSort === "price-high") {
-            result.sort((a, b) => (Number(b.item.price) || 0) - (Number(a.item.price) || 0));
-        } else if (currentSort === "name") {
-            result.sort((a, b) => String(a.item.name || "").localeCompare(String(b.item.name || "")));
-        }
-
-        return result.map(({ item }) => item);
-    }
-
-    function renderProducts() {
-        if (!productGrid) return;
-        productGrid.setAttribute("aria-busy", "false");
-        hideErrorState();
-
-        const visibleProducts = getVisibleProducts();
-
-        if (productCount) {
-            productCount.textContent = `${visibleProducts.length} ${visibleProducts.length === 1 ? "product" : "products"} found`;
-        }
-
-        if (!visibleProducts.length) {
-            productGrid.innerHTML = "";
-            showEmptyState();
-            return;
-        }
-
-        hideEmptyState();
-        productGrid.innerHTML = "";
-
-        const fragment = document.createDocumentFragment();
-        visibleProducts.forEach(product => {
-            fragment.appendChild(createProductCard(product));
-        });
-        productGrid.appendChild(fragment);
-    }
-
-    function debounce(func, wait) {
-        let timeout;
-        return function (...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
-    }
-
-    const handleSearchInput = debounce(event => {
-        currentSearch = event.target.value;
-        renderProducts();
-    }, 200);
-
-    // Event Listeners
-    if (categoryContainer) {
-        categoryContainer.addEventListener("click", event => {
-            const pill = event.target.closest(".category-pill");
-            if (!pill) return;
-            event.preventDefault();
-
-            if (searchInput) searchInput.value = "";
-            currentSearch = "";
-
-            const cat = pill.dataset.category || new URLSearchParams((pill.getAttribute("href") || "").split("?")[1] || "").get("category") || "all";
-            currentCategory = normalize(cat);
-
-            const newUrl = currentCategory === "all" ? "products.html" : `products.html?category=${encodeURIComponent(currentCategory)}`;
-            history.pushState({ category: currentCategory }, "", newUrl);
-
-            updateActiveCategory();
-            renderProducts();
-        });
-    }
-
-    window.addEventListener("popstate", () => {
-        if (searchInput) searchInput.value = "";
-        currentSearch = "";
-        currentCategory = getCategoryFromURL();
-        updateActiveCategory();
-        renderProducts();
+        return (
+            matchesCategory &&
+            matchesSearch
+        );
     });
 
-    if (searchInput) {
-        searchInput.addEventListener("input", handleSearchInput);
+
+    /* --------------------------------------------------------------------
+       Sorting
+       -------------------------------------------------------------------- */
+
+    switch (currentSort) {
+
+        case "price-low":
+            filtered.sort(
+                (a, b) =>
+                    getProductPrice(a) -
+                    getProductPrice(b)
+            );
+            break;
+
+        case "price-high":
+            filtered.sort(
+                (a, b) =>
+                    getProductPrice(b) -
+                    getProductPrice(a)
+            );
+            break;
+
+        case "name":
+            filtered.sort(
+                (a, b) =>
+                    getProductName(a).localeCompare(
+                        getProductName(b),
+                        undefined,
+                        {
+                            sensitivity: "base"
+                        }
+                    )
+            );
+            break;
+
+        case "featured":
+        default:
+            /*
+             * Preserve the original JSON order.
+             */
+            break;
     }
 
-    if (searchForm) {
-        searchForm.addEventListener("submit", event => event.preventDefault());
-    }
+    return filtered;
+}
 
-    if (emptyResetBtn) {
-        emptyResetBtn.addEventListener("click", event => {
+
+/* ------------------------------------------------------------------------
+   Product Card
+   ------------------------------------------------------------------------ */
+
+function createProductCard(product) {
+
+    const id = getProductId(product);
+    const name = getProductName(product);
+    const category = getProductCategory(product);
+    const description =
+        getProductDescription(product);
+
+    const image =
+        getProductImage(product);
+
+    const price =
+        getProductPrice(product);
+
+
+    const article =
+        document.createElement("article");
+
+    article.className = "product-card";
+
+
+    /* Product link */
+
+    const link =
+        document.createElement("a");
+
+    link.className = "product-card-link";
+
+    link.href =
+        `product-detail.html?id=${encodeURIComponent(id)}`;
+
+    link.setAttribute(
+        "aria-label",
+        `View ${name}`
+    );
+
+
+    /* Image */
+
+    const imageWrap =
+        document.createElement("div");
+
+    imageWrap.className =
+        "product-card-image";
+
+
+    const img =
+        document.createElement("img");
+
+    img.alt = name;
+
+    img.loading = "lazy";
+
+    img.decoding = "async";
+
+    img.src = image;
+
+    img.addEventListener(
+        "error",
+        () => {
+            imageWrap.classList.add(
+                "image-error"
+            );
+        },
+        { once: true }
+    );
+
+
+    /* Category badge */
+
+    const categoryBadge =
+        document.createElement("span");
+
+    categoryBadge.className =
+        "product-category";
+
+    categoryBadge.textContent =
+        category;
+
+
+    imageWrap.appendChild(img);
+    imageWrap.appendChild(categoryBadge);
+
+    link.appendChild(imageWrap);
+
+
+    /* Body */
+
+    const body =
+        document.createElement("div");
+
+    body.className =
+        "product-card-body";
+
+
+    const title =
+        document.createElement("h2");
+
+    title.className =
+        "product-title";
+
+    title.textContent =
+        name;
+
+
+    const descriptionElement =
+        document.createElement("p");
+
+    descriptionElement.className =
+        "product-description";
+
+    descriptionElement.textContent =
+        description;
+
+
+    const bottom =
+        document.createElement("div");
+
+    bottom.className =
+        "product-bottom";
+
+
+    const priceElement =
+        document.createElement("p");
+
+    priceElement.className =
+        "product-price";
+
+    priceElement.textContent =
+        formatPrice(price);
+
+
+    const cartButton =
+        document.createElement("button");
+
+    cartButton.type = "button";
+
+    cartButton.className =
+        "product-cart-button";
+
+    cartButton.setAttribute(
+        "aria-label",
+        `Add ${name} to cart`
+    );
+
+
+    cartButton.innerHTML = `
+        <span>Add to Cart</span>
+
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+        >
+            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"/>
+            <circle cx="10" cy="20" r="1.3"/>
+            <circle cx="18" cy="20" r="1.3"/>
+        </svg>
+    `;
+
+
+    /* Add to cart */
+
+    cartButton.addEventListener(
+        "click",
+        event => {
+
             event.preventDefault();
-            currentCategory = "all";
-            currentSearch = "";
-            if (searchInput) searchInput.value = "";
-            history.pushState({ category: "all" }, "", "products.html");
-            updateActiveCategory();
-            renderProducts();
-        });
+            event.stopPropagation();
+
+            addToCart(product);
+
+            cartButton.classList.add(
+                "is-added"
+            );
+
+            cartButton.setAttribute(
+                "aria-label",
+                `${name} added to cart`
+            );
+
+            cartButton.innerHTML = `
+                <span>Added</span>
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <path d="M20 6 9 17l-5-5"/>
+                </svg>
+            `;
+
+
+            window.setTimeout(
+                () => {
+
+                    cartButton.classList.remove(
+                        "is-added"
+                    );
+
+                    cartButton.setAttribute(
+                        "aria-label",
+                        `Add ${name} to cart`
+                    );
+
+                    cartButton.innerHTML = `
+                        <span>Add to Cart</span>
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"/>
+                            <circle cx="10" cy="20" r="1.3"/>
+                            <circle cx="18" cy="20" r="1.3"/>
+                        </svg>
+                    `;
+
+                },
+                1200
+            );
+        }
+    );
+
+
+    bottom.appendChild(
+        priceElement
+    );
+
+    bottom.appendChild(
+        cartButton
+    );
+
+
+    body.appendChild(title);
+
+    if (description) {
+        body.appendChild(
+            descriptionElement
+        );
     }
 
-    if (productSort) {
-        productSort.addEventListener("change", event => {
-            currentSort = event.target.value;
-            renderProducts();
-        });
+    body.appendChild(bottom);
+
+
+    article.appendChild(link);
+    article.appendChild(body);
+
+
+    return article;
+}
+
+
+/* ------------------------------------------------------------------------
+   Render
+   ------------------------------------------------------------------------ */
+
+function renderProducts() {
+
+    const filtered =
+        getFilteredProducts();
+
+
+    grid.innerHTML = "";
+
+    grid.setAttribute(
+        "aria-busy",
+        "true"
+    );
+
+
+    if (!filtered.length) {
+
+        grid.hidden = true;
+
+        emptyState.hidden = false;
+
+        count.textContent =
+            "0 products found";
+
+        grid.setAttribute(
+            "aria-busy",
+            "false"
+        );
+
+        return;
     }
 
-    if (productGrid) {
-        productGrid.addEventListener("click", event => {
-            const button = event.target.closest('[data-action="cart"]');
-            if (!button) return;
-            event.preventDefault();
-            const productId = button.dataset.id;
-            if (productId) addToCart(productId);
-        });
-    }
 
-    // Load Products
-    async function loadProducts() {
-        const currentSequence = ++loadSequence;
-        try {
-            showSkeletons();
-            hideErrorState();
+    emptyState.hidden = true;
 
-            let data = null;
-            const pathsToTry = ["data/products.json", "products.json"];
+    grid.hidden = false;
 
-            for (const path of pathsToTry) {
-                try {
-                    const response = await fetch(path, { cache: "no-cache" });
-                    if (response.ok) {
-                        data = await response.json();
-                        break;
-                    }
-                } catch (e) {
-                    // Try next path
+
+    const fragment =
+        document.createDocumentFragment();
+
+
+    filtered.forEach(product => {
+
+        fragment.appendChild(
+            createProductCard(product)
+        );
+
+    });
+
+
+    grid.appendChild(fragment);
+
+
+    count.textContent =
+        filtered.length === 1
+            ? "Showing 1 product"
+            : `Showing ${filtered.length} products`;
+
+
+    grid.setAttribute(
+        "aria-busy",
+        "false"
+    );
+}
+
+
+/* ------------------------------------------------------------------------
+   Loading
+   ------------------------------------------------------------------------ */
+
+function setLoadingState() {
+
+    grid.hidden = false;
+
+    emptyState.hidden = true;
+
+    errorState.hidden = true;
+
+    grid.setAttribute(
+        "aria-busy",
+        "true"
+    );
+
+    count.textContent =
+        "Loading products…";
+}
+
+
+function setErrorState() {
+
+    grid.innerHTML = "";
+
+    grid.hidden = true;
+
+    emptyState.hidden = true;
+
+    errorState.hidden = false;
+
+    count.textContent =
+        "Unable to load products";
+
+    grid.setAttribute(
+        "aria-busy",
+        "false"
+    );
+}
+
+
+async function loadProducts() {
+
+    setLoadingState();
+
+    try {
+
+        const response =
+            await fetch(
+                PRODUCTS_URL,
+                {
+                    cache: "no-store"
                 }
-            }
+            );
 
-            if (currentSequence !== loadSequence) return;
 
-            if (!Array.isArray(data) || data.length === 0) {
-                data = FALLBACK_PRODUCTS;
-            }
+        if (!response.ok) {
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+        }
 
-            products = data;
-            currentCategory = getCategoryFromURL();
-            updateActiveCategory();
+
+        const data =
+            await response.json();
+
+
+        if (!Array.isArray(data)) {
+            throw new Error(
+                "products.json must contain an array"
+            );
+        }
+
+
+        products = data;
+
+
+        renderProducts();
+
+
+    } catch (error) {
+
+        console.error(
+            "Products loading failed:",
+            error
+        );
+
+        setErrorState();
+    }
+}
+
+
+/* ------------------------------------------------------------------------
+   Search
+   ------------------------------------------------------------------------ */
+
+function updateSearchUI() {
+
+    if (!searchClear) {
+        return;
+    }
+
+    searchClear.hidden =
+        searchInput.value.length === 0;
+}
+
+
+searchInput?.addEventListener(
+    "input",
+    event => {
+
+        currentSearch =
+            event.target.value.trim();
+
+        updateSearchUI();
+
+        renderProducts();
+    }
+);
+
+
+searchForm?.addEventListener(
+    "submit",
+    event => {
+        event.preventDefault();
+    }
+);
+
+
+searchClear?.addEventListener(
+    "click",
+    () => {
+
+        searchInput.value = "";
+
+        currentSearch = "";
+
+        updateSearchUI();
+
+        searchInput.focus();
+
+        renderProducts();
+    }
+);
+
+
+/* ------------------------------------------------------------------------
+   Category
+   ------------------------------------------------------------------------ */
+
+categoryButtons.forEach(button => {
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            currentCategory =
+                button.dataset.category ||
+                "all";
+
+
+            categoryButtons.forEach(
+                item => {
+
+                    const active =
+                        item === button;
+
+                    item.classList.toggle(
+                        "active",
+                        active
+                    );
+
+                    item.setAttribute(
+                        "aria-pressed",
+                        String(active)
+                    );
+                }
+            );
+
+
             renderProducts();
-            updateCartCount();
-        } catch (error) {
-            if (currentSequence !== loadSequence) return;
-            products = FALLBACK_PRODUCTS;
-            currentCategory = getCategoryFromURL();
-            updateActiveCategory();
-            renderProducts();
-            updateCartCount();
+        }
+    );
+});
+
+
+/* ------------------------------------------------------------------------
+   Sorting
+   ------------------------------------------------------------------------ */
+
+sortSelect?.addEventListener(
+    "change",
+    event => {
+
+        currentSort =
+            event.target.value;
+
+        renderProducts();
+    }
+);
+
+
+/* ------------------------------------------------------------------------
+   Reset
+   ------------------------------------------------------------------------ */
+
+function resetFilters() {
+
+    currentCategory = "all";
+
+    currentSearch = "";
+
+    currentSort = "featured";
+
+
+    searchInput.value = "";
+
+    sortSelect.value = "featured";
+
+
+    categoryButtons.forEach(
+        button => {
+
+            const active =
+                button.dataset.category === "all";
+
+            button.classList.toggle(
+                "active",
+                active
+            );
+
+            button.setAttribute(
+                "aria-pressed",
+                String(active)
+            );
+        }
+    );
+
+
+    updateSearchUI();
+
+    renderProducts();
+}
+
+
+resetButton?.addEventListener(
+    "click",
+    resetFilters
+);
+
+
+retryButton?.addEventListener(
+    "click",
+    loadProducts
+);
+
+
+/* ------------------------------------------------------------------------
+   Keyboard Shortcut
+   ------------------------------------------------------------------------ */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            (event.metaKey || event.ctrlKey) &&
+            event.key.toLowerCase() === "k"
+        ) {
+
+            event.preventDefault();
+
+            searchInput?.focus();
+
+            searchInput?.select();
+        }
+
+
+        if (
+            event.key === "Escape" &&
+            document.activeElement === searchInput &&
+            searchInput.value
+        ) {
+
+            searchClear?.click();
         }
     }
+);
 
-    // Initialization
-    updateCartCount();
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", loadProducts);
-    } else {
-        loadProducts();
+
+/* ------------------------------------------------------------------------
+   Mobile Menu
+   ------------------------------------------------------------------------ */
+
+menuToggle?.addEventListener(
+    "click",
+    () => {
+
+        const isOpen =
+            menuToggle.getAttribute(
+                "aria-expanded"
+            ) === "true";
+
+
+        menuToggle.setAttribute(
+            "aria-expanded",
+            String(!isOpen)
+        );
+
+
+        if (mobileMenu) {
+            mobileMenu.hidden = isOpen;
+        }
     }
-})();
+);
+
+
+/* ------------------------------------------------------------------------
+   Footer Year
+   ------------------------------------------------------------------------ */
+
+if (footerYear) {
+    footerYear.textContent =
+        new Date().getFullYear();
+}
+
+
+/* ------------------------------------------------------------------------
+   Initial Cart State
+   ------------------------------------------------------------------------ */
+
+updateCartBadge();
+
+
+/* ------------------------------------------------------------------------
+   Cross-tab cart synchronization
+   ------------------------------------------------------------------------ */
+
+window.addEventListener(
+    "storage",
+    event => {
+
+        if (event.key === CART_KEY) {
+            updateCartBadge();
+        }
+    }
+);
+
+
+/* ------------------------------------------------------------------------
+   Start
+   ------------------------------------------------------------------------ */
+
+loadProducts();
+```
+
+});
