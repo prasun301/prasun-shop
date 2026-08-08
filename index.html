@@ -176,23 +176,22 @@
       align-items: center;
       margin-bottom: 1.5rem;
       background: #ffffff;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 1rem;
       box-sizing: border-box;
-      border: 1px solid rgba(0,0,0,0.03);
+      border: 1px solid rgba(0, 0, 0, 0.03);
+      overflow: hidden;
     }
 
-    .product-image-wrap svg {
-      width: 64px;
-      height: 64px;
-      stroke: var(--apple-text);
-      stroke-width: 1.5;
-      fill: none;
+    .product-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
       transition: transform 0.3s ease;
     }
 
-    .product-card:hover .product-image-wrap svg {
-      transform: scale(1.08);
+    .product-card:hover .product-image-wrap img {
+      transform: scale(1.05);
     }
 
     .product-info {
@@ -309,17 +308,13 @@
     <h2 class="section-title">Explore Lineup</h2>
     <div class="products-grid" id="products-grid">
       
-      <!-- Product 1: Smart Lamp -->
+      <!-- Product 1: Smart Lamp LED -->
       <a href="product.html?id=smart-lamp" class="product-card">
         <div class="product-image-wrap">
-          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 18h6"></path>
-            <path d="M10 22h4"></path>
-            <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path>
-          </svg>
+          <img src="images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png" alt="Smart Lamp LED" />
         </div>
         <div class="product-info">
-          <h3 class="product-title">Smart Ambient Lamp</h3>
+          <h3 class="product-title">Smart Lamp LED</h3>
           <p class="product-desc">Adaptive lighting engineered with seamless touch response.</p>
         </div>
         <div class="product-footer">
@@ -328,17 +323,13 @@
         </div>
       </a>
 
-      <!-- Product 2: Wireless Buds -->
+      <!-- Product 2: Ear bud -->
       <a href="product.html?id=wireless-buds" class="product-card">
         <div class="product-image-wrap">
-          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-            <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"></path>
-            <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
-          </svg>
+          <img src="images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg" alt="Wireless Earbuds" />
         </div>
         <div class="product-info">
-          <h3 class="product-title">Wireless Pro Buds</h3>
+          <h3 class="product-title">Wireless Pro Earbuds</h3>
           <p class="product-desc">Immersive spatial audio with active noise cancellation.</p>
         </div>
         <div class="product-footer">
@@ -347,21 +338,17 @@
         </div>
       </a>
 
-      <!-- Product 3: Aluminum Stand -->
-      <a href="product.html?id=minimal-stand" class="product-card">
+      <!-- Product 3: Power Bank -->
+      <a href="product.html?id=power-bank" class="product-card">
         <div class="product-image-wrap">
-          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-            <line x1="8" y1="21" x2="16" y2="21"></line>
-            <line x1="12" y1="17" x2="12" y2="21"></line>
-          </svg>
+          <img src="images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg" alt="Power Bank" />
         </div>
         <div class="product-info">
-          <h3 class="product-title">Aluminum Desk Stand</h3>
-          <p class="product-desc">Precision-milled aerospace aluminum stand for all devices.</p>
+          <h3 class="product-title">Ultra-Slim Power Bank</h3>
+          <p class="product-desc">High-capacity portable charging with fast-delivery power output.</p>
         </div>
         <div class="product-footer">
-          <span class="product-price">$39.00</span>
+          <span class="product-price">$59.00</span>
           <span class="btn-apple">View</span>
         </div>
       </a>
