@@ -1,77 +1,43 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Prasun Shop — Discover useful technology, smart devices, electronics, and everyday products curated for modern living.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#ffffff">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <meta
-    name="description"
-    content="Prasun Shop — Discover useful technology, smart devices, electronics, and everyday products."
-  >
-
-  <meta
-    name="robots"
-    content="index, follow"
-  >
-
-  <meta
-    name="theme-color"
-    content="#ffffff"
-  >
+  <!-- Open Graph / Social Sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Prasun Shop — Technology & Everyday Products">
+  <meta property="og:description" content="Discover useful technology, smart devices, and everyday products curated for modern living.">
+  <meta property="og:url" content="https://shop.prasunbarua.com/">
+  <meta property="og:site_name" content="Prasun Shop">
 
   <title>Prasun Shop — Technology & Everyday Products</title>
 
   <!-- Canonical -->
-  <link
-    rel="canonical"
-    href="https://shop.prasunbarua.com/"
-  >
+  <link rel="canonical" href="https://shop.prasunbarua.com/">
 
-  <!-- Preconnect -->
+  <!-- Preconnect & Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-
-  <link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin
-  >
-
-  <!-- Inter -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  >
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Main Stylesheet -->
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+  <link rel="stylesheet" href="style.css">
 
   <!-- Favicon -->
-  <link
-    rel="icon"
-    href="favicon.ico"
-    sizes="any"
-  >
+  <link rel="icon" href="favicon.ico" sizes="any">
 
-  <!-- Prevent flash of incorrect theme if dark mode is supported -->
+  <!-- Prevent flash of incorrect theme -->
   <script>
     (() => {
       try {
         const savedTheme = localStorage.getItem("prasun-shop-theme");
-
         if (
           savedTheme === "dark" ||
-          (
-            !savedTheme &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches
-          )
+          (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)
         ) {
           document.documentElement.classList.add("dark");
         }
@@ -82,130 +48,70 @@
 
 <body>
 
-  <!-- ================================================================
-       ACCESSIBILITY
-       ================================================================ -->
-
-  <a
-    href="#main-content"
-    class="skip-link"
-  >
+  <!-- Skip Link for Keyboard Accessibility -->
+  <a href="#main-content" class="skip-link">
     Skip to content
   </a>
 
 
   <!-- ================================================================
-       HEADER
+       HEADER & NAVIGATION
        ================================================================ -->
 
   <header class="header">
-
-    <div class="container nav-wrapper">
+    <div class="header-container">
 
       <!-- Logo -->
-
-      <a
-        href="index.html"
-        class="logo"
-        aria-label="Prasun Shop Home"
-      >
-        <svg
-          class="store-icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
+      <a href="index.html" class="logo" aria-label="Prasun Shop Home">
+        <svg class="store-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M3 9l1.5-5h15L21 9"/>
           <path d="M4 9v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9"/>
           <path d="M3 9h18"/>
           <path d="M8 21v-6h8v6"/>
         </svg>
-
-        <span>
-          Prasun Shop<span aria-hidden="true">.</span>
-        </span>
+        <span>Prasun Shop<span aria-hidden="true">.</span></span>
       </a>
 
+      <!-- Desktop Navigation Links -->
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="index.html" class="nav-link" aria-current="page">Home</a>
+        <a href="products.html" class="nav-link">Products</a>
+        <a href="#categories" class="nav-link">Categories</a>
+        <a href="#contact" class="nav-link">Contact</a>
+      </nav>
 
-      <!-- Navigation -->
-
-      <nav
-        class="nav-links"
-        aria-label="Main navigation"
-      >
-
-        <a
-          href="index.html"
-          class="nav-link"
-          aria-current="page"
-        >
-          Home
-        </a>
-
-        <a
-          href="products.html"
-          class="nav-link"
-        >
-          Products
-        </a>
-
-        <a
-          href="#categories"
-          class="nav-link mobile-visible"
-        >
-          Categories
-        </a>
-
-        <a
-          href="#contact"
-          class="nav-link mobile-visible"
-        >
-          Contact
-        </a>
-
-        <a
-          href="cart.html"
-          class="cart-link"
-          aria-label="Shopping cart"
-        >
-
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
+      <!-- Action Area: Cart & Mobile Toggle -->
+      <div class="header-actions">
+        <a href="cart.html" class="cart-icon-wrap" aria-label="Shopping cart">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="9" cy="20" r="1"/>
             <circle cx="19" cy="20" r="1"/>
             <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L22 8H6"/>
           </svg>
-
-          <span>Cart</span>
-
-          <span
-            class="cart-badge"
-            id="cart-count"
-            aria-label="0 items in cart"
-          >
-            0
-          </span>
-
+          <span class="cart-badge" id="cart-count" aria-label="0 items in cart">0</span>
         </a>
 
-      </nav>
+        <!-- Mobile Menu Hamburger Button -->
+        <button type="button" class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-navigation">
+          <svg class="menu-open-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="4" x2="20" y1="12" y2="12"/>
+            <line x1="4" x2="20" y1="6" y2="6"/>
+            <line x1="4" x2="20" y1="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
 
     </div>
-
   </header>
+
+  <!-- Mobile Drawer Menu -->
+  <div class="mobile-menu" id="mobile-navigation" aria-label="Mobile navigation">
+    <a href="index.html" class="nav-link" aria-current="page">Home</a>
+    <a href="products.html" class="nav-link">Products</a>
+    <a href="#categories" class="nav-link">Categories</a>
+    <a href="#contact" class="nav-link">Contact</a>
+    <a href="cart.html" class="nav-link">Cart</a>
+  </div>
 
 
   <!-- ================================================================
@@ -214,451 +120,148 @@
 
   <main id="main-content">
 
-
-    <!-- ==============================================================
-         HERO
-         ============================================================== -->
-
-    <section class="hero">
-
-      <div class="container hero-content">
-
-        <h1 class="hero-title">
-          Simple products.<br>
-          Better everyday life.
-        </h1>
-
-        <p class="hero-description">
-          Discover useful technology, smart devices, and everyday products
-          selected for modern living.
-        </p>
-
-        <a
-          href="products.html"
-          class="btn-primary"
-        >
-          Shop Products
+    <!-- Hero Section -->
+    <section class="products-hero">
+      <div class="products-eyebrow">Curated Technology</div>
+      <h1 class="products-heading">
+        Simple products.<br>
+        Better everyday life.
+      </h1>
+      <p class="products-intro">
+        Discover useful technology, smart devices, and everyday tools designed with precision for modern living.
+      </p>
+      <div style="margin-top: 24px;">
+        <a href="products.html" class="products-empty-button" style="text-decoration: none; padding: 0 24px;">
+          Explore Products
         </a>
-
       </div>
-
     </section>
 
 
-    <!-- ==============================================================
-         CATEGORIES
-         ============================================================== -->
-
-    <section
-      id="categories"
-      class="section"
-      aria-labelledby="categories-heading"
-    >
-
-      <div class="container">
-
-        <h2
-          id="categories-heading"
-          class="section-title"
-        >
-          Categories
+    <!-- Categories Section -->
+    <section id="categories" class="section" aria-labelledby="categories-heading" style="padding: 32px 0;">
+      <div class="products-toolbar">
+        <h2 id="categories-heading" class="products-eyebrow" style="font-size: 13px; margin-bottom: 0;">
+          Browse by Category
         </h2>
 
-
-        <div class="category-grid">
-
-
+        <div class="products-categories">
           <!-- Smart Lighting -->
-
-          <a
-            class="category-card"
-            href="products.html?category=Smart%20Lighting"
-          >
-
-            <svg
-              class="category-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>
-              <path d="M9 18h6"/>
-              <path d="M10 22h4"/>
-            </svg>
-
-            <h3>Smart Lighting</h3>
-
+          <a class="category-pill" href="products.html?category=Smart%20Lighting">
+            Smart Lighting
           </a>
-
 
           <!-- Power & Charging -->
-
-          <a
-            class="category-card"
-            href="products.html?category=Power%20%26%20Charging"
-          >
-
-            <svg
-              class="category-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <rect
-                width="16"
-                height="10"
-                x="2"
-                y="7"
-                rx="2"
-              />
-
-              <line
-                x1="22"
-                x2="22"
-                y1="11"
-                y2="13"
-              />
-            </svg>
-
-            <h3>Power &amp; Charging</h3>
-
+          <a class="category-pill" href="products.html?category=Power%20%26%20Charging">
+            Power &amp; Charging
           </a>
-
 
           <!-- Audio -->
-
-          <a
-            class="category-card"
-            href="products.html?category=Audio"
-          >
-
-            <svg
-              class="category-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>
-            </svg>
-
-            <h3>Audio</h3>
-
+          <a class="category-pill" href="products.html?category=Audio">
+            Audio
           </a>
-
 
           <!-- Smart Home -->
-
-          <a
-            class="category-card"
-            href="products.html?category=Smart%20Home"
-          >
-
-            <svg
-              class="category-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-
-            <h3>Smart Home</h3>
-
+          <a class="category-pill" href="products.html?category=Smart%20Home">
+            Smart Home
           </a>
-
 
           <!-- Office & Desk -->
-
-          <a
-            class="category-card"
-            href="products.html?category=Office%20%26%20Desk"
-          >
-
-            <svg
-              class="category-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9"/>
-              <path d="M4 16h16"/>
-              <path d="m20 16 1.28 2.55A1 1 0 0 1 20.34 20H3.66a1 1 0 0 1-.94-1.45L4 16"/>
-            </svg>
-
-            <h3>Office &amp; Desk</h3>
-
+          <a class="category-pill" href="products.html?category=Office%20%26%20Desk">
+            Office &amp; Desk
           </a>
-
 
           <!-- Tech Gadgets -->
-
-          <a
-            class="category-card"
-            href="products.html?category=Tech%20Gadgets"
-          >
-
-            <svg
-              class="category-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
-            </svg>
-
-            <h3>Tech Gadgets</h3>
-
+          <a class="category-pill" href="products.html?category=Tech%20Gadgets">
+            Tech Gadgets
           </a>
-
-
         </div>
-
       </div>
-
     </section>
 
 
-    <!-- ==============================================================
-         PRODUCTS
-         ============================================================== -->
+    <!-- Products Grid Section -->
+    <section id="products" class="section" aria-labelledby="products-heading">
+      <div class="products-toolbar" style="margin-bottom: 16px;">
+        <div class="products-results-bar">
+          <h2 id="products-heading" class="product-title" style="font-size: 18px;">
+            Featured Products
+          </h2>
 
-    <section
-      id="products"
-      class="section"
-      aria-labelledby="products-heading"
-    >
-
-      <div class="container">
-
-
-        <div class="products-header">
-
-          <div class="products-heading-wrapper">
-
-            <h2
-              id="products-heading"
-              class="section-title"
-            >
-              Products
-            </h2>
-
-          </div>
-
-
-          <!-- Search -->
-
+          <!-- Integrated Search Form -->
           <div class="search-wrapper">
-
-            <form
-              class="search-form"
-              id="product-search-form"
-              role="search"
-            >
-
-              <label
-                for="searchInput"
-                class="sr-only"
-              >
-                Search products
-              </label>
-
-
-              <svg
-                class="search-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <circle
-                  cx="11"
-                  cy="11"
-                  r="8"
-                />
-
-                <path d="m21 21-4.3-4.3"/>
-              </svg>
-
-
-              <input
-                type="search"
-                id="searchInput"
-                class="search-input"
-                placeholder="Search products..."
-                autocomplete="off"
-                spellcheck="false"
-              >
-
+            <form class="products-search" id="product-search-form" role="search" style="margin: 0; width: 260px;">
+              <label for="searchInput" class="sr-only">Search products</label>
+              <div class="products-search-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.3-4.3"/>
+                </svg>
+              </div>
+              <input type="search" id="searchInput" class="products-search-input" placeholder="Search..." autocomplete="off" spellcheck="false">
             </form>
-
           </div>
-
         </div>
-
-
-        <!-- Dynamic Product Grid -->
-
-        <div
-          class="product-grid"
-          id="product-list"
-          aria-live="polite"
-          aria-busy="true"
-        >
-        </div>
-
-
-        <!-- Empty State -->
-
-        <div
-          class="products-empty"
-          id="empty-state"
-          hidden
-        >
-
-          <h3>No products found</h3>
-
-          <p>
-            Try a different search or browse another category.
-          </p>
-
-          <button
-            type="button"
-            class="btn-primary"
-            id="clear-search"
-          >
-            Clear Search
-          </button>
-
-        </div>
-
-
-        <!-- Error State -->
-
-        <div
-          class="products-error"
-          id="products-error"
-          hidden
-        >
-
-          <h3>Unable to load products</h3>
-
-          <p>
-            Please refresh the page and try again.
-          </p>
-
-          <button
-            type="button"
-            class="btn-primary"
-            id="retry-products"
-          >
-            Try Again
-          </button>
-
-        </div>
-
       </div>
 
+      <!-- Dynamic Product Grid container loaded by products.js -->
+      <div class="products-grid" id="product-list" aria-live="polite" aria-busy="true">
+      </div>
+
+      <!-- Empty Search State -->
+      <div class="products-empty" id="empty-state" hidden>
+        <div class="products-empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+          </svg>
+        </div>
+        <h3>No products found</h3>
+        <p>Try searching for another keyword or clear your active filter.</p>
+        <button type="button" class="products-empty-button" id="clear-search">
+          Clear Search
+        </button>
+      </div>
+
+      <!-- Error Loading State -->
+      <div class="products-error" id="products-error" hidden>
+        <div class="products-error-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <h3>Unable to load products</h3>
+        <p>Please check your internet connection or try reloading the page.</p>
+        <button type="button" class="products-error-button" id="retry-products">
+          Try Again
+        </button>
+      </div>
     </section>
 
 
-    <!-- ==============================================================
-         NEWSLETTER
-         ============================================================== -->
-
-    <section
-      id="contact"
-      class="section newsletter-section"
-      aria-labelledby="newsletter-heading"
-    >
-
-      <div class="container newsletter-container">
-
-        <h2
-          id="newsletter-heading"
-          class="section-title"
-        >
+    <!-- Newsletter Section -->
+    <section id="contact" class="section" aria-labelledby="newsletter-heading" style="padding: 64px 0 32px;">
+      <div class="products-hero" style="padding-bottom: 0;">
+        <h2 id="newsletter-heading" class="products-heading" style="font-size: 28px;">
           Stay Updated
         </h2>
-
-        <p class="newsletter-subtitle">
-          Get updates about new products and offers.
+        <p class="products-intro" style="font-size: 14px; margin-bottom: 20px;">
+          Get updates on new product drops, tech reviews, and exclusive releases.
         </p>
 
-
-        <form
-          class="newsletter-form"
-          id="newsletter-form"
-          aria-label="Newsletter subscription"
-        >
-
-          <label
-            for="newsletter-email"
-            class="sr-only"
-          >
-            Enter your email address
-          </label>
-
-
-          <input
-            type="email"
-            id="newsletter-email"
-            class="email-input"
-            placeholder="Email address"
-            autocomplete="email"
-            inputmode="email"
-            required
-          >
-
-
-          <button
-            type="submit"
-            class="btn-primary"
-          >
+        <form class="products-search" id="newsletter-form" aria-label="Newsletter subscription" style="max-width: 400px; gap: 8px;">
+          <label for="newsletter-email" class="sr-only">Enter your email address</label>
+          <input type="email" id="newsletter-email" class="products-search-input" style="padding-left: 16px;" placeholder="Enter your email..." autocomplete="email" required>
+          <button type="submit" class="products-empty-button" style="height: 44px; white-space: nowrap;">
             Subscribe
           </button>
-
         </form>
 
-
-        <p
-          class="newsletter-message"
-          id="newsletter-message"
-          aria-live="polite"
-          hidden
-        ></p>
-
+        <p class="products-result-count" id="newsletter-message" aria-live="polite" style="margin-top: 12px; color: var(--color-success);" hidden></p>
       </div>
-
     </section>
-
 
   </main>
 
@@ -668,146 +271,127 @@
        ================================================================ -->
 
   <footer class="footer">
+    <div class="footer-content">
 
-    <div class="container footer-content">
-
-      <div class="footer-brand">
-
-        <a
-          href="index.html"
-          class="footer-logo"
-        >
-          Prasun Shop<span aria-hidden="true">.</span>
+      <!-- Brand Info -->
+      <div class="footer-col">
+        <a href="index.html" class="logo" style="margin-bottom: 12px;">
+          Prasun Shop<span>.</span>
         </a>
-
-        <p class="footer-description">
-          Technology and everyday products for modern living.
+        <p style="font-size: 13px; color: var(--color-text-secondary); max-width: 280px; line-height: 1.5;">
+          Refined technology and smart lifestyle devices designed for modern efficiency.
         </p>
-
       </div>
 
+      <!-- Quick Navigation -->
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="products.html">Products</a></li>
+          <li><a href="#categories">Categories</a></li>
+          <li><a href="cart.html">Shopping Cart</a></li>
+        </ul>
+      </div>
 
-      <nav
-        class="footer-links"
-        aria-label="Footer navigation"
-      >
+      <!-- Support Links -->
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="#contact">Contact Us</a></li>
+          <li><a href="#">Shipping Policy</a></li>
+          <li><a href="#">Returns &amp; Refunds</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+        </ul>
+      </div>
 
-        <a href="index.html">
-          Home
-        </a>
-
-        <a href="products.html">
-          Products
-        </a>
-
-        <a href="#categories">
-          Categories
-        </a>
-
-        <a href="#contact">
-          Contact
-        </a>
-
-        <a href="cart.html">
-          Cart
-        </a>
-
-      </nav>
-
-
-      <div class="footer-bottom">
-
-        <p class="footer-text">
-          &copy;
-          <span id="current-year"></span>
-          Prasun Shop. All rights reserved.
-        </p>
-
+      <!-- Categories Links -->
+      <div class="footer-col">
+        <h4>Categories</h4>
+        <ul>
+          <li><a href="products.html?category=Smart%20Lighting">Smart Lighting</a></li>
+          <li><a href="products.html?category=Audio">Audio Equipment</a></li>
+          <li><a href="products.html?category=Power%20%26%20Charging">Power &amp; Chargers</a></li>
+          <li><a href="products.html?category=Smart%20Home">Smart Home</a></li>
+        </ul>
       </div>
 
     </div>
 
+    <div class="footer-bottom">
+      <p>&copy; <span id="current-year"></span> Prasun Shop. All rights reserved.</p>
+      <p style="color: var(--color-text-tertiary);">Designed for clarity &amp; performance.</p>
+    </div>
   </footer>
 
 
   <!-- ================================================================
-       JAVASCRIPT
+       JAVASCRIPT SCRIPTS
        ================================================================ -->
 
-  <script
-    src="script.js"
-    defer
-  ></script>
+  <script src="script.js" defer></script>
+  <script src="products.js" defer></script>
 
-
-  <!-- Small page-only utilities -->
+  <!-- Page Utilities Script -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-
-      // Current year
+      // Set current year
       const year = document.getElementById("current-year");
-
       if (year) {
         year.textContent = new Date().getFullYear();
       }
 
+      // Mobile Menu Toggle Logic
+      const mobileToggle = document.getElementById("mobile-menu-toggle");
+      const mobileNav = document.getElementById("mobile-navigation");
 
-      // Smooth navigation for same-page anchors
+      if (mobileToggle && mobileNav) {
+        mobileToggle.addEventListener("click", () => {
+          const isOpen = mobileNav.classList.contains("open");
+          mobileNav.classList.toggle("open");
+          mobileToggle.setAttribute("aria-expanded", !isOpen);
+        });
+
+        // Close drawer when clicking a link
+        mobileNav.querySelectorAll("a").forEach(link => {
+          link.addEventListener("click", () => {
+            mobileNav.classList.remove("open");
+            mobileToggle.setAttribute("aria-expanded", "false");
+          });
+        });
+      }
+
+      // Smooth Navigation for Same-Page Anchors
       document.querySelectorAll('a[href^="#"]').forEach(link => {
-
         link.addEventListener("click", event => {
-
           const targetId = link.getAttribute("href");
-
-          if (!targetId || targetId === "#") {
-            return;
-          }
+          if (!targetId || targetId === "#") return;
 
           const target = document.querySelector(targetId);
-
-          if (!target) {
-            return;
-          }
+          if (!target) return;
 
           event.preventDefault();
-
           target.scrollIntoView({
             behavior: "smooth",
             block: "start"
           });
-
         });
-
       });
 
-
-      // Newsletter UI
-      const newsletterForm =
-        document.getElementById("newsletter-form");
-
-      const newsletterMessage =
-        document.getElementById("newsletter-message");
+      // Newsletter Form Submission Handler
+      const newsletterForm = document.getElementById("newsletter-form");
+      const newsletterMessage = document.getElementById("newsletter-message");
 
       if (newsletterForm && newsletterMessage) {
-
         newsletterForm.addEventListener("submit", event => {
-
           event.preventDefault();
-
-          newsletterMessage.textContent =
-            "Thanks for subscribing.";
-
+          newsletterMessage.textContent = "Thank you for subscribing.";
           newsletterMessage.hidden = false;
-
           newsletterForm.reset();
-
         });
-
       }
-
     });
   </script>
 
 </body>
 </html>
-```
