@@ -1,87 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Confirmed — PRASUN SHOP</title>
+  <meta name="description" content="Thank you for your order at PRASUN SHOP." />
+  <style>
+    :root {
+      --apple-bg: #f5f5f7;
+      --apple-card-bg: #ffffff;
+      --apple-text: #1d1d1f;
+      --apple-gray: #86868b;
+      --apple-border: #d2d2d7;
+      --apple-dark: #1d1d1f;
+      --apple-dark-hover: #333336;
+    }
 
-<meta charset="UTF-8">
+    * {
+      box-sizing: border-box;
+    }
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    body {
+      background-color: var(--apple-card-bg);
+      color: var(--apple-text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
 
-<title>Order Successful | Prasun Shop</title>
+    .header {
+      border-bottom: 1px solid var(--apple-border);
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 100;
+    }
 
-<link rel="stylesheet" href="css/style.css">
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
 
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--apple-text);
+      font-weight: 600;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--apple-gray);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--apple-text);
+    }
+
+    .success-container {
+      max-width: 700px;
+      margin: 4rem auto;
+      padding: 0 2rem;
+      text-align: center;
+    }
+
+    .success-card {
+      background-color: var(--apple-bg);
+      border: 1px solid var(--apple-border);
+      border-radius: 20px;
+      padding: 3rem 2rem;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background-color: var(--apple-dark);
+      color: #ffffff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem auto;
+    }
+
+    .success-card h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -0.015em;
+    }
+
+    .success-card p {
+      color: var(--apple-gray);
+      font-size: 1rem;
+      margin: 0 0 2rem 0;
+    }
+
+    .order-details-box {
+      background: #ffffff;
+      border: 1px solid var(--apple-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: left;
+      margin-bottom: 2rem;
+    }
+
+    .order-details-box h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+      border-bottom: 1px solid var(--apple-border);
+      padding-bottom: 0.5rem;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      margin-bottom: 0.6rem;
+      color: var(--apple-gray);
+    }
+
+    .detail-row span:last-child {
+      color: var(--apple-text);
+      font-weight: 500;
+    }
+
+    .btn-home {
+      display: inline-block;
+      background-color: var(--apple-dark);
+      color: #ffffff;
+      text-decoration: none;
+      padding: 0.85rem 2.5rem;
+      border-radius: 980px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .btn-home:hover {
+      background-color: var(--apple-dark-hover);
+    }
+
+    .footer {
+      border-top: 1px solid var(--apple-border);
+      background-color: var(--apple-bg);
+      padding: 2rem;
+      text-align: center;
+      color: var(--apple-gray);
+      font-size: 0.85rem;
+      margin-top: 6rem;
+    }
+  </style>
 </head>
-
-
 <body>
 
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <a href="index.html" class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span>PRASUN SHOP</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
 
-<header>
+  <!-- Success Message Content -->
+  <main class="success-container">
+    <div class="success-card">
+      <div class="success-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <h1>Thank you for your order!</h1>
+      <p>Your order has been successfully placed. We'll begin processing it right away.</p>
 
-<div class="container nav">
+      <div class="order-details-box">
+        <h3>Order Overview</h3>
+        <div class="detail-row">
+          <span>Order Number:</span>
+          <span id="order-id">#PS-84920</span>
+        </div>
+        <div class="detail-row">
+          <span>Date:</span>
+          <span id="order-date"></span>
+        </div>
+        <div class="detail-row">
+          <span>Payment Status:</span>
+          <span>Confirmed (Simulated)</span>
+        </div>
+      </div>
 
-<div class="logo">
-Prasun Shop
-</div>
+      <a href="index.html" class="btn-home">Continue Shopping</a>
+    </div>
+  </main>
 
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
+  </footer>
 
-<nav>
-
-<a href="index.html">
-Home
-</a>
-
-
-<a href="products.html">
-Products
-</a>
-
-
-</nav>
-
-</div>
-
-</header>
-
-
-
-<section class="products">
-
-
-<div class="container">
-
-
-<h1>
-Thank You For Your Order! 🎉
-</h1>
-
-
-<p>
-Your order has been received successfully.
-</p>
-
-
-<p>
-We will process your order and contact you soon.
-</p>
-
-
-<a href="index.html">
-
-<button>
-Continue Shopping
-</button>
-
-</a>
-
-
-</div>
-
-
-</section>
-
-<script src="js/cart-count.js"></script>
+  <script>
+    document.getElementById('order-date').textContent = new Date().toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+    document.getElementById('order-id').textContent = '#PS-' + Math.floor(10000 + Math.random() * 90000);
+  </script>
 </body>
-
 </html>
