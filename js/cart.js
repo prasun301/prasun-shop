@@ -319,10 +319,12 @@
         updateCartCount();
     }
 
-    // Event Delegation for Image Failures (Capture phase required for 'error' event)
+    // Event Delegation for Image Failures with loop guard
     cartItemsContainer.addEventListener("error", event => {
-        if (event.target && event.target.tagName === "IMG") {
-            event.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f4f4f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a1a1aa' font-family='sans-serif' font-size='12'%3ENo Img%3C/text%3E%3C/svg%3E";
+        const target = event.target;
+        if (target && target.tagName === "IMG" && !target.dataset.fallbackApplied) {
+            target.dataset.fallbackApplied = "true";
+            target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f4f4f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a1a1aa' font-family='sans-serif' font-size='12'%3ENo Img%3C/text%3E%3C/svg%3E";
         }
     }, true);
 
@@ -376,12 +378,11 @@
         }
     });
 
-    // Same-tab Synchronization (Custom event listener)
+    // Same-tab Synchronization (Custom event listener) - Fixed to fully re-render cart view
     window.addEventListener(CART_EVENT_NAME, event => {
         if (event.detail && Array.isArray(event.detail.cart)) {
-            // Keep local state in sync without re-parsing localStorage
             cart = event.detail.cart;
-            updateCartCount();
+            renderCart();
         }
     });
 
