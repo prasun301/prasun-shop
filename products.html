@@ -2,22 +2,14 @@
 <html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0">
-    <meta
-        name="description"
-        content="Explore premium digital products from Prasun Shop.">
-    <meta
-        name="theme-color"
-        content="#ffffff">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore premium digital products from Prasun Shop.">
+    <meta name="theme-color" content="#ffffff">
     <title>Products — Prasun Shop</title>
-    <link
-        rel="stylesheet"
-        href="style.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         /* ==========================================================
-           PRASUN SHOP — PRODUCTS PAGE (ENTERPRISE REFACTOR)
+            PRASUN SHOP — PRODUCTS PAGE (ENTERPRISE REFACTOR)
            ========================================================== */
         .products-page {
             min-height: 100vh;
@@ -284,6 +276,7 @@
             font-size: 14px;
             font-weight: 500;
             text-decoration: none;
+            cursor: pointer;
             transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
         }
         .category-pill:hover {
@@ -511,18 +504,17 @@
             border-radius: 6px;
             animation: skeleton-loading 1.4s infinite;
         }
-        .skeleton-line.short {
-            width: 35%;
-        }
-        .skeleton-line.medium {
-            width: 65%;
-        }
-        .skeleton-line.long {
-            width: 90%;
-        }
+        .skeleton-line.short { width: 35%; }
+        .skeleton-line.medium { width: 65%; }
+        .skeleton-line.long { width: 90%; }
         @keyframes skeleton-loading {
             from { background-position: 200% 0; }
             to { background-position: -200% 0; }
+        }
+        .hidden { display: none !important; }
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
         }
         /* Responsive */
         @media (max-width: 1100px) {
@@ -535,93 +527,34 @@
             }
         }
         @media (max-width: 850px) {
-            .products-nav {
-                display: none;
-            }
-            .products-menu-button {
-                display: grid;
-            }
-            .products-header-inner {
-                width: min(100% - 32px, 1360px);
-            }
-            .products-main {
-                width: min(100% - 32px, 1360px);
-                padding-top: 48px;
-            }
-            .products-hero {
-                grid-template-columns: 1fr;
-                gap: 28px;
-            }
-            .products-search {
-                max-width: 560px;
-            }
-            .products-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
+            .products-nav { display: none; }
+            .products-menu-button { display: grid; }
+            .products-header-inner { width: min(100% - 32px, 1360px); }
+            .products-main { width: min(100% - 32px, 1360px); padding-top: 48px; }
+            .products-hero { grid-template-columns: 1fr; gap: 28px; }
+            .products-search { max-width: 560px; }
+            .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
         @media (max-width: 560px) {
-            .products-header {
-                height: 64px;
-            }
-            .products-brand {
-                font-size: 17px;
-            }
-            .products-brand-icon {
-                width: 22px;
-                height: 22px;
-            }
-            .products-header-actions {
-                gap: 2px;
-            }
-            .products-icon-button {
-                width: 38px;
-                height: 38px;
-            }
-            .products-main {
-                width: min(100% - 24px, 1360px);
-                padding: 36px 0 60px;
-            }
-            .products-heading {
-                font-size: 36px;
-            }
-            .products-intro {
-                font-size: 15px;
-            }
-            .products-search-input {
-                height: 52px;
-            }
-            .products-results-bar {
-                align-items: flex-start;
-                flex-direction: column;
-                gap: 12px;
-            }
-            .products-sort {
-                width: 100%;
-            }
-            .products-grid {
-                grid-template-columns: 1fr;
-                gap: 18px;
-            }
-            .product-card-image {
-                aspect-ratio: 1.5 / 1;
-            }
-            .product-card-body {
-                padding: 18px;
-            }
-            .products-categories {
-                margin-right: -12px;
-                padding-right: 12px;
-            }
+            .products-header { height: 64px; }
+            .products-brand { font-size: 17px; }
+            .products-brand-icon { width: 22px; height: 22px; }
+            .products-header-actions { gap: 2px; }
+            .products-icon-button { width: 38px; height: 38px; }
+            .products-main { width: min(100% - 24px, 1360px); padding: 36px 0 60px; }
+            .products-heading { font-size: 36px; }
+            .products-intro { font-size: 15px; }
+            .products-search-input { height: 52px; }
+            .products-results-bar { align-items: flex-start; flex-direction: column; gap: 12px; }
+            .products-sort { width: 100%; }
+            .products-grid { grid-template-columns: 1fr; gap: 18px; }
+            .product-card-image { aspect-ratio: 1.5 / 1; }
+            .product-card-body { padding: 18px; }
+            .products-categories { margin-right: -12px; padding-right: 12px; }
         }
-        /* Accessibility */
-        :focus-visible {
-            outline: 2px solid #18181b;
-            outline-offset: 3px;
-        }
+        :focus-visible { outline: 2px solid #18181b; outline-offset: 3px; }
         @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
+            *, *::before, *::after {
                 scroll-behavior: auto !important;
                 transition-duration: 0.01ms !important;
                 animation-duration: 0.01ms !important;
@@ -631,25 +564,12 @@
 </head>
 <body>
     <div class="products-page">
-        <!-- ======================================================
-             HEADER
-        ======================================================= -->
+        <!-- HEADER -->
         <header class="products-header">
             <div class="products-header-inner">
-                <a
-                    href="index.html"
-                    class="products-brand"
-                    aria-label="Prasun Shop Home">
-                    <span
-                        class="products-brand-icon"
-                        aria-hidden="true">
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round">
+                <a href="index.html" class="products-brand" aria-label="Prasun Shop Home">
+                    <span class="products-brand-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M4 9.5h16" />
                             <path d="M5 9.5V19h14V9.5" />
                             <path d="M3 9.5l2-5h14l2 5" />
@@ -658,184 +578,71 @@
                     </span>
                     <span>Prasun Shop</span>
                 </a>
-                <nav
-                    class="products-nav"
-                    aria-label="Primary Navigation">
+                <nav class="products-nav" aria-label="Primary Navigation">
                     <a href="index.html">Home</a>
-                    <a
-                        href="products.html"
-                        class="active"
-                        aria-current="page">Products</a>
+                    <a href="products.html" class="active" aria-current="page">Products</a>
                     <a href="about.html">About</a>
                     <a href="contact.html">Contact</a>
                 </nav>
                 <div class="products-header-actions">
-                    <a
-                        href="cart.html"
-                        class="products-icon-button"
-                        aria-label="Shopping cart">
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
+                    <a href="cart.html" class="products-icon-button" aria-label="Shopping cart">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6" />
                             <circle cx="10" cy="20" r="1.3" />
                             <circle cx="18" cy="20" r="1.3" />
                         </svg>
-                        <span
-                            id="cart-count"
-                            class="products-cart-badge"
-                            aria-live="polite"
-                            aria-atomic="true">
-                            0
-                        </span>
+                        <span id="cart-count" class="products-cart-badge" aria-live="polite" aria-atomic="true">0</span>
                     </a>
-                    <button
-                        type="button"
-                        id="products-menu-toggle"
-                        class="products-icon-button products-menu-button"
-                        aria-label="Open navigation menu"
-                        aria-controls="products-mobile-menu"
-                        aria-expanded="false">
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            aria-hidden="true">
-                            <path d="M4 7h16" />
-                            <path d="M4 12h16" />
-                            <path d="M4 17h16" />
+                    <button type="button" id="products-menu-toggle" class="products-icon-button products-menu-button" aria-label="Open navigation menu" aria-controls="products-mobile-menu" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                            <path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" />
                         </svg>
                     </button>
                 </div>
             </div>
-            <div
-                id="products-mobile-menu"
-                class="products-mobile-menu">
+            <div id="products-mobile-menu" class="products-mobile-menu">
                 <a href="index.html">Home</a>
-                <a
-                    href="products.html"
-                    class="active"
-                    aria-current="page">Products</a>
+                <a href="products.html" class="active" aria-current="page">Products</a>
                 <a href="about.html">About</a>
                 <a href="contact.html">Contact</a>
             </div>
         </header>
 
-        <!-- ======================================================
-             MAIN
-        ======================================================= -->
+        <!-- MAIN -->
         <main class="products-main">
-            <section
-                class="products-hero"
-                aria-labelledby="products-heading">
+            <section class="products-hero" aria-labelledby="products-heading">
                 <div>
                     <p class="products-eyebrow">Prasun Shop</p>
-                    <h1
-                        id="products-heading"
-                        class="products-heading">
-                        Explore Our Products
-                    </h1>
+                    <h1 id="products-heading" class="products-heading">Explore Our Products</h1>
                     <p class="products-intro">
-                        Discover premium digital products carefully
-                        designed for engineers, professionals,
-                        students and creators.
+                        Discover premium digital products carefully designed for engineers, professionals, students and creators.
                     </p>
                 </div>
-                <form
-                    class="products-search"
-                    id="product-search-form"
-                    role="search">
-                    <label
-                        for="product-search"
-                        class="sr-only">
-                        Search products
-                    </label>
-                    <svg
-                        class="products-search-icon"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        aria-hidden="true">
-                        <circle cx="11" cy="11" r="7" />
-                        <path d="m20 20-4-4" />
+                <form class="products-search" id="product-search-form" role="search" onsubmit="return false;">
+                    <label for="product-search" class="sr-only">Search products</label>
+                    <svg class="products-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
                     </svg>
-                    <input
-                        id="product-search"
-                        class="products-search-input"
-                        type="search"
-                        placeholder="Search products..."
-                        autocomplete="off"
-                        spellcheck="false"
-                        enterkeyhint="search"
-                        aria-label="Search products">
-                    <span
-                        class="products-search-shortcut"
-                        aria-hidden="true">
-                        ⌘ K
-                    </span>
+                    <input id="product-search" class="products-search-input" type="search" placeholder="Search products..." autocomplete="off" spellcheck="false" enterkeyhint="search" aria-label="Search products">
+                    <span class="products-search-shortcut" aria-hidden="true">⌘ K</span>
                 </form>
             </section>
 
-            <section
-                class="products-toolbar"
-                aria-label="Product categories">
+            <section class="products-toolbar" aria-label="Product categories">
                 <div class="products-categories">
-                    <a
-                        href="products.html"
-                        class="category-pill active"
-                        data-category="all"
-                        aria-current="page">
-                        All Products
-                    </a>
-                    <a
-                        href="products.html?category=electronics"
-                        class="category-pill"
-                        data-category="electronics">
-                        Electronics
-                    </a>
-                    <a
-                        href="products.html?category=lifestyle"
-                        class="category-pill"
-                        data-category="lifestyle">
-                        Lifestyle
-                    </a>
-                    <a
-                        href="products.html?category=accessories"
-                        class="category-pill"
-                        data-category="accessories">
-                        Accessories
-                    </a>
-                    <a
-                        href="products.html?category=smart"
-                        class="category-pill"
-                        data-category="smart">
-                        Smart Tech
-                    </a>
+                    <button type="button" class="category-pill active" data-category="all" aria-current="page">All Products</button>
+                    <button type="button" class="category-pill" data-category="electronics">Electronics</button>
+                    <button type="button" class="category-pill" data-category="lifestyle">Lifestyle</button>
+                    <button type="button" class="category-pill" data-category="accessories">Accessories</button>
+                    <button type="button" class="category-pill" data-category="smart">Smart Tech</button>
                 </div>
             </section>
 
             <div class="products-results-bar">
-                <p
-                    id="products-count"
-                    class="products-count"
-                    aria-live="polite">
-                    Loading products...
-                </p>
+                <p id="products-count" class="products-count" aria-live="polite">Loading products...</p>
                 <label>
                     <span class="sr-only">Sort products</span>
-                    <select
-                        id="product-sort"
-                        class="products-sort"
-                        aria-label="Sort products">
+                    <select id="product-sort" class="products-sort" aria-label="Sort products">
                         <option value="featured">Sort by: Featured</option>
                         <option value="price-low">Price: Low to High</option>
                         <option value="price-high">Price: High to Low</option>
@@ -844,93 +651,34 @@
                 </label>
             </div>
 
-            <!-- ==================================================
-                 PRODUCT GRID
-            =================================================== -->
-            <section
-                id="product-list"
-                class="products-grid"
-                aria-busy="true"
-                aria-label="Products">
-                <article class="product-skeleton">
-                    <div class="skeleton-image"></div>
-                    <div class="skeleton-content">
-                        <div class="skeleton-line short"></div>
-                        <div class="skeleton-line medium"></div>
-                        <div class="skeleton-line long"></div>
-                        <div class="skeleton-line medium"></div>
-                    </div>
-                </article>
-                <article class="product-skeleton">
-                    <div class="skeleton-image"></div>
-                    <div class="skeleton-content">
-                        <div class="skeleton-line short"></div>
-                        <div class="skeleton-line medium"></div>
-                        <div class="skeleton-line long"></div>
-                        <div class="skeleton-line medium"></div>
-                    </div>
-                </article>
-                <article class="product-skeleton">
-                    <div class="skeleton-image"></div>
-                    <div class="skeleton-content">
-                        <div class="skeleton-line short"></div>
-                        <div class="skeleton-line medium"></div>
-                        <div class="skeleton-line long"></div>
-                        <div class="skeleton-line medium"></div>
-                    </div>
-                </article>
-                <article class="product-skeleton">
-                    <div class="skeleton-image"></div>
-                    <div class="skeleton-content">
-                        <div class="skeleton-line short"></div>
-                        <div class="skeleton-line medium"></div>
-                        <div class="skeleton-line long"></div>
-                        <div class="skeleton-line medium"></div>
-                    </div>
-                </article>
+            <!-- PRODUCT GRID -->
+            <section id="product-list" class="products-grid" aria-busy="true" aria-label="Products">
+                <!-- Skeletons rendered initially -->
+                <article class="product-skeleton"><div class="skeleton-image"></div><div class="skeleton-content"><div class="skeleton-line short"></div><div class="skeleton-line medium"></div><div class="skeleton-line long"></div><div class="skeleton-line medium"></div></div></article>
+                <article class="product-skeleton"><div class="skeleton-image"></div><div class="skeleton-content"><div class="skeleton-line short"></div><div class="skeleton-line medium"></div><div class="skeleton-line long"></div><div class="skeleton-line medium"></div></div></article>
+                <article class="product-skeleton"><div class="skeleton-image"></div><div class="skeleton-content"><div class="skeleton-line short"></div><div class="skeleton-line medium"></div><div class="skeleton-line long"></div><div class="skeleton-line medium"></div></div></article>
+                <article class="product-skeleton"><div class="skeleton-image"></div><div class="skeleton-content"><div class="skeleton-line short"></div><div class="skeleton-line medium"></div><div class="skeleton-line long"></div><div class="skeleton-line medium"></div></div></article>
             </section>
 
-            <div
-                id="empty-state"
-                class="products-empty hidden">
+            <div id="empty-state" class="products-empty hidden">
                 <div class="products-empty-icon">
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                        stroke-linecap="round"
-                        stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="7" />
-                        <path d="m20 20-4-4" />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
                     </svg>
                 </div>
                 <h2>No products found</h2>
                 <p>Try another search term or browse all products.</p>
-                <a
-                    href="products.html"
-                    class="products-empty-button"
-                    id="empty-reset-btn">
-                    View All Products
-                </a>
+                <button type="button" class="products-empty-button" id="empty-reset-btn">View All Products</button>
             </div>
         </main>
     </div>
 
-    <!-- ==========================================================
-         PRODUCT CARD TEMPLATE
-    =========================================================== -->
+    <!-- PRODUCT CARD TEMPLATE -->
     <template id="product-card-template">
         <article class="product-card">
-            <a
-                class="product-card-link"
-                href="#">
+            <a class="product-card-link" href="#">
                 <div class="product-card-image">
-                    <img
-                        src=""
-                        alt=""
-                        loading="lazy"
-                        decoding="async">
+                    <img src="" alt="" loading="lazy" decoding="async">
                 </div>
             </a>
             <div class="product-card-body">
@@ -939,20 +687,9 @@
                 <p class="product-description"></p>
                 <div class="product-bottom">
                     <p class="product-price"></p>
-                    <button
-                        type="button"
-                        class="product-cart-button"
-                        data-action="cart"
-                        aria-label="Add product to cart">
+                    <button type="button" class="product-cart-button" data-action="cart" aria-label="Add product to cart">
                         <span>Add to Cart</span>
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6" />
                             <circle cx="10" cy="20" r="1.3" />
                             <circle cx="18" cy="20" r="1.3" />
@@ -963,410 +700,174 @@
         </article>
     </template>
 
-    <!-- ==========================================================
-         JAVASCRIPT
-    =========================================================== -->
+    <!-- EMBEDDED APPLICATION SCRIPT -->
     <script>
-        "use strict";
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sample dataset (Replace or fetch from backend API / JSON)
+            const products = [
+                { id: 1, name: "Advanced UI Kit Pro", category: "electronics", price: 49.00, description: "Enterprise-grade UI components for modern web apps.", image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80" },
+                { id: 2, name: "Minimalist Desk Pad", category: "lifestyle", price: 29.00, description: "Smooth waterproof PU leather desk mat for productivity.", image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=600&q=80" },
+                { id: 3, name: "Ergonomic Laptop Stand", category: "accessories", price: 39.00, description: "Adjustable aluminum stand for improved posture.", image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=600&q=80" },
+                { id: 4, name: "Smart Wireless Hub", category: "smart", price: 89.00, description: "Multi-port connectivity hub with fast charging support.", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80" },
+                { id: 5, name: "Developer Icon Pack", category: "electronics", price: 19.00, description: "Vector icon sets optimized for software developers.", image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80" }
+            ];
 
-        (function () {
-            const productGrid = document.getElementById("product-list");
-            const emptyState = document.getElementById("empty-state");
-            const emptyResetBtn = document.getElementById("empty-reset-btn");
-            const searchInput = document.getElementById("product-search");
-            const searchForm = document.getElementById("product-search-form");
-            const productTemplate = document.getElementById("product-card-template");
-            const categoryContainer = document.querySelector(".products-categories");
-            const categoryLinks = document.querySelectorAll(".category-pill");
-            const productCount = document.getElementById("products-count");
-            const productSort = document.getElementById("product-sort");
-            const cartCount = document.getElementById("cart-count");
-            const menuToggle = document.getElementById("products-menu-toggle");
-            const mobileMenu = document.getElementById("products-mobile-menu");
+            // State management
+            let currentCategory = 'all';
+            let searchQuery = '';
+            let currentSort = 'featured';
 
-            let products = [];
-            let currentCategory = "all";
-            let currentSearch = "";
-            let currentSort = "featured";
+            // DOM Elements
+            const gridEl = document.getElementById('product-list');
+            const countEl = document.getElementById('products-count');
+            const emptyEl = document.getElementById('empty-state');
+            const searchInput = document.getElementById('product-search');
+            const sortSelect = document.getElementById('product-sort');
+            const categoryPills = document.querySelectorAll('.category-pill');
+            const menuToggle = document.getElementById('products-menu-toggle');
+            const mobileMenu = document.getElementById('products-mobile-menu');
+            const cartCountEl = document.getElementById('cart-count');
+            const emptyResetBtn = document.getElementById('empty-reset-btn');
+            const template = document.getElementById('product-card-template');
 
-            function normalize(value) {
-                return String(value || "").trim().toLowerCase();
-            }
-
-            function formatPrice(price) {
-                const number = Number(price);
-                if (!Number.isFinite(number)) {
-                    return "$0.00";
-                }
-                return new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "USD"
-                }).format(number);
-            }
-
-            function getCategoryFromURL() {
-                const params = new URLSearchParams(window.location.search);
-                const cat = params.get("category");
-                if (!cat) return "all";
-                const normalizedCat = normalize(cat);
-                const validCategories = Array.from(categoryLinks)
-                    .map(link => normalize(link.dataset.category))
-                    .filter(c => c && c !== "all");
-                if (normalizedCat === "all" || validCategories.includes(normalizedCat)) {
-                    return normalizedCat;
-                }
-                return "all";
-            }
-
-            currentCategory = getCategoryFromURL();
-
-            menuToggle?.addEventListener("click", () => {
-                const isOpen = mobileMenu.classList.toggle("open");
-                menuToggle.setAttribute("aria-expanded", String(isOpen));
-                menuToggle.setAttribute(
-                    "aria-label",
-                    isOpen ? "Close navigation menu" : "Open navigation menu"
-                );
+            // Mobile Menu Toggle
+            menuToggle?.addEventListener('click', () => {
+                const expanded = menuToggle.getAttribute('aria-expanded') === 'true';
+                menuToggle.setAttribute('aria-expanded', !expanded);
+                mobileMenu.classList.toggle('open');
             });
 
-            mobileMenu?.addEventListener("click", event => {
-                if (event.target.tagName === "A") {
-                    mobileMenu.classList.remove("open");
-                    menuToggle?.setAttribute("aria-expanded", "false");
-                    menuToggle?.setAttribute("aria-label", "Open navigation menu");
-                }
-            });
-
-            function updateActiveCategory() {
-                categoryLinks.forEach(link => {
-                    const category = normalize(link.dataset.category || "all");
-                    const active = category === normalize(currentCategory);
-                    link.classList.toggle("active", active);
-                    if (active) {
-                        link.setAttribute("aria-current", "page");
-                    } else {
-                        link.removeAttribute("aria-current");
-                    }
-                });
+            // Cart badge sync
+            function updateCartBadge() {
+                const cart = JSON.parse(localStorage.getItem('prasun_cart') || '[]');
+                const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+                if (cartCountEl) cartCountEl.textContent = totalItems;
             }
+            updateCartBadge();
 
-            function getVisibleProducts() {
-                let result = [...products];
-
-                if (normalize(currentCategory) !== "all") {
-                    result = result.filter(product =>
-                        normalize(product.category) === normalize(currentCategory)
-                    );
-                }
-
-                const keyword = currentSearch.trim().toLowerCase();
-                if (keyword) {
-                    result = result.filter(product => {
-                        const name = normalize(product.name);
-                        const category = normalize(product.category);
-                        const description = normalize(product.description);
-                        return (
-                            name.includes(keyword) ||
-                            category.includes(keyword) ||
-                            description.includes(keyword)
-                        );
-                    });
-                }
-
-                if (currentSort === "price-low") {
-                    result.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
-                } else if (currentSort === "price-high") {
-                    result.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
-                } else if (currentSort === "name") {
-                    result.sort((a, b) =>
-                        String(a.name || "").localeCompare(String(b.name || ""))
-                    );
-                } else if (currentSort === "featured") {
-                    // Preserves original fetched order from products.json without indexOf overhead
-                }
-
-                return result;
-            }
-
-            function createProductCard(product) {
-                const fragment = productTemplate.content.cloneNode(true);
-                const article = fragment.querySelector(".product-card");
-                const link = fragment.querySelector(".product-card-link");
-                const image = fragment.querySelector("img");
-                const category = fragment.querySelector(".product-category");
-                const title = fragment.querySelector(".product-title");
-                const description = fragment.querySelector(".product-description");
-                const price = fragment.querySelector(".product-price");
-                const button = fragment.querySelector(".product-cart-button");
-
-                const productId = product.id !== undefined && product.id !== null ? String(product.id) : "";
-                if (productId) {
-                    link.href = `product.html?id=${encodeURIComponent(productId)}`;
-                } else {
-                    link.removeAttribute("href");
-                }
-
-                image.src = product.image || "";
-                image.alt = product.name ? `Image of ${product.name}` : "Product image";
-                image.onerror = function () {
-                    this.onerror = null;
-                    this.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='180' viewBox='0 0 240 180'%3E%3Crect width='240' height='180' fill='%23f4f4f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a1a1aa' font-family='sans-serif' font-size='14'%3ENo Image%3C/text%3E%3C/svg%3E";
-                };
-
-                category.textContent = product.category ? product.category.toUpperCase() : "GENERAL";
-                title.textContent = product.name || "Untitled Product";
-                description.textContent = product.description || "";
-                price.textContent = formatPrice(product.price);
-
-                if (productId) {
-                    button.dataset.id = productId;
-                }
-                button.dataset.action = "cart";
-                article.dataset.id = productId;
-                article.dataset.category = product.category || "";
-
-                return fragment;
-            }
-
-            function createErrorState() {
-                let errEl = document.getElementById("error-state");
-                if (!errEl) {
-                    errEl = document.createElement("div");
-                    errEl.id = "error-state";
-                    errEl.className = "products-empty hidden";
-                    errEl.innerHTML = `
-                        <div class="products-empty-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="8" x2="12" y2="12"></line>
-                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                            </svg>
-                        </div>
-                        <h2>Failed to load products</h2>
-                        <p>Please check your connection and try again.</p>
-                        <button type="button" id="retry-button" class="products-empty-button">Retry</button>
-                    `;
-                    emptyState.parentNode.insertBefore(errEl, emptyState.nextSibling);
-                    errEl.querySelector("#retry-button")?.addEventListener("click", loadProducts);
-                }
-                return errEl;
-            }
-
-            function showErrorState() {
-                emptyState.classList.add("hidden");
-                productGrid.innerHTML = "";
-                productGrid.setAttribute("aria-busy", "false");
-                productCount.textContent = "Error loading products";
-                const errEl = document.getElementById("error-state") || createErrorState();
-                errEl.classList.remove("hidden");
-            }
-
-            function hideErrorState() {
-                const errEl = document.getElementById("error-state");
-                if (errEl) errEl.classList.add("hidden");
-            }
-
+            // Render products function
             function renderProducts() {
-                const visibleProducts = getVisibleProducts();
-                productGrid.innerHTML = "";
-                productGrid.setAttribute("aria-busy", "false");
+                gridEl.setAttribute('aria-busy', 'true');
+                
+                // Filter logic
+                let filtered = products.filter(item => {
+                    const matchesCat = currentCategory === 'all' || item.category === currentCategory;
+                    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
+                    return matchesCat && matchesSearch;
+                });
 
-                productCount.textContent = `${visibleProducts.length} ${
-                    visibleProducts.length === 1 ? "product" : "products"
-                } found`;
+                // Sort logic
+                if (currentSort === 'price-low') {
+                    filtered.sort((a, b) => a.price - b.price);
+                } else if (currentSort === 'price-high') {
+                    filtered.sort((a, b) => b.price - a.price);
+                } else if (currentSort === 'name') {
+                    filtered.sort((a, b) => a.name.localeCompare(b.name));
+                }
 
-                if (!visibleProducts.length) {
-                    emptyState.classList.remove("hidden");
-                    hideErrorState();
+                gridEl.innerHTML = '';
+
+                if (filtered.length === 0) {
+                    emptyEl.classList.remove('hidden');
+                    countEl.textContent = '0 products found';
+                    gridEl.setAttribute('aria-busy', 'false');
                     return;
                 }
 
-                emptyState.classList.add("hidden");
-                hideErrorState();
+                emptyEl.classList.add('hidden');
+                countEl.textContent = `Showing ${filtered.length} product${filtered.length === 1 ? '' : 's'}`;
 
                 const fragment = document.createDocumentFragment();
-                visibleProducts.forEach(product => {
-                    fragment.appendChild(createProductCard(product));
-                });
-                productGrid.appendChild(fragment);
-            }
-
-            categoryContainer?.addEventListener("click", event => {
-                const pill = event.target.closest(".category-pill");
-                if (!pill) return;
-                event.preventDefault();
-
-                const category = pill.dataset.category || "all";
-                currentCategory = normalize(category);
-
-                const newUrl =
-                    currentCategory === "all"
-                        ? "products.html"
-                        : `products.html?category=${encodeURIComponent(currentCategory)}`;
-                history.pushState({ category: currentCategory }, "", newUrl);
-
-                updateActiveCategory();
-                renderProducts();
-            });
-
-            window.addEventListener("popstate", () => {
-                currentCategory = getCategoryFromURL();
-                updateActiveCategory();
-                renderProducts();
-            });
-
-            function debounce(func, wait) {
-                let timeout;
-                return function (...args) {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func.apply(this, args), wait);
-                };
-            }
-
-            const handleSearchInput = debounce(event => {
-                currentSearch = event.target.value;
-                renderProducts();
-            }, 200);
-
-            searchInput?.addEventListener("input", handleSearchInput);
-
-            searchForm?.addEventListener("submit", event => {
-                event.preventDefault();
-            });
-
-            emptyResetBtn?.addEventListener("click", event => {
-                event.preventDefault();
-                currentCategory = "all";
-                currentSearch = "";
-                if (searchInput) searchInput.value = "";
-                history.pushState({ category: "all" }, "", "products.html");
-                updateActiveCategory();
-                renderProducts();
-            });
-
-            productSort?.addEventListener("change", event => {
-                currentSort = event.target.value;
-                renderProducts();
-            });
-
-            document.addEventListener("keydown", event => {
-                const isShortcut =
-                    (event.metaKey || event.ctrlKey) &&
-                    event.key.toLowerCase() === "k";
-                if (!isShortcut) {
-                    return;
-                }
-                event.preventDefault();
-                searchInput?.focus();
-                searchInput?.select();
-            });
-
-            function updateCartCount() {
-                if (!cartCount) return;
-                try {
-                    const raw = localStorage.getItem("cart");
-                    if (!raw) {
-                        cartCount.textContent = "0";
-                        return;
-                    }
-                    const cart = JSON.parse(raw);
-                    if (Array.isArray(cart)) {
-                        const total = cart.reduce((sum, item) => {
-                            const qty = Number(item?.quantity);
-                            return sum + (Number.isFinite(qty) && qty > 0 ? qty : 1);
-                        }, 0);
-                        cartCount.textContent = String(total);
-                        return;
-                    }
-                    cartCount.textContent = "0";
-                } catch {
-                    cartCount.textContent = "0";
-                }
-            }
-
-            function addToCart(productId) {
-                const product = products.find(p => String(p.id) === String(productId));
-                if (!product) return;
-                try {
-                    const raw = localStorage.getItem("cart");
-                    let cart = [];
-                    if (raw) {
-                        const parsed = JSON.parse(raw);
-                        if (Array.isArray(parsed)) cart = parsed;
-                    }
-                    const existingIndex = cart.findIndex(item => String(item.id) === String(product.id));
-                    if (existingIndex > -1) {
-                        cart[existingIndex].quantity = (Number(cart[existingIndex].quantity) || 1) + 1;
-                    } else {
-                        cart.push({
-                            id: product.id,
-                            name: product.name,
-                            price: product.price,
-                            image: product.image,
-                            category: product.category,
-                            quantity: 1
-                        });
-                    }
-                    localStorage.setItem("cart", JSON.stringify(cart));
-                    updateCartCount();
-                    window.dispatchEvent(new Event("storage"));
-                } catch (error) {
-                    console.error("Cart update error:", error);
-                }
-            }
-
-            productGrid?.addEventListener("click", event => {
-                const button = event.target.closest('[data-action="cart"]');
-                if (!button) return;
-                const productId = button.dataset.id;
-                if (productId) {
-                    addToCart(productId);
-                }
-            });
-
-            window.addEventListener("storage", event => {
-                if (!event.key || event.key === "cart") {
-                    updateCartCount();
-                }
-            });
-
-            async function loadProducts() {
-                try {
-                    productGrid.setAttribute("aria-busy", "true");
-                    hideErrorState();
-                    const response = await fetch("data/products.json");
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    const data = await response.json();
-                    if (!Array.isArray(data)) {
-                        throw new Error("products.json must contain an array.");
-                    }
+                filtered.forEach(product => {
+                    const clone = template.content.cloneNode(true);
                     
-                    products = data.filter(p =>
-                        p &&
-                        (p.id !== undefined && p.id !== null && p.id !== "") &&
-                        typeof p.name === "string" &&
-                        p.name.trim() !== "" &&
-                        !isNaN(Number(p.price))
-                    );
+                    const img = clone.querySelector('img');
+                    img.src = product.image;
+                    img.alt = product.name;
 
-                    currentCategory = getCategoryFromURL();
-                    updateActiveCategory();
+                    clone.querySelector('.product-category').textContent = product.category;
+                    clone.querySelector('.product-title').textContent = product.name;
+                    clone.querySelector('.product-description').textContent = product.description;
+                    clone.querySelector('.product-price').textContent = `$${product.price.toFixed(2)}`;
+                    
+                    const link = clone.querySelector('.product-card-link');
+                    link.href = `product-detail.html?id=${product.id}`;
+
+                    // Add to cart handler
+                    const cartBtn = clone.querySelector('.product-cart-button');
+                    cartBtn.addEventListener('click', () => {
+                        let cart = JSON.parse(localStorage.getItem('prasun_cart') || '[]');
+                        const existing = cart.find(i => i.id === product.id);
+                        if (existing) {
+                            existing.quantity = (existing.quantity || 1) + 1;
+                        } else {
+                            cart.push({ ...product, quantity: 1 });
+                        }
+                        localStorage.setItem('prasun_cart', JSON.stringify(cart));
+                        updateCartBadge();
+                        
+                        // Visual feedback
+                        const originalText = cartBtn.querySelector('span').textContent;
+                        cartBtn.querySelector('span').textContent = 'Added!';
+                        setTimeout(() => { cartBtn.querySelector('span').textContent = originalText; }, 1200);
+                    });
+
+                    fragment.appendChild(clone);
+                });
+
+                gridEl.appendChild(fragment);
+                gridEl.setAttribute('aria-busy', 'false');
+            }
+
+            // Event Listeners for Filters & Search
+            categoryPills.forEach(pill => {
+                pill.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    categoryPills.forEach(p => {
+                        p.classList.remove('active');
+                        p.removeAttribute('aria-current');
+                    });
+                    pill.classList.add('active');
+                    pill.setAttribute('aria-current', 'page');
+                    currentCategory = pill.getAttribute('data-category');
                     renderProducts();
-                    updateCartCount();
-                } catch (error) {
-                    console.error("Product loading error:", error);
-                    showErrorState();
-                }
-            }
+                });
+            });
 
-            if (document.readyState === "loading") {
-                document.addEventListener("DOMContentLoaded", loadProducts);
-            } else {
-                loadProducts();
-            }
-        })();
+            searchInput?.addEventListener('input', (e) => {
+                searchQuery = e.target.value.trim();
+                renderProducts();
+            });
+
+            sortSelect?.addEventListener('change', (e) => {
+                currentSort = e.target.value;
+                renderProducts();
+            });
+
+            emptyResetBtn?.addEventListener('click', () => {
+                currentCategory = 'all';
+                searchQuery = '';
+                if (searchInput) searchInput.value = '';
+                categoryPills.forEach(p => {
+                    p.classList.toggle('active', p.getAttribute('data-category') === 'all');
+                });
+                renderProducts();
+            });
+
+            // Global shortcut handler (⌘K or Ctrl+K for search)
+            window.addEventListener('keydown', (e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    searchInput?.focus();
+                }
+            });
+
+            // Initial Load Simulation
+            setTimeout(() => {
+                renderProducts();
+            }, 300);
+        });
     </script>
 </body>
 </html>
