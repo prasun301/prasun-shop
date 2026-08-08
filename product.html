@@ -15,6 +15,7 @@
       --apple-border: #d2d2d7;
       --apple-blue: #0071e3;
       --apple-blue-hover: #0077ed;
+      --apple-success: #34c759;
     }
 
     body {
@@ -158,6 +159,31 @@
       transform: scale(0.98);
     }
 
+    /* Cart Badge Style */
+    .cart-icon-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      color: var(--apple-text);
+      text-decoration: none;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -10px;
+      background-color: var(--apple-blue);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     .product-not-found {
       text-align: center;
       padding: 5rem 1rem;
@@ -168,14 +194,13 @@
       margin-bottom: 1rem;
     }
   </style>
-  <script src="js/script.js" defer></script>
 </head>
 <body>
 
   <!-- Header -->
   <header class="header">
-    <div class="header-container">
-      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
+    <div class="header-container" style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 2rem;">
+      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #1d1d1f; font-weight: 600;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
           <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -183,20 +208,20 @@
         </svg>
         <span>PRASUN SHOP</span>
       </a>
-      <nav class="nav-links" aria-label="Main Navigation">
-        <a href="index.html">Shop</a>
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
-        <a href="checkout.html">Checkout</a>
+      <nav class="nav-links" aria-label="Main Navigation" style="display: flex; gap: 2rem;">
+        <a href="index.html" style="text-decoration: none; color: #1d1d1f;">Shop</a>
+        <a href="about.html" style="text-decoration: none; color: #86868b;">About</a>
+        <a href="contact.html" style="text-decoration: none; color: #86868b;">Contact</a>
+        <a href="checkout.html" style="text-decoration: none; color: #86868b;">Checkout</a>
       </nav>
       <div class="header-actions">
         <a href="cart.html" class="cart-icon-wrap" aria-label="View Shopping Cart">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="9" cy="21" r="1"></circle>
             <circle cx="20" cy="21" r="1"></circle>
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
           </svg>
-          <span id="cart-count" class="cart-badge" aria-hidden="true">0</span>
+          <span id="cart-count" class="cart-badge">0</span>
         </a>
       </div>
     </div>
@@ -225,22 +250,22 @@
   </main>
 
   <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
+  <footer class="footer" style="border-top: 1px solid var(--apple-border); padding: 3rem 2rem; font-size: 0.85rem; color: var(--apple-gray);">
+    <div class="footer-content" style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
       <div class="footer-col">
-        <h4 class="footer-heading">PRASUN SHOP</h4>
+        <h4 class="footer-heading" style="color: var(--apple-text); margin-bottom: 0.75rem;">PRASUN SHOP</h4>
         <p>Premium technology and everyday accessories built with clean, modern design.</p>
       </div>
       <div class="footer-col">
-        <h4 class="navigation-heading">Navigation</h4>
-        <ul>
-          <li><a href="index.html">Shop All</a></li>
-          <li><a href="about.html">About Us</a></li>
-          <li><a href="contact.html">Contact Us</a></li>
+        <h4 style="color: var(--apple-text); margin-bottom: 0.75rem;">Navigation</h4>
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+          <li><a href="index.html" style="color: var(--apple-gray); text-decoration: none;">Shop All</a></li>
+          <li><a href="about.html" style="color: var(--apple-gray); text-decoration: none;">About Us</a></li>
+          <li><a href="contact.html" style="color: var(--apple-gray); text-decoration: none;">Contact Us</a></li>
         </ul>
       </div>
     </div>
-    <div class="footer-bottom">
+    <div class="footer-bottom" style="max-width: 1200px; margin: 2rem auto 0 auto; border-top: 1px solid var(--apple-border); padding-top: 1.5rem;">
       <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
     </div>
   </footer>
@@ -270,6 +295,32 @@
       }
     };
 
+    // Cart Logic Management
+    function getCart() {
+      try {
+        return JSON.parse(localStorage.getItem('prasun_cart')) || [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveCart(cart) {
+      localStorage.setItem('prasun_cart', JSON.stringify(cart));
+      updateCartBadge();
+    }
+
+    function updateCartBadge() {
+      const cart = getCart();
+      const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      const badge = document.getElementById('cart-count');
+      if (badge) {
+        badge.textContent = totalItems;
+      }
+    }
+
+    // Initialize badge count on page load
+    document.addEventListener('DOMContentLoaded', updateCartBadge);
+
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('id');
     const container = document.getElementById('product-detail-container');
@@ -289,11 +340,43 @@
           <div class="product-detail-price">${product.price}</div>
           <hr class="product-divider" />
           <p class="product-detail-description">${product.description}</p>
-          <button type="button" class="btn-apple-primary" data-action="add-cart" data-id="${productId}">
+          <button type="button" id="add-to-cart-btn" class="btn-apple-primary" data-id="${productId}">
             Add to Cart
           </button>
         </div>
       `;
+
+      // Attach event listener to the dynamically rendered button
+      document.getElementById('add-to-cart-btn').addEventListener('click', function() {
+        let cart = getCart();
+        const existingIndex = cart.findIndex(item => item.id === productId);
+        
+        if (existingIndex > -1) {
+          cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+        } else {
+          cart.push({
+            id: productId,
+            title: product.title,
+            price: product.price,
+            image: product.image,
+            quantity: 1
+          });
+        }
+        
+        saveCart(cart);
+
+        // Success state feedback styling
+        const btn = this;
+        const originalText = btn.textContent;
+        btn.textContent = 'Added to Cart ✓';
+        btn.style.backgroundColor = 'var(--apple-success)';
+        
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.backgroundColor = '';
+        }, 1500);
+      });
+
     } else {
       container.style.display = 'none';
       notFound.style.display = 'block';
