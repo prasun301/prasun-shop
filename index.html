@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PRASUN SHOP — Premium Tech & Accessories</title>
+  <meta name="description" content="Discover high-performance smart gadgets, lighting, power accessories, and audio gear designed for daily productivity." />
+  
+  <!-- Preconnect & Styles -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -14,7 +17,7 @@
       
       <!-- Brand Logo -->
       <a href="/" class="logo" aria-label="PRASUN SHOP Homepage">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <path d="M16 10a4 4 0 0 1-8 0"></path>
@@ -32,17 +35,24 @@
 
       <!-- Action Icons (Cart & Mobile Toggle) -->
       <div class="header-actions">
-        <a href="/cart.html" class="cart-icon-wrap" aria-label="View Shopping Cart">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <a href="/cart.html" class="cart-icon-wrap" aria-label="View Shopping Cart, 3 items">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="9" cy="21" r="1"></circle>
             <circle cx="20" cy="21" r="1"></circle>
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
           </svg>
-          <span class="cart-badge" data-count="3">3</span>
+          <span class="cart-badge" data-count="3" aria-hidden="true">3</span>
         </a>
 
-        <button class="mobile-menu-btn" aria-label="Toggle Menu" onclick="document.querySelector('.mobile-menu').classList.toggle('is-active')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button 
+          type="button" 
+          class="mobile-menu-btn" 
+          aria-label="Toggle mobile menu" 
+          aria-expanded="false" 
+          aria-controls="mobile-navigation"
+          onclick="const expanded = this.getAttribute('aria-expanded') === 'true'; this.setAttribute('aria-expanded', !expanded); document.getElementById('mobile-navigation').classList.toggle('is-active');"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -53,8 +63,8 @@
     </div>
 
     <!-- Mobile Dropdown Navigation -->
-    <nav class="mobile-menu" aria-label="Mobile Navigation">
-      <a href="/">Shop</a>
+    <nav id="mobile-navigation" class="mobile-menu" aria-label="Mobile Navigation">
+      <a href="/" class="active" aria-current="page">Shop</a>
       <a href="/about.html">About</a>
       <a href="/contact.html">Contact</a>
       <a href="/cart.html">Cart</a>
@@ -73,79 +83,99 @@
     </section>
 
     <!-- Search Bar -->
-    <div class="products-search">
-      <span class="products-search-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <form class="products-search" role="search" action="/search" method="GET" onSubmit="event.preventDefault();">
+      <label for="product-search-input" class="sr-only">Search products</label>
+      <span class="products-search-icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
       </span>
-      <input type="text" class="products-search-input" placeholder="Search products by name, category, or feature..." />
-    </div>
+      <input 
+        type="search" 
+        id="product-search-input"
+        name="q"
+        class="products-search-input" 
+        placeholder="Search products by name, category, or feature..." 
+        autocomplete="off"
+      />
+    </form>
 
     <!-- Category Filters -->
-    <div class="products-categories">
-      <button class="category-pill active">All</button>
-      <button class="category-pill">Smart Lighting</button>
-      <button class="category-pill">Power &amp; Charging</button>
-      <button class="category-pill">Audio</button>
+    <div class="products-categories" role="group" aria-label="Filter products by category">
+      <button type="button" class="category-pill active" aria-pressed="true">All</button>
+      <button type="button" class="category-pill" aria-pressed="false">Smart Lighting</button>
+      <button type="button" class="category-pill" aria-pressed="false">Power &amp; Charging</button>
+      <button type="button" class="category-pill" aria-pressed="false">Audio</button>
     </div>
 
     <!-- Product Grid -->
-    <section class="products-grid">
+    <section class="products-grid" aria-label="Product listings">
       
       <!-- Card 1 -->
       <article class="product-card">
-        <a href="/product/smart-lamp" class="product-card-link">
-          <div class="product-card-image">
+        <div class="product-card-image">
+          <a href="/product/smart-lamp" tabindex="-1" aria-hidden="true">
             <img src="https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80" alt="G-Shaped Smart LED Atmosphere Lamp" loading="lazy" width="600" height="600" />
+          </a>
+        </div>
+        <div class="product-card-body">
+          <span class="product-category">Smart Lighting</span>
+          <h2 class="product-title">
+            <a href="/product/smart-lamp" class="product-title-link">G-Shaped Smart LED Atmosphere Lamp</a>
+          </h2>
+          <p class="product-description">Includes built-in Bluetooth speaker and fast wireless charger pad.</p>
+          <div class="product-bottom">
+            <span class="product-price">$29.99</span>
+            <button type="button" class="product-cart-button" data-product-id="smart-lamp" aria-label="Add G-Shaped Smart LED Atmosphere Lamp to cart">
+              Add to Cart
+            </button>
           </div>
-          <div class="product-card-body">
-            <span class="product-category">Smart Lighting</span>
-            <h2 class="product-title">G-Shaped Smart LED Atmosphere Lamp</h2>
-            <p class="product-description">Includes built-in Bluetooth speaker and fast wireless charger pad.</p>
-            <div class="product-bottom">
-              <span class="product-price">$29.99</span>
-              <button type="button" class="product-cart-button" aria-label="Add to cart">Add to Cart</button>
-            </div>
-          </div>
-        </a>
+        </div>
       </article>
 
       <!-- Card 2 -->
       <article class="product-card">
-        <a href="/product/power-bank" class="product-card-link">
-          <div class="product-card-image">
+        <div class="product-card-image">
+          <a href="/product/power-bank" tabindex="-1" aria-hidden="true">
             <img src="https://images.unsplash.com/photo-1609592424109-dd9892f1b177?auto=format&fit=crop&w=600&q=80" alt="Mini Magnetic Power Bank" loading="lazy" width="600" height="600" />
+          </a>
+        </div>
+        <div class="product-card-body">
+          <span class="product-category">Power &amp; Charging</span>
+          <h2 class="product-title">
+            <a href="/product/power-bank" class="product-title-link">Mini 5000mAh Magnetic Wireless Power Bank</a>
+          </h2>
+          <p class="product-description">Compact fast-charging portable battery pack for mobile devices.</p>
+          <div class="product-bottom">
+            <span class="product-price">$39.99</span>
+            <button type="button" class="product-cart-button" data-product-id="power-bank" aria-label="Add Mini 5000mAh Magnetic Power Bank to cart">
+              Add to Cart
+            </button>
           </div>
-          <div class="product-card-body">
-            <span class="product-category">Power &amp; Charging</span>
-            <h2 class="product-title">Mini 5000mAh Magnetic Wireless Power Bank</h2>
-            <p class="product-description">Compact fast-charging portable battery pack for mobile devices.</p>
-            <div class="product-bottom">
-              <span class="product-price">$39.99</span>
-              <button type="button" class="product-cart-button" aria-label="Add to cart">Add to Cart</button>
-            </div>
-          </div>
-        </a>
+        </div>
       </article>
 
       <!-- Card 3 -->
       <article class="product-card">
-        <a href="/product/earbuds" class="product-card-link">
-          <div class="product-card-image">
+        <div class="product-card-image">
+          <a href="/product/earbuds" tabindex="-1" aria-hidden="true">
             <img src="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80" alt="Noise Cancelling Earbuds" loading="lazy" width="600" height="600" />
+          </a>
+        </div>
+        <div class="product-card-body">
+          <span class="product-category">Audio</span>
+          <h2 class="product-title">
+            <a href="/product/earbuds" class="product-title-link">Wireless Noise-Cancelling Sports Earbuds</a>
+          </h2>
+          <p class="product-description">High-fidelity Bluetooth audio with ergonomic sweat-resistant fit.</p>
+          <div class="product-bottom">
+            <span class="product-price">$49.99</span>
+            <button type="button" class="product-cart-button" data-product-id="earbuds" aria-label="Add Wireless Noise-Cancelling Sports Earbuds to cart">
+              Add to Cart
+            </button>
           </div>
-          <div class="product-card-body">
-            <span class="product-category">Audio</span>
-            <h2 class="product-title">Wireless Noise-Cancelling Sports Earbuds</h2>
-            <p class="product-description">High-fidelity Bluetooth audio with ergonomic sweat-resistant fit.</p>
-            <div class="product-bottom">
-              <span class="product-price">$49.99</span>
-              <button type="button" class="product-cart-button" aria-label="Add to cart">Add to Cart</button>
-            </div>
-          </div>
-        </a>
+        </div>
       </article>
 
     </section>
@@ -156,12 +186,12 @@
     <div class="footer-content">
       
       <div class="footer-col">
-        <h4 class="footer-heading">PRASUN SHOP</h4>
+        <h2 class="footer-heading">PRASUN SHOP</h2>
         <p>Premium technology and everyday accessories built with clean, modern design.</p>
       </div>
 
       <div class="footer-col">
-        <h4>Navigation</h4>
+        <h3>Navigation</h3>
         <ul>
           <li><a href="/">Shop All</a></li>
           <li><a href="/about.html">About Us</a></li>
@@ -172,7 +202,7 @@
       </div>
 
       <div class="footer-col">
-        <h4>Customer Care</h4>
+        <h3>Customer Care</h3>
         <ul>
           <li><a href="/privacy-policy.html">Privacy Policy</a></li>
           <li><a href="/terms-of-service.html">Terms of Service</a></li>
@@ -182,7 +212,7 @@
       </div>
 
       <div class="footer-col">
-        <h4>Connect</h4>
+        <h3>Connect</h3>
         <ul>
           <li><a href="mailto:support@prasunshop.com">support@prasunshop.com</a></li>
           <li><a href="/contact.html">Contact Form</a></li>
