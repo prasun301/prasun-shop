@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * PRASUN SHOP — PRODUCTS & INTERACTIVITY (PERFORMANCE OPTIMIZED)
+ * PRASUN SHOP — PRODUCTS & INTERACTIVITY (PRODUCTION OPTIMIZED)
  * High-performance product listing, async fetch, search, filtering, and sorting.
  * ============================================================================
  */
@@ -26,7 +26,7 @@
         `)}`
     };
 
-    // Reusable Formatters & Collators (Instantiated once to avoid GC pressure)
+    // Reusable Formatters & Collators (Instantiated once to eliminate GC overhead)
     const CURRENCY_FORMATTER = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -119,7 +119,7 @@
             normalizedCategory: normalize(category),
             description,
             rating: Number.isFinite(rating) ? rating : 0,
-            // Pre-computed search text index for O(1) string matching during filters
+            // Pre-computed normalized search index for fast lookup
             searchIndex: normalize(`${name} ${description} ${category}`)
         };
     }
@@ -198,7 +198,8 @@
         updatePageHeading();
     }
 
-    function syncStateToURL() {
+    // Prevents browser history pollution by using replaceState during filter/search operations
+    function syncStateToURL(replace = true) {
         const url = new URL(window.location.href);
 
         if (state.currentCategory) url.searchParams.set("category", state.currentCategory);
@@ -213,7 +214,11 @@
             url.searchParams.delete("sort");
         }
 
-        window.history.pushState({}, "", url);
+        if (replace) {
+            window.history.replaceState({}, "", url);
+        } else {
+            window.history.pushState({}, "", url);
+        }
     }
 
     function updateCategoryNavigation() {
@@ -242,16 +247,20 @@
 
     function applyFilters() {
         const cat = normalize(state.currentCategory);
-        const kw = normalize(state.currentKeyword);
+        const rawKw = normalize(state.currentKeyword);
+        // Tokenize search query to support non-contiguous word matching
+        const kwTokens = rawKw ? rawKw.split(/\s+/).filter(Boolean) : [];
 
-        // Fast filtering using pre-computed fields
+        // Fast filtering using pre-computed fields & token matching
         let filtered = state.allProducts.filter(p => {
             if (cat && p.normalizedCategory !== cat) return false;
-            if (kw && !p.searchIndex.includes(kw)) return false;
+            if (kwTokens.length > 0) {
+                return kwTokens.every(token => p.searchIndex.includes(token));
+            }
             return true;
         });
 
-        // Fast sorting using reused collator
+        // Fast sorting using pre-instantiated collator
         switch (state.currentSort) {
             case "price-asc":
                 filtered.sort((a, b) => a.price - b.price);
@@ -269,7 +278,7 @@
                 break;
         }
 
-        // Schedule batch DOM update
+        // Schedule batch DOM update via Animation Frame
         if (state.renderFrame) cancelAnimationFrame(state.renderFrame);
         state.renderFrame = requestAnimationFrame(() => renderProducts(filtered));
     }
@@ -288,6 +297,7 @@
             return;
         }
 
+        // Fast DOM insertion using single batch HTML string write
         elements.productList.innerHTML = products.map(renderProductCard).join("");
     }
 
@@ -371,7 +381,7 @@
         if (elements.searchInput) {
             elements.searchInput.addEventListener("input", debounce(() => {
                 state.currentKeyword = elements.searchInput.value.trim();
-                syncStateToURL();
+                syncStateToURL(true); // replaceState avoids polluting history during typing
                 applyFilters();
             }, CONFIG.DEBOUNCE_MS));
         }
@@ -380,7 +390,26 @@
         if (elements.sortSelect) {
             elements.sortSelect.addEventListener("change", () => {
                 state.currentSort = elements.sortSelect.value;
-                syncStateToURL();
+                syncStateToURL(true);
+                applyFilters();
+            });
+        }
+
+        // Intercept Category Pill Clicks for instant SPA switching without reloads
+        if (elements.categoryPills.length) {
+            document.addEventListener("click", (event) => {
+                const pill = event.target.closest(".category-pill, .products-categories a");
+                if (!pill) return;
+
+                event.preventDefault();
+                const targetCategory = pill.dataset.category || "";
+
+                if (state.currentCategory === targetCategory) return;
+
+                state.currentCategory = targetCategory;
+                syncStateToURL(false); // pushState for explicit navigation click
+                updateCategoryNavigation();
+                updatePageHeading();
                 applyFilters();
             });
         }
@@ -470,7 +499,7 @@
         if (elements.searchInput) elements.searchInput.value = "";
         if (elements.sortSelect) elements.sortSelect.value = "featured";
 
-        syncStateToURL();
+        syncStateToURL(true);
         updateCategoryNavigation();
         updatePageHeading();
         applyFilters();
