@@ -23,7 +23,7 @@
         return Number.isFinite(num) ? currencyFormatter.format(num) : "$0.00";
     }
 
-    // 2. Single-pass HTML Escaping via lookup map
+    // 2. Single-pass HTML Escaping via lookup map (Fixed to safely handle 0 and false)
     const ESCAPE_MAP = {
         "&": "&amp;",
         "<": "&lt;",
@@ -34,7 +34,7 @@
     const ESCAPE_REGEX = /[&<>"']/g;
 
     function escapeHTML(str) {
-        if (!str) return "";
+        if (str === null || str === undefined) return "";
         return String(str).replace(ESCAPE_REGEX, (match) => ESCAPE_MAP[match]);
     }
 
@@ -165,7 +165,6 @@
         }
 
         try {
-            // Standard browser fetch (uses browser HTTP cache when possible)
             const response = await fetch("data/products.json");
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
@@ -185,7 +184,7 @@
                 price: Number(productRaw.price) || 0,
                 image: String(productRaw.image || ""),
                 category: String(productRaw.category || "Smart Product"),
-                rating: productRaw.rating || "5.0",
+                rating: productRaw.rating !== undefined && productRaw.rating !== null ? productRaw.rating : "5.0",
                 sku: productRaw.sku || "N/A",
                 description: String(productRaw.description || ""),
                 features: Array.isArray(productRaw.features) ? productRaw.features : [],
@@ -320,7 +319,7 @@
         }
     }
 
-    // 6. Single Event Delegation Listener (Replaces multiple individual element bindings)
+    // 6. Single Event Delegation Listener
     function setupEventDelegation(product) {
         container.addEventListener("click", (e) => {
             const target = e.target.closest("button");
