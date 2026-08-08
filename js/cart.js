@@ -1,71 +1,27 @@
 /**
  * Prasun Shop — Cart Management Module
- * Production-Grade 10/10 Optimized Implementation
+ * Production-Grade Performance Optimized Implementation
  */
 "use strict";
 
 (function () {
     const CART_KEY_PRIMARY = "prasunShopCart";
     const CART_KEY_LEGACY = "cart";
-    
+
     const cartItemsContainer = document.getElementById("cart-items");
     const cartTotalEl = document.getElementById("cart-total");
     const cartCountEl = document.getElementById("cart-count");
 
     if (!cartItemsContainer) return;
 
-    // Cached products catalog to prevent redundant network requests
-    let cachedProducts = null;
+    // Singleton Intl.NumberFormat instance (prevents repeated GC and creation overhead)
+    const currencyFormatter = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD"
+    });
 
-    // Retrieve and validate cart from LocalStorage (supports dual-key fallback)
-    function getCart() {
-        try {
-            let stored = localStorage.getItem(CART_KEY_PRIMARY);
-            if (!stored) {
-                stored = localStorage.getItem(CART_KEY_LEGACY);
-            }
-            if (!stored) return [];
-            const parsed = JSON.parse(stored);
-            if (!Array.isArray(parsed)) return [];
-
-            const validCart = [];
-            for (const item of parsed) {
-                if (!item || item.id === undefined || item.id === null) continue;
-                const qty = Number(item.quantity);
-                validCart.push({
-                    id: item.id,
-                    quantity: Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 1
-                });
-            }
-            return validCart;
-        } catch (error) {
-            console.error("Error reading cart from localStorage:", error);
-            return [];
-        }
-    }
-
-    let cart = getCart();
-
-    // Save cart state across both storage keys for maximum backward compatibility
-    function saveCart() {
-        try {
-            const serialized = JSON.stringify(cart);
-            localStorage.setItem(CART_KEY_PRIMARY, serialized);
-            localStorage.setItem(CART_KEY_LEGACY, serialized);
-        } catch (error) {
-            console.error("Error saving cart to localStorage:", error);
-        }
-    }
-
-    // Clean Currency Formatter
-    function formatPrice(price) {
-        const num = Number(price);
-        if (!Number.isFinite(num)) return "$0.00";
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD"
-        }).format(num);
-    }
+    // Cached HashMap (Map<string, Product>) for O(1) product lookups
+    let productsMap = null;
 
     // Safe HTML Escaping Helper to Prevent XSS
     function escapeHTML(value) {
@@ -78,11 +34,54 @@
             .replace(/'/g, "&#039;");
     }
 
-    // Update Header Cart Badge Visibility and Count
+    // Reuse singleton currency formatter
+    function formatPrice(price) {
+        const num = Number(price);
+        return currencyFormatter.format(Number.isFinite(num) ? num : 0);
+    }
+
+    // Retrieve and validate cart from LocalStorage
+    function getCart() {
+        try {
+            const stored = localStorage.getItem(CART_KEY_PRIMARY) || localStorage.getItem(CART_KEY_LEGACY);
+            if (!stored) return [];
+            const parsed = JSON.parse(stored);
+            if (!Array.isArray(parsed)) return [];
+
+            const validCart = [];
+            for (const item of parsed) {
+                if (!item || item.id === undefined || item.id === null) continue;
+                const qty = Number(item.quantity);
+                validCart.push({
+                    id: String(item.id),
+                    quantity: Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 1
+                });
+            }
+            return validCart;
+        } catch (error) {
+            console.error("Error reading cart from localStorage:", error);
+            return [];
+        }
+    }
+
+    let cart = getCart();
+
+    // Save cart state across both storage keys
+    function saveCart() {
+        try {
+            const serialized = JSON.stringify(cart);
+            localStorage.setItem(CART_KEY_PRIMARY, serialized);
+            localStorage.setItem(CART_KEY_LEGACY, serialized);
+        } catch (error) {
+            console.error("Error saving cart to localStorage:", error);
+        }
+    }
+
+    // Update Header Cart Badge
     function updateCartCount() {
         if (!cartCountEl) return;
 
-        const totalCount = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+        const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
         cartCountEl.textContent = totalCount;
 
         if (totalCount > 0) {
@@ -92,6 +91,16 @@
             cartCountEl.classList.remove("opacity-100", "visible");
             cartCountEl.classList.add("opacity-0", "invisible");
         }
+    }
+
+    // Compute total cost using O(1) HashMap lookups
+    function calculateTotal() {
+        if (!productsMap) return 0;
+        return cart.reduce((sum, item) => {
+            const product = productsMap.get(item.id);
+            if (!product) return sum;
+            return sum + (Number(product.price) || 0) * item.quantity;
+        }, 0);
     }
 
     // Render Empty Cart State
@@ -118,11 +127,11 @@
         }
     }
 
-    // Fetch Products Catalog with Memory Caching
-    async function fetchProducts() {
-        if (cachedProducts) return cachedProducts;
+    // Fetch Products Catalog & Build Map Index
+    async function fetchProductsMap() {
+        if (productsMap) return productsMap;
 
-        const response = await fetch("data/products.json", { cache: "no-cache" });
+        const response = await fetch("data/products.json");
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -132,8 +141,14 @@
             throw new Error("Invalid data format: products.json must contain an array.");
         }
 
-        cachedProducts = data;
-        return cachedProducts;
+        // Convert array to HashMap for O(1) instant key lookups
+        productsMap = new Map();
+        for (const product of data) {
+            if (product && product.id !== undefined && product.id !== null) {
+                productsMap.set(String(product.id), product);
+            }
+        }
+        return productsMap;
     }
 
     // Main Render Cart Function
@@ -146,15 +161,15 @@
         }
 
         try {
-            const products = await fetchProducts();
+            const pMap = await fetchProductsMap();
             let total = 0;
             let html = "";
 
             cart.forEach(item => {
-                const product = products.find(p => p && String(p.id) === String(item.id));
+                const product = pMap.get(item.id);
                 if (!product) return;
 
-                const quantity = Math.max(1, Number(item.quantity) || 1);
+                const quantity = item.quantity;
                 const price = Number(product.price) || 0;
                 const subtotal = price * quantity;
                 total += subtotal;
@@ -175,7 +190,6 @@
                                     class="w-20 h-20 object-cover rounded-xl border border-zinc-200 bg-zinc-100"
                                     loading="lazy"
                                     decoding="async"
-                                    onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\' viewBox=\\'0 0 100 100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23f4f4f5\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%23a1a1aa\\' font-family=\\'sans-serif\\' font-size=\\'12\\'%3ENo Img%3C/text%3E%3C/svg%3E';"
                                 >
                             </a>
                             <div class="min-w-0">
@@ -200,7 +214,7 @@
                                 >
                                     −
                                 </button>
-                                <span class="w-10 text-center text-xs font-semibold text-zinc-900" aria-label="Quantity">${quantity}</span>
+                                <span class="w-10 text-center text-xs font-semibold text-zinc-900" data-role="quantity-display" aria-label="Quantity">${quantity}</span>
                                 <button 
                                     type="button" 
                                     data-action="increase" 
@@ -214,7 +228,7 @@
 
                             <!-- Subtotal and Remove -->
                             <div class="text-right shrink-0">
-                                <p class="text-sm font-bold text-zinc-900 mb-1">${formatPrice(subtotal)}</p>
+                                <p class="text-sm font-bold text-zinc-900 mb-1" data-role="subtotal-display">${formatPrice(subtotal)}</p>
                                 <button 
                                     type="button" 
                                     data-action="remove" 
@@ -246,7 +260,7 @@
                 <div class="py-8 text-center col-span-full space-y-3">
                     <h3 class="text-sm font-semibold text-red-600">Unable to load your cart items</h3>
                     <p class="text-xs text-zinc-500">Please check your network connection and try again.</p>
-                    <button type="button" onclick="window.location.reload()" class="px-4 py-2 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-all shadow-xs cursor-pointer">
+                    <button type="button" data-action="retry" class="px-4 py-2 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg transition-all shadow-xs cursor-pointer">
                         Retry
                     </button>
                 </div>
@@ -254,31 +268,76 @@
         }
     }
 
-    // Event Delegation for Cart Actions (Increase, Decrease, Remove)
+    // Fast in-place DOM update for quantity modifications (bypasses full innerHTML re-parse)
+    function updateItemDOM(articleEl, item) {
+        const product = productsMap ? productsMap.get(item.id) : null;
+        if (!product) return;
+
+        const qtyDisplay = articleEl.querySelector('[data-role="quantity-display"]');
+        const subtotalDisplay = articleEl.querySelector('[data-role="subtotal-display"]');
+
+        if (qtyDisplay) qtyDisplay.textContent = item.quantity;
+        if (subtotalDisplay) {
+            const price = Number(product.price) || 0;
+            subtotalDisplay.textContent = formatPrice(price * item.quantity);
+        }
+
+        if (cartTotalEl) {
+            cartTotalEl.textContent = formatPrice(calculateTotal());
+        }
+        updateCartCount();
+    }
+
+    // Event Delegation for Image Failures (Capture phase required for 'error' event)
+    cartItemsContainer.addEventListener("error", event => {
+        if (event.target.tagName === "IMG") {
+            event.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f4f4f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a1a1aa' font-family='sans-serif' font-size='12'%3ENo Img%3C/text%3E%3C/svg%3E";
+        }
+    }, true);
+
+    // Event Delegation for Cart Actions
     cartItemsContainer.addEventListener("click", event => {
+        const retryBtn = event.target.closest('button[data-action="retry"]');
+        if (retryBtn) {
+            renderCart();
+            return;
+        }
+
         const button = event.target.closest("button[data-action]");
         if (!button) return;
 
         const id = String(button.dataset.id);
         const action = button.dataset.action;
-        const item = cart.find(i => String(i.id) === id);
+        const item = cart.find(i => i.id === id);
 
         if (action === "remove") {
-            cart = cart.filter(i => String(i.id) !== id);
-        } else if (item && action === "increase") {
-            item.quantity = Number(item.quantity || 0) + 1;
-        } else if (item && action === "decrease") {
-            item.quantity = Number(item.quantity || 1) - 1;
+            cart = cart.filter(i => i.id !== id);
+            saveCart();
+            renderCart(); // Full re-render needed when removing an item node
+        } else if (item && (action === "increase" || action === "decrease")) {
+            if (action === "increase") {
+                item.quantity += 1;
+            } else {
+                item.quantity -= 1;
+            }
+
             if (item.quantity <= 0) {
-                cart = cart.filter(i => String(i.id) !== id);
+                cart = cart.filter(i => i.id !== id);
+                saveCart();
+                renderCart();
+            } else {
+                saveCart();
+                const articleEl = button.closest("article[data-product-id]");
+                if (articleEl) {
+                    updateItemDOM(articleEl, item); // Fast path: inline target DOM update
+                } else {
+                    renderCart();
+                }
             }
         }
-
-        saveCart();
-        renderCart();
     });
 
-    // Sync across multiple browser tabs automatically
+    // Cross-tab Synchronization
     window.addEventListener("storage", event => {
         if (event.key === CART_KEY_PRIMARY || event.key === CART_KEY_LEGACY) {
             cart = getCart();
