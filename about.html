@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — PRASUN SHOP</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --apple-bg: #f5f5f7;
+      --apple-card-bg: #ffffff;
+      --apple-text: #1d1d1f;
+      --apple-gray: #86868b;
+      --apple-border: #d2d2d7;
+      --apple-dark: #1d1d1f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background-color: var(--apple-card-bg);
+      color: var(--apple-text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .header {
+      border-bottom: 1px solid var(--apple-border);
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--apple-text);
+      font-weight: 600;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--apple-gray);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover, .nav-links a.active { color: var(--apple-text); }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin: 0 0 1rem 0;
+      letter-spacing: -0.015em;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--apple-gray);
+      margin: 0;
+    }
+
+    .content-section {
+      font-size: 1.05rem;
+      color: #48484a;
+    }
+
+    .content-section p {
+      margin-bottom: 1.5rem;
+    }
+
+    .footer {
+      border-top: 1px solid var(--apple-border);
+      background-color: var(--apple-bg);
+      padding: 2.5rem;
+      text-align: center;
+      color: var(--apple-gray);
+      font-size: 0.85rem;
+      margin-top: 6rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-container">
+      <a href="index.html" class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-0.5-0.5Z"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>
+        </svg>
+        <span>PRASUN SHOP</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">Ebooks</a>
+        <a href="about.html" class="active">About</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="hero">
+      <h1>About Prasun Shop</h1>
+      <p>Practical guides and technical documentation for engineers and professionals.</p>
+    </div>
+
+    <div class="content-section" style="max-width: 700px; margin: 0 auto; line-height: 1.7;">
+      <p>Welcome to Prasun Shop, an independent digital publishing platform founded and authored by <strong>Prasun Barua</strong>. Our mission is to break down complex engineering concepts into clear, actionable, and intuitive guides.</p>
+      
+      <p>Whether you are looking to understand residential solar systems, dive deep into electrical engineering fundamentals, or explore the intricacies of semiconductor manufacturing, these publications are designed to help you make informed technical decisions.</p>
+      
+      <p>All books are delivered as high-quality digital PDFs instantly upon purchase, ensuring you get immediate access to the resources you need.</p>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 PRASUN SHOP. All rights reserved. Secure digital delivery powered by Lemon Squeezy.</p>
+  </footer>
+
+</body>
+</html>
