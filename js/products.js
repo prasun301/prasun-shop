@@ -1,7 +1,7 @@
 /**
  * ============================================================================
  * PRASUN SHOP — PRODUCTS & INTERACTIVITY (PERFORMANCE & A11Y OPTIMIZED)
- * Production-ready async fetch, tokenized search, filtering, and optimized rendering.
+ * Production-ready async fetch, tokenized search, filtering, and cart sync.
  * ============================================================================
  */
 
@@ -14,11 +14,12 @@
 
     const CONFIG = {
         STORAGE_KEYS: ["products", "prasun_products"],
+        CART_KEY: "prasun_cart",
         CACHE_TTL_MS: 1000 * 60 * 30, // 30 minutes cache validity
         API_ENDPOINT: "/api/products.json",
         FETCH_TIMEOUT_MS: 8000,
         DEBOUNCE_MS: 150,
-        ITEMS_PER_PAGE: 24, // Prevents DOM freeze on huge lists
+        ITEMS_PER_PAGE: 24,
         FALLBACK_IMAGE: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
             <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
                 <rect width="800" height="600" fill="#f4f4f5"/>
@@ -61,6 +62,7 @@
         resultsCount: null,
         heading: null,
         liveRegion: null,
+        cartBadge: null,
         categoryPills: []
     };
 
@@ -88,6 +90,53 @@
     function formatPrice(value) {
         const price = Number(value);
         return Number.isFinite(price) ? currencyFormatter.format(price) : "$0.00";
+    }
+
+    /* =========================================================================
+       GLOBAL CART BADGE MANAGEMENT
+       ========================================================================= */
+
+    function updateCartBadge() {
+        if (!DOM.cartBadge) return;
+
+        try {
+            const rawCart = localStorage.getItem(CONFIG.CART_KEY);
+            const cart = rawCart ? JSON.parse(rawCart) : [];
+            const totalCount = Array.isArray(cart) 
+                ? cart.reduce((acc, item) => acc + Number(item.quantity || 1), 0)
+                : 0;
+
+            DOM.cartBadge.textContent = String(totalCount);
+            DOM.cartBadge.hidden = totalCount === 0;
+        } catch (e) {
+            console.warn("[Prasun Shop] Failed to update cart badge count:", e);
+        }
+    }
+
+    function addToCart(productId) {
+        const product = state.allProducts.find(p => p.id === productId);
+        if (!product) return;
+
+        try {
+            const rawCart = localStorage.getItem(CONFIG.CART_KEY);
+            const cart = rawCart ? JSON.parse(rawCart) : [];
+            const existingIndex = cart.findIndex(item => item.id === productId);
+
+            if (existingIndex > -1) {
+                cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+
+            localStorage.setItem(CONFIG.CART_KEY, JSON.stringify(cart));
+            updateCartBadge();
+
+            if (DOM.liveRegion) {
+                DOM.liveRegion.textContent = `${product.name} added to cart.`;
+            }
+        } catch (e) {
+            console.error("[Prasun Shop] Failed to add item to cart:", e);
+        }
     }
 
     /* =========================================================================
@@ -131,9 +180,8 @@
                 if (!stored) continue;
 
                 const parsed = JSON.parse(stored);
-                // Validation check for TTL wrapping or standard array
                 if (parsed?.timestamp && (Date.now() - parsed.timestamp > CONFIG.CACHE_TTL_MS)) {
-                    localStorage.removeItem(key); // Expired cache
+                    localStorage.removeItem(key);
                     continue;
                 }
 
@@ -169,7 +217,6 @@
             const json = await response.json();
             const normalized = Array.isArray(json) ? json.map(normalizeProduct).filter(Boolean) : [];
 
-            // Save fresh copy to local storage with timestamp
             if (normalized.length > 0) {
                 try {
                     localStorage.setItem(CONFIG.STORAGE_KEYS[0], JSON.stringify({
@@ -196,7 +243,6 @@
 
         DOM.productList.setAttribute("aria-busy", "true");
 
-        // 1. Try Cache First
         const cached = getCachedProducts();
         if (cached) {
             state.allProducts = cached;
@@ -205,7 +251,6 @@
             return;
         }
 
-        // 2. Fallback to API
         try {
             state.allProducts = await fetchProductsFromAPI();
             if (!state.allProducts.length) {
@@ -291,19 +336,16 @@
     function applyFilters() {
         let filtered = state.allProducts;
 
-        // 1. Category Filter
         if (state.currentCategory) {
             const cat = normalize(state.currentCategory);
             filtered = filtered.filter(p => p._normalizedCategory === cat);
         }
 
-        // 2. Tokenized Multi-Term Search Filter
         if (state.currentKeyword) {
             const tokens = normalize(state.currentKeyword).split(/\s+/).filter(Boolean);
             filtered = filtered.filter(p => tokens.every(token => p._searchIndex.includes(token)));
         }
 
-        // 3. Sorting
         if (state.currentSort !== "featured") {
             filtered = [...filtered];
             switch (state.currentSort) {
@@ -328,7 +370,6 @@
         state.filteredProducts = filtered;
         state.currentPage = 1;
 
-        // Schedule RAF rendering
         if (state.renderFrame) cancelAnimationFrame(state.renderFrame);
         state.renderFrame = requestAnimationFrame(() => {
             renderProducts(state.filteredProducts);
@@ -350,10 +391,8 @@
             return;
         }
 
-        // Slice for pagination chunking
         const paginatedItems = products.slice(0, CONFIG.ITEMS_PER_PAGE);
 
-        // Fast Template Rendering via DocumentFragment to avoid raw HTML string parsing overhead
         const fragment = document.createDocumentFragment();
         const template = document.createElement("template");
 
@@ -378,33 +417,38 @@
 
         return `
             <article class="product-card" data-id="${safeId}">
-                <a class="product-card-link" href="product.html?id=${safeId}" aria-label="View ${escapeHTML(product.name)}">
-                    <div class="product-card-image">
-                        <img 
-                            src="${escapeHTML(image)}" 
-                            alt="${escapeHTML(product.name)}" 
-                            loading="lazy" 
-                            decoding="async"
-                        />
-                        ${categoryHTML}
-                    </div>
-                    <div class="product-card-body">
-                        ${ratingHTML ? `<div class="product-meta">${ratingHTML}</div>` : ""}
-                        <h3 class="product-title">${escapeHTML(product.name)}</h3>
-                        ${product.description ? `<p class="product-description">${escapeHTML(product.description)}</p>` : ""}
-                        <div class="product-bottom">
-                            <p class="product-price">${formatPrice(product.price)}</p>
-                            <span class="product-view-button">View Details</span>
+                <div class="product-card-inner">
+                    <a class="product-card-link" href="product.html?id=${safeId}" aria-label="View ${escapeHTML(product.name)}">
+                        <div class="product-card-image">
+                            <img 
+                                src="${escapeHTML(image)}" 
+                                alt="${escapeHTML(product.name)}" 
+                                loading="lazy" 
+                                decoding="async"
+                            />
+                            ${categoryHTML}
                         </div>
+                        <div class="product-card-body">
+                            ${ratingHTML ? `<div class="product-meta">${ratingHTML}</div>` : ""}
+                            <h3 class="product-title">${escapeHTML(product.name)}</h3>
+                            ${product.description ? `<p class="product-description">${escapeHTML(product.description)}</p>` : ""}
+                            <p class="product-price">${formatPrice(product.price)}</p>
+                        </div>
+                    </a>
+                    <div class="product-card-actions">
+                        <button type="button" class="btn-add-to-cart" data-action="add-cart" data-id="${safeId}">
+                            Add to Cart
+                        </button>
                     </div>
-                </a>
+                </div>
             </article>
         `;
     }
 
-    function setupImageErrorDelegation() {
+    function setupProductListDelegation() {
         if (!DOM.productList) return;
 
+        // Image error handling delegation
         DOM.productList.addEventListener("error", (event) => {
             if (event.target && event.target.tagName === "IMG") {
                 const img = event.target;
@@ -413,6 +457,16 @@
                 img.closest(".product-card-image")?.classList.add("image-error");
             }
         }, true);
+
+        // Click delegation for Add to Cart
+        DOM.productList.addEventListener("click", (event) => {
+            const cartBtn = event.target.closest('[data-action="add-cart"]');
+            if (cartBtn) {
+                event.preventDefault();
+                const productId = decodeURIComponent(cartBtn.dataset.id);
+                addToCart(productId);
+            }
+        });
     }
 
     /* =========================================================================
@@ -435,14 +489,12 @@
             DOM.resultsCount.textContent = text;
         }
 
-        // Live Region announcement for screen readers
         if (DOM.liveRegion) {
             DOM.liveRegion.textContent = text;
         }
     }
 
     function initializeControls() {
-        // Search Input & Debounce
         if (DOM.searchInput) {
             DOM.searchInput.addEventListener("input", () => {
                 const val = DOM.searchInput.value.trim();
@@ -457,7 +509,6 @@
             });
         }
 
-        // Clear Search Button
         if (DOM.searchClearBtn) {
             DOM.searchClearBtn.addEventListener("click", () => {
                 if (DOM.searchInput) {
@@ -471,7 +522,6 @@
             });
         }
 
-        // Sort Select Dropdown
         if (DOM.sortSelect) {
             DOM.sortSelect.addEventListener("change", () => {
                 state.currentSort = DOM.sortSelect.value;
@@ -480,7 +530,6 @@
             });
         }
 
-        // Category Pill Click Delegation
         const categoryContainer = $(".products-categories");
         if (categoryContainer) {
             categoryContainer.addEventListener("click", (e) => {
@@ -498,7 +547,6 @@
             });
         }
 
-        // Global Keyboard Shortcut (Cmd+K / Ctrl+K)
         document.addEventListener("keydown", (event) => {
             if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
                 if (DOM.searchInput) {
@@ -509,10 +557,16 @@
             }
         });
 
-        // Browser Back/Forward navigation handling
         window.addEventListener("popstate", () => {
             readStateFromURL();
             applyFilters();
+        });
+
+        // Sync cart counter across tabs/windows
+        window.addEventListener("storage", (e) => {
+            if (e.key === CONFIG.CART_KEY) {
+                updateCartBadge();
+            }
         });
     }
 
@@ -590,8 +644,8 @@
         DOM.resultsCount = $("#products-count") || $(".products-result-count");
         DOM.heading = $("#products-heading") || $(".products-heading");
         DOM.categoryPills = $$(".category-pill");
+        DOM.cartBadge = $("#cart-count");
 
-        // Accessibility Live Region (Creates dynamically if missing)
         let liveRegion = $("#a11y-status-region");
         if (!liveRegion) {
             liveRegion = document.createElement("div");
@@ -606,8 +660,9 @@
 
     function initialize() {
         cacheDOM();
+        updateCartBadge();
         initializeControls();
-        setupImageErrorDelegation();
+        setupProductListDelegation();
         loadProducts();
     }
 
