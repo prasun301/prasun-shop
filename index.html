@@ -4,7 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PRASUN SHOP — Minimalist Store</title>
-  <meta name="description" content="Discover premium products at PRASUN SHOP." />
+  <meta name="description" content="Discover premium products and digital guides at PRASUN SHOP." />
+
+  <!-- Lemon Squeezy Embed Library (Opens checkout in an overlay) -->
+  <script src="https://assets.lemonsqueezy.com/lemon.js" defer></script>
+
   <style>
     :root {
       --apple-bg: #f5f5f7;
@@ -14,6 +18,8 @@
       --apple-border: #d2d2d7;
       --apple-dark: #1d1d1f;
       --apple-dark-hover: #333336;
+      --apple-accent: #0071e3;
+      --apple-accent-hover: #0077ed;
     }
 
     * {
@@ -28,7 +34,7 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    button:focus, input:focus {
+    button:focus, input:focus, a:focus {
       outline: none !important;
     }
 
@@ -126,11 +132,12 @@
 
     .product-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 2rem;
     }
 
     .product-card {
+      position: relative;
       background-color: var(--apple-bg);
       border: 1px solid var(--apple-border);
       border-radius: 20px;
@@ -146,9 +153,25 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
     }
 
+    /* Digital Ebook Badge */
+    .badge-digital {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background-color: var(--apple-dark);
+      color: #ffffff;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 0.25rem 0.6rem;
+      border-radius: 980px;
+      letter-spacing: 0.05em;
+      z-index: 2;
+    }
+
     .product-image {
       width: 100%;
-      height: 200px;
+      height: 220px;
       object-fit: contain;
       background: #ffffff;
       border-radius: 12px;
@@ -158,19 +181,36 @@
     }
 
     .product-info h3 {
-      font-size: 1.05rem;
+      font-size: 1.1rem;
       font-weight: 600;
-      margin: 0 0 0.4rem 0;
+      margin: 0 0 0.25rem 0;
+    }
+
+    .product-meta {
+      font-size: 0.8rem;
+      color: var(--apple-gray);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .product-price {
       font-weight: 600;
-      color: var(--apple-gray);
-      font-size: 0.95rem;
+      color: var(--apple-text);
+      font-size: 1.1rem;
       margin-bottom: 1rem;
     }
 
-    .btn-add {
+    /* Action Buttons */
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    .btn-buy, .btn-add {
       background-color: var(--apple-dark);
       color: #ffffff;
       border: none;
@@ -180,11 +220,35 @@
       font-weight: 500;
       cursor: pointer;
       width: 100%;
-      transition: background-color 0.2s;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      transition: background-color 0.2s, transform 0.1s;
     }
 
-    .btn-add:hover {
+    .btn-buy:hover, .btn-add:hover {
       background-color: var(--apple-dark-hover);
+    }
+
+    .btn-preview {
+      background-color: transparent;
+      color: var(--apple-accent);
+      border: 1px solid var(--apple-border);
+      padding: 0.65rem 1rem;
+      border-radius: 980px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+
+    .btn-preview:hover {
+      background-color: #ffffff;
+      border-color: var(--apple-accent);
     }
 
     .footer {
@@ -231,14 +295,44 @@
 
   <!-- Hero Section -->
   <section class="hero">
-    <h1>Explore Our Products</h1>
+    <h1>Explore Our Products & Guides</h1>
     <p>Designed with simplicity. Built for performance.</p>
   </section>
 
   <!-- Main Product Grid -->
   <main class="main-container">
     <div class="product-grid" id="product-grid">
-      <!-- Sample Products -->
+
+      <!-- ========================================================= -->
+      <!-- FEATURED EBOOK PRODUCT CARD (Lemon Squeezy Integration)     -->
+      <!-- ========================================================= -->
+      <div class="product-card">
+        <span class="badge-digital">PDF Ebook</span>
+        <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=500&q=80" alt="Ebook Cover" class="product-image" />
+        
+        <div class="product-info">
+          <h3>Mastering Web Development</h3>
+          <div class="product-meta">
+            <span>By Prasun Barua</span> • <span>180 Pages</span> • <span>PDF / ePub</span>
+          </div>
+          <div class="product-price">$19.00</div>
+        </div>
+
+        <div class="button-group">
+          <!-- Lemon Squeezy Instant Overlay Checkout Button -->
+          <!-- REPLACE 'https://prasun.lemonsqueezy.com/buy/xxxx-xxxx-xxxx?embed=1' WITH YOUR ACTUAL LEMON SQUEEZY BUY LINK -->
+          <a href="https://prasun.lemonsqueezy.com/buy/xxxx-xxxx-xxxx?embed=1" class="lemonsqueezy-button btn-buy">
+            Buy Now (Instant Download)
+          </a>
+
+          <!-- Optional Sample Preview PDF Button -->
+          <a href="sample-preview.pdf" target="_blank" class="btn-preview">
+            Read Free Preview (PDF)
+          </a>
+        </div>
+      </div>
+
+      <!-- Sample Physical Products -->
       <div class="product-card">
         <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80" alt="Wireless Headphones" class="product-image" />
         <div class="product-info">
@@ -266,14 +360,6 @@
         <button class="btn-add" onclick="addToCart('Classic Camera', '$349.00', 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=500&q=80')">Add to Bag</button>
       </div>
 
-      <div class="product-card">
-        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=500&q=80" alt="Performance Sneaker" class="product-image" />
-        <div class="product-info">
-          <h3>Performance Sneaker</h3>
-          <div class="product-price">$129.00</div>
-        </div>
-        <button class="btn-add" onclick="addToCart('Performance Sneaker', '$129.00', 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=500&q=80')">Add to Bag</button>
-      </div>
     </div>
   </main>
 
@@ -318,11 +404,17 @@
       localStorage.setItem('prasun_cart', JSON.stringify(cart));
       updateCartBadge();
       
-      // Quick confirmation visual or redirect option
       window.location.href = 'cart.html';
     }
 
-    document.addEventListener('DOMContentLoaded', updateCartBadge);
+    document.addEventListener('DOMContentLoaded', () => {
+      updateCartBadge();
+      
+      // Initialize Lemon Squeezy JS listener
+      if (window.createLemonSqueezy) {
+        window.createLemonSqueezy();
+      }
+    });
   </script>
 </body>
 </html>
