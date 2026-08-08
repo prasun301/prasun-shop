@@ -1,28 +1,47 @@
 /**
- * Prasun Shop — Products & Interactivity Module
- * Production-Grade 10/10 Optimized Implementation
+ * ============================================================================
+ * PRASUN SHOP — PRODUCTS & INTERACTIVITY
+ * Production-ready product listing, search, filtering and rendering.
+ * ============================================================================
  */
+
 "use strict";
 
-(function () {
+(() => {
+    /* =========================================================================
+       STATE
+       ========================================================================= */
+
     let allProducts = [];
-    let currentCategory = null;
+    let currentCategory = "";
     let currentKeyword = "";
+    let searchTimer = null;
 
-    // Format price cleanly
-    function formatPrice(price) {
-        const num = Number(price);
-        if (!Number.isFinite(num)) return "$0.00";
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD"
-        }).format(num);
-    }
+    const PRODUCT_STORAGE_KEYS = [
+        "products",
+        "prasun_products"
+    ];
 
-    // Basic HTML escaping helper to prevent script injection / XSS
-    function escapeHTML(str) {
-        if (str === null || str === undefined) return "";
-        return String(str)
+    /* =========================================================================
+       DOM HELPERS
+       ========================================================================= */
+
+    const $ = (selector, parent = document) =>
+        parent.querySelector(selector);
+
+    const $$ = (selector, parent = document) =>
+        Array.from(parent.querySelectorAll(selector));
+
+    /* =========================================================================
+       UTILITIES
+       ========================================================================= */
+
+    function escapeHTML(value) {
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        return String(value)
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
@@ -30,192 +49,806 @@
             .replace(/'/g, "&#039;");
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        // Smooth Scrolling for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(link => {
-            link.addEventListener("click", function (e) {
-                const targetId = this.getAttribute("href");
-                if (targetId && targetId !== "#") {
-                    const target = document.querySelector(targetId);
-                    if (target) {
-                        e.preventDefault();
-                        target.scrollIntoView({ behavior: "smooth" });
-                    }
-                }
-            });
-        });
+    function normalize(value) {
+        return String(value ?? "")
+            .trim()
+            .toLowerCase();
+    }
 
-        // Global Keyboard Shortcut (⌘K / Ctrl+K) for Search
-        const searchInput = document.querySelector(".search-input");
-        if (searchInput) {
-            document.addEventListener("keydown", (e) => {
-                if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-                    e.preventDefault();
-                    searchInput.focus();
-                    searchInput.select();
-                }
-            });
+    function formatPrice(value) {
+        const price = Number(value);
 
-            // Debounced Real-time Search Filter Handler for High Performance
-            let searchTimeout;
-            searchInput.addEventListener("input", function () {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    currentKeyword = this.value.toLowerCase().trim();
-                    applyFilters();
-                }, 150);
-            });
+        if (!Number.isFinite(price)) {
+            return "$0.00";
         }
 
-        // Load Products & Category Filtering from LocalStorage
-        loadProducts();
-    });
+        return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(price);
+    }
+
+    function createFallbackImage() {
+        return [
+            "data:image/svg+xml;charset=UTF-8,",
+            encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="800"
+                     height="600"
+                     viewBox="0 0 800 600">
+                    <rect width="800" height="600" fill="#f4f4f5"/>
+                    <text
+                        x="400"
+                        y="300"
+                        text-anchor="middle"
+                        dominant-baseline="middle"
+                        fill="#a1a1aa"
+                        font-family="Arial, sans-serif"
+                        font-size="24">
+                        Image unavailable
+                    </text>
+                </svg>
+            `)
+        ].join("");
+    }
+
+    /* =========================================================================
+       PRODUCT NORMALIZATION
+       ========================================================================= */
+
+    function normalizeProduct(item, index) {
+        if (!item || typeof item !== "object") {
+            return null;
+        }
+
+        const id =
+            item.id ??
+            item.productId ??
+            `product-${index + 1}`;
+
+        const name =
+            item.name ??
+            item.title ??
+            "Unnamed Product";
+
+        const price =
+            Number(item.price ?? 0);
+
+        const image =
+            item.image ??
+            item.imageUrl ??
+            item.thumbnail ??
+            "";
+
+        const category =
+            item.category ??
+            "";
+
+        const description =
+            item.description ??
+            "";
+
+        const rating =
+            item.rating ??
+            "";
+
+        return {
+            id: String(id),
+            name: String(name).trim() || "Unnamed Product",
+            price: Number.isFinite(price) ? price : 0,
+            image: String(image).trim(),
+            category: String(category).trim(),
+            description: String(description).trim(),
+            rating: String(rating).trim()
+        };
+    }
+
+    /* =========================================================================
+       LOAD PRODUCTS
+       ========================================================================= */
 
     function loadProducts() {
-        const productList = document.getElementById("product-list");
-        if (!productList) return;
+        const productList = $("#product-list");
 
-        try {
-            // Load ONLY products from localStorage (user-added items)
-            const savedData = localStorage.getItem("products") || localStorage.getItem("prasun_products");
-            const data = savedData ? JSON.parse(savedData) : [];
-
-            if (!Array.isArray(data)) {
-                throw new Error("Invalid data format in localStorage.");
-            }
-
-            allProducts = data.map(item => ({
-                id: item.id || Date.now(),
-                name: String(item.name || "Unnamed Product"),
-                price: Number(item.price) || 0,
-                image: String(item.image || ""),
-                category: String(item.category || ""),
-                rating: item.rating || "5.0",
-                description: String(item.description || "")
-            }));
-
-            const params = new URLSearchParams(window.location.search);
-            currentCategory = params.get("category");
-
-            // Highlight Active Category Pill in Navigation
-            if (currentCategory) {
-                const normalizedSelectedCat = currentCategory.toLowerCase();
-                document.querySelectorAll(".flex.items-center.gap-2.overflow-x-auto a").forEach(pill => {
-                    const href = pill.getAttribute("href") || "";
-                    if (href.toLowerCase().includes(`category=${normalizedSelectedCat}`)) {
-                        pill.className = "px-4 py-2 text-xs font-semibold bg-zinc-900 text-white rounded-xl shadow-xs transition-all shrink-0";
-                    } else {
-                        pill.className = "px-4 py-2 text-xs font-medium bg-zinc-100 hover:bg-zinc-200/80 text-zinc-700 rounded-xl transition-all shrink-0";
-                    }
-                });
-
-                // Update page heading safely
-                const heading = document.querySelector("h1, h2");
-                if (heading) {
-                    heading.textContent = currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1);
-                }
-            }
-
-            applyFilters();
-
-        } catch (error) {
-            console.error("Error loading products:", error);
-            productList.innerHTML = `
-                <div class="col-span-full py-16 text-center">
-                    <p class="text-zinc-500 text-sm font-medium mb-4">No custom products found in storage.</p>
-                </div>
-            `;
-        }
-    }
-
-    // Unified Filter Engine (Handles both Category parameters & Search Input simultaneously)
-    function applyFilters() {
-        let filtered = allProducts;
-
-        if (currentCategory) {
-            const normalizedCat = currentCategory.toLowerCase();
-            filtered = filtered.filter(product => 
-                product.category && product.category.toLowerCase() === normalizedCat
-            );
-        }
-
-        if (currentKeyword) {
-            filtered = filtered.filter(product => {
-                const name = product.name.toLowerCase();
-                const desc = product.description.toLowerCase();
-                const cat = product.category.toLowerCase();
-                return name.includes(currentKeyword) || desc.includes(currentKeyword) || cat.includes(currentKeyword);
-            });
-        }
-
-        displayProducts(filtered);
-    }
-
-    // Display Products (Uses your exact original markup and styles)
-    function displayProducts(products) {
-        const productList = document.getElementById("product-list");
-        if (!productList) return;
-
-        if (!Array.isArray(products) || products.length === 0) {
-            productList.innerHTML = `
-                <div class="col-span-full py-16 text-center">
-                    <p class="text-zinc-500 text-sm font-medium">You haven't added any products yet.</p>
-                </div>
-            `;
+        if (!productList) {
             return;
         }
 
-        // Render all cards using your original design markup
-        productList.innerHTML = products.map(product => `
-            <div class="group bg-white rounded-2xl border border-zinc-200/80 overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col">
-                <!-- Product Image Container -->
-                <div class="aspect-square bg-zinc-100 overflow-hidden relative">
-                    <img 
-                        src="${escapeHTML(product.image)}" 
-                        alt="${escapeHTML(product.name)}"
-                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                        decoding="async"
-                        onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'400\\' viewBox=\\'0 0 400 400\\'%3E%3Crect width=\\'400\\' height=\\'400\\' fill=\\'%23f4f4f5\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%23a1a1aa\\' font-family=\\'sans-serif\\' font-size=\\'16\\'%3ENo Image%3C/text%3E%3C/svg%3E';"
-                    >
-                    ${product.category ? `
-                        <span class="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 text-[11px] font-semibold text-zinc-800 rounded-full shadow-xs">
-                            ${escapeHTML(product.category)}
-                        </span>
-                    ` : ''}
-                </div>
+        try {
+            let storedProducts = null;
 
-                <!-- Product Content Body -->
-                <div class="p-5 flex flex-col flex-grow">
-                    <div class="flex items-center justify-between text-xs text-zinc-500 mb-2">
-                        <span class="flex items-center gap-1 font-medium text-amber-500">
-                            ★ <span class="text-zinc-700">${escapeHTML(product.rating)}</span>
-                        </span>
-                        <span class="inline-flex items-center gap-1.5 text-emerald-600 font-medium text-[11px]">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> In Stock
-                        </span>
-                    </div>
+            for (const key of PRODUCT_STORAGE_KEYS) {
+                const value = localStorage.getItem(key);
 
-                    <h3 class="text-base font-semibold text-zinc-900 group-hover:text-zinc-600 transition-colors line-clamp-1 mb-1">
-                        ${escapeHTML(product.name)}
-                    </h3>
+                if (value) {
+                    storedProducts = value;
+                    break;
+                }
+            }
 
-                    <p class="text-xs text-zinc-500 line-clamp-2 mb-4 flex-grow">
-                        ${escapeHTML(product.description)}
-                    </p>
+            if (!storedProducts) {
+                allProducts = [];
+                renderEmptyState();
+                updateResultsCount(0);
+                return;
+            }
 
-                    <!-- Footer Action & Price -->
-                    <div class="flex items-center justify-between pt-4 border-t border-zinc-100 mt-auto">
-                        <span class="text-lg font-bold text-zinc-900">${formatPrice(product.price)}</span>
-                        <a 
-                            href="product.html?id=${encodeURIComponent(product.id)}"
-                            class="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 active:scale-95 rounded-xl transition-all shadow-xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900"
-                        >
-                            View Details
-                        </a>
-                    </div>
-                </div>
-            </div>
-        `).join("");
+            const parsed = JSON.parse(storedProducts);
+
+            if (!Array.isArray(parsed)) {
+                throw new Error("Product data must be an array.");
+            }
+
+            allProducts = parsed
+                .map(normalizeProduct)
+                .filter(Boolean);
+
+            readCategoryFromURL();
+            applyFilters();
+
+        } catch (error) {
+            console.error(
+                "[Prasun Shop] Unable to load products:",
+                error
+            );
+
+            renderErrorState();
+        }
     }
+
+    /* =========================================================================
+       URL / CATEGORY
+       ========================================================================= */
+
+    function readCategoryFromURL() {
+        const params = new URLSearchParams(
+            window.location.search
+        );
+
+        currentCategory =
+            params.get("category")?.trim() || "";
+
+        updateCategoryNavigation();
+        updatePageHeading();
+    }
+
+    function updateCategoryNavigation() {
+        const pills = $$(
+            ".category-pill, .products-categories a"
+        );
+
+        if (!pills.length) {
+            return;
+        }
+
+        const selected = normalize(currentCategory);
+
+        pills.forEach(pill => {
+            const href =
+                pill.getAttribute("href") || "";
+
+            let category = "";
+
+            try {
+                const url = new URL(
+                    href,
+                    window.location.href
+                );
+
+                category =
+                    url.searchParams.get("category") || "";
+            } catch {
+                category = "";
+            }
+
+            const active =
+                selected &&
+                normalize(category) === selected;
+
+            pill.classList.toggle(
+                "active",
+                Boolean(active)
+            );
+
+            pill.setAttribute(
+                "aria-current",
+                active ? "page" : "false"
+            );
+        });
+    }
+
+    function updatePageHeading() {
+        if (!currentCategory) {
+            return;
+        }
+
+        const heading =
+            $("#products-heading") ||
+            $(".products-heading");
+
+        if (!heading) {
+            return;
+        }
+
+        heading.textContent =
+            currentCategory;
+    }
+
+    /* =========================================================================
+       SEARCH
+       ========================================================================= */
+
+    function initializeSearch() {
+        const searchInput =
+            $("#searchInput") ||
+            $(".search-input") ||
+            $(".products-search-input");
+
+        if (!searchInput) {
+            return;
+        }
+
+        searchInput.addEventListener(
+            "input",
+            () => {
+                clearTimeout(searchTimer);
+
+                searchTimer = setTimeout(() => {
+                    currentKeyword =
+                        searchInput.value
+                            .trim()
+                            .toLowerCase();
+
+                    applyFilters();
+                }, 120);
+            }
+        );
+
+        const initialValue =
+            searchInput.value.trim();
+
+        if (initialValue) {
+            currentKeyword =
+                initialValue.toLowerCase();
+        }
+
+        initializeSearchShortcut(
+            searchInput
+        );
+    }
+
+    function initializeSearchShortcut(
+        searchInput
+    ) {
+        document.addEventListener(
+            "keydown",
+            event => {
+                if (
+                    (event.metaKey ||
+                        event.ctrlKey) &&
+                    event.key.toLowerCase() === "k"
+                ) {
+                    event.preventDefault();
+
+                    searchInput.focus();
+                    searchInput.select();
+                }
+            }
+        );
+    }
+
+    /* =========================================================================
+       FILTER ENGINE
+       ========================================================================= */
+
+    function applyFilters() {
+        let filtered =
+            [...allProducts];
+
+        if (currentCategory) {
+            const category =
+                normalize(currentCategory);
+
+            filtered =
+                filtered.filter(product =>
+                    normalize(product.category) ===
+                    category
+                );
+        }
+
+        if (currentKeyword) {
+            const keyword =
+                normalize(currentKeyword);
+
+            filtered =
+                filtered.filter(product => {
+                    const searchableText = [
+                        product.name,
+                        product.description,
+                        product.category
+                    ]
+                        .map(normalize)
+                        .join(" ");
+
+                    return searchableText.includes(
+                        keyword
+                    );
+                });
+        }
+
+        renderProducts(filtered);
+    }
+
+    /* =========================================================================
+       PRODUCT RENDERING
+       ========================================================================= */
+
+    function renderProducts(products) {
+        const productList =
+            $("#product-list");
+
+        if (!productList) {
+            return;
+        }
+
+        updateResultsCount(
+            products.length
+        );
+
+        if (
+            !Array.isArray(products) ||
+            products.length === 0
+        ) {
+            renderEmptyState();
+            return;
+        }
+
+        productList.innerHTML =
+            products
+                .map(renderProductCard)
+                .join("");
+
+        initializeProductImages(
+            productList
+        );
+    }
+
+    function renderProductCard(product) {
+        const safeId =
+            encodeURIComponent(product.id);
+
+        const image =
+            product.image ||
+            createFallbackImage();
+
+        const category =
+            product.category
+                ? `
+                    <span class="product-category">
+                        ${escapeHTML(product.category)}
+                    </span>
+                `
+                : "";
+
+        const rating =
+            product.rating
+                ? `
+                    <span class="product-rating"
+                          aria-label="Rating ${escapeHTML(product.rating)} out of 5">
+                        ★ ${escapeHTML(product.rating)}
+                    </span>
+                `
+                : "";
+
+        return `
+            <article class="product-card">
+
+                <a
+                    class="product-card-link"
+                    href="product.html?id=${safeId}"
+                    aria-label="View ${escapeHTML(product.name)}"
+                >
+
+                    <div class="product-card-image">
+
+                        <img
+                            src="${escapeHTML(image)}"
+                            alt="${escapeHTML(product.name)}"
+                            loading="lazy"
+                            decoding="async"
+                        >
+
+                        ${category}
+
+                    </div>
+
+                    <div class="product-card-body">
+
+                        ${
+                            rating
+                                ? `
+                                    <div class="product-meta">
+                                        ${rating}
+                                    </div>
+                                `
+                                : ""
+                        }
+
+                        <h3 class="product-title">
+                            ${escapeHTML(product.name)}
+                        </h3>
+
+                        ${
+                            product.description
+                                ? `
+                                    <p class="product-description">
+                                        ${escapeHTML(
+                                            product.description
+                                        )}
+                                    </p>
+                                `
+                                : ""
+                        }
+
+                        <div class="product-bottom">
+
+                            <p class="product-price">
+                                ${formatPrice(
+                                    product.price
+                                )}
+                            </p>
+
+                            <span class="product-view-button">
+                                View Details
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </a>
+
+            </article>
+        `;
+    }
+
+    /* =========================================================================
+       IMAGE HANDLING
+       ========================================================================= */
+
+    function initializeProductImages(
+        container
+    ) {
+        const images =
+            $$(
+                ".product-card-image img",
+                container
+            );
+
+        images.forEach(image => {
+            image.addEventListener(
+                "error",
+                () => {
+                    image.src =
+                        createFallbackImage();
+
+                    image.classList.add(
+                        "is-fallback"
+                    );
+
+                    const wrapper =
+                        image.closest(
+                            ".product-card-image"
+                        );
+
+                    wrapper?.classList.add(
+                        "image-error"
+                    );
+                },
+                { once: true }
+            );
+        });
+    }
+
+    /* =========================================================================
+       RESULTS COUNT
+       ========================================================================= */
+
+    function updateResultsCount(
+        count
+    ) {
+        const resultCount =
+            $(
+                ".products-result-count"
+            );
+
+        if (!resultCount) {
+            return;
+        }
+
+        if (count === 0) {
+            resultCount.textContent =
+                "No products";
+            return;
+        }
+
+        resultCount.textContent =
+            `${count} ${
+                count === 1
+                    ? "product"
+                    : "products"
+            }`;
+    }
+
+    /* =========================================================================
+       EMPTY / ERROR STATES
+       ========================================================================= */
+
+    function renderEmptyState() {
+        const productList =
+            $("#product-list");
+
+        if (!productList) {
+            return;
+        }
+
+        const hasFilters =
+            Boolean(
+                currentCategory ||
+                currentKeyword
+            );
+
+        productList.innerHTML = `
+            <div class="products-empty">
+
+                <div
+                    class="products-empty-icon"
+                    aria-hidden="true"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <circle
+                            cx="11"
+                            cy="11"
+                            r="7"
+                        />
+                        <path d="m20 20-4-4"/>
+                    </svg>
+                </div>
+
+                <h2>
+                    ${
+                        hasFilters
+                            ? "No products found"
+                            : "No products available"
+                    }
+                </h2>
+
+                <p>
+                    ${
+                        hasFilters
+                            ? "Try a different search or category."
+                            : "Products will appear here when they are available."
+                    }
+                </p>
+
+                ${
+                    hasFilters
+                        ? `
+                            <button
+                                type="button"
+                                class="products-empty-button"
+                                id="clear-product-filters"
+                            >
+                                Clear Filters
+                            </button>
+                        `
+                        : ""
+                }
+
+            </div>
+        `;
+
+        const clearButton =
+            $("#clear-product-filters");
+
+        clearButton?.addEventListener(
+            "click",
+            clearFilters
+        );
+    }
+
+    function renderErrorState() {
+        const productList =
+            $("#product-list");
+
+        if (!productList) {
+            return;
+        }
+
+        productList.innerHTML = `
+            <div class="products-error">
+
+                <div
+                    class="products-empty-icon"
+                    aria-hidden="true"
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <circle
+                            cx="12"
+                            cy="12"
+                            r="9"
+                        />
+                        <path d="M12 8v4"/>
+                        <path d="M12 16h.01"/>
+                    </svg>
+                </div>
+
+                <h2>
+                    Unable to load products
+                </h2>
+
+                <p>
+                    Please refresh the page and try again.
+                </p>
+
+                <button
+                    type="button"
+                    class="products-empty-button"
+                    id="retry-products"
+                >
+                    Try Again
+                </button>
+
+            </div>
+        `;
+
+        $("#retry-products")?.addEventListener(
+            "click",
+            loadProducts
+        );
+    }
+
+    /* =========================================================================
+       CLEAR FILTERS
+       ========================================================================= */
+
+    function clearFilters() {
+        currentCategory = "";
+        currentKeyword = "";
+
+        const searchInput =
+            $("#searchInput") ||
+            $(".search-input") ||
+            $(".products-search-input");
+
+        if (searchInput) {
+            searchInput.value = "";
+        }
+
+        updateCategoryNavigation();
+
+        const url =
+            new URL(window.location.href);
+
+        url.searchParams.delete(
+            "category"
+        );
+
+        window.history.replaceState(
+            {},
+            "",
+            url
+        );
+
+        updatePageHeading();
+        applyFilters();
+    }
+
+    /* =========================================================================
+       CATEGORY LINKS
+       ========================================================================= */
+
+    function initializeCategoryLinks() {
+        const links =
+            $$(
+                ".category-pill, .category-card"
+            );
+
+        links.forEach(link => {
+            link.addEventListener(
+                "click",
+                () => {
+                    /*
+                     * Let the browser handle normal
+                     * navigation. This only clears
+                     * transient search state.
+                     */
+
+                    currentKeyword = "";
+                }
+            );
+        });
+    }
+
+    /* =========================================================================
+       SMOOTH ANCHOR SCROLL
+       ========================================================================= */
+
+    function initializeSmoothScrolling() {
+        $$('a[href^="#"]').forEach(link => {
+            link.addEventListener(
+                "click",
+                event => {
+                    const href =
+                        link.getAttribute(
+                            "href"
+                        );
+
+                    if (
+                        !href ||
+                        href === "#"
+                    ) {
+                        return;
+                    }
+
+                    const target =
+                        document.querySelector(
+                            href
+                        );
+
+                    if (!target) {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    target.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+                }
+            );
+        });
+    }
+
+    /* =========================================================================
+       INITIALIZATION
+       ========================================================================= */
+
+    function initialize() {
+        initializeSearch();
+        initializeCategoryLinks();
+        initializeSmoothScrolling();
+        loadProducts();
+    }
+
+    if (
+        document.readyState ===
+        "loading"
+    ) {
+        document.addEventListener(
+            "DOMContentLoaded",
+            initialize,
+            { once: true }
+        );
+    } else {
+        initialize();
+    }
+
 })();
