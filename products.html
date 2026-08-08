@@ -24,25 +24,18 @@
     <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
+    <!-- Critical Path Optimizations -->
+    <link rel="preload" href="style.css" as="style">
     <link rel="stylesheet" href="style.css">
     <script src="products.js" defer></script>
 </head>
 
 <body>
 
-<!-- ================================================================
-     SKIP LINK
-     ================================================================ -->
+<!-- SKIP LINK -->
+<a href="#main-content" class="skip-link">Skip to content</a>
 
-<a href="#main-content" class="skip-link">
-    Skip to content
-</a>
-
-
-<!-- ================================================================
-     HEADER
-     ================================================================ -->
-
+<!-- HEADER -->
 <header class="header">
     <div class="container header-container">
 
@@ -72,15 +65,15 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     aria-hidden="true"
+                    width="24"
+                    height="24"
                 >
                     <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6" />
                     <circle cx="10" cy="20" r="1.3" />
                     <circle cx="18" cy="20" r="1.3" />
                 </svg>
 
-                <span id="cart-count" class="cart-badge" aria-hidden="true">
-                    0
-                </span>
+                <span id="cart-count" class="cart-badge" aria-hidden="true">0</span>
             </a>
 
             <!-- Mobile Menu Button -->
@@ -99,6 +92,8 @@
                     stroke-width="2"
                     stroke-linecap="round"
                     aria-hidden="true"
+                    width="24"
+                    height="24"
                 >
                     <path d="M4 6h16"/>
                     <path d="M4 12h16"/>
@@ -122,34 +117,21 @@
 
 </header>
 
-
-<!-- ================================================================
-     MAIN
-     ================================================================ -->
-
+<!-- MAIN CONTENT -->
 <main id="main-content">
     <div class="container products-page">
 
-        <!-- ============================================================
-             PRODUCTS HERO & SEARCH
-             ============================================================ -->
-
+        <!-- HERO & SEARCH -->
         <section class="products-hero" aria-labelledby="products-heading">
             <div class="products-hero-content">
-                <h1 id="products-heading" class="products-heading">
-                    Products
-                </h1>
-                <p class="products-intro">
-                    Browse our collection of modern essentials.
-                </p>
+                <h1 id="products-heading" class="products-heading">Products</h1>
+                <p class="products-intro">Browse our collection of modern essentials.</p>
             </div>
 
             <!-- Search -->
-            <search role="search">
-                <form id="product-search-form" class="products-search">
-                    <label for="product-search" class="sr-only">
-                        Search products
-                    </label>
+            <search>
+                <form id="product-search-form" class="products-search" action="javascript:void(0);">
+                    <label for="product-search" class="sr-only">Search products</label>
 
                     <svg
                         class="products-search-icon"
@@ -159,6 +141,8 @@
                         stroke-width="2"
                         stroke-linecap="round"
                         aria-hidden="true"
+                        width="20"
+                        height="20"
                     >
                         <circle cx="11" cy="11" r="7" />
                         <path d="m20 20-4-4"/>
@@ -184,18 +168,12 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
 
-                    <kbd class="products-search-shortcut" aria-hidden="true">
-                        ⌘ K
-                    </kbd>
+                    <kbd class="products-search-shortcut" aria-hidden="true">⌘ K</kbd>
                 </form>
             </search>
         </section>
 
-
-        <!-- ============================================================
-             CATEGORY FILTER
-             ============================================================ -->
-
+        <!-- CATEGORY FILTER -->
         <section class="products-toolbar" aria-label="Product categories">
             <div class="products-categories" role="group" aria-label="Filter products by category">
                 <button
@@ -209,20 +187,14 @@
             </div>
         </section>
 
-
-        <!-- ============================================================
-             RESULTS BAR
-             ============================================================ -->
-
+        <!-- RESULTS BAR -->
         <div class="products-results-bar">
             <p id="products-count" class="products-result-count" aria-live="polite">
                 Loading products…
             </p>
 
             <div class="products-sort-wrap">
-                <label for="product-sort" class="sr-only">
-                    Sort products
-                </label>
+                <label for="product-sort" class="sr-only">Sort products</label>
                 <select id="product-sort" class="products-sort">
                     <option value="featured">Featured</option>
                     <option value="price-low">Price: Low to High</option>
@@ -232,11 +204,7 @@
             </div>
         </div>
 
-
-        <!-- ============================================================
-             PRODUCT GRID
-             ============================================================ -->
-
+        <!-- PRODUCT GRID (DYNAMICALLY POPULATED) -->
         <section
             id="product-list"
             class="products-grid"
@@ -244,7 +212,7 @@
             aria-live="polite"
             aria-busy="true"
         >
-            <!-- Loading Skeletons -->
+            <!-- Skeletons render during initial JSON fetch -->
             <article class="product-skeleton" aria-hidden="true">
                 <div class="skeleton-image"></div>
                 <div class="skeleton-content">
@@ -288,82 +256,19 @@
                     <span class="skeleton-line skeleton-price"></span>
                 </div>
             </article>
-        </section>
-
-
-        <!-- ============================================================
-             EMPTY STATE
-             ============================================================ -->
-
-        <section id="empty-state" class="products-empty" hidden aria-live="polite">
-            <div class="products-empty-icon">
-                <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                >
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="m20 20-4-4"/>
-                </svg>
-            </div>
-            <h2>No products found</h2>
-            <p>Try another search query or clear filters to view all products.</p>
-            <button type="button" class="products-empty-button" id="empty-reset-btn">
-                View All Products
-            </button>
-        </section>
-
-
-        <!-- ============================================================
-             ERROR STATE
-             ============================================================ -->
-
-        <section id="products-error" class="products-error" hidden aria-live="assertive">
-            <div class="products-empty-icon">
-                <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                >
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M12 8v5"/>
-                    <path d="M12 16h.01"/>
-                </svg>
-            </div>
-            <h2>Unable to load products</h2>
-            <p>Please check your internet connection and try again.</p>
-            <button type="button" class="products-empty-button" id="products-retry-btn">
-                Try Again
-            </button>
         </section>
 
     </div>
 </main>
 
-
-<!-- ================================================================
-     FOOTER
-     ================================================================ -->
-
+<!-- FOOTER -->
 <footer class="footer">
     <div class="container">
         <div class="footer-content">
-
-            <!-- Brand -->
             <div class="footer-col">
                 <h4>Prasun Shop</h4>
                 <p>Simple, useful products for modern life and work.</p>
             </div>
-
-            <!-- Shop -->
             <div class="footer-col">
                 <h4>Shop</h4>
                 <ul>
@@ -371,8 +276,6 @@
                     <li><a href="cart.html">Cart</a></li>
                 </ul>
             </div>
-
-            <!-- Information -->
             <div class="footer-col">
                 <h4>Information</h4>
                 <ul>
@@ -380,70 +283,49 @@
                     <li><a href="contact.html">Contact</a></li>
                 </ul>
             </div>
-
         </div>
 
-        <!-- Copyright -->
         <div class="footer-bottom">
-            &copy; <span id="footer-year"></span> Prasun Shop. All rights reserved.
+            &copy; <span id="footer-year">2026</span> Prasun Shop. All rights reserved.
         </div>
     </div>
 </footer>
 
-
-<!-- ================================================================
-     PAGE UI SCRIPT
-     ================================================================ -->
-
+<!-- LIGHTWEIGHT PAGE NAVIGATION UI SCRIPT -->
 <script>
-(function () {
+(() => {
     "use strict";
 
-    // Set Copyright Year
+    // Dynamic copyright year fallback
     const yearEl = document.getElementById("footer-year");
-    if (yearEl) {
-        yearEl.textContent = new Date().getFullYear();
-    }
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
 
     // Mobile Navigation Toggle
     const menuButton = document.getElementById("products-menu-toggle");
     const mobileMenu = document.getElementById("products-mobile-menu");
 
-    function closeMobileMenu() {
-        if (!menuButton || !mobileMenu) return;
-        menuButton.setAttribute("aria-expanded", "false");
-        menuButton.setAttribute("aria-label", "Open menu");
-        mobileMenu.hidden = true;
-    }
-
     if (menuButton && mobileMenu) {
-        menuButton.addEventListener("click", function () {
+        const closeMenu = () => {
+            menuButton.setAttribute("aria-expanded", "false");
+            menuButton.setAttribute("aria-label", "Open menu");
+            mobileMenu.hidden = true;
+        };
+
+        menuButton.addEventListener("click", () => {
             const isOpen = menuButton.getAttribute("aria-expanded") === "true";
             menuButton.setAttribute("aria-expanded", String(!isOpen));
             menuButton.setAttribute("aria-label", isOpen ? "Open menu" : "Close menu");
             mobileMenu.hidden = isOpen;
         });
 
-        mobileMenu.querySelectorAll("a").forEach(function (link) {
-            link.addEventListener("click", closeMobileMenu);
+        mobileMenu.addEventListener("click", (e) => {
+            if (e.target.tagName === "A") closeMenu();
         });
 
-        document.addEventListener("keydown", function (e) {
+        document.addEventListener("keydown", (e) => {
             if (e.key === "Escape" && menuButton.getAttribute("aria-expanded") === "true") {
-                closeMobileMenu();
+                closeMenu();
                 menuButton.focus();
-            }
-        });
-    }
-
-    // Command/Control + K Search Focus Shortcut
-    const searchInput = document.getElementById("product-search");
-    if (searchInput) {
-        document.addEventListener("keydown", function (e) {
-            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-                e.preventDefault();
-                searchInput.focus();
-                searchInput.select();
             }
         });
     }
