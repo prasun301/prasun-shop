@@ -4,19 +4,241 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact — PRASUN SHOP</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --apple-bg: #f5f5f7;
+      --apple-card-bg: #ffffff;
+      --apple-text: #1d1d1f;
+      --apple-gray: #86868b;
+      --apple-border: #d2d2d7;
+      --apple-dark: #1d1d1f;
+      --apple-dark-hover: #333336;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background-color: var(--apple-card-bg);
+      color: var(--apple-text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .header {
+      border-bottom: 1px solid var(--apple-border);
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--apple-text);
+      font-weight: 600;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--apple-gray);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover, .nav-links a.active { color: var(--apple-text); }
+
+    .main-container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin: 0 0 1rem 0;
+      letter-spacing: -0.015em;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--apple-gray);
+      margin: 0;
+    }
+
+    .contact-card {
+      background-color: var(--apple-bg);
+      border: 1px solid var(--apple-border);
+      border-radius: 20px;
+      padding: 3rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--apple-text);
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--apple-border);
+      border-radius: 12px;
+      background-color: #ffffff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--apple-text);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--apple-dark);
+      box-shadow: 0 0 0 3px rgba(29, 29, 31, 0.1);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 140px;
+    }
+
+    .btn-submit {
+      display: block;
+      width: 100%;
+      background-color: var(--apple-dark);
+      color: #ffffff;
+      text-align: center;
+      padding: 0.9rem;
+      border-radius: 980px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-submit:hover {
+      background-color: var(--apple-dark-hover);
+    }
+
+    .direct-contact {
+      text-align: center;
+      margin-top: 2.5rem;
+      font-size: 0.95rem;
+      color: var(--apple-gray);
+    }
+
+    .direct-contact a {
+      color: var(--apple-text);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .footer {
+      border-top: 1px solid var(--apple-border);
+      background-color: var(--apple-bg);
+      padding: 2.5rem;
+      text-align: center;
+      color: var(--apple-gray);
+      font-size: 0.85rem;
+      margin-top: 6rem;
+    }
+  </style>
 </head>
 <body>
-  <main class="main-container" style="max-width: 700px; margin: 0 auto; padding: 4rem 2rem; line-height: 1.6; color: #1d1d1f; text-align: center;">
-    <h1>Contact Us</h1>
-    <p style="color: #86868b; margin-bottom: 2rem;">Have questions about an ebook or need technical support with your download?</p>
-    
-    <div style="background-color: #f5f5f7; border: 1px solid #d2d2d7; border-radius: 16px; padding: 2.5rem;">
-      <h3 style="margin-top: 0;">Get in Touch</h3>
-      <p>Drop us an email anytime at:</p>
-      <p><a href="mailto:contact@prasunbarua.com" style="font-size: 1.2rem; font-weight: 600; color: #1d1d1f; text-decoration: none;">contact@prasunbarua.com</a></p>
-      <p style="font-size: 0.9rem; color: #86868b; margin-bottom: 0;">We typically respond within 24–48 hours.</p>
+
+  <header class="header">
+    <div class="header-container">
+      <a href="index.html" class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-0.5-0.5Z"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>
+        </svg>
+        <span>PRASUN SHOP</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">Ebooks</a>
+        <a href="about.html">About</a>
+        <a href="contact.html" class="active">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="hero">
+      <h1>Get in Touch</h1>
+      <p>Have questions about an ebook or need assistance with your download?</p>
+    </div>
+
+    <div class="contact-card">
+      <!-- Form submission powered by Formsubmit.co (Replace email or endpoint as needed) -->
+      <form action="https://formsubmit.co/contact@prasunbarua.com" method="POST">
+        <!-- Optional: Disable captcha or set next redirect page -->
+        <input type="hidden" name="_captcha" value="false">
+        
+        <div class="form-group">
+          <label class="form-label" for="name">Your Name</label>
+          <input type="text" id="name" name="name" class="form-input" placeholder="John Doe" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input type="email" id="email" name="email" class="form-input" placeholder="john@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="message">Message</label>
+          <textarea id="message" name="message" class="form-textarea" placeholder="How can we help you?" required></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">Send Message</button>
+      </form>
+    </div>
+
+    <div class="direct-contact">
+      Prefer to email directly? Reach us at <a href="mailto:contact@prasunbarua.com">contact@prasunbarua.com</a>
     </div>
   </main>
+
+  <footer class="footer">
+    <div style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+      <a href="privacy.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Privacy Policy</a>
+      <a href="terms.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Terms of Service</a>
+      <a href="refund.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Refund Policy</a>
+      <a href="contact.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Contact</a>
+    </div>
+    <p>&copy; 2026 PRASUN SHOP. All rights reserved. Secure digital delivery powered by Lemon Squeezy.</p>
+  </footer>
+
 </body>
 </html>
