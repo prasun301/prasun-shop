@@ -32,7 +32,7 @@
 
 <body class="bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-zinc-900 selection:text-white min-h-screen flex flex-col">
 
-  <!-- Header -->
+  <!-- Modern Header -->
   <header class="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-zinc-200 transition-all">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
@@ -41,25 +41,25 @@
         Prasun Shop<span class="text-zinc-400">.</span>
       </a>
 
-      <!-- Desktop Navigation -->
+      <!-- Desktop Navigation Links -->
       <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-600">
         <a href="index.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
         <a href="products.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Products</a>
         <a href="cart.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Cart</a>
       </nav>
 
-      <!-- Right Actions -->
+      <!-- Right Action Items -->
       <div class="flex items-center gap-3">
-        <!-- Shopping Cart Icon -->
+        <!-- Shopping Cart Icon Badge -->
         <a href="cart.html" class="relative p-2 text-zinc-700 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-full" aria-label="Shopping Cart">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
           </svg>
-          <!-- Cart Count Badge -->
-          <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold text-white bg-zinc-900 rounded-full shadow-sm transition-opacity duration-200 opacity-0 invisible">0</span>
+          <!-- Hidden via JS if quantity is 0 -->
+          <span id="cart-count" class="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-semibold text-white bg-zinc-900 rounded-full shadow-sm transition-opacity duration-200">0</span>
         </a>
 
-        <!-- Mobile Menu Toggle -->
+        <!-- Mobile Menu Toggle Button -->
         <button id="mobile-menu-button" type="button" class="md:hidden p-2 text-zinc-700 hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-lg" aria-expanded="false" aria-controls="mobile-menu" aria-label="Toggle navigation menu">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 6h16M4 12h16M4 18h16"/>
@@ -76,10 +76,10 @@
     </div>
   </header>
 
-  <!-- Main Checkout Content -->
+  <!-- Main Content -->
   <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
     
-    <!-- Breadcrumbs -->
+    <!-- Breadcrumb Nav -->
     <nav class="flex items-center gap-2 text-sm font-medium text-zinc-500 mb-8" aria-label="Breadcrumb">
       <a href="index.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
       <span aria-hidden="true" class="text-zinc-300">/</span>
@@ -90,12 +90,12 @@
 
     <h1 class="text-3xl font-semibold tracking-tight text-zinc-900 mb-8 sm:mb-10">Checkout</h1>
 
-    <!-- Layout Grid -->
+    <!-- Checkout Layout Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
       
-      <!-- Left Column: Checkout Form -->
+      <!-- Left Column: Form -->
       <div class="lg:col-span-7 space-y-8">
-        <form id="checkout-form" class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm space-y-8" method="POST" novalidate>
+        <form id="checkout-form" class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm space-y-8" method="POST">
           
           <!-- Contact Information -->
           <section aria-labelledby="contact-heading">
@@ -150,7 +150,6 @@
 
               <div class="sm:col-span-2">
                 <label for="country" class="block text-sm font-medium text-zinc-700 mb-1.5">Country / Region</label>
-                <!-- Dynamic country list to be populated by checkout.js based on supported shipping zones -->
                 <select 
                   id="country" 
                   name="country"
@@ -160,6 +159,11 @@
                   style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%2371717a%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E'); background-position: right 0.75rem center; background-repeat: no-repeat; background-size: 1.25rem; padding-right: 2.5rem;"
                 >
                   <option value="" disabled selected>Select a country</option>
+                  <!-- Base fallback; JS will dynamically populate valid shipping destinations -->
+                  <option value="US">United States</option>
+                  <option value="CA">Canada</option>
+                  <option value="GB">United Kingdom</option>
+                  <option value="AU">Australia</option>
                 </select>
               </div>
 
@@ -202,7 +206,7 @@
               </div>
 
               <div>
-                <label for="state" class="block text-sm font-medium text-zinc-700 mb-1.5">State / Province</label>
+                <label for="state" class="block text-sm font-medium text-zinc-700 mb-1.5">State / Province / Region</label>
                 <input 
                   type="text" 
                   id="state" 
@@ -228,7 +232,6 @@
             </div>
           </section>
 
-          <!-- Submit Action -->
           <div class="pt-2">
             <button 
               type="submit" 
@@ -239,7 +242,7 @@
             </button>
 
             <!-- Trust Indicator -->
-            <div class="mt-5 flex items-center justify-center gap-2 text-sm text-zinc-500">
+            <div class="mt-4 flex items-center justify-center gap-2 text-sm text-zinc-500">
               <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
               </svg>
@@ -250,28 +253,23 @@
         </form>
       </div>
 
-      <!-- Right Column: Order Summary (Sticky) -->
-      <aside class="lg:col-span-5">
+      <!-- Right Column: Order Summary (Sticky on Desktop) -->
+      <div class="lg:col-span-5">
         <div class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm lg:sticky lg:top-24">
           <h2 class="text-lg font-medium text-zinc-900 mb-6">Order Summary</h2>
           
           <div id="order-summary" class="space-y-6">
             
             <!-- Dynamic Items Container -->
-            <div id="summary-items" class="flex flex-col gap-4">
-              <!-- Default Empty State -->
-              <div id="empty-cart-state" class="text-center py-8">
-                <svg class="w-12 h-12 text-zinc-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                </svg>
-                <p class="text-sm text-zinc-500">Loading order details...</p>
-              </div>
+            <div id="summary-items" class="space-y-4" aria-live="polite">
+              <!-- Empty state fallback; JS will populate items or update this message -->
+              <p class="text-sm text-zinc-500" id="empty-cart-msg">Loading your order details...</p>
             </div>
 
             <hr class="border-zinc-200">
 
             <!-- Dynamic Totals -->
-            <dl class="space-y-3 text-sm text-zinc-600" aria-live="polite">
+            <dl class="space-y-3 text-sm text-zinc-600">
               <div class="flex justify-between items-center">
                 <dt>Subtotal</dt>
                 <dd class="font-medium text-zinc-900" id="summary-subtotal">--</dd>
@@ -284,31 +282,31 @@
 
               <div class="flex justify-between items-center">
                 <dt>Shipping</dt>
-                <dd class="font-medium text-zinc-900" id="summary-shipping">Calculated next step</dd>
+                <dd class="font-medium text-zinc-900" id="summary-shipping">--</dd>
               </div>
 
               <div class="flex justify-between items-center">
                 <dt>Tax</dt>
-                <dd class="font-medium text-zinc-900" id="summary-tax">Calculated next step</dd>
+                <dd class="font-medium text-zinc-900" id="summary-tax">--</dd>
               </div>
             </dl>
 
             <hr class="border-zinc-200">
 
             <!-- Final Total -->
-            <dl class="flex justify-between items-center" aria-live="polite">
+            <dl class="flex justify-between items-center">
               <dt class="text-base font-semibold text-zinc-900">Total</dt>
               <dd class="text-xl font-semibold text-zinc-900" id="summary-total">--</dd>
             </dl>
 
           </div>
         </div>
-      </aside>
+      </div>
 
     </div>
   </main>
 
-  <!-- Footer -->
+  <!-- Minimal Footer -->
   <footer class="border-t border-zinc-200 bg-white py-8 mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
       <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
@@ -319,44 +317,22 @@
     </div>
   </footer>
 
-  <!-- HTML Templates for dynamic rendering by JS -->
-  <template id="summary-item-template">
-    <div class="flex items-start gap-4 py-2">
-      <!-- Thumbnail & Quantity -->
-      <div class="relative shrink-0">
-        <div class="w-16 h-16 bg-zinc-50 rounded-md border border-zinc-200 overflow-hidden">
-          <img src="" alt="" class="item-image object-cover w-full h-full bg-white">
-        </div>
-        <span class="item-quantity absolute -top-2 -right-2 w-[22px] h-[22px] flex items-center justify-center bg-zinc-600 text-white text-[11px] font-semibold rounded-full border-2 border-white shadow-sm"></span>
-      </div>
-      <!-- Product Details -->
-      <div class="flex-grow min-w-0 pt-1">
-        <h3 class="item-name text-sm font-medium text-zinc-900 truncate"></h3>
-        <p class="item-price-unit text-xs text-zinc-500 mt-0.5"></p>
-      </div>
-      <!-- Line Total -->
-      <div class="text-right shrink-0 pt-1">
-        <p class="item-line-total text-sm font-medium text-zinc-900"></p>
-      </div>
-    </div>
-  </template>
-
-  <!-- Inline UI scripts -->
+  <!-- Scripts for UI logic & existing JS hooks -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Mobile Menu Toggle
-      const mobileMenuBtn = document.getElementById('mobile-menu-button');
+      // Mobile Navigation Toggle
+      const mobileMenuButton = document.getElementById('mobile-menu-button');
       const mobileMenu = document.getElementById('mobile-menu');
       
-      if (mobileMenuBtn && mobileMenu) {
-        mobileMenuBtn.addEventListener('click', () => {
-          const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
-          mobileMenuBtn.setAttribute('aria-expanded', !isExpanded);
+      if (mobileMenuButton && mobileMenu) {
+        mobileMenuButton.addEventListener('click', () => {
+          const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+          mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
           mobileMenu.classList.toggle('hidden');
         });
       }
 
-      // Cart Badge Observer (UI behavior only; logic lives in external JS)
+      // Cart Badge Visibility Logic
       const cartCount = document.getElementById('cart-count');
       if (cartCount) {
         const updateBadgeVisibility = () => {
@@ -375,18 +351,14 @@
         observer.observe(cartCount, { childList: true, characterData: true, subtree: true });
       }
 
-      // Basic Submit State UI hook
-      // Note: checkout.js handles actual form logic, preventDefault, and data submission
+      // Checkout Form UI State handling for submission
       const checkoutForm = document.getElementById('checkout-form');
       const submitBtn = document.getElementById('submit-button');
       
       if (checkoutForm && submitBtn) {
-        checkoutForm.addEventListener('submit', (e) => {
-          // Only show visual loading state if the native HTML5 validation passes
+        checkoutForm.addEventListener('submit', () => {
           if (checkoutForm.checkValidity()) {
-            submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
-            // We do not strictly disable the button here so the external JS event still receives it, 
-            // but we change the label safely.
+            submitBtn.disabled = true;
             submitBtn.innerHTML = `
               <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
