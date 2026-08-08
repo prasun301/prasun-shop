@@ -1121,56 +1121,71 @@
     // --------------------------------------------------------------------------
     // STATE MANAGEMENT
     // --------------------------------------------------------------------------
-    let currentCategory = 'all';
-    let searchQuery = '';
-    let sortBy = 'featured';
-    let cart = new Set(); // Store product IDs
+    const state = {
+      category: 'all',
+      searchQuery: '',
+      sortBy: 'featured',
+      cart: new Set()
+    };
 
-    // DOM ELEMENTS
+    // --------------------------------------------------------------------------
+    // DOM REFERENCES
+    // --------------------------------------------------------------------------
     const productsGrid = document.getElementById('productsGrid');
+    const resultCount = document.getElementById('resultCount');
     const searchInput = document.getElementById('searchInput');
     const searchClear = document.getElementById('searchClear');
-    const shortcutBadge = document.getElementById('shortcutBadge');
-    const categoryContainer = document.getElementById('categoryContainer');
     const sortSelect = document.getElementById('sortSelect');
-    const resultCount = document.getElementById('resultCount');
+    const categoryContainer = document.getElementById('categoryContainer');
     const cartBadge = document.getElementById('cartBadge');
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
 
+    // Detect OS for search shortcut visual indicator
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const shortcutBadge = document.getElementById('shortcutBadge');
+    if (shortcutBadge) {
+      shortcutBadge.textContent = isMac ? '⌘K' : 'Ctrl+K';
+    }
+
     // --------------------------------------------------------------------------
-    // CORE RENDER FUNCTION
+    // FILTER & SORT ENGINE
     // --------------------------------------------------------------------------
-    function render() {
-      // 1. Filter by Category
+    function getFilteredProducts() {
       let filtered = PRODUCTS.filter(product => {
-        if (currentCategory === 'all') return true;
-        return product.category === currentCategory;
+        const matchesCategory = state.category === 'all' || product.category === state.category;
+        const query = state.searchQuery.toLowerCase().trim();
+        const matchesSearch = !query || 
+          product.title.toLowerCase().includes(query) || 
+          product.description.toLowerCase().includes(query) ||
+          product.category.toLowerCase().includes(query);
+        return matchesCategory && matchesSearch;
       });
 
-      // 2. Filter by Search Query
-      if (searchQuery.trim() !== '') {
-        const query = searchQuery.toLowerCase().trim();
-        filtered = filtered.filter(p => 
-          p.title.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query) ||
-          p.category.toLowerCase().includes(query)
-        );
+      if (state.sortBy === 'price-low') {
+        filtered.sort((a, b) => a.price - b.price);
+      } else if (state.sortBy === 'price-high') {
+        filtered.sort((a, b) => b.price - a.price);
+      } else if (state.sortBy === 'name') {
+        filtered.sort((a, b) => a.title.localeCompare(b.title));
+      } else {
+        filtered.sort((a, b) => a.featuredOrder - b.featuredOrder);
       }
 
-      // 3. Sort Results
-      filtered.sort((a, b) => {
-        if (sortBy === 'price-low') return a.price - b.price;
-        if (sortBy === 'price-high') return b.price - a.price;
-        if (sortBy === 'name') return a.title.localeCompare(b.title);
-        return a.featuredOrder - b.featuredOrder; // Default featured
-      });
+      return filtered;
+    }
 
-      // 4. Update Results Counter
-      resultCount.textContent = `Showing ${filtered.length} item${filtered.length === 1 ? '' : 's'}`;
+    // --------------------------------------------------------------------------
+    // RENDER FUNCTIONS
+    // --------------------------------------------------------------------------
+    function render() {
+      const items = getFilteredProducts();
 
-      // 5. Render Grid or Empty State
-      if (filtered.length === 0) {
+      // Update Result Count Header
+      resultCount.textContent = `Showing ${items.length} ${items.length === 1 ? 'item' : 'items'}`;
+
+      // Handle Empty Results State
+      if (items.length === 0) {
         productsGrid.innerHTML = `
           <div class="products-empty">
             <div class="products-empty-icon">
@@ -1180,41 +1195,49 @@
               </svg>
             </div>
             <h3>No products found</h3>
-            <p>We couldn't find anything matching "${escapeHtml(searchQuery)}". Try checking for typos or clear your filters.</p>
-            <button class="products-empty-button" onclick="resetFilters()">Reset All Filters</button>
+            <p>We couldn't find anything matching "${escapeHtml(state.searchQuery)}". Try resetting your search or filter options.</p>
+            <button class="products-empty-button" id="resetFiltersBtn">Reset Filters</button>
           </div>
         `;
+
+        const resetBtn = document.getElementById('resetFiltersBtn');
+        if (resetBtn) {
+          resetBtn.addEventListener('click', resetFilters);
+        }
         return;
       }
 
-      productsGrid.innerHTML = filtered.map(product => {
-        const isAdded = cart.has(product.id);
+      // Render Grid Cards
+      productsGrid.innerHTML = items.map(product => {
+        const isAdded = state.cart.has(product.id);
         return `
-          <article class="product-card">
+          <article class="product-card" data-id="${product.id}">
             <div class="product-card-image">
               <img src="${product.image}" alt="${escapeHtml(product.title)}" loading="lazy" />
             </div>
             <div class="product-card-body">
-              <span class="product-category">${product.category}</span>
+              <span class="product-category">${escapeHtml(product.category)}</span>
               <h2 class="product-title">${escapeHtml(product.title)}</h2>
               <p class="product-description">${escapeHtml(product.description)}</p>
               <div class="product-bottom">
                 <span class="product-price">$${product.price.toFixed(2)}</span>
                 <button 
                   class="product-cart-button ${isAdded ? 'added' : ''}" 
+                  data-id="${product.id}"
                   data-added="${isAdded}"
-                  onclick="toggleCart('${product.id}')"
                   aria-label="${isAdded ? 'Remove from cart' : 'Add to cart'}"
                 >
                   ${isAdded ? `
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="20 6 9 17 4 12"/>
-                    </svg> Added
+                    </svg>
+                    Added
                   ` : `
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <line x1="12" y1="5" x2="12" y2="19"/>
                       <line x1="5" y1="12" x2="19" y2="12"/>
-                    </svg> Add
+                    </svg>
+                    Add
                   `}
                 </button>
               </div>
@@ -1222,119 +1245,137 @@
           </article>
         `;
       }).join('');
+
+      // Bind Cart Button Click Listeners
+      const cartButtons = productsGrid.querySelectorAll('.product-cart-button');
+      cartButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          toggleCartItem(id);
+        });
+      });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, function(m) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        }[m];
+      });
     }
 
     // --------------------------------------------------------------------------
-    // CART TOGGLE HANDLER
+    // CART INTERACTION & BADGE ANIMATION
     // --------------------------------------------------------------------------
-    window.toggleCart = function(productId) {
-      if (cart.has(productId)) {
-        cart.delete(productId);
+    function toggleCartItem(productId) {
+      if (state.cart.has(productId)) {
+        state.cart.delete(productId);
       } else {
-        cart.add(productId);
+        state.cart.add(productId);
       }
 
-      // Update badge
-      cartBadge.textContent = cart.size;
+      // Update Cart Badge Count
+      cartBadge.textContent = state.cart.size;
+
+      // Trigger Badge Bump Animation
       cartBadge.classList.add('bump');
-      setTimeout(() => cartBadge.classList.remove('bump'), 200);
+      setTimeout(() => cartBadge.classList.remove('bump'), 180);
 
       render();
-    };
+    }
 
     // --------------------------------------------------------------------------
-    // RESET FILTERS
+    // EVENT LISTENERS & CONTROLS
     // --------------------------------------------------------------------------
-    window.resetFilters = function() {
-      searchQuery = '';
-      currentCategory = 'all';
-      sortBy = 'featured';
+    categoryContainer.addEventListener('click', (e) => {
+      const pill = e.target.closest('.category-pill');
+      if (!pill) return;
 
-      searchInput.value = '';
-      searchClear.classList.remove('visible');
-      if (shortcutBadge) shortcutBadge.style.display = 'block';
-      sortSelect.value = 'featured';
-
-      document.querySelectorAll('.category-pill').forEach(pill => {
-        const active = pill.dataset.category === 'all';
-        pill.classList.toggle('active', active);
-        pill.setAttribute('aria-pressed', active);
+      categoryContainer.querySelectorAll('.category-pill').forEach(btn => {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-pressed', 'false');
       });
 
+      pill.classList.add('active');
+      pill.setAttribute('aria-pressed', 'true');
+
+      state.category = pill.getAttribute('data-category');
       render();
-    };
+    });
 
-    // --------------------------------------------------------------------------
-    // EVENT LISTENERS & INITIALIZATION
-    // --------------------------------------------------------------------------
-
-    // Search Input Events
     searchInput.addEventListener('input', (e) => {
-      searchQuery = e.target.value;
-      if (searchQuery.length > 0) {
+      state.searchQuery = e.target.value;
+      if (state.searchQuery.length > 0) {
         searchClear.classList.add('visible');
-        if (shortcutBadge) shortcutBadge.style.display = 'none';
       } else {
         searchClear.classList.remove('visible');
-        if (shortcutBadge) shortcutBadge.style.display = 'block';
       }
       render();
     });
 
     searchClear.addEventListener('click', () => {
       searchInput.value = '';
-      searchQuery = '';
+      state.searchQuery = '';
       searchClear.classList.remove('visible');
-      if (shortcutBadge) shortcutBadge.style.display = 'block';
       searchInput.focus();
       render();
     });
 
-    // Keyboard Shortcut (⌘K / Ctrl+K)
-    document.addEventListener('keydown', (e) => {
+    sortSelect.addEventListener('change', (e) => {
+      state.sortBy = e.target.value;
+      render();
+    });
+
+    function resetFilters() {
+      state.category = 'all';
+      state.searchQuery = '';
+      state.sortBy = 'featured';
+
+      searchInput.value = '';
+      searchClear.classList.remove('visible');
+      sortSelect.value = 'featured';
+
+      categoryContainer.querySelectorAll('.category-pill').forEach(btn => {
+        const isAll = btn.getAttribute('data-category') === 'all';
+        btn.classList.toggle('active', isAll);
+        btn.setAttribute('aria-pressed', isAll ? 'true' : 'false');
+      });
+
+      render();
+    }
+
+    // Keyboard Shortcuts (⌘K or Ctrl+K to search, Escape to clear)
+    window.addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         searchInput.focus();
       }
-    });
 
-    // Category Filter Pills
-    categoryContainer.addEventListener('click', (e) => {
-      const pill = e.target.closest('.category-pill');
-      if (!pill) return;
-
-      document.querySelectorAll('.category-pill').forEach(p => {
-        p.classList.remove('active');
-        p.setAttribute('aria-pressed', 'false');
-      });
-
-      pill.classList.add('active');
-      pill.setAttribute('aria-pressed', 'true');
-      currentCategory = pill.dataset.category;
-      render();
-    });
-
-    // Sort Dropdown Selection
-    sortSelect.addEventListener('change', (e) => {
-      sortBy = e.target.value;
-      render();
+      if (e.key === 'Escape' && document.activeElement === searchInput) {
+        if (searchInput.value) {
+          searchInput.value = '';
+          state.searchQuery = '';
+          searchClear.classList.remove('visible');
+          render();
+        } else {
+          searchInput.blur();
+        }
+      }
     });
 
     // Mobile Navigation Toggle
     mobileMenuBtn.addEventListener('click', () => {
       const isOpen = mobileMenu.classList.toggle('open');
-      mobileMenuBtn.setAttribute('aria-expanded', isOpen);
+      mobileMenuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     });
 
-    // Utility: HTML Escaper
-    function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, match => {
-        const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-        return escapeMap[match];
-      });
-    }
-
-    // INITIAL RENDER
+    // --------------------------------------------------------------------------
+    // INITIALIZATION
+    // --------------------------------------------------------------------------
     render();
   </script>
 </body>
