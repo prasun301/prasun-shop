@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contact & Support — PRASUN SHOP</title>
-  <meta name="description" content="Get in touch with Prasun Barua for questions or support regarding digital eBook orders." />
+  <meta name="description" content="Get official customer support, order assistance, or licensing inquiries for technical eBooks by Prasun Barua." />
 
   <!-- Favicon Links -->
   <link rel="icon" href="favicon.ico" sizes="any">
@@ -61,55 +61,63 @@
     }
 
     /* MAIN CONTAINER */
-    .main-container {
-      max-width: 720px;
+    .content-card {
+      max-width: 800px;
       margin: 40px auto;
-      padding: 0 1.5rem;
-    }
-    h1 { color: #0f172a; font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
-    .page-subtitle { color: #64748b; font-size: 1.05rem; margin-bottom: 2rem; }
-
-    /* FORM CARD STYLES */
-    .contact-card {
+      padding: 2.5rem;
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    h1 { color: #0f172a; font-size: 2.2rem; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+    .subtitle { color: #64748b; font-size: 1.05rem; margin-bottom: 2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; }
+
+    /* SUPPORT META (E-E-A-T TRUST BOX) */
+    .support-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+      background-color: #f8fafc;
+      padding: 1.25rem;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .meta-item h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      margin-bottom: 0.25rem;
+    }
+    .meta-item p {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
     }
 
+    /* FORM STYLES */
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1.25rem;
     }
-
     .form-group {
       display: flex;
       flex-direction: column;
       gap: 0.375rem;
     }
-
     .form-group.full-width {
       grid-column: span 2;
     }
-
     label {
       font-size: 0.875rem;
       font-weight: 600;
       color: #0f172a;
     }
-
-    label span.required {
-      color: #dc2626;
-    }
-
-    label span.optional {
-      color: #94a3b8;
-      font-weight: 400;
-      font-size: 0.8rem;
-    }
-
+    label .required { color: #dc2626; }
+    label .optional { color: #94a3b8; font-weight: 400; font-size: 0.8rem; }
     input, select, textarea {
       width: 100%;
       padding: 0.75rem 0.875rem;
@@ -121,22 +129,14 @@
       font-family: inherit;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-
-    input::placeholder, textarea::placeholder {
-      color: #94a3b8;
-    }
-
+    input::placeholder, textarea::placeholder { color: #94a3b8; }
     input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: #2563eb;
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
-
-    textarea {
-      resize: vertical;
-      min-height: 130px;
-    }
-
+    textarea { resize: vertical; min-height: 140px; }
+    
     .btn-submit {
       background-color: #0f172a;
       color: #ffffff;
@@ -148,35 +148,9 @@
       cursor: pointer;
       transition: background-color 0.15s ease, transform 0.08s ease;
       align-self: flex-start;
-      margin-top: 0.5rem;
     }
-
-    .btn-submit:hover {
-      background-color: #1e293b;
-    }
-
-    .btn-submit:active {
-      transform: scale(0.98);
-    }
-
-    .direct-email-note {
-      margin-top: 2rem;
-      padding: 1.25rem;
-      background-color: #f1f5f9;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      color: #475569;
-    }
-
-    .direct-email-note a {
-      color: #2563eb;
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .direct-email-note a:hover {
-      text-decoration: underline;
-    }
+    .btn-submit:hover { background-color: #1e293b; }
+    .btn-submit:active { transform: scale(0.98); }
 
     /* FOOTER STYLES */
     .footer {
@@ -188,7 +162,6 @@
       font-size: 0.875rem;
       margin-top: 4rem;
     }
-
     .footer-container {
       max-width: 1080px;
       margin: 0 auto;
@@ -197,30 +170,24 @@
       align-items: center;
       gap: 1.25rem;
     }
-
     .footer-links {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 1.5rem;
     }
-
     .footer-links a {
       color: #64748b;
       text-decoration: none;
       font-weight: 500;
       transition: color 0.2s ease;
     }
-
-    .footer-links a:hover {
-      color: #0f172a;
-      text-decoration: underline;
-    }
+    .footer-links a:hover { color: #0f172a; text-decoration: underline; }
 
     @media (max-width: 640px) {
+      .content-card { padding: 1.5rem; margin: 20px 1rem; }
       .form-grid { grid-template-columns: 1fr; }
       .form-group.full-width { grid-column: span 1; }
-      .contact-card { padding: 1.5rem; }
       .btn-submit { width: 100%; }
     }
   </style>
@@ -246,75 +213,90 @@
   </header>
 
   <!-- MAIN CONTENT -->
-  <main class="main-container">
+  <main class="content-card">
     <h1>Contact & Support</h1>
-    <p class="page-subtitle">Have a question about an eBook, need download assistance, or want to inquire about licensing? Send a message below.</p>
+    <p class="subtitle">Have questions about an eBook order, download access, or institutional licensing? Send a message directly below.</p>
 
-    <div class="contact-card">
-      <!-- To send actual emails without a backend server, replace action URL with Formspree or Web3Forms -->
-      <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
-        <div class="form-grid">
-          
-          <!-- Name -->
-          <div class="form-group">
-            <label for="name">Your Name <span class="required">*</span></label>
-            <input type="text" id="name" name="name" placeholder="John Doe" required />
-          </div>
+    <!-- TRUST & EXPECTATION METRICS -->
+    <div class="support-meta">
+      <div class="meta-item">
+        <h3>Average Response</h3>
+        <p>Within 24 Hours</p>
+      </div>
+      <div class="meta-item">
+        <h3>Order Fulfillment</h3>
+        <p>Lemon Squeezy</p>
+      </div>
+      <div class="meta-item">
+        <h3>Author Portfolio</h3>
+        <p><a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:none;">prasunbarua.com</a></p>
+      </div>
+    </div>
 
-          <!-- Email -->
-          <div class="form-group">
-            <label for="email">Email Address <span class="required">*</span></label>
-            <input type="email" id="email" name="email" placeholder="john@example.com" required />
-          </div>
+    <!-- FORM -->
+    <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+      <!-- Hidden Spam Protection Honeypot -->
+      <input type="text" name="_gotcha" style="display:none !important" tabindex="-1" autocomplete="off" />
 
-          <!-- Subject Category -->
-          <div class="form-group">
-            <label for="topic">Topic / Category <span class="required">*</span></label>
-            <select id="topic" name="topic" required>
-              <option value="" disabled selected>Select a topic...</option>
-              <option value="Download / Access Issue">eBook Download / Access Issue</option>
-              <option value="Pre-Purchase Question">Pre-Purchase Question</option>
-              <option value="Bulk / Educational Licensing">Bulk / Educational Licensing</option>
-              <option value="Feedback / Suggestion">Feedback / General Inquiry</option>
-            </select>
-          </div>
-
-          <!-- Optional Order ID -->
-          <div class="form-group">
-            <label for="order_id">Lemon Squeezy Order ID <span class="optional">(Optional)</span></label>
-            <input type="text" id="order_id" name="order_id" placeholder="e.g. #1029384" />
-          </div>
-
-          <!-- Message -->
-          <div class="form-group full-width">
-            <label for="message">Message <span class="required">*</span></label>
-            <textarea id="message" name="message" placeholder="How can we help you?" required></textarea>
-          </div>
-
-          <!-- Submit -->
-          <div class="form-group full-width">
-            <button type="submit" class="btn-submit">Send Message</button>
-          </div>
-
+      <div class="form-grid">
+        
+        <!-- Name -->
+        <div class="form-group">
+          <label for="name">Full Name <span class="required" aria-hidden="true">*</span></label>
+          <input type="text" id="name" name="name" placeholder="John Doe" required aria-required="true" />
         </div>
-      </form>
-    </div>
 
-    <!-- Direct Email Fallback -->
-    <div class="direct-email-note">
-      <strong>Prefer direct email?</strong> You can also connect via the main website at <a href="https://prasunbarua.com" target="_blank" rel="noopener">prasunbarua.com</a>.
-    </div>
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email">Email Address <span class="required" aria-hidden="true">*</span></label>
+          <input type="email" id="email" name="email" placeholder="john@example.com" required aria-required="true" />
+        </div>
+
+        <!-- Topic -->
+        <div class="form-group">
+          <label for="topic">Topic / Category <span class="required" aria-hidden="true">*</span></label>
+          <select id="topic" name="topic" required aria-required="true">
+            <option value="" disabled selected>Select a topic...</option>
+            <option value="Download / Access Issue">eBook Download / Access Support</option>
+            <option value="Pre-Purchase Inquiry">Pre-Purchase Technical Inquiry</option>
+            <option value="Bulk / Educational Licensing">Educational / Multi-User Licensing</option>
+            <option value="Feedback / General">General Feedback or Author Inquiry</option>
+          </select>
+        </div>
+
+        <!-- Order ID -->
+        <div class="form-group">
+          <label for="order_id">Lemon Squeezy Order ID <span class="optional">(Optional)</span></label>
+          <input type="text" id="order_id" name="order_id" placeholder="e.g. #1029384" />
+        </div>
+
+        <!-- Message -->
+        <div class="form-group full-width">
+          <label for="message">Message <span class="required" aria-hidden="true">*</span></label>
+          <textarea id="message" name="message" placeholder="Please describe how we can assist you..." required aria-required="true"></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-group full-width">
+          <button type="submit" class="btn-submit">Send Message</button>
+        </div>
+
+      </div>
+    </form>
   </main>
 
-  <!-- Footer -->
+  <!-- FOOTER -->
   <footer class="footer">
-    <div style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
-      <a href="privacy.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Privacy Policy</a>
-      <a href="terms.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Terms of Service</a>
-      <a href="refund.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Refund Policy</a>
-      <a href="contact.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Contact</a>
+    <div class="footer-container">
+      <div class="footer-links">
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="refund.html">Refund Policy</a>
+      </div>
+      <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">Prasun Barua</a>. All rights reserved.</p>
     </div>
-    <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color: var(--apple-text); text-decoration: underline; font-weight: 500;">Prasun Barua</a>. All rights reserved.</p>
   </footer>
 
 </body>
