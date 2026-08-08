@@ -71,23 +71,22 @@
         loadProducts();
     });
 
-    async function loadProducts() {
+    function loadProducts() {
         const productList = document.getElementById("product-list");
         if (!productList) return;
 
         try {
-            const response = await fetch("data/products.json", { cache: "no-cache" });
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
+            // Load only products added by you from localStorage 
+            // (Checks both 'products' and 'prasun_products' keys)
+            const savedData = localStorage.getItem("products") || localStorage.getItem("prasun_products");
+            const data = savedData ? JSON.parse(savedData) : [];
 
-            const data = await response.json();
             if (!Array.isArray(data)) {
-                throw new Error("Invalid data format: products.json must contain an array.");
+                throw new Error("Invalid data format in localStorage.");
             }
 
             allProducts = data.map(item => ({
-                id: item.id,
+                id: item.id || Date.now(),
                 name: String(item.name || "Unnamed Product"),
                 price: Number(item.price) || 0,
                 image: String(item.image || ""),
@@ -124,10 +123,7 @@
             console.error("Error loading products:", error);
             productList.innerHTML = `
                 <div class="col-span-full py-16 text-center">
-                    <p class="text-zinc-500 text-sm font-medium mb-4">Unable to load products at this time. Please try again later.</p>
-                    <button type="button" onclick="window.location.reload()" class="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-all shadow-xs cursor-pointer">
-                        Retry
-                    </button>
+                    <p class="text-zinc-500 text-sm font-medium mb-4">No custom products found in storage.</p>
                 </div>
             `;
         }
@@ -164,7 +160,7 @@
         if (!Array.isArray(products) || products.length === 0) {
             productList.innerHTML = `
                 <div class="col-span-full py-16 text-center">
-                    <p class="text-zinc-500 text-sm font-medium">No products found matching your search or category.</p>
+                    <p class="text-zinc-500 text-sm font-medium">You haven't added any products yet.</p>
                 </div>
             `;
             return;
