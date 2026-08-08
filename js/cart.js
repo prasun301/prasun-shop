@@ -1,12 +1,13 @@
 /**
  * Prasun Shop — Cart Management Module
- * Production-Grade Performance Optimized Implementation
+ * Production-Grade Performance & Accessibility Optimized Implementation
  */
 "use strict";
 
 (function () {
     const CART_KEY_PRIMARY = "prasunShopCart";
     const CART_KEY_LEGACY = "cart";
+    const CART_EVENT_NAME = "prasunCartUpdated";
 
     const cartItemsContainer = document.getElementById("cart-items");
     const cartTotalEl = document.getElementById("cart-total");
@@ -14,14 +15,15 @@
 
     if (!cartItemsContainer) return;
 
-    // Singleton Intl.NumberFormat instance (prevents repeated GC and creation overhead)
+    // Singleton Intl.NumberFormat instance (prevents repeated GC overhead)
     const currencyFormatter = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD"
     });
 
-    // Cached HashMap (Map<string, Product>) for O(1) product lookups
+    // Cached HashMap (Map<string, Product>) and active fetch Promise to prevent network races
     let productsMap = null;
+    let productsFetchPromise = null;
 
     // Safe HTML Escaping Helper to Prevent XSS
     function escapeHTML(value) {
@@ -40,7 +42,7 @@
         return currencyFormatter.format(Number.isFinite(num) ? num : 0);
     }
 
-    // Retrieve and validate cart from LocalStorage
+    // Retrieve and validate cart items from LocalStorage
     function getCart() {
         try {
             const stored = localStorage.getItem(CART_KEY_PRIMARY) || localStorage.getItem(CART_KEY_LEGACY);
@@ -66,23 +68,35 @@
 
     let cart = getCart();
 
-    // Save cart state across both storage keys
+    // Save cart state and notify both cross-tab and same-tab listeners
     function saveCart() {
         try {
             const serialized = JSON.stringify(cart);
             localStorage.setItem(CART_KEY_PRIMARY, serialized);
             localStorage.setItem(CART_KEY_LEGACY, serialized);
+
+            // Notify components on the SAME page/tab
+            window.dispatchEvent(
+                new CustomEvent(CART_EVENT_NAME, {
+                    detail: { cart: [...cart] }
+                })
+            );
         } catch (error) {
             console.error("Error saving cart to localStorage:", error);
         }
     }
 
-    // Update Header Cart Badge
+    // Update Header Cart Badge with Accessibility Support
     function updateCartCount() {
         if (!cartCountEl) return;
 
         const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
         cartCountEl.textContent = totalCount;
+
+        // Ensure accessibility announcement for screen readers
+        if (!cartCountEl.getAttribute("aria-live")) {
+            cartCountEl.setAttribute("aria-live", "polite");
+        }
 
         if (totalCount > 0) {
             cartCountEl.classList.remove("opacity-0", "invisible");
@@ -127,28 +141,39 @@
         }
     }
 
-    // Fetch Products Catalog & Build Map Index
-    async function fetchProductsMap() {
-        if (productsMap) return productsMap;
+    // Fetch Products Catalog & Build Map Index (Race-condition safe)
+    function fetchProductsMap() {
+        if (productsMap) return Promise.resolve(productsMap);
 
-        const response = await fetch("data/products.json");
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+        // Deduplicate simultaneous fetch invocations
+        if (!productsFetchPromise) {
+            productsFetchPromise = fetch("data/products.json")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!Array.isArray(data)) {
+                        throw new Error("Invalid data format: products.json must contain an array.");
+                    }
+
+                    productsMap = new Map();
+                    for (const product of data) {
+                        if (product && product.id !== undefined && product.id !== null) {
+                            productsMap.set(String(product.id), product);
+                        }
+                    }
+                    return productsMap;
+                })
+                .catch(error => {
+                    productsFetchPromise = null; // Clear so subsequent calls can retry
+                    throw error;
+                });
         }
 
-        const data = await response.json();
-        if (!Array.isArray(data)) {
-            throw new Error("Invalid data format: products.json must contain an array.");
-        }
-
-        // Convert array to HashMap for O(1) instant key lookups
-        productsMap = new Map();
-        for (const product of data) {
-            if (product && product.id !== undefined && product.id !== null) {
-                productsMap.set(String(product.id), product);
-            }
-        }
-        return productsMap;
+        return productsFetchPromise;
     }
 
     // Main Render Cart Function
@@ -174,16 +199,17 @@
                 const subtotal = price * quantity;
                 total += subtotal;
 
-                const image = escapeHTML(product.image);
-                const name = escapeHTML(product.name);
+                const image = escapeHTML(product.image || "");
+                const name = escapeHTML(product.name || "Unnamed Product");
                 const category = escapeHTML(product.category || "Product");
                 const productId = escapeHTML(product.id);
+                const encodedId = encodeURIComponent(product.id);
 
                 html += `
-                    <article class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 first:pt-0 last:pb-0" data-product-id="${productId}">
+                    <article class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 border-b border-zinc-100 last:border-b-0" data-product-id="${productId}">
                         <!-- Product Details -->
                         <div class="flex items-center gap-4 min-w-0">
-                            <a href="product.html?id=${encodeURIComponent(product.id)}" class="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xl" aria-label="View ${name}">
+                            <a href="product.html?id=${encodedId}" class="shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-xl" aria-label="View ${name}">
                                 <img 
                                     src="${image}" 
                                     alt="${name}" 
@@ -195,7 +221,7 @@
                             <div class="min-w-0">
                                 <span class="inline-block text-[11px] font-medium uppercase tracking-wider text-zinc-400 mb-0.5">${category}</span>
                                 <h3 class="text-sm font-semibold text-zinc-900 truncate mb-1">
-                                    <a href="product.html?id=${encodeURIComponent(product.id)}" class="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">${name}</a>
+                                    <a href="product.html?id=${encodedId}" class="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">${name}</a>
                                 </h3>
                                 <p class="text-xs text-zinc-500">${formatPrice(price)} each</p>
                             </div>
@@ -204,23 +230,23 @@
                         <!-- Quantity Control & Subtotal Actions -->
                         <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-6">
                             <!-- Quantity Selector -->
-                            <div class="inline-flex items-center border border-zinc-300 rounded-lg bg-white overflow-shadow shadow-xs" aria-label="Quantity controls">
+                            <div class="inline-flex items-center border border-zinc-300 rounded-lg bg-white shadow-xs" aria-label="Quantity controls for ${name}">
                                 <button 
                                     type="button" 
                                     data-action="decrease" 
                                     data-id="${productId}" 
-                                    class="w-8 h-8 flex items-center justify-center text-zinc-600 hover:bg-zinc-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 cursor-pointer"
-                                    aria-label="Decrease quantity"
+                                    class="w-8 h-8 flex items-center justify-center text-zinc-600 hover:bg-zinc-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-l-lg cursor-pointer"
+                                    aria-label="Decrease quantity of ${name}"
                                 >
                                     −
                                 </button>
-                                <span class="w-10 text-center text-xs font-semibold text-zinc-900" data-role="quantity-display" aria-label="Quantity">${quantity}</span>
+                                <span class="w-10 text-center text-xs font-semibold text-zinc-900" data-role="quantity-display" aria-label="Quantity: ${quantity}">${quantity}</span>
                                 <button 
                                     type="button" 
                                     data-action="increase" 
                                     data-id="${productId}" 
-                                    class="w-8 h-8 flex items-center justify-center text-zinc-600 hover:bg-zinc-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 cursor-pointer"
-                                    aria-label="Increase quantity"
+                                    class="w-8 h-8 flex items-center justify-center text-zinc-600 hover:bg-zinc-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-r-lg cursor-pointer"
+                                    aria-label="Increase quantity of ${name}"
                                 >
                                     +
                                 </button>
@@ -234,6 +260,7 @@
                                     data-action="remove" 
                                     data-id="${productId}" 
                                     class="text-xs font-medium text-red-600 hover:text-red-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 rounded-sm cursor-pointer"
+                                    aria-label="Remove ${name} from cart"
                                 >
                                     Remove
                                 </button>
@@ -276,7 +303,11 @@
         const qtyDisplay = articleEl.querySelector('[data-role="quantity-display"]');
         const subtotalDisplay = articleEl.querySelector('[data-role="subtotal-display"]');
 
-        if (qtyDisplay) qtyDisplay.textContent = item.quantity;
+        if (qtyDisplay) {
+            qtyDisplay.textContent = item.quantity;
+            qtyDisplay.setAttribute("aria-label", `Quantity: ${item.quantity}`);
+        }
+        
         if (subtotalDisplay) {
             const price = Number(product.price) || 0;
             subtotalDisplay.textContent = formatPrice(price * item.quantity);
@@ -290,7 +321,7 @@
 
     // Event Delegation for Image Failures (Capture phase required for 'error' event)
     cartItemsContainer.addEventListener("error", event => {
-        if (event.target.tagName === "IMG") {
+        if (event.target && event.target.tagName === "IMG") {
             event.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f4f4f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a1a1aa' font-family='sans-serif' font-size='12'%3ENo Img%3C/text%3E%3C/svg%3E";
         }
     }, true);
@@ -313,7 +344,7 @@
         if (action === "remove") {
             cart = cart.filter(i => i.id !== id);
             saveCart();
-            renderCart(); // Full re-render needed when removing an item node
+            renderCart();
         } else if (item && (action === "increase" || action === "decrease")) {
             if (action === "increase") {
                 item.quantity += 1;
@@ -329,7 +360,7 @@
                 saveCart();
                 const articleEl = button.closest("article[data-product-id]");
                 if (articleEl) {
-                    updateItemDOM(articleEl, item); // Fast path: inline target DOM update
+                    updateItemDOM(articleEl, item);
                 } else {
                     renderCart();
                 }
@@ -337,11 +368,20 @@
         }
     });
 
-    // Cross-tab Synchronization
+    // Cross-tab Synchronization (Native window storage event)
     window.addEventListener("storage", event => {
         if (event.key === CART_KEY_PRIMARY || event.key === CART_KEY_LEGACY) {
             cart = getCart();
             renderCart();
+        }
+    });
+
+    // Same-tab Synchronization (Custom event listener)
+    window.addEventListener(CART_EVENT_NAME, event => {
+        if (event.detail && Array.isArray(event.detail.cart)) {
+            // Keep local state in sync without re-parsing localStorage
+            cart = event.detail.cart;
+            updateCartCount();
         }
     });
 
