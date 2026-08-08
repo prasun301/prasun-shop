@@ -5,11 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PRASUN SHOP — Premium Tech & Accessories</title>
   <meta name="description" content="Discover high-performance smart gadgets, lighting, power accessories, and audio gear designed for daily productivity." />
-  
-  <!-- Preconnect & Styles -->
+  <link rel="canonical" href="https://prasunshop.com/" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://prasunshop.com/" />
+  <meta property="og:title" content="PRASUN SHOP — Premium Tech & Accessories" />
+  <meta property="og:description" content="Discover high-performance smart gadgets, lighting, power accessories, and audio gear." />
+  <meta property="og:image" content="https://prasunshop.com/assets/og-image.jpg" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="PRASUN SHOP — Premium Tech & Accessories" />
+  <meta name="twitter:description" content="Discover high-performance smart gadgets, lighting, power accessories, and audio gear." />
+
+  <!-- Preconnect & Resource Hints -->
+  <link rel="preconnect" href="https://images.unsplash.com" />
+  <link rel="dns-prefetch" href="https://images.unsplash.com" />
+
+  <!-- Stylesheets & Scripts -->
   <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
 </head>
 <body>
+
+  <!-- Keyboard Accessibility Skip Link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Live Region for Screen Readers -->
+  <div id="a11y-status-region" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
 
   <!-- ================= HEADER / NAVIGATION ================= -->
   <header class="header">
@@ -46,11 +70,11 @@
 
         <button 
           type="button" 
+          id="mobile-menu-toggle"
           class="mobile-menu-btn" 
-          aria-label="Toggle mobile menu" 
+          aria-label="Toggle navigation menu" 
           aria-expanded="false" 
           aria-controls="mobile-navigation"
-          onclick="const expanded = this.getAttribute('aria-expanded') === 'true'; this.setAttribute('aria-expanded', !expanded); document.getElementById('mobile-navigation').classList.toggle('is-active');"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -63,7 +87,7 @@
     </div>
 
     <!-- Mobile Dropdown Navigation -->
-    <nav id="mobile-navigation" class="mobile-menu" aria-label="Mobile Navigation">
+    <nav id="mobile-navigation" class="mobile-menu" aria-label="Mobile Navigation" hidden>
       <a href="/" class="active" aria-current="page">Shop</a>
       <a href="/about.html">About</a>
       <a href="/contact.html">Contact</a>
@@ -73,115 +97,148 @@
   </header>
 
   <!-- ================= MAIN CONTENT ================= -->
-  <main class="products-page">
+  <main id="main-content" class="products-page">
     
     <!-- Hero Banner -->
     <section class="products-hero">
       <p class="products-eyebrow">Curated Electronics</p>
-      <h1 class="products-heading">Find Products Instantly</h1>
+      <h1 id="products-heading" class="products-heading">Find Products Instantly</h1>
       <p class="products-intro">Explore high-performance smart gadgets designed for daily productivity.</p>
     </section>
 
-    <!-- Search Bar -->
-    <form class="products-search" role="search" action="/search" method="GET" onSubmit="event.preventDefault();">
-      <label for="product-search-input" class="sr-only">Search products</label>
-      <span class="products-search-icon" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-      </span>
-      <input 
-        type="search" 
-        id="product-search-input"
-        name="q"
-        class="products-search-input" 
-        placeholder="Search products by name, category, or feature..." 
-        autocomplete="off"
-      />
-    </form>
+    <!-- Toolbar: Search & Controls -->
+    <section class="products-toolbar" aria-label="Product Controls">
+      
+      <!-- Search Bar -->
+      <form class="products-search" role="search" action="/search" method="GET">
+        <label for="product-search" class="sr-only">Search products</label>
+        <span class="products-search-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input 
+          type="search" 
+          id="product-search"
+          name="q"
+          class="products-search-input" 
+          placeholder="Search products (Press ⌘K or Ctrl+K)" 
+          autocomplete="off"
+        />
+        <button type="button" id="search-clear" class="search-clear-btn" aria-label="Clear search query" hidden>
+          &times;
+        </button>
+      </form>
+
+      <!-- Sort Controls & Results Counter -->
+      <div class="products-controls">
+        <span id="products-count" class="products-result-count" aria-live="polite">3 products</span>
+        
+        <div class="products-sort-wrap">
+          <label for="product-sort" class="sr-only">Sort products</label>
+          <select id="product-sort" class="products-sort">
+            <option value="featured">Sort by: Featured</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="rating">Highest Rated</option>
+            <option value="name">Name: A–Z</option>
+          </select>
+        </div>
+      </div>
+
+    </section>
 
     <!-- Category Filters -->
     <div class="products-categories" role="group" aria-label="Filter products by category">
-      <button type="button" class="category-pill active" aria-pressed="true">All</button>
-      <button type="button" class="category-pill" aria-pressed="false">Smart Lighting</button>
-      <button type="button" class="category-pill" aria-pressed="false">Power &amp; Charging</button>
-      <button type="button" class="category-pill" aria-pressed="false">Audio</button>
+      <button type="button" class="category-pill active" data-category="all" aria-pressed="true">All</button>
+      <button type="button" class="category-pill" data-category="Smart Lighting" aria-pressed="false">Smart Lighting</button>
+      <button type="button" class="category-pill" data-category="Power &amp; Charging" aria-pressed="false">Power &amp; Charging</button>
+      <button type="button" class="category-pill" data-category="Audio" aria-pressed="false">Audio</button>
     </div>
 
-    <!-- Product Grid -->
-    <section class="products-grid" aria-label="Product listings">
+    <!-- Dynamic Product Grid Hook -->
+    <section id="product-list" class="products-grid" aria-label="Product listings" aria-busy="false">
       
       <!-- Card 1 -->
-      <article class="product-card">
-        <div class="product-card-image">
-          <a href="/product/smart-lamp" tabindex="-1" aria-hidden="true">
-            <img src="https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80" alt="G-Shaped Smart LED Atmosphere Lamp" loading="lazy" width="600" height="600" />
-          </a>
-        </div>
-        <div class="product-card-body">
-          <span class="product-category">Smart Lighting</span>
-          <h2 class="product-title">
-            <a href="/product/smart-lamp" class="product-title-link">G-Shaped Smart LED Atmosphere Lamp</a>
-          </h2>
-          <p class="product-description">Includes built-in Bluetooth speaker and fast wireless charger pad.</p>
-          <div class="product-bottom">
-            <span class="product-price">$29.99</span>
-            <button type="button" class="product-cart-button" data-product-id="smart-lamp" aria-label="Add G-Shaped Smart LED Atmosphere Lamp to cart">
-              Add to Cart
-            </button>
+      <article class="product-card" data-id="smart-lamp">
+        <a class="product-card-link" href="/product/smart-lamp" aria-label="View G-Shaped Smart LED Atmosphere Lamp">
+          <div class="product-card-image">
+            <img 
+              src="https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80" 
+              alt="G-Shaped Smart LED Atmosphere Lamp" 
+              loading="lazy" 
+              decoding="async"
+              width="600" 
+              height="600" 
+            />
+            <span class="product-category">Smart Lighting</span>
           </div>
-        </div>
+          <div class="product-card-body">
+            <h2 class="product-title">G-Shaped Smart LED Atmosphere Lamp</h2>
+            <p class="product-description">Includes built-in Bluetooth speaker and fast wireless charger pad.</p>
+            <div class="product-bottom">
+              <span class="product-price">$29.99</span>
+              <span class="product-view-button">View Details</span>
+            </div>
+          </div>
+        </a>
       </article>
 
       <!-- Card 2 -->
-      <article class="product-card">
-        <div class="product-card-image">
-          <a href="/product/power-bank" tabindex="-1" aria-hidden="true">
-            <img src="https://images.unsplash.com/photo-1609592424109-dd9892f1b177?auto=format&fit=crop&w=600&q=80" alt="Mini Magnetic Power Bank" loading="lazy" width="600" height="600" />
-          </a>
-        </div>
-        <div class="product-card-body">
-          <span class="product-category">Power &amp; Charging</span>
-          <h2 class="product-title">
-            <a href="/product/power-bank" class="product-title-link">Mini 5000mAh Magnetic Wireless Power Bank</a>
-          </h2>
-          <p class="product-description">Compact fast-charging portable battery pack for mobile devices.</p>
-          <div class="product-bottom">
-            <span class="product-price">$39.99</span>
-            <button type="button" class="product-cart-button" data-product-id="power-bank" aria-label="Add Mini 5000mAh Magnetic Power Bank to cart">
-              Add to Cart
-            </button>
+      <article class="product-card" data-id="power-bank">
+        <a class="product-card-link" href="/product/power-bank" aria-label="View Mini 5000mAh Magnetic Wireless Power Bank">
+          <div class="product-card-image">
+            <img 
+              src="https://images.unsplash.com/photo-1609592424109-dd9892f1b177?auto=format&fit=crop&w=600&q=80" 
+              alt="Mini Magnetic Power Bank" 
+              loading="lazy" 
+              decoding="async"
+              width="600" 
+              height="600" 
+            />
+            <span class="product-category">Power &amp; Charging</span>
           </div>
-        </div>
+          <div class="product-card-body">
+            <h2 class="product-title">Mini 5000mAh Magnetic Wireless Power Bank</h2>
+            <p class="product-description">Compact fast-charging portable battery pack for mobile devices.</p>
+            <div class="product-bottom">
+              <span class="product-price">$39.99</span>
+              <span class="product-view-button">View Details</span>
+            </div>
+          </div>
+        </a>
       </article>
 
       <!-- Card 3 -->
-      <article class="product-card">
-        <div class="product-card-image">
-          <a href="/product/earbuds" tabindex="-1" aria-hidden="true">
-            <img src="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80" alt="Noise Cancelling Earbuds" loading="lazy" width="600" height="600" />
-          </a>
-        </div>
-        <div class="product-card-body">
-          <span class="product-category">Audio</span>
-          <h2 class="product-title">
-            <a href="/product/earbuds" class="product-title-link">Wireless Noise-Cancelling Sports Earbuds</a>
-          </h2>
-          <p class="product-description">High-fidelity Bluetooth audio with ergonomic sweat-resistant fit.</p>
-          <div class="product-bottom">
-            <span class="product-price">$49.99</span>
-            <button type="button" class="product-cart-button" data-product-id="earbuds" aria-label="Add Wireless Noise-Cancelling Sports Earbuds to cart">
-              Add to Cart
-            </button>
+      <article class="product-card" data-id="earbuds">
+        <a class="product-card-link" href="/product/earbuds" aria-label="View Wireless Noise-Cancelling Sports Earbuds">
+          <div class="product-card-image">
+            <img 
+              src="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80" 
+              alt="Noise Cancelling Earbuds" 
+              loading="lazy" 
+              decoding="async"
+              width="600" 
+              height="600" 
+            />
+            <span class="product-category">Audio</span>
           </div>
-        </div>
+          <div class="product-card-body">
+            <h2 class="product-title">Wireless Noise-Cancelling Sports Earbuds</h2>
+            <p class="product-description">High-fidelity Bluetooth audio with ergonomic sweat-resistant fit.</p>
+            <div class="product-bottom">
+              <span class="product-price">$49.99</span>
+              <span class="product-view-button">View Details</span>
+            </div>
+          </div>
+        </a>
       </article>
 
     </section>
   </main>
 
-  <!-- ================= FOOTER WITH ALL POLICIES ================= -->
+  <!-- ================= FOOTER ================= -->
   <footer class="footer">
     <div class="footer-content">
       
