@@ -1,52 +1,121 @@
+```html
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-```
-<title>Products — Prasun Shop</title>
-<meta
-    name="description"
-    content="Explore products from Prasun Shop."
->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
 
-<link rel="stylesheet" href="style.css">
-<script src="products.js" defer></script>
-```
+    <title>Products — Prasun Shop</title>
 
+    <meta
+        name="description"
+        content="Browse products available from Prasun Shop."
+    >
+
+    <meta
+        name="theme-color"
+        content="#ffffff"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+    <script
+        src="products.js"
+        defer
+    ></script>
 </head>
 
 <body>
 
-```
+<!-- ================================================================
+     SKIP LINK
+     ================================================================ -->
+
+<a
+    href="#main-content"
+    class="skip-link"
+>
+    Skip to content
+</a>
+
+
 <!-- ================================================================
      HEADER
      ================================================================ -->
+
 <header class="header">
+
     <div class="container header-container">
 
-        <a href="index.html" class="logo" aria-label="Prasun Shop home">
+        <!-- Logo -->
+
+        <a
+            href="index.html"
+            class="logo"
+            aria-label="Prasun Shop home"
+        >
             Prasun Shop<span aria-hidden="true">.</span>
         </a>
 
-        <nav class="nav-links" aria-label="Primary navigation">
-            <a href="index.html">Home</a>
-            <a href="products.html" class="active" aria-current="page">
+
+        <!-- Desktop Navigation -->
+
+        <nav
+            class="nav-links"
+            aria-label="Primary navigation"
+        >
+
+            <a
+                href="index.html"
+                class="nav-link"
+            >
+                Home
+            </a>
+
+            <a
+                href="products.html"
+                class="nav-link active"
+                aria-current="page"
+            >
                 Products
             </a>
-            <a href="about.html">About</a>
-            <a href="contact.html">Contact</a>
+
+            <a
+                href="about.html"
+                class="nav-link"
+            >
+                About
+            </a>
+
+            <a
+                href="contact.html"
+                class="nav-link"
+            >
+                Contact
+            </a>
+
         </nav>
 
+
+        <!-- Header Actions -->
+
         <div class="header-actions">
+
+            <!-- Cart -->
 
             <a
                 href="cart.html"
                 class="cart-icon-wrap"
                 aria-label="Shopping cart"
             >
+
                 <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -56,17 +125,35 @@
                     stroke-linejoin="round"
                     aria-hidden="true"
                 >
-                    <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"/>
-                    <circle cx="10" cy="20" r="1.3"/>
-                    <circle cx="18" cy="20" r="1.3"/>
+                    <path
+                        d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"
+                    />
+
+                    <circle
+                        cx="10"
+                        cy="20"
+                        r="1.3"
+                    />
+
+                    <circle
+                        cx="18"
+                        cy="20"
+                        r="1.3"
+                    />
                 </svg>
 
                 <span
                     id="cart-count"
                     class="cart-badge"
                     aria-label="Items in cart"
-                >0</span>
+                >
+                    0
+                </span>
+
             </a>
+
+
+            <!-- Mobile Menu Button -->
 
             <button
                 type="button"
@@ -76,6 +163,7 @@
                 aria-controls="products-mobile-menu"
                 aria-label="Open menu"
             >
+
                 <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -88,20 +176,33 @@
                     <path d="M4 12h16"/>
                     <path d="M4 18h16"/>
                 </svg>
+
             </button>
 
         </div>
 
     </div>
 
+
     <!-- Mobile Navigation -->
+
     <div
         id="products-mobile-menu"
         class="mobile-menu"
         hidden
     >
-        <nav aria-label="Mobile navigation">
-            <a href="index.html" class="mobile-nav-link">Home</a>
+
+        <nav
+            aria-label="Mobile navigation"
+        >
+
+            <a
+                href="index.html"
+                class="mobile-nav-link"
+            >
+                Home
+            </a>
+
             <a
                 href="products.html"
                 class="mobile-nav-link active"
@@ -109,47 +210,70 @@
             >
                 Products
             </a>
-            <a href="about.html" class="mobile-nav-link">About</a>
-            <a href="contact.html" class="mobile-nav-link">Contact</a>
+
+            <a
+                href="about.html"
+                class="mobile-nav-link"
+            >
+                About
+            </a>
+
+            <a
+                href="contact.html"
+                class="mobile-nav-link"
+            >
+                Contact
+            </a>
+
         </nav>
+
     </div>
+
 </header>
 
 
 <!-- ================================================================
      MAIN
      ================================================================ -->
-<main>
+
+<main id="main-content">
 
     <div class="container products-page">
 
-        <!-- Products Hero -->
+
+        <!-- ============================================================
+             PRODUCTS HEADER
+             ============================================================ -->
+
         <section
             class="products-hero"
             aria-labelledby="products-heading"
         >
+
             <div class="products-hero-content">
-                <p class="products-eyebrow">Prasun Shop</p>
 
                 <h1
                     id="products-heading"
                     class="products-heading"
                 >
-                    Explore Our Products
+                    Products
                 </h1>
 
                 <p class="products-intro">
-                    Discover carefully selected products designed for
-                    modern work, everyday life, and technology.
+                    Browse our available products.
                 </p>
+
             </div>
 
+
             <!-- Search -->
+
             <form
-                class="products-search"
                 id="product-search-form"
+                class="products-search"
                 role="search"
             >
+
                 <label
                     for="product-search"
                     class="sr-only"
@@ -166,9 +290,15 @@
                     stroke-linecap="round"
                     aria-hidden="true"
                 >
-                    <circle cx="11" cy="11" r="7"/>
+                    <circle
+                        cx="11"
+                        cy="11"
+                        r="7"
+                    />
+
                     <path d="m20 20-4-4"/>
                 </svg>
+
 
                 <input
                     id="product-search"
@@ -180,6 +310,7 @@
                     enterkeyhint="search"
                 >
 
+
                 <button
                     type="button"
                     id="search-clear"
@@ -190,75 +321,68 @@
                     ×
                 </button>
 
+
                 <span
                     class="products-search-shortcut"
                     aria-hidden="true"
                 >
                     ⌘ K
                 </span>
+
             </form>
+
         </section>
 
 
-        <!-- Category Navigation -->
+        <!-- ============================================================
+             CATEGORY FILTER
+             ============================================================ -->
+
         <section
             class="products-toolbar"
             aria-label="Product categories"
         >
+
             <div
                 class="products-categories"
                 role="group"
-                aria-label="Filter by category"
+                aria-label="Filter products by category"
             >
+
                 <button
                     type="button"
                     class="category-pill active"
                     data-category="all"
                     aria-pressed="true"
                 >
-                    All Products
+                    All
                 </button>
 
-                <button
-                    type="button"
-                    class="category-pill"
-                    data-category="electronics"
-                    aria-pressed="false"
-                >
-                    Electronics
-                </button>
+                <!--
+                    Additional category buttons can be added here
+                    if they exist in data/products.json or localStorage.
 
-                <button
-                    type="button"
-                    class="category-pill"
-                    data-category="lifestyle"
-                    aria-pressed="false"
-                >
-                    Lifestyle
-                </button>
+                    Example:
 
-                <button
-                    type="button"
-                    class="category-pill"
-                    data-category="accessories"
-                    aria-pressed="false"
-                >
-                    Accessories
-                </button>
+                    <button
+                        type="button"
+                        class="category-pill"
+                        data-category="Smart Lighting"
+                        aria-pressed="false"
+                    >
+                        Smart Lighting
+                    </button>
+                -->
 
-                <button
-                    type="button"
-                    class="category-pill"
-                    data-category="smart"
-                    aria-pressed="false"
-                >
-                    Smart Tech
-                </button>
             </div>
+
         </section>
 
 
-        <!-- Results / Sorting -->
+        <!-- ============================================================
+             RESULTS BAR
+             ============================================================ -->
+
         <div class="products-results-bar">
 
             <p
@@ -269,7 +393,9 @@
                 Loading products…
             </p>
 
+
             <label class="products-sort-wrap">
+
                 <span class="sr-only">
                     Sort products
                 </span>
@@ -279,8 +405,9 @@
                     class="products-sort"
                     aria-label="Sort products"
                 >
+
                     <option value="featured">
-                        Sort by: Featured
+                        Featured
                     </option>
 
                     <option value="price-low">
@@ -294,7 +421,9 @@
                     <option value="name">
                         Name: A to Z
                     </option>
+
                 </select>
+
             </label>
 
         </div>
@@ -303,6 +432,7 @@
         <!-- ============================================================
              PRODUCT GRID
              ============================================================ -->
+
         <section
             id="product-list"
             class="products-grid"
@@ -311,66 +441,153 @@
             aria-busy="true"
         >
 
-            <!-- Loading Skeleton -->
+            <!-- Loading Skeleton 1 -->
+
             <article class="product-skeleton">
+
                 <div class="skeleton-image"></div>
 
                 <div class="skeleton-content">
-                    <span class="skeleton-line skeleton-category"></span>
-                    <span class="skeleton-line skeleton-title"></span>
-                    <span class="skeleton-line skeleton-description"></span>
-                    <span class="skeleton-line skeleton-description short"></span>
-                    <span class="skeleton-line skeleton-price"></span>
+
+                    <span
+                        class="skeleton-line skeleton-category"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-title"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-description"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-description short"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-price"
+                    ></span>
+
                 </div>
+
             </article>
 
+
+            <!-- Loading Skeleton 2 -->
+
             <article class="product-skeleton">
+
                 <div class="skeleton-image"></div>
 
                 <div class="skeleton-content">
-                    <span class="skeleton-line skeleton-category"></span>
-                    <span class="skeleton-line skeleton-title"></span>
-                    <span class="skeleton-line skeleton-description"></span>
-                    <span class="skeleton-line skeleton-description short"></span>
-                    <span class="skeleton-line skeleton-price"></span>
+
+                    <span
+                        class="skeleton-line skeleton-category"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-title"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-description"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-description short"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-price"
+                    ></span>
+
                 </div>
+
             </article>
 
+
+            <!-- Loading Skeleton 3 -->
+
             <article class="product-skeleton">
+
                 <div class="skeleton-image"></div>
 
                 <div class="skeleton-content">
-                    <span class="skeleton-line skeleton-category"></span>
-                    <span class="skeleton-line skeleton-title"></span>
-                    <span class="skeleton-line skeleton-description"></span>
-                    <span class="skeleton-line skeleton-description short"></span>
-                    <span class="skeleton-line skeleton-price"></span>
+
+                    <span
+                        class="skeleton-line skeleton-category"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-title"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-description"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-description short"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-price"
+                    ></span>
+
                 </div>
+
             </article>
 
+
+            <!-- Loading Skeleton 4 -->
+
             <article class="product-skeleton">
+
                 <div class="skeleton-image"></div>
 
                 <div class="skeleton-content">
-                    <span class="skeleton-line skeleton-category"></span>
-                    <span class="skeleton-line skeleton-title"></span>
-                    <span class="skeleton-line skeleton-description"></span>
-                    <span class="skeleton-line skeleton-description short"></span>
-                    <span class="skeleton-line skeleton-price"></span>
+
+                    <span
+                        class="skeleton-line skeleton-category"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-title"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-description"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-description short"
+                    ></span>
+
+                    <span
+                        class="skeleton-line skeleton-price"
+                    ></span>
+
                 </div>
+
             </article>
 
         </section>
 
 
-        <!-- Empty State -->
+        <!-- ============================================================
+             EMPTY STATE
+             ============================================================ -->
+
         <section
             id="empty-state"
             class="products-empty"
             hidden
             aria-live="polite"
         >
+
             <div class="products-empty-icon">
+
                 <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -380,16 +597,28 @@
                     stroke-linejoin="round"
                     aria-hidden="true"
                 >
-                    <circle cx="11" cy="11" r="7"/>
+                    <circle
+                        cx="11"
+                        cy="11"
+                        r="7"
+                    />
+
                     <path d="m20 20-4-4"/>
+
                 </svg>
+
             </div>
 
-            <h2>No products found</h2>
+
+            <h2>
+                No products found
+            </h2>
+
 
             <p>
-                Try another search term or browse all products.
+                Try another search or view all products.
             </p>
+
 
             <button
                 type="button"
@@ -398,17 +627,23 @@
             >
                 View All Products
             </button>
+
         </section>
 
 
-        <!-- Error State -->
+        <!-- ============================================================
+             ERROR STATE
+             ============================================================ -->
+
         <section
             id="products-error"
             class="products-error"
             hidden
             aria-live="assertive"
         >
+
             <div class="products-empty-icon">
+
                 <svg
                     viewBox="0 0 24 24"
                     fill="none"
@@ -418,17 +653,31 @@
                     stroke-linejoin="round"
                     aria-hidden="true"
                 >
-                    <circle cx="12" cy="12" r="9"/>
+
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="9"
+                    />
+
                     <path d="M12 8v5"/>
+
                     <path d="M12 16h.01"/>
+
                 </svg>
+
             </div>
 
-            <h2>Unable to load products</h2>
+
+            <h2>
+                Unable to load products
+            </h2>
+
 
             <p>
-                Please refresh the page and try again.
+                Please try again.
             </p>
+
 
             <button
                 type="button"
@@ -437,6 +686,7 @@
             >
                 Try Again
             </button>
+
         </section>
 
     </div>
@@ -447,54 +697,172 @@
 <!-- ================================================================
      FOOTER
      ================================================================ -->
+
 <footer class="footer">
+
     <div class="container">
 
         <div class="footer-content">
 
+
+            <!-- Brand -->
+
             <div class="footer-col">
-                <h4>Prasun Shop</h4>
+
+                <h4>
+                    Prasun Shop
+                </h4>
 
                 <p>
                     Simple, useful products for modern life and work.
                 </p>
+
             </div>
 
+
+            <!-- Shop -->
+
             <div class="footer-col">
-                <h4>Shop</h4>
+
+                <h4>
+                    Shop
+                </h4>
 
                 <ul>
+
                     <li>
-                        <a href="products.html">All Products</a>
+                        <a href="products.html">
+                            Products
+                        </a>
                     </li>
+
                     <li>
-                        <a href="cart.html">Shopping Cart</a>
+                        <a href="cart.html">
+                            Cart
+                        </a>
                     </li>
+
                 </ul>
+
             </div>
 
+
+            <!-- Information -->
+
             <div class="footer-col">
-                <h4>Information</h4>
+
+                <h4>
+                    Information
+                </h4>
 
                 <ul>
+
                     <li>
-                        <a href="about.html">About</a>
+                        <a href="about.html">
+                            About
+                        </a>
                     </li>
+
                     <li>
-                        <a href="contact.html">Contact</a>
+                        <a href="contact.html">
+                            Contact
+                        </a>
                     </li>
+
                 </ul>
+
             </div>
 
         </div>
 
+
+        <!-- Copyright -->
+
         <div class="footer-bottom">
-            © <span id="footer-year"></span> Prasun Shop. All rights reserved.
+
+            ©
+            <span id="footer-year"></span>
+            Prasun Shop. All rights reserved.
+
         </div>
 
     </div>
+
 </footer>
-```
+
+
+<!-- ================================================================
+     MINIMAL PAGE SCRIPT
+     ================================================================ -->
+
+<script>
+(function () {
+
+    "use strict";
+
+    const year = document.getElementById("footer-year");
+
+    if (year) {
+        year.textContent = new Date().getFullYear();
+    }
+
+
+    const menuButton =
+        document.getElementById("products-menu-toggle");
+
+    const mobileMenu =
+        document.getElementById("products-mobile-menu");
+
+
+    if (menuButton && mobileMenu) {
+
+        menuButton.addEventListener("click", function () {
+
+            const isOpen =
+                menuButton.getAttribute("aria-expanded") === "true";
+
+            menuButton.setAttribute(
+                "aria-expanded",
+                String(!isOpen)
+            );
+
+            menuButton.setAttribute(
+                "aria-label",
+                isOpen ? "Open menu" : "Close menu"
+            );
+
+            mobileMenu.hidden = isOpen;
+
+        });
+
+
+        mobileMenu
+            .querySelectorAll("a")
+            .forEach(function (link) {
+
+                link.addEventListener("click", function () {
+
+                    menuButton.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+
+                    menuButton.setAttribute(
+                        "aria-label",
+                        "Open menu"
+                    );
+
+                    mobileMenu.hidden = true;
+
+                });
+
+            });
+
+    }
+
+})();
+</script>
 
 </body>
 </html>
+```
