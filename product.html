@@ -1,11 +1,29 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="View product details and add smart products to your Prasun Shop cart.">
   <title>Product Details — Prasun Shop</title>
+  <meta name="description" content="View product details and add smart products to your Prasun Shop cart.">
+  <link rel="canonical" href="https://prasunshop.com/product.html">
+  <meta name="theme-color" content="#ffffff">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://prasunshop.com/product.html">
+  <meta property="og:title" content="Product Details — Prasun Shop">
+  <meta property="og:description" content="View product details and add smart products to your Prasun Shop cart.">
+  <meta property="og:image" content="https://prasunshop.com/assets/og-image.jpg">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Product Details — Prasun Shop">
+  <meta name="twitter:description" content="View product details and add smart products to your Prasun Shop cart.">
+
+  <!-- Favicon Links -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
   <!-- Early Connection Hints for External Assets -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,13 +36,13 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   </noscript>
 
-  <!-- Compiled Tailwind CSS (Production Build Replacement for JIT CDN) -->
+  <!-- Compiled Tailwind CSS -->
   <link rel="stylesheet" href="css/tailwind.css">
 
   <!-- Custom CSS Overrides -->
   <link rel="stylesheet" href="css/style.css">
 
-  <!-- JavaScript Modules (Deferred for Non-Blocking Initial Render) -->
+  <!-- JavaScript Modules -->
   <script src="js/cart-count.js" defer></script>
   <script src="js/product.js" defer></script>
 </head>
@@ -33,7 +51,7 @@
 
   <!-- Header -->
   <header class="header">
-    <div class="container">
+    <div class="container header-container">
 
       <!-- Brand -->
       <a href="index.html" class="logo" aria-label="Prasun Shop Home">
@@ -105,7 +123,7 @@
 
   <!-- Product Details -->
   <main class="flex-grow">
-    <section class="product-page">
+    <section class="product-page py-8">
       <div class="container">
         <div id="product-detail" aria-live="polite">
           <!-- Loading Skeleton with Aspect Ratio Reserved Space (CLS Prevention) -->
@@ -157,5 +175,4 @@
   </script>
 
 </body>
-
 </html>
