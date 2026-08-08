@@ -1,867 +1,813 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prasun Shop | Smart Products for Modern Living</title>
-  <meta name="description" content="Discover carefully selected smart gadgets, technology products, and everyday essentials designed to make modern living effortless.">
-  <meta name="theme-color" content="#ffffff">
-  <!-- Open Graph / Meta -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Prasun Shop | Smart Products for Modern Living">
-  <meta property="og:description" content="Discover carefully selected smart gadgets and tech essentials for modern living.">
-  <!-- Typography: Inter Font Stack -->
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Prasun Shop — Discover useful technology, smart devices, electronics, and everyday products."
+  >
+
+  <meta
+    name="robots"
+    content="index, follow"
+  >
+
+  <meta
+    name="theme-color"
+    content="#ffffff"
+  >
+
+  <title>Prasun Shop — Technology & Everyday Products</title>
+
+  <!-- Canonical -->
+  <link
+    rel="canonical"
+    href="https://shop.prasunbarua.com/"
+  >
+
+  <!-- Preconnect -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    /* ==========================================================================
-        DESIGN SYSTEM & CSS CUSTOM PROPERTIES (8px Spatial Grid)
-        ========================================================================== */
-    :root {
-      /* Colors */
-      --bg-body: #ffffff;
-      --bg-subtle: #fafafa;
-      --bg-card: #ffffff;
-      --text-main: #09090b;
-      --text-muted: #71717a;
-      --text-inverse: #ffffff;
-      --border-color: #e4e4e7;
-      --border-hover: #a1a1aa;
-      
-      --accent-primary: #09090b;
-      --accent-hover: #27272a;
-      --focus-ring: #000000;
 
-      /* Typography */
-      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      
-      /* Spacing Scale (8px system) */
-      --space-1: 4px;
-      --space-2: 8px;
-      --space-3: 12px;
-      --space-4: 16px;
-      --space-6: 24px;
-      --space-8: 32px;
-      --space-12: 48px;
-      --space-16: 64px;
-      --space-20: 80px;
-      --space-24: 96px;
-
-      /* Layout */
-      --max-width: 1200px;
-      --radius-sm: 6px;
-      --radius-md: 8px;
-      --radius-full: 9999px;
-      --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    /* ==========================================================================
-        RESET & BASE STYLES
-        ========================================================================== */
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html {
-      font-size: 100%;
-      scroll-behavior: smooth;
-      -webkit-text-size-adjust: 100%;
-    }
-
-    body {
-      font-family: var(--font-family);
-      background-color: var(--bg-body);
-      color: var(--text-main);
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* Skip Link for WCAG Accessibility */
-    .skip-link {
-      position: absolute;
-      top: -100px;
-      left: var(--space-4);
-      background: var(--accent-primary);
-      color: var(--text-inverse);
-      padding: var(--space-2) var(--space-4);
-      border-radius: var(--radius-sm);
-      z-index: 1000;
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 0.875rem;
-      transition: top var(--transition-fast);
-    }
-
-    .skip-link:focus {
-      top: var(--space-4);
-      outline: 2px solid var(--focus-ring);
-      outline-offset: 2px;
-    }
-
-    /* Interactive Element Focus States */
-    a:focus-visible,
-    button:focus-visible,
-    input:focus-visible {
-      outline: 2px solid var(--focus-ring);
-      outline-offset: 2px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: var(--max-width);
-      margin-left: auto;
-      margin-right: auto;
-      padding-left: var(--space-6);
-      padding-right: var(--space-6);
-    }
-
-    /* ==========================================================================
-        HEADER & NAVIGATION
-        ========================================================================== */
-    .header {
-      position: sticky;
-      top: 0;
-      background-color: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border-bottom: 1px solid var(--border-color);
-      z-index: 100;
-      height: 64px;
-      display: flex;
-      align-items: center;
-    }
-
-    .nav-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-    }
-
-    .logo {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-2);
-      font-size: 1.125rem;
-      font-weight: 700;
-      color: var(--text-main);
-      text-decoration: none;
-      letter-spacing: -0.02em;
-    }
-
-    .store-icon {
-      width: 20px;
-      height: 20px;
-      stroke-width: 2;
-      color: var(--text-main);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: var(--space-6);
-      list-style: none;
-    }
-
-    .nav-link {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: color var(--transition-fast);
-    }
-
-    .nav-link:hover,
-    .nav-link[aria-current="page"] {
-      color: var(--text-main);
-    }
-
-    .cart-link {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-2);
-      color: var(--text-main);
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      padding: var(--space-2) var(--space-3);
-      border-radius: var(--radius-sm);
-      transition: background-color var(--transition-fast);
-    }
-
-    .cart-link:hover {
-      background-color: var(--bg-subtle);
-    }
-
-    .cart-badge {
-      background-color: var(--accent-primary);
-      color: var(--text-inverse);
-      font-size: 0.75rem;
-      font-weight: 600;
-      min-width: 20px;
-      height: 20px;
-      border-radius: var(--radius-full);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 var(--space-1);
-    }
-
-    /* ==========================================================================
-        HERO SECTION
-        ========================================================================== */
-    .hero {
-      padding-top: clamp(64px, 10vw, 120px);
-      padding-bottom: clamp(64px, 8vw, 96px);
-      text-align: center;
-      background-color: var(--bg-body);
-    }
-
-    .hero-content {
-      max-width: 760px;
-      margin: 0 auto;
-    }
-
-    .hero-title {
-      font-size: clamp(2.25rem, 5vw, 3.75rem);
-      font-weight: 700;
-      line-height: 1.1;
-      letter-spacing: -0.03em;
-      color: var(--text-main);
-      margin-bottom: var(--space-6);
-    }
-
-    .hero-description {
-      font-size: clamp(1rem, 2vw, 1.25rem);
-      line-height: 1.6;
-      color: var(--text-muted);
-      margin-bottom: var(--space-8);
-      font-weight: 400;
-      text-wrap: balance;
-    }
-
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      height: 52px;
-      padding: 0 var(--space-8);
-      background-color: var(--accent-primary);
-      color: var(--text-inverse);
-      font-size: 1rem;
-      font-weight: 500;
-      text-decoration: none;
-      border: 1px solid var(--accent-primary);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      transition: background-color var(--transition-fast), border-color var(--transition-fast);
-    }
-
-    .btn-primary:hover {
-      background-color: var(--accent-hover);
-      border-color: var(--accent-hover);
-    }
-
-    /* ==========================================================================
-        CATEGORIES SECTION
-        ========================================================================== */
-    .section {
-      padding-top: clamp(48px, 8vw, 80px);
-      padding-bottom: clamp(48px, 8vw, 80px);
-      border-top: 1px solid var(--border-color);
-    }
-
-    .section-title {
-      font-size: clamp(1.5rem, 3vw, 2rem);
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      color: var(--text-main);
-      margin-bottom: var(--space-8);
-      text-align: center;
-    }
-
-    .category-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-      gap: var(--space-4);
-    }
-
-    .category-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: var(--space-6) var(--space-4);
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      text-decoration: none;
-      color: var(--text-main);
-      transition: border-color var(--transition-fast), background-color var(--transition-fast);
-    }
-
-    .category-card:hover {
-      border-color: var(--border-hover);
-      background-color: var(--bg-subtle);
-    }
-
-    .category-icon {
-      width: 32px;
-      height: 32px;
-      stroke-width: 1.75;
-      color: var(--text-main);
-      margin-bottom: var(--space-3);
-    }
-
-    .category-card h3 {
-      font-size: 0.9375rem;
-      font-weight: 500;
-      text-align: center;
-    }
-
-    /* ==========================================================================
-        FEATURES / ABOUT SECTION
-        ========================================================================== */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--space-8);
-    }
-
-    .feature-card {
-      padding: var(--space-6);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      background-color: var(--bg-card);
-    }
-
-    .feature-card h3 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      margin-bottom: var(--space-2);
-      color: var(--text-main);
-    }
-
-    .feature-card p {
-      font-size: 0.9375rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    /* ==========================================================================
-        PRODUCTS & SEARCH SECTION
-        ========================================================================== */
-    .search-wrapper {
-      max-width: 480px;
-      margin: 0 auto var(--space-8);
-    }
-
-    .search-form {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .search-icon {
-      position: absolute;
-      left: var(--space-4);
-      width: 20px;
-      height: 20px;
-      color: var(--text-muted);
-      pointer-events: none;
-    }
-
-    .search-input {
-      width: 100%;
-      height: 48px;
-      padding-left: 48px;
-      padding-right: var(--space-4);
-      font-family: var(--font-family);
-      font-size: 0.9375rem;
-      color: var(--text-main);
-      background-color: var(--bg-body);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      transition: border-color var(--transition-fast);
-      appearance: none;
-    }
-
-    .search-input:focus {
-      border-color: var(--text-main);
-      outline: none;
-    }
-
-    /* ==========================================================================
-        MINIMAL SQUARE PRODUCT GRID & CARD SYSTEM (FIXED OVERLAPPING)
-        ========================================================================== */
-    .product-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: var(--space-6);
-      width: 100%;
-      min-height: 120px;
-    }
-
-    .product-card {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      transition: border-color var(--transition-fast), transform var(--transition-fast);
-    }
-
-    .product-card:hover {
-      border-color: var(--border-hover);
-      transform: translateY(-2px);
-    }
-
-    /* Strict Square Image Container with Flex Protection */
-    .product-image-wrapper,
-    .product-card .image-container {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      background-color: var(--bg-subtle);
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-
-    .product-image,
-    .product-card img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-    }
-
-    /* Product Info / Details */
-    .product-details,
-    .product-info {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      padding: var(--space-4);
-    }
-
-    .product-category {
-      font-size: 0.75rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      margin-bottom: var(--space-1);
-    }
-
-    .product-title,
-    .product-card h3 {
-      font-size: 0.9375rem;
-      font-weight: 500;
-      color: var(--text-main);
-      margin-bottom: var(--space-3);
-      line-height: 1.4;
-    }
-
-    .product-price-wrapper {
-      display: flex;
-      align-items: baseline;
-      gap: var(--space-2);
-      margin-top: auto;
-      margin-bottom: var(--space-4);
-    }
-
-    .product-price {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .product-price-original {
-      font-size: 0.8125rem;
-      color: var(--text-muted);
-      text-decoration: line-through;
-    }
-
-    /* Modern Minimalist Action Button */
-    .product-card .btn,
-    .product-card button,
-    .product-card a.btn,
-    .add-to-cart-btn,
-    .view-details-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 38px;
-      padding: 0 var(--space-4);
-      font-family: var(--font-family);
-      font-size: 0.8125rem;
-      font-weight: 500;
-      border-radius: var(--radius-sm);
-      background-color: var(--bg-subtle);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      text-decoration: none;
-      cursor: pointer;
-      transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
-    }
-
-    .product-card .btn:hover,
-    .add-to-cart-btn:hover,
-    .view-details-btn:hover {
-      background-color: var(--accent-primary);
-      color: var(--text-inverse);
-      border-color: var(--accent-primary);
-    }
-
-    /* ==========================================================================
-        TRUST / CONFIDENCE SECTION
-        ========================================================================== */
-    .trust-container {
-      text-align: center;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .trust-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
-      align-items: flex-start;
-      justify-content: center;
-      margin: 0 auto;
-    }
-
-    .trust-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--text-main);
-    }
-
-    .check-icon {
-      width: 20px;
-      height: 20px;
-      color: var(--accent-primary);
-      flex-shrink: 0;
-    }
-
-    /* ==========================================================================
-        CONTACT / NEWSLETTER SECTION
-        ========================================================================== */
-    .newsletter-container {
-      max-width: 520px;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .newsletter-subtitle {
-      font-size: 1rem;
-      color: var(--text-muted);
-      margin-bottom: var(--space-6);
-    }
-
-    .newsletter-form {
-      display: flex;
-      gap: var(--space-3);
-    }
-
-    .email-input {
-      flex: 1;
-      height: 52px;
-      padding: 0 var(--space-4);
-      font-family: var(--font-family);
-      font-size: 0.9375rem;
-      color: var(--text-main);
-      background-color: var(--bg-body);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      transition: border-color var(--transition-fast);
-    }
-
-    .email-input:focus {
-      border-color: var(--text-main);
-      outline: none;
-    }
-
-    /* Visually Hidden Helper (WCAG) */
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    /* ==========================================================================
-        FOOTER
-        ========================================================================== */
-    .footer {
-      padding: var(--space-8) 0;
-      border-top: 1px solid var(--border-color);
-      text-align: center;
-      background-color: var(--bg-body);
-    }
-
-    .footer-text {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-    }
-
-    /* ==========================================================================
-        MEDIA QUERIES (Mobile-First Responsiveness)
-        ========================================================================== */
-    @media (max-width: 864px) {
-      .features-grid {
-        grid-template-columns: 1fr;
-        gap: var(--space-4);
-      }
-    }
-
-    @media (max-width: 640px) {
-      .nav-links {
-        gap: var(--space-3);
-      }
-      .nav-link:not(.cart-link):not(.mobile-visible) {
-        display: none; 
-      }
-      .newsletter-form {
-        flex-direction: column;
-      }
-      .newsletter-form .btn-primary {
-        width: 100%;
-      }
-      .category-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .product-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--space-3);
-      }
-    }
-  </style>
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <!-- Inter -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- Main Stylesheet -->
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <!-- Favicon -->
+  <link
+    rel="icon"
+    href="favicon.ico"
+    sizes="any"
+  >
+
+  <!-- Prevent flash of incorrect theme if dark mode is supported -->
+  <script>
+    (() => {
+      try {
+        const savedTheme = localStorage.getItem("prasun-shop-theme");
+
+        if (
+          savedTheme === "dark" ||
+          (
+            !savedTheme &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+          )
+        ) {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (_) {}
+    })();
+  </script>
 </head>
-<body>
-  <!-- Skip to Main Content (Accessibility) -->
-  <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <!-- Header & Navigation -->
+<body>
+
+  <!-- ================================================================
+       ACCESSIBILITY
+       ================================================================ -->
+
+  <a
+    href="#main-content"
+    class="skip-link"
+  >
+    Skip to content
+  </a>
+
+
+  <!-- ================================================================
+       HEADER
+       ================================================================ -->
+
   <header class="header">
+
     <div class="container nav-wrapper">
-      <a href="index.html" class="logo" aria-label="Prasun Shop Home">
-        <svg class="store-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-          <line x1="3" y1="6" x2="21" y2="6"/>
-          <path d="M16 10a4 4 0 0 1-8 0"/>
+
+      <!-- Logo -->
+
+      <a
+        href="index.html"
+        class="logo"
+        aria-label="Prasun Shop Home"
+      >
+        <svg
+          class="store-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M3 9l1.5-5h15L21 9"/>
+          <path d="M4 9v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9"/>
+          <path d="M3 9h18"/>
+          <path d="M8 21v-6h8v6"/>
         </svg>
-        <span>Prasun Shop</span>
+
+        <span>
+          Prasun Shop<span aria-hidden="true">.</span>
+        </span>
       </a>
-      <nav aria-label="Main Navigation">
-        <ul class="nav-links">
-          <li><a href="index.html" class="nav-link" aria-current="page">Home</a></li>
-          <li><a href="products.html" class="nav-link">Products</a></li>
-          <li><a href="#categories" class="nav-link">Categories</a></li>
-          <li><a href="#about" class="nav-link">About</a></li>
-          <li><a href="#contact" class="nav-link">Contact</a></li>
-          <li>
-            <a href="cart.html" class="cart-link" aria-label="Shopping Cart, 0 items">
-              <svg class="category-icon" style="width:20px;height:20px;margin-bottom:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="8" cy="21" r="1"/>
-                <circle cx="19" cy="21" r="1"/>
-                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
-              </svg>
-              <span>Cart</span>
-              <span id="cart-count" class="cart-badge">0</span>
-            </a>
-          </li>
-        </ul>
+
+
+      <!-- Navigation -->
+
+      <nav
+        class="nav-links"
+        aria-label="Main navigation"
+      >
+
+        <a
+          href="index.html"
+          class="nav-link"
+          aria-current="page"
+        >
+          Home
+        </a>
+
+        <a
+          href="products.html"
+          class="nav-link"
+        >
+          Products
+        </a>
+
+        <a
+          href="#categories"
+          class="nav-link mobile-visible"
+        >
+          Categories
+        </a>
+
+        <a
+          href="#contact"
+          class="nav-link mobile-visible"
+        >
+          Contact
+        </a>
+
+        <a
+          href="cart.html"
+          class="cart-link"
+          aria-label="Shopping cart"
+        >
+
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="9" cy="20" r="1"/>
+            <circle cx="19" cy="20" r="1"/>
+            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L22 8H6"/>
+          </svg>
+
+          <span>Cart</span>
+
+          <span
+            class="cart-badge"
+            id="cart-count"
+            aria-label="0 items in cart"
+          >
+            0
+          </span>
+
+        </a>
+
       </nav>
+
     </div>
+
   </header>
 
-  <!-- Main Content Area -->
+
+  <!-- ================================================================
+       MAIN CONTENT
+       ================================================================ -->
+
   <main id="main-content">
-    <!-- Hero Section -->
-    <section class="hero" aria-labelledby="hero-heading">
+
+
+    <!-- ==============================================================
+         HERO
+         ============================================================== -->
+
+    <section class="hero">
+
       <div class="container hero-content">
-        <h1 id="hero-heading" class="hero-title">Smart Products for Modern Living</h1>
+
+        <h1 class="hero-title">
+          Simple products.<br>
+          Better everyday life.
+        </h1>
+
         <p class="hero-description">
-          Discover carefully selected smart gadgets, technology products, and everyday essentials designed to simplify and elevate your daily life.
+          Discover useful technology, smart devices, and everyday products
+          selected for modern living.
         </p>
-        <a href="#products" class="btn-primary">Shop Now</a>
+
+        <a
+          href="products.html"
+          class="btn-primary"
+        >
+          Shop Products
+        </a>
+
       </div>
+
     </section>
 
-    <!-- Categories Section -->
-    <section id="categories" class="section" aria-labelledby="categories-heading">
+
+    <!-- ==============================================================
+         CATEGORIES
+         ============================================================== -->
+
+    <section
+      id="categories"
+      class="section"
+      aria-labelledby="categories-heading"
+    >
+
       <div class="container">
-        <h2 id="categories-heading" class="section-title">Shop by Category</h2>
+
+        <h2
+          id="categories-heading"
+          class="section-title"
+        >
+          Categories
+        </h2>
+
+
         <div class="category-grid">
-          <a class="category-card" href="products.html?category=Smart%20Lighting">
-            <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+
+          <!-- Smart Lighting -->
+
+          <a
+            class="category-card"
+            href="products.html?category=Smart%20Lighting"
+          >
+
+            <svg
+              class="category-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
               <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>
               <path d="M9 18h6"/>
               <path d="M10 22h4"/>
             </svg>
+
             <h3>Smart Lighting</h3>
+
           </a>
-          <a class="category-card" href="products.html?category=Power%20%26%20Charging">
-            <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect width="16" height="10" x="2" y="7" rx="2" ry="2"/>
-              <line x1="22" x2="22" y1="11" y2="13"/>
+
+
+          <!-- Power & Charging -->
+
+          <a
+            class="category-card"
+            href="products.html?category=Power%20%26%20Charging"
+          >
+
+            <svg
+              class="category-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect
+                width="16"
+                height="10"
+                x="2"
+                y="7"
+                rx="2"
+              />
+
+              <line
+                x1="22"
+                x2="22"
+                y1="11"
+                y2="13"
+              />
             </svg>
+
             <h3>Power &amp; Charging</h3>
+
           </a>
-          <a class="category-card" href="products.html?category=Audio">
-            <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+
+          <!-- Audio -->
+
+          <a
+            class="category-card"
+            href="products.html?category=Audio"
+          >
+
+            <svg
+              class="category-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
               <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>
             </svg>
+
             <h3>Audio</h3>
+
           </a>
-          <a class="category-card" href="products.html?category=Smart%20Home">
-            <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+
+          <!-- Smart Home -->
+
+          <a
+            class="category-card"
+            href="products.html?category=Smart%20Home"
+          >
+
+            <svg
+              class="category-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
               <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
               <polyline points="9 22 9 12 15 12 15 22"/>
             </svg>
+
             <h3>Smart Home</h3>
-          </a>
-          <a class="category-card" href="products.html?category=Office%20%26%20Desk">
-            <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55A1 1 0 0 1 20.34 20H3.66a1 1 0 0 1-.94-1.45L4 16"/>
-            </svg>
-            <h3>Office &amp; Desk</h3>
-          </a>
-          <a class="category-card" href="products.html?category=Tech%20Gadgets">
-            <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M13 2 L3 14h9l-1 8 10-12h-9l1-8z"/>
-            </svg>
-            <h3>Tech Gadgets</h3>
-          </a>
-        </div>
-      </div>
-    </section>
 
-    <!-- Features Section -->
-    <section id="about" class="section" aria-labelledby="features-heading">
-      <div class="container">
-        <h2 id="features-heading" class="section-title">Why Choose Prasun Shop?</h2>
-        <div class="features-grid">
-          <div class="feature-card">
-            <h3>Quality Products</h3>
-            <p>Carefully selected items tested for durability, innovation, and long-term performance.</p>
-          </div>
-          <div class="feature-card">
-            <h3>Secure Shopping</h3>
-            <p>End-to-end encrypted checkout ensuring a completely protected shopping environment.</p>
-          </div>
-          <div class="feature-card">
-            <h3>Customer Focus</h3>
-            <p>Dedicated customer care team ready to assist before, during, and after your purchase.</p>
-          </div>
-        </div>
-      </div>
-    </section>
+          </a>
 
-    <!-- Products & Search Section -->
-    <section id="products" class="section" aria-labelledby="products-heading">
-      <div class="container">
-        <h2 id="products-heading" class="section-title">Featured Products</h2>
-        <!-- Search Box -->
-        <div class="search-wrapper">
-          <form class="search-form" role="search" onSubmit="event.preventDefault();">
-            <label for="searchInput" class="sr-only">Search products</label>
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.3-4.3"/>
-            </svg>
-            <input 
-              type="search" 
-              id="searchInput" 
-              class="search-input" 
-              placeholder="Search products..." 
-              autocomplete="off"
+
+          <!-- Office & Desk -->
+
+          <a
+            class="category-card"
+            href="products.html?category=Office%20%26%20Desk"
+          >
+
+            <svg
+              class="category-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
             >
-          </form>
+              <path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9"/>
+              <path d="M4 16h16"/>
+              <path d="m20 16 1.28 2.55A1 1 0 0 1 20.34 20H3.66a1 1 0 0 1-.94-1.45L4 16"/>
+            </svg>
+
+            <h3>Office &amp; Desk</h3>
+
+          </a>
+
+
+          <!-- Tech Gadgets -->
+
+          <a
+            class="category-card"
+            href="products.html?category=Tech%20Gadgets"
+          >
+
+            <svg
+              class="category-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+
+            <h3>Tech Gadgets</h3>
+
+          </a>
+
+
         </div>
-        <!-- Product Dynamic Insertion Container -->
-        <div class="product-grid" id="product-list">
-          <!-- Dynamic product items populated by script.js -->
-        </div>
+
       </div>
+
     </section>
 
-    <!-- Trust Section -->
-    <section class="section" aria-labelledby="trust-heading">
-      <div class="container trust-container">
-        <h2 id="trust-heading" class="section-title">Shop With Confidence</h2>
-        <ul class="trust-list">
-          <li class="trust-item">
-            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Carefully selected products</span>
-          </li>
-          <li class="trust-item">
-            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Secure checkout guarantee</span>
-          </li>
-          <li class="trust-item">
-            <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Customer-focused reliable service</span>
-          </li>
-        </ul>
+
+    <!-- ==============================================================
+         PRODUCTS
+         ============================================================== -->
+
+    <section
+      id="products"
+      class="section"
+      aria-labelledby="products-heading"
+    >
+
+      <div class="container">
+
+
+        <div class="products-header">
+
+          <div class="products-heading-wrapper">
+
+            <h2
+              id="products-heading"
+              class="section-title"
+            >
+              Products
+            </h2>
+
+          </div>
+
+
+          <!-- Search -->
+
+          <div class="search-wrapper">
+
+            <form
+              class="search-form"
+              id="product-search-form"
+              role="search"
+            >
+
+              <label
+                for="searchInput"
+                class="sr-only"
+              >
+                Search products
+              </label>
+
+
+              <svg
+                class="search-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="8"
+                />
+
+                <path d="m21 21-4.3-4.3"/>
+              </svg>
+
+
+              <input
+                type="search"
+                id="searchInput"
+                class="search-input"
+                placeholder="Search products..."
+                autocomplete="off"
+                spellcheck="false"
+              >
+
+            </form>
+
+          </div>
+
+        </div>
+
+
+        <!-- Dynamic Product Grid -->
+
+        <div
+          class="product-grid"
+          id="product-list"
+          aria-live="polite"
+          aria-busy="true"
+        >
+        </div>
+
+
+        <!-- Empty State -->
+
+        <div
+          class="products-empty"
+          id="empty-state"
+          hidden
+        >
+
+          <h3>No products found</h3>
+
+          <p>
+            Try a different search or browse another category.
+          </p>
+
+          <button
+            type="button"
+            class="btn-primary"
+            id="clear-search"
+          >
+            Clear Search
+          </button>
+
+        </div>
+
+
+        <!-- Error State -->
+
+        <div
+          class="products-error"
+          id="products-error"
+          hidden
+        >
+
+          <h3>Unable to load products</h3>
+
+          <p>
+            Please refresh the page and try again.
+          </p>
+
+          <button
+            type="button"
+            class="btn-primary"
+            id="retry-products"
+          >
+            Try Again
+          </button>
+
+        </div>
+
       </div>
+
     </section>
 
-    <!-- Contact / Newsletter Section -->
-    <section id="contact" class="section" aria-labelledby="newsletter-heading">
+
+    <!-- ==============================================================
+         NEWSLETTER
+         ============================================================== -->
+
+    <section
+      id="contact"
+      class="section newsletter-section"
+      aria-labelledby="newsletter-heading"
+    >
+
       <div class="container newsletter-container">
-        <h2 id="newsletter-heading" class="section-title">Stay Updated</h2>
-        <p class="newsletter-subtitle">New products, technology reviews, and special offers delivered straight to your inbox.</p>
-        <form class="newsletter-form" aria-label="Newsletter Subscription" onSubmit="event.preventDefault();">
-          <label for="newsletter-email" class="sr-only">Enter your email address</label>
-          <input 
-            type="email" 
-            id="newsletter-email" 
-            class="email-input" 
-            placeholder="Enter your email address" 
-            autocomplete="email" 
+
+        <h2
+          id="newsletter-heading"
+          class="section-title"
+        >
+          Stay Updated
+        </h2>
+
+        <p class="newsletter-subtitle">
+          Get updates about new products and offers.
+        </p>
+
+
+        <form
+          class="newsletter-form"
+          id="newsletter-form"
+          aria-label="Newsletter subscription"
+        >
+
+          <label
+            for="newsletter-email"
+            class="sr-only"
+          >
+            Enter your email address
+          </label>
+
+
+          <input
+            type="email"
+            id="newsletter-email"
+            class="email-input"
+            placeholder="Email address"
+            autocomplete="email"
+            inputmode="email"
             required
           >
-          <button type="submit" class="btn-primary">Subscribe</button>
+
+
+          <button
+            type="submit"
+            class="btn-primary"
+          >
+            Subscribe
+          </button>
+
         </form>
+
+
+        <p
+          class="newsletter-message"
+          id="newsletter-message"
+          aria-live="polite"
+          hidden
+        ></p>
+
       </div>
+
     </section>
+
+
   </main>
 
-  <!-- Footer -->
+
+  <!-- ================================================================
+       FOOTER
+       ================================================================ -->
+
   <footer class="footer">
-    <div class="container">
-      <p class="footer-text">&copy; 2026 Prasun Shop. All rights reserved.</p>
+
+    <div class="container footer-content">
+
+      <div class="footer-brand">
+
+        <a
+          href="index.html"
+          class="footer-logo"
+        >
+          Prasun Shop<span aria-hidden="true">.</span>
+        </a>
+
+        <p class="footer-description">
+          Technology and everyday products for modern living.
+        </p>
+
+      </div>
+
+
+      <nav
+        class="footer-links"
+        aria-label="Footer navigation"
+      >
+
+        <a href="index.html">
+          Home
+        </a>
+
+        <a href="products.html">
+          Products
+        </a>
+
+        <a href="#categories">
+          Categories
+        </a>
+
+        <a href="#contact">
+          Contact
+        </a>
+
+        <a href="cart.html">
+          Cart
+        </a>
+
+      </nav>
+
+
+      <div class="footer-bottom">
+
+        <p class="footer-text">
+          &copy;
+          <span id="current-year"></span>
+          Prasun Shop. All rights reserved.
+        </p>
+
+      </div>
+
     </div>
+
   </footer>
 
-  <!-- Core Scripts -->
-  <script src="js/script.js" defer></script>
-  <script src="js/cart-count.js" defer></script>
+
+  <!-- ================================================================
+       JAVASCRIPT
+       ================================================================ -->
+
+  <script
+    src="script.js"
+    defer
+  ></script>
+
+
+  <!-- Small page-only utilities -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      // Current year
+      const year = document.getElementById("current-year");
+
+      if (year) {
+        year.textContent = new Date().getFullYear();
+      }
+
+
+      // Smooth navigation for same-page anchors
+      document.querySelectorAll('a[href^="#"]').forEach(link => {
+
+        link.addEventListener("click", event => {
+
+          const targetId = link.getAttribute("href");
+
+          if (!targetId || targetId === "#") {
+            return;
+          }
+
+          const target = document.querySelector(targetId);
+
+          if (!target) {
+            return;
+          }
+
+          event.preventDefault();
+
+          target.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+
+        });
+
+      });
+
+
+      // Newsletter UI
+      const newsletterForm =
+        document.getElementById("newsletter-form");
+
+      const newsletterMessage =
+        document.getElementById("newsletter-message");
+
+      if (newsletterForm && newsletterMessage) {
+
+        newsletterForm.addEventListener("submit", event => {
+
+          event.preventDefault();
+
+          newsletterMessage.textContent =
+            "Thanks for subscribing.";
+
+          newsletterMessage.hidden = false;
+
+          newsletterForm.reset();
+
+        });
+
+      }
+
+    });
+  </script>
+
 </body>
 </html>
+```
