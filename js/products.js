@@ -230,6 +230,7 @@
 
             return normalized;
         } catch (error) {
+            clearTimeout(timeoutId);
             if (error.name !== "AbortError") {
                 console.error("[Prasun Shop] Fetch failed:", error);
                 throw error;
@@ -248,6 +249,7 @@
             state.allProducts = cached;
             readStateFromURL();
             applyFilters();
+            DOM.productList.setAttribute("aria-busy", "false");
             return;
         }
 
@@ -377,7 +379,7 @@
     }
 
     /* =========================================================================
-       OPTIMIZED PRODUCT RENDERING (DOCUMENT FRAGMENT)
+       OPTIMIZED PRODUCT RENDERING (DOCUMENT FRAGMENT & PAGINATION)
        ========================================================================= */
 
     function renderProducts(products) {
@@ -391,20 +393,40 @@
             return;
         }
 
-        const paginatedItems = products.slice(0, CONFIG.ITEMS_PER_PAGE);
+        const visibleCount = state.currentPage * CONFIG.ITEMS_PER_PAGE;
+        const paginatedItems = products.slice(0, visibleCount);
+        const hasMore = products.length > visibleCount;
 
         const fragment = document.createDocumentFragment();
         const template = document.createElement("template");
 
         const cardsHTML = paginatedItems.map(renderProductCardHTML).join("");
-        template.innerHTML = cardsHTML;
+        let containerHTML = cardsHTML;
+
+        if (hasMore) {
+            containerHTML += `
+                <div class="products-pagination-container" style="grid-column: 1 / -1; text-align: center; padding: 2rem 0;">
+                    <button type="button" class="btn-load-more" id="load-more-products" style="padding: 0.75rem 2rem; cursor: pointer;">
+                        Load More (${products.length - visibleCount} remaining)
+                    </button>
+                </div>
+            `;
+        }
+
+        template.innerHTML = containerHTML;
         fragment.appendChild(template.content);
 
         DOM.productList.replaceChildren(fragment);
+
+        $("#load-more-products")?.addEventListener("click", () => {
+            state.currentPage++;
+            renderProducts(state.filteredProducts);
+        });
     }
 
     function renderProductCardHTML(product) {
-        const safeId = encodeURIComponent(product.id);
+        const safeId = escapeHTML(product.id);
+        const urlSafeId = encodeURIComponent(product.id);
         const image = product.image || CONFIG.FALLBACK_IMAGE;
 
         const categoryHTML = product.category
@@ -418,7 +440,7 @@
         return `
             <article class="product-card" data-id="${safeId}">
                 <div class="product-card-inner">
-                    <a class="product-card-link" href="product.html?id=${safeId}" aria-label="View ${escapeHTML(product.name)}">
+                    <a class="product-card-link" href="product.html?id=${urlSafeId}" aria-label="View ${escapeHTML(product.name)}">
                         <div class="product-card-image">
                             <img 
                                 src="${escapeHTML(image)}" 
@@ -448,7 +470,7 @@
     function setupProductListDelegation() {
         if (!DOM.productList) return;
 
-        // Image error handling delegation
+        // Image error handling delegation (capture phase required for error events)
         DOM.productList.addEventListener("error", (event) => {
             if (event.target && event.target.tagName === "IMG") {
                 const img = event.target;
@@ -463,7 +485,7 @@
             const cartBtn = event.target.closest('[data-action="add-cart"]');
             if (cartBtn) {
                 event.preventDefault();
-                const productId = decodeURIComponent(cartBtn.dataset.id);
+                const productId = cartBtn.dataset.id;
                 addToCart(productId);
             }
         });
