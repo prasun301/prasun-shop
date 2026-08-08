@@ -1,397 +1,1341 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Prasun Shop — Discover useful technology, smart devices, electronics, and everyday products curated for modern living.">
-  <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#ffffff">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRASUN SHOP — Premium E-Commerce</title>
+  <style>
+    /* ==========================================================================
+       PRASUN SHOP — PREMIUM E-COMMERCE STYLESHEET
+       Refined Modern Design System inspired by Apple, Stripe, & Linear
+       ========================================================================== */
 
-  <!-- Open Graph / Social Sharing -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Prasun Shop — Technology & Everyday Products">
-  <meta property="og:description" content="Discover useful technology, smart devices, and everyday products curated for modern living.">
-  <meta property="og:url" content="https://shop.prasunbarua.com/">
-  <meta property="og:site_name" content="Prasun Shop">
+    /* --------------------------------------------------------------------------
+       1. DESIGN TOKENS & CSS VARIABLES
+       -------------------------------------------------------------------------- */
+    :root {
+      /* Typography Stack */
+      --font-sans: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
-  <title>Prasun Shop — Technology & Everyday Products</title>
+      /* Colors — Restrained Neutral Palette */
+      --color-bg-primary: #ffffff;
+      --color-bg-secondary: #fbfbfd;
+      --color-bg-tertiary: #f5f5f7;
+      --color-bg-elevated: #ffffff;
 
-  <!-- Canonical -->
-  <link rel="canonical" href="https://shop.prasunbarua.com/">
+      --color-text-primary: #1d1d1f;
+      --color-text-secondary: #6e6e73;
+      --color-text-tertiary: #86868b;
+      --color-text-inverse: #ffffff;
 
-  <!-- Preconnect & Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+      --color-border-subtle: #e5e5e7;
+      --color-border-strong: #d2d2d7;
 
-  <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+      --color-action-bg: #1d1d1f;
+      --color-action-hover: #333336;
+      --color-action-text: #ffffff;
 
-  <!-- Favicon -->
-  <link rel="icon" href="favicon.ico" sizes="any">
+      --color-badge-bg: #1d1d1f;
+      --color-badge-text: #ffffff;
 
-  <!-- Prevent flash of incorrect theme -->
-  <script>
-    (() => {
-      try {
-        const savedTheme = localStorage.getItem("prasun-shop-theme");
-        if (
-          savedTheme === "dark" ||
-          (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)
-        ) {
-          document.documentElement.classList.add("dark");
-        }
-      } catch (_) {}
-    })();
-  </script>
+      --color-success: #10b981;
+      --color-success-hover: #059669;
+      --color-error: #ef4444;
+
+      --color-focus: #0066cc;
+
+      /* Spacing Scale */
+      --space-2xs: 4px;
+      --space-xs: 8px;
+      --space-sm: 12px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+      --space-3xl: 64px;
+
+      /* Layout & Dimensions */
+      --container-max-width: 1160px;
+      --header-height: 64px;
+
+      /* Elevation & Borders */
+      --radius-xs: 4px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+
+      --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.08);
+
+      /* Transitions */
+      --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-smooth: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-image: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* --------------------------------------------------------------------------
+       2. RESET & GLOBAL BASE STYLES
+       -------------------------------------------------------------------------- */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--color-text-primary);
+      background-color: var(--color-bg-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--color-bg-primary);
+      color: var(--color-text-primary);
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: none;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    img, svg {
+      display: block;
+      max-width: 100%;
+    }
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    /* --------------------------------------------------------------------------
+       3. HEADER & NAVIGATION
+       -------------------------------------------------------------------------- */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--header-height);
+      background-color: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--color-border-subtle);
+      transition: background-color var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .header-container {
+      max-width: var(--container-max-width);
+      height: 100%;
+      margin: 0 auto;
+      padding: 0 var(--space-lg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--color-text-primary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+
+    .logo svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xl);
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--color-text-secondary);
+      transition: color var(--transition-fast);
+    }
+
+    .nav-links a:hover,
+    .nav-links a[aria-current="page"] {
+      color: var(--color-text-primary);
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .cart-icon-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      color: var(--color-text-primary);
+      transition: background-color var(--transition-fast);
+    }
+
+    .cart-icon-wrap:hover {
+      background-color: var(--color-bg-tertiary);
+    }
+
+    .cart-icon-wrap svg {
+      width: 19px;
+      height: 19px;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 8px;
+      background-color: var(--color-badge-bg);
+      color: var(--color-badge-text);
+      font-size: 10px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      transition: transform var(--transition-fast);
+    }
+
+    .cart-badge.bump {
+      transform: scale(1.25);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      color: var(--color-text-primary);
+    }
+
+    .mobile-menu-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* --------------------------------------------------------------------------
+       4. PRODUCTS HERO & SEARCH
+       -------------------------------------------------------------------------- */
+    .products-page {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .products-hero {
+      padding: clamp(40px, 6vw, 72px) var(--space-lg) clamp(24px, 4vw, 40px);
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .products-eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-text-tertiary);
+      margin-bottom: var(--space-xs);
+    }
+
+    .products-heading {
+      font-size: clamp(34px, 5vw, 56px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.08;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-sm);
+    }
+
+    .products-intro {
+      font-size: clamp(15px, 2vw, 17px);
+      line-height: 1.47;
+      color: var(--color-text-secondary);
+      max-width: 580px;
+      margin: 0 auto var(--space-xl);
+      font-weight: 400;
+    }
+
+    .products-search {
+      position: relative;
+      max-width: 460px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+    }
+
+    .products-search-icon {
+      position: absolute;
+      left: 14px;
+      color: var(--color-text-tertiary);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .products-search-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .products-search-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 76px 0 40px;
+      background-color: var(--color-bg-secondary);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--color-text-primary);
+      transition: all var(--transition-fast);
+    }
+
+    .products-search-input::placeholder {
+      color: var(--color-text-tertiary);
+    }
+
+    .products-search-input:hover {
+      border-color: var(--color-border-strong);
+      background-color: var(--color-bg-primary);
+    }
+
+    .products-search-input:focus {
+      outline: none;
+      border-color: var(--color-text-primary);
+      background-color: var(--color-bg-primary);
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .products-search-shortcut {
+      position: absolute;
+      right: 12px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--color-text-tertiary);
+      background-color: var(--color-bg-tertiary);
+      border: 1px solid var(--color-border-subtle);
+      padding: 2px 6px;
+      border-radius: 4px;
+      pointer-events: none;
+      line-height: 1.2;
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 12px;
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-full);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-tertiary);
+      transition: color var(--transition-fast);
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .search-clear.visible {
+      display: flex;
+    }
+
+    .search-clear:hover {
+      color: var(--color-text-primary);
+    }
+
+    .search-clear svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* --------------------------------------------------------------------------
+       5. CATEGORIES & RESULTS TOOLBAR
+       -------------------------------------------------------------------------- */
+    .products-toolbar {
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      padding: 0 var(--space-lg);
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-xl);
+    }
+
+    .products-categories {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: var(--space-2xs) 2px;
+    }
+
+    .products-categories::-webkit-scrollbar {
+      display: none;
+    }
+
+    .category-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 16px;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      background-color: var(--color-bg-primary);
+      border: 1px solid var(--color-border-subtle);
+      white-space: nowrap;
+      transition: all var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .category-pill:hover {
+      color: var(--color-text-primary);
+      border-color: var(--color-border-strong);
+      background-color: var(--color-bg-secondary);
+    }
+
+    .category-pill.active,
+    .category-pill[aria-pressed="true"] {
+      background-color: var(--color-action-bg);
+      color: var(--color-action-text);
+      border-color: var(--color-action-bg);
+    }
+
+    .products-results-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: var(--space-sm);
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    .products-result-count {
+      font-size: 13px;
+      color: var(--color-text-tertiary);
+      font-weight: 400;
+    }
+
+    .products-sort {
+      height: 32px;
+      padding: 0 28px 0 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      background-color: transparent;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      transition: all var(--transition-fast);
+    }
+
+    .products-sort:hover {
+      color: var(--color-text-primary);
+      background-color: var(--color-bg-tertiary);
+    }
+
+    .products-sort:focus {
+      outline: none;
+      border-color: var(--color-border-strong);
+    }
+
+    /* --------------------------------------------------------------------------
+       6. PRODUCT GRID & CARDS
+       -------------------------------------------------------------------------- */
+    .products-grid {
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      padding: 0 var(--space-lg) clamp(48px, 8vw, 80px);
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(16px, 2vw, 24px);
+    }
+
+    .product-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--color-bg-primary);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: transform var(--transition-smooth), box-shadow var(--transition-smooth), border-color var(--transition-smooth);
+    }
+
+    .product-card:hover {
+      border-color: rgba(0, 0, 0, 0.12);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .product-card-image {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background-color: var(--color-bg-secondary);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .product-card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform var(--transition-image);
+    }
+
+    .product-card:hover .product-card-image img {
+      transform: scale(1.03);
+    }
+
+    .product-card-body {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 16px;
+      gap: 6px;
+    }
+
+    .product-category {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-tertiary);
+    }
+
+    .product-title {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.3;
+      color: var(--color-text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .product-description {
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--color-text-secondary);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .product-bottom {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 10px;
+      gap: 8px;
+    }
+
+    .product-price {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .product-cart-button {
+      height: 36px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      background-color: var(--color-bg-primary);
+      border: 1px solid var(--color-border-strong);
+      color: var(--color-text-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .product-cart-button svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .product-cart-button:hover {
+      background-color: var(--color-action-bg);
+      color: var(--color-action-text);
+      border-color: var(--color-action-bg);
+    }
+
+    .product-cart-button.added,
+    .product-cart-button[data-added="true"] {
+      background-color: var(--color-success);
+      color: #ffffff;
+      border-color: var(--color-success);
+    }
+
+    .product-cart-button.added:hover,
+    .product-cart-button[data-added="true"]:hover {
+      background-color: var(--color-success-hover);
+      border-color: var(--color-success-hover);
+    }
+
+    /* --------------------------------------------------------------------------
+       7. EMPTY & ERROR STATES
+       -------------------------------------------------------------------------- */
+    .products-empty {
+      grid-column: 1 / -1;
+      max-width: 480px;
+      margin: 40px auto 80px;
+      padding: 48px 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .products-empty-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-full);
+      background-color: var(--color-bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-secondary);
+    }
+
+    .products-empty-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .products-empty h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .products-empty p {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    .products-empty-button {
+      height: 40px;
+      padding: 0 20px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      background-color: var(--color-action-bg);
+      color: var(--color-action-text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color var(--transition-fast);
+      margin-top: var(--space-xs);
+    }
+
+    .products-empty-button:hover {
+      background-color: var(--color-action-hover);
+    }
+
+    /* --------------------------------------------------------------------------
+       8. FOOTER
+       -------------------------------------------------------------------------- */
+    .footer {
+      background-color: var(--color-bg-tertiary);
+      border-top: 1px solid var(--color-border-subtle);
+      margin-top: auto;
+      font-size: 13px;
+      color: var(--color-text-secondary);
+    }
+
+    .footer-content {
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      padding: clamp(40px, 5vw, 64px) var(--space-lg) var(--space-xl);
+      display: grid;
+      grid-template-columns: 2fr repeat(3, 1fr);
+      gap: var(--space-2xl);
+    }
+
+    .footer-col h4 {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-md);
+    }
+
+    .footer-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .footer-col a {
+      color: var(--color-text-secondary);
+      transition: color var(--transition-fast);
+    }
+
+    .footer-col a:hover {
+      color: var(--color-text-primary);
+    }
+
+    .footer-bottom {
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      padding: var(--space-lg);
+      border-top: 1px solid var(--color-border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--color-text-tertiary);
+    }
+
+    /* --------------------------------------------------------------------------
+       9. MOBILE NAVIGATION DRAWER
+       -------------------------------------------------------------------------- */
+    .mobile-menu {
+      position: fixed;
+      top: var(--header-height);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 99;
+      padding: var(--space-xl) var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      transform: translateY(-12px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform var(--transition-smooth), opacity var(--transition-smooth), visibility var(--transition-smooth);
+    }
+
+    .mobile-menu.open,
+    .mobile-menu.active {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .mobile-menu a {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--color-text-primary);
+      padding: 8px 0;
+    }
+
+    /* --------------------------------------------------------------------------
+       10. RESPONSIVE BREAKPOINTS
+       -------------------------------------------------------------------------- */
+    @media (max-width: 1024px) {
+      .products-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .footer-content {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-xl);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: flex;
+      }
+
+      .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .product-card-body {
+        padding: 12px;
+        gap: 4px;
+      }
+
+      .product-title {
+        font-size: 14px;
+      }
+
+      .product-description {
+        font-size: 12px;
+        -webkit-line-clamp: 1;
+      }
+
+      .product-price {
+        font-size: 14px;
+      }
+
+      .product-cart-button {
+        height: 32px;
+        padding: 0 10px;
+        font-size: 12px;
+      }
+
+      .footer-content {
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        gap: var(--space-sm);
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .products-hero {
+        padding-top: 32px;
+      }
+
+      .products-heading {
+        font-size: 30px;
+      }
+
+      .products-search-shortcut {
+        display: none;
+      }
+
+      .products-search-input {
+        padding-right: 40px;
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+       11. ACCESSIBILITY, FOCUS, MOTION & PRINT
+       -------------------------------------------------------------------------- */
+    :focus-visible {
+      outline: 2px solid var(--color-focus);
+      outline-offset: 2px;
+    }
+
+    button:focus:not(:focus-visible),
+    a:focus:not(:focus-visible) {
+      outline: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-  <!-- Skip Link for Keyboard Accessibility -->
-  <a href="#main-content" class="skip-link">
-    Skip to content
-  </a>
-
-
-  <!-- ================================================================
-       HEADER & NAVIGATION
-       ================================================================ -->
-
+  <!-- HEADER -->
   <header class="header">
     <div class="header-container">
-
-      <!-- Logo -->
-      <a href="index.html" class="logo" aria-label="Prasun Shop Home">
-        <svg class="store-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M3 9l1.5-5h15L21 9"/>
-          <path d="M4 9v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9"/>
-          <path d="M3 9h18"/>
-          <path d="M8 21v-6h8v6"/>
+      <a href="#" class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
         </svg>
-        <span>Prasun Shop<span aria-hidden="true">.</span></span>
+        PRASUN
       </a>
 
-      <!-- Desktop Navigation Links -->
-      <nav class="nav-links" aria-label="Main navigation">
-        <a href="index.html" class="nav-link" aria-current="page">Home</a>
-        <a href="products.html" class="nav-link">Products</a>
-        <a href="#categories" class="nav-link">Categories</a>
-        <a href="#contact" class="nav-link">Contact</a>
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="#" aria-current="page">Shop</a></li>
+          <li><a href="#">Categories</a></li>
+          <li><a href="#">New Arrivals</a></li>
+          <li><a href="#">About</a></li>
+        </ul>
       </nav>
 
-      <!-- Action Area: Cart & Mobile Toggle -->
       <div class="header-actions">
-        <a href="cart.html" class="cart-icon-wrap" aria-label="Shopping cart">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="9" cy="20" r="1"/>
-            <circle cx="19" cy="20" r="1"/>
-            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L22 8H6"/>
+        <a href="#" class="cart-icon-wrap" aria-label="Shopping Cart">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 01-8 0"/>
           </svg>
-          <span class="cart-badge" id="cart-count" aria-label="0 items in cart">0</span>
+          <span class="cart-badge" id="cartBadge">0</span>
         </a>
 
-        <!-- Mobile Menu Hamburger Button -->
-        <button type="button" class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-navigation">
-          <svg class="menu-open-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="4" x2="20" y1="12" y2="12"/>
-            <line x1="4" x2="20" y1="6" y2="6"/>
-            <line x1="4" x2="20" y1="18" y2="18"/>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle mobile menu" aria-expanded="false">
+          <svg id="menuIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
       </div>
-
     </div>
   </header>
 
-  <!-- Mobile Drawer Menu -->
-  <div class="mobile-menu" id="mobile-navigation" aria-label="Mobile navigation">
-    <a href="index.html" class="nav-link" aria-current="page">Home</a>
-    <a href="products.html" class="nav-link">Products</a>
-    <a href="#categories" class="nav-link">Categories</a>
-    <a href="#contact" class="nav-link">Contact</a>
-    <a href="cart.html" class="nav-link">Cart</a>
+  <!-- MOBILE NAVIGATION MENU -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#">Shop All</a>
+    <a href="#">Categories</a>
+    <a href="#">New Arrivals</a>
+    <a href="#">Account</a>
+    <a href="#">Support</a>
   </div>
 
-
-  <!-- ================================================================
-       MAIN CONTENT
-       ================================================================ -->
-
-  <main id="main-content">
-
-    <!-- Hero Section -->
+  <!-- MAIN CONTENT -->
+  <main class="products-page">
     <section class="products-hero">
-      <div class="products-eyebrow">Curated Technology</div>
-      <h1 class="products-heading">
-        Simple products.<br>
-        Better everyday life.
-      </h1>
-      <p class="products-intro">
-        Discover useful technology, smart devices, and everyday tools designed with precision for modern living.
-      </p>
-      <div style="margin-top: 24px;">
-        <a href="products.html" class="products-empty-button" style="text-decoration: none; padding: 0 24px;">
-          Explore Products
-        </a>
-      </div>
-    </section>
-
-
-    <!-- Categories Section -->
-    <section id="categories" class="section" aria-labelledby="categories-heading" style="padding: 32px 0;">
-      <div class="products-toolbar">
-        <h2 id="categories-heading" class="products-eyebrow" style="font-size: 13px; margin-bottom: 0;">
-          Browse by Category
-        </h2>
-
-        <div class="products-categories">
-          <!-- Smart Lighting -->
-          <a class="category-pill" href="products.html?category=Smart%20Lighting">
-            Smart Lighting
-          </a>
-
-          <!-- Power & Charging -->
-          <a class="category-pill" href="products.html?category=Power%20%26%20Charging">
-            Power &amp; Charging
-          </a>
-
-          <!-- Audio -->
-          <a class="category-pill" href="products.html?category=Audio">
-            Audio
-          </a>
-
-          <!-- Smart Home -->
-          <a class="category-pill" href="products.html?category=Smart%20Home">
-            Smart Home
-          </a>
-
-          <!-- Office & Desk -->
-          <a class="category-pill" href="products.html?category=Office%20%26%20Desk">
-            Office &amp; Desk
-          </a>
-
-          <!-- Tech Gadgets -->
-          <a class="category-pill" href="products.html?category=Tech%20Gadgets">
-            Tech Gadgets
-          </a>
-        </div>
-      </div>
-    </section>
-
-
-    <!-- Products Grid Section -->
-    <section id="products" class="section" aria-labelledby="products-heading">
-      <div class="products-toolbar" style="margin-bottom: 16px;">
-        <div class="products-results-bar">
-          <h2 id="products-heading" class="product-title" style="font-size: 18px;">
-            Featured Products
-          </h2>
-
-          <!-- Integrated Search Form -->
-          <div class="search-wrapper">
-            <form class="products-search" id="product-search-form" role="search" style="margin: 0; width: 260px;">
-              <label for="searchInput" class="sr-only">Search products</label>
-              <div class="products-search-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="m21 21-4.3-4.3"/>
-                </svg>
-              </div>
-              <input type="search" id="searchInput" class="products-search-input" placeholder="Search..." autocomplete="off" spellcheck="false">
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <!-- Dynamic Product Grid container loaded by products.js -->
-      <div class="products-grid" id="product-list" aria-live="polite" aria-busy="true">
-      </div>
-
-      <!-- Empty Search State -->
-      <div class="products-empty" id="empty-state" hidden>
-        <div class="products-empty-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <p class="products-eyebrow">Curated Collection</p>
+      <h1 class="products-heading">Designed for Living.</h1>
+      <p class="products-intro">Explore premium hardware, minimalist essentials, and precision-engineered daily gear.</p>
+      
+      <div class="products-search">
+        <span class="products-search-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.3-4.3"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
-        </div>
-        <h3>No products found</h3>
-        <p>Try searching for another keyword or clear your active filter.</p>
-        <button type="button" class="products-empty-button" id="clear-search">
-          Clear Search
-        </button>
-      </div>
-
-      <!-- Error Loading State -->
-      <div class="products-error" id="products-error" hidden>
-        <div class="products-error-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </span>
+        <input type="text" id="searchInput" class="products-search-input" placeholder="Search products, gear, accessories..." />
+        <span class="products-search-shortcut" id="shortcutBadge">⌘K</span>
+        <button class="search-clear" id="searchClear" aria-label="Clear search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
-        </div>
-        <h3>Unable to load products</h3>
-        <p>Please check your internet connection or try reloading the page.</p>
-        <button type="button" class="products-error-button" id="retry-products">
-          Try Again
         </button>
       </div>
     </section>
 
-
-    <!-- Newsletter Section -->
-    <section id="contact" class="section" aria-labelledby="newsletter-heading" style="padding: 64px 0 32px;">
-      <div class="products-hero" style="padding-bottom: 0;">
-        <h2 id="newsletter-heading" class="products-heading" style="font-size: 28px;">
-          Stay Updated
-        </h2>
-        <p class="products-intro" style="font-size: 14px; margin-bottom: 20px;">
-          Get updates on new product drops, tech reviews, and exclusive releases.
-        </p>
-
-        <form class="products-search" id="newsletter-form" aria-label="Newsletter subscription" style="max-width: 400px; gap: 8px;">
-          <label for="newsletter-email" class="sr-only">Enter your email address</label>
-          <input type="email" id="newsletter-email" class="products-search-input" style="padding-left: 16px;" placeholder="Enter your email..." autocomplete="email" required>
-          <button type="submit" class="products-empty-button" style="height: 44px; white-space: nowrap;">
-            Subscribe
-          </button>
-        </form>
-
-        <p class="products-result-count" id="newsletter-message" aria-live="polite" style="margin-top: 12px; color: var(--color-success);" hidden></p>
+    <div class="products-toolbar">
+      <div class="products-categories" id="categoryContainer" role="tablist">
+        <button class="category-pill active" data-category="all" aria-pressed="true">All Products</button>
+        <button class="category-pill" data-category="Audio" aria-pressed="false">Audio</button>
+        <button class="category-pill" data-category="Wearables" aria-pressed="false">Wearables</button>
+        <button class="category-pill" data-category="Accessories" aria-pressed="false">Accessories</button>
+        <button class="category-pill" data-category="Workstation" aria-pressed="false">Workstation</button>
       </div>
-    </section>
 
+      <div class="products-results-bar">
+        <span class="products-result-count" id="resultCount">Showing 8 items</span>
+        <select class="products-sort" id="sortSelect" aria-label="Sort products">
+          <option value="featured">Sort by Featured</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="name">Name: A to Z</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PRODUCT GRID CONTAINER -->
+    <section class="products-grid" id="productsGrid"></section>
   </main>
 
-
-  <!-- ================================================================
-       FOOTER
-       ================================================================ -->
-
+  <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-content">
-
-      <!-- Brand Info -->
       <div class="footer-col">
-        <a href="index.html" class="logo" style="margin-bottom: 12px;">
-          Prasun Shop<span>.</span>
-        </a>
-        <p style="font-size: 13px; color: var(--color-text-secondary); max-width: 280px; line-height: 1.5;">
-          Refined technology and smart lifestyle devices designed for modern efficiency.
+        <h4>PRASUN SHOP</h4>
+        <p style="font-size: 13px; line-height: 1.6; color: var(--color-text-secondary); max-width: 280px;">
+          Architected for modern performance. Timeless design meets daily utility.
         </p>
       </div>
-
-      <!-- Quick Navigation -->
       <div class="footer-col">
-        <h4>Navigation</h4>
+        <h4>Explore</h4>
         <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="products.html">Products</a></li>
-          <li><a href="#categories">Categories</a></li>
-          <li><a href="cart.html">Shopping Cart</a></li>
+          <li><a href="#">New Releases</a></li>
+          <li><a href="#">Best Sellers</a></li>
+          <li><a href="#">Storefront</a></li>
         </ul>
       </div>
-
-      <!-- Support Links -->
       <div class="footer-col">
         <h4>Support</h4>
         <ul>
-          <li><a href="#contact">Contact Us</a></li>
-          <li><a href="#">Shipping Policy</a></li>
-          <li><a href="#">Returns &amp; Refunds</a></li>
-          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">Shipping & Returns</a></li>
+          <li><a href="#">Order Tracking</a></li>
         </ul>
       </div>
-
-      <!-- Categories Links -->
       <div class="footer-col">
-        <h4>Categories</h4>
+        <h4>Legal</h4>
         <ul>
-          <li><a href="products.html?category=Smart%20Lighting">Smart Lighting</a></li>
-          <li><a href="products.html?category=Audio">Audio Equipment</a></li>
-          <li><a href="products.html?category=Power%20%26%20Charging">Power &amp; Chargers</a></li>
-          <li><a href="products.html?category=Smart%20Home">Smart Home</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Cookie Settings</a></li>
         </ul>
       </div>
-
     </div>
-
     <div class="footer-bottom">
-      <p>&copy; <span id="current-year"></span> Prasun Shop. All rights reserved.</p>
-      <p style="color: var(--color-text-tertiary);">Designed for clarity &amp; performance.</p>
+      <p>© 2026 PRASUN SHOP Inc. All rights reserved.</p>
+      <p>Designed with Apple & Linear inspired aesthetics.</p>
     </div>
   </footer>
 
-
-  <!-- ================================================================
-       JAVASCRIPT SCRIPTS
-       ================================================================ -->
-
-  <script src="script.js" defer></script>
-  <script src="products.js" defer></script>
-
-  <!-- Page Utilities Script -->
+  <!-- INTERACTIVE JAVASCRIPT LOGIC -->
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      // Set current year
-      const year = document.getElementById("current-year");
-      if (year) {
-        year.textContent = new Date().getFullYear();
+    // --------------------------------------------------------------------------
+    // MOCK PRODUCT DATA
+    // --------------------------------------------------------------------------
+    const PRODUCTS = [
+      {
+        id: 'p1',
+        title: 'Studio Wireless Headphones',
+        category: 'Audio',
+        price: 299.00,
+        description: 'Active noise cancellation with 40-hour battery life and spatial audio support.',
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80',
+        featuredOrder: 1
+      },
+      {
+        id: 'p2',
+        title: 'Minimalist Smartwatch Series X',
+        category: 'Wearables',
+        price: 349.00,
+        description: 'Titanium chassis, sapphire glass face, and continuous health telemetry tracking.',
+        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80',
+        featuredOrder: 2
+      },
+      {
+        id: 'p3',
+        title: 'Mechanical Desk Keyboard',
+        category: 'Workstation',
+        price: 189.00,
+        description: 'CNC machined aluminum frame with hot-swappable tactile key switches.',
+        image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&q=80',
+        featuredOrder: 3
+      },
+      {
+        id: 'p4',
+        title: 'Precision Ergonomic Mouse',
+        category: 'Workstation',
+        price: 99.00,
+        description: 'Ultra-low latency Bluetooth connectivity with electromagnetic scroll wheel control.',
+        image: 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=600&q=80',
+        featuredOrder: 4
+      },
+      {
+        id: 'p5',
+        title: 'Leather Daily Carry Sleeve',
+        category: 'Accessories',
+        price: 79.00,
+        description: 'Full-grain vegetable-tanned leather sleeve with micro-fiber protective interior.',
+        image: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=600&q=80',
+        featuredOrder: 5
+      },
+      {
+        id: 'p6',
+        title: 'True Wireless Earbuds Pro',
+        category: 'Audio',
+        price: 199.00,
+        description: 'Transparency mode, custom drivers, and IPX4 water resistance for workouts.',
+        image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&q=80',
+        featuredOrder: 6
+      },
+      {
+        id: 'p7',
+        title: 'Magnetic Power Bank 10K',
+        category: 'Accessories',
+        price: 59.00,
+        description: 'Slim pass-through fast charging battery pack with anodized matte metallic finish.',
+        image: 'https://images.unsplash.com/photo-1609592424109-dd9892f1b177?w=600&q=80',
+        featuredOrder: 7
+      },
+      {
+        id: 'p8',
+        title: 'Aluminum Monitor Stand',
+        category: 'Workstation',
+        price: 129.00,
+        description: 'Elevates display to eye level while clearing desktop space for keyboard storage.',
+        image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=600&q=80',
+        featuredOrder: 8
       }
+    ];
 
-      // Mobile Menu Toggle Logic
-      const mobileToggle = document.getElementById("mobile-menu-toggle");
-      const mobileNav = document.getElementById("mobile-navigation");
+    // --------------------------------------------------------------------------
+    // STATE MANAGEMENT
+    // --------------------------------------------------------------------------
+    let currentCategory = 'all';
+    let searchQuery = '';
+    let sortBy = 'featured';
+    let cart = new Set(); // Store product IDs
 
-      if (mobileToggle && mobileNav) {
-        mobileToggle.addEventListener("click", () => {
-          const isOpen = mobileNav.classList.contains("open");
-          mobileNav.classList.toggle("open");
-          mobileToggle.setAttribute("aria-expanded", !isOpen);
-        });
+    // DOM ELEMENTS
+    const productsGrid = document.getElementById('productsGrid');
+    const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+    const shortcutBadge = document.getElementById('shortcutBadge');
+    const categoryContainer = document.getElementById('categoryContainer');
+    const sortSelect = document.getElementById('sortSelect');
+    const resultCount = document.getElementById('resultCount');
+    const cartBadge = document.getElementById('cartBadge');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
 
-        // Close drawer when clicking a link
-        mobileNav.querySelectorAll("a").forEach(link => {
-          link.addEventListener("click", () => {
-            mobileNav.classList.remove("open");
-            mobileToggle.setAttribute("aria-expanded", "false");
-          });
-        });
-      }
-
-      // Smooth Navigation for Same-Page Anchors
-      document.querySelectorAll('a[href^="#"]').forEach(link => {
-        link.addEventListener("click", event => {
-          const targetId = link.getAttribute("href");
-          if (!targetId || targetId === "#") return;
-
-          const target = document.querySelector(targetId);
-          if (!target) return;
-
-          event.preventDefault();
-          target.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-          });
-        });
+    // --------------------------------------------------------------------------
+    // CORE RENDER FUNCTION
+    // --------------------------------------------------------------------------
+    function render() {
+      // 1. Filter by Category
+      let filtered = PRODUCTS.filter(product => {
+        if (currentCategory === 'all') return true;
+        return product.category === currentCategory;
       });
 
-      // Newsletter Form Submission Handler
-      const newsletterForm = document.getElementById("newsletter-form");
-      const newsletterMessage = document.getElementById("newsletter-message");
+      // 2. Filter by Search Query
+      if (searchQuery.trim() !== '') {
+        const query = searchQuery.toLowerCase().trim();
+        filtered = filtered.filter(p => 
+          p.title.toLowerCase().includes(query) ||
+          p.description.toLowerCase().includes(query) ||
+          p.category.toLowerCase().includes(query)
+        );
+      }
 
-      if (newsletterForm && newsletterMessage) {
-        newsletterForm.addEventListener("submit", event => {
-          event.preventDefault();
-          newsletterMessage.textContent = "Thank you for subscribing.";
-          newsletterMessage.hidden = false;
-          newsletterForm.reset();
-        });
+      // 3. Sort Results
+      filtered.sort((a, b) => {
+        if (sortBy === 'price-low') return a.price - b.price;
+        if (sortBy === 'price-high') return b.price - a.price;
+        if (sortBy === 'name') return a.title.localeCompare(b.title);
+        return a.featuredOrder - b.featuredOrder; // Default featured
+      });
+
+      // 4. Update Results Counter
+      resultCount.textContent = `Showing ${filtered.length} item${filtered.length === 1 ? '' : 's'}`;
+
+      // 5. Render Grid or Empty State
+      if (filtered.length === 0) {
+        productsGrid.innerHTML = `
+          <div class="products-empty">
+            <div class="products-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
+            <h3>No products found</h3>
+            <p>We couldn't find anything matching "${escapeHtml(searchQuery)}". Try checking for typos or clear your filters.</p>
+            <button class="products-empty-button" onclick="resetFilters()">Reset All Filters</button>
+          </div>
+        `;
+        return;
+      }
+
+      productsGrid.innerHTML = filtered.map(product => {
+        const isAdded = cart.has(product.id);
+        return `
+          <article class="product-card">
+            <div class="product-card-image">
+              <img src="${product.image}" alt="${escapeHtml(product.title)}" loading="lazy" />
+            </div>
+            <div class="product-card-body">
+              <span class="product-category">${product.category}</span>
+              <h2 class="product-title">${escapeHtml(product.title)}</h2>
+              <p class="product-description">${escapeHtml(product.description)}</p>
+              <div class="product-bottom">
+                <span class="product-price">$${product.price.toFixed(2)}</span>
+                <button 
+                  class="product-cart-button ${isAdded ? 'added' : ''}" 
+                  data-added="${isAdded}"
+                  onclick="toggleCart('${product.id}')"
+                  aria-label="${isAdded ? 'Remove from cart' : 'Add to cart'}"
+                >
+                  ${isAdded ? `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg> Added
+                  ` : `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"/>
+                      <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg> Add
+                  `}
+                </button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // --------------------------------------------------------------------------
+    // CART TOGGLE HANDLER
+    // --------------------------------------------------------------------------
+    window.toggleCart = function(productId) {
+      if (cart.has(productId)) {
+        cart.delete(productId);
+      } else {
+        cart.add(productId);
+      }
+
+      // Update badge
+      cartBadge.textContent = cart.size;
+      cartBadge.classList.add('bump');
+      setTimeout(() => cartBadge.classList.remove('bump'), 200);
+
+      render();
+    };
+
+    // --------------------------------------------------------------------------
+    // RESET FILTERS
+    // --------------------------------------------------------------------------
+    window.resetFilters = function() {
+      searchQuery = '';
+      currentCategory = 'all';
+      sortBy = 'featured';
+
+      searchInput.value = '';
+      searchClear.classList.remove('visible');
+      if (shortcutBadge) shortcutBadge.style.display = 'block';
+      sortSelect.value = 'featured';
+
+      document.querySelectorAll('.category-pill').forEach(pill => {
+        const active = pill.dataset.category === 'all';
+        pill.classList.toggle('active', active);
+        pill.setAttribute('aria-pressed', active);
+      });
+
+      render();
+    };
+
+    // --------------------------------------------------------------------------
+    // EVENT LISTENERS & INITIALIZATION
+    // --------------------------------------------------------------------------
+
+    // Search Input Events
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      if (searchQuery.length > 0) {
+        searchClear.classList.add('visible');
+        if (shortcutBadge) shortcutBadge.style.display = 'none';
+      } else {
+        searchClear.classList.remove('visible');
+        if (shortcutBadge) shortcutBadge.style.display = 'block';
+      }
+      render();
+    });
+
+    searchClear.addEventListener('click', () => {
+      searchInput.value = '';
+      searchQuery = '';
+      searchClear.classList.remove('visible');
+      if (shortcutBadge) shortcutBadge.style.display = 'block';
+      searchInput.focus();
+      render();
+    });
+
+    // Keyboard Shortcut (⌘K / Ctrl+K)
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInput.focus();
       }
     });
-  </script>
 
+    // Category Filter Pills
+    categoryContainer.addEventListener('click', (e) => {
+      const pill = e.target.closest('.category-pill');
+      if (!pill) return;
+
+      document.querySelectorAll('.category-pill').forEach(p => {
+        p.classList.remove('active');
+        p.setAttribute('aria-pressed', 'false');
+      });
+
+      pill.classList.add('active');
+      pill.setAttribute('aria-pressed', 'true');
+      currentCategory = pill.dataset.category;
+      render();
+    });
+
+    // Sort Dropdown Selection
+    sortSelect.addEventListener('change', (e) => {
+      sortBy = e.target.value;
+      render();
+    });
+
+    // Mobile Navigation Toggle
+    mobileMenuBtn.addEventListener('click', () => {
+      const isOpen = mobileMenu.classList.toggle('open');
+      mobileMenuBtn.setAttribute('aria-expanded', isOpen);
+    });
+
+    // Utility: HTML Escaper
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, match => {
+        const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return escapeMap[match];
+      });
+    }
+
+    // INITIAL RENDER
+    render();
+  </script>
 </body>
 </html>
