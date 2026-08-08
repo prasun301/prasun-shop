@@ -6,17 +6,14 @@
   <title>Prasun Shop | Smart Products for Modern Living</title>
   <meta name="description" content="Discover carefully selected smart gadgets, technology products, and everyday essentials designed to make modern living effortless.">
   <meta name="theme-color" content="#ffffff">
-
   <!-- Open Graph / Meta -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="Prasun Shop | Smart Products for Modern Living">
   <meta property="og:description" content="Discover carefully selected smart gadgets and tech essentials for modern living.">
-
   <!-- Typography: Inter Font Stack -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
   <style>
     /* ==========================================================================
         DESIGN SYSTEM & CSS CUSTOM PROPERTIES (8px Spatial Grid)
@@ -146,11 +143,21 @@
     }
 
     .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
       font-size: 1.125rem;
       font-weight: 700;
       color: var(--text-main);
       text-decoration: none;
       letter-spacing: -0.02em;
+    }
+
+    .store-icon {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2;
+      color: var(--text-main);
     }
 
     .nav-links {
@@ -168,7 +175,8 @@
       transition: color var(--transition-fast);
     }
 
-    .nav-link:hover {
+    .nav-link:hover,
+    .nav-link[aria-current="page"] {
       color: var(--text-main);
     }
 
@@ -627,23 +635,18 @@
       .nav-links {
         gap: var(--space-3);
       }
-
-      .nav-link:not(.cart-link) {
+      .nav-link:not(.cart-link):not(.mobile-visible) {
         display: none; 
       }
-
       .newsletter-form {
         flex-direction: column;
       }
-
       .newsletter-form .btn-primary {
         width: 100%;
       }
-
       .category-grid {
         grid-template-columns: repeat(2, 1fr);
       }
-
       .product-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: var(--space-3);
@@ -651,17 +654,21 @@
     }
   </style>
 </head>
-
 <body>
-
   <!-- Skip to Main Content (Accessibility) -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
   <!-- Header & Navigation -->
   <header class="header">
     <div class="container nav-wrapper">
-      <a href="index.html" class="logo" aria-label="Prasun Shop Home">Prasun Shop</a>
-
+      <a href="index.html" class="logo" aria-label="Prasun Shop Home">
+        <svg class="store-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <span>Prasun Shop</span>
+      </a>
       <nav aria-label="Main Navigation">
         <ul class="nav-links">
           <li><a href="index.html" class="nav-link" aria-current="page">Home</a></li>
@@ -687,7 +694,6 @@
 
   <!-- Main Content Area -->
   <main id="main-content">
-
     <!-- Hero Section -->
     <section class="hero" aria-labelledby="hero-heading">
       <div class="container hero-content">
@@ -703,7 +709,6 @@
     <section id="categories" class="section" aria-labelledby="categories-heading">
       <div class="container">
         <h2 id="categories-heading" class="section-title">Shop by Category</h2>
-
         <div class="category-grid">
           <a class="category-card" href="products.html?category=Smart%20Lighting">
             <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -713,7 +718,6 @@
             </svg>
             <h3>Smart Lighting</h3>
           </a>
-
           <a class="category-card" href="products.html?category=Power%20%26%20Charging">
             <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <rect width="16" height="10" x="2" y="7" rx="2" ry="2"/>
@@ -721,14 +725,12 @@
             </svg>
             <h3>Power &amp; Charging</h3>
           </a>
-
           <a class="category-card" href="products.html?category=Audio">
             <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>
             </svg>
             <h3>Audio</h3>
           </a>
-
           <a class="category-card" href="products.html?category=Smart%20Home">
             <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -736,14 +738,12 @@
             </svg>
             <h3>Smart Home</h3>
           </a>
-
           <a class="category-card" href="products.html?category=Office%20%26%20Desk">
             <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55A1 1 0 0 1 20.34 20H3.66a1 1 0 0 1-.94-1.45L4 16"/>
             </svg>
             <h3>Office &amp; Desk</h3>
           </a>
-
           <a class="category-card" href="products.html?category=Tech%20Gadgets">
             <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M13 2 L3 14h9l-1 8 10-12h-9l1-8z"/>
@@ -758,18 +758,15 @@
     <section id="about" class="section" aria-labelledby="features-heading">
       <div class="container">
         <h2 id="features-heading" class="section-title">Why Choose Prasun Shop?</h2>
-
         <div class="features-grid">
           <div class="feature-card">
             <h3>Quality Products</h3>
             <p>Carefully selected items tested for durability, innovation, and long-term performance.</p>
           </div>
-
           <div class="feature-card">
             <h3>Secure Shopping</h3>
             <p>End-to-end encrypted checkout ensuring a completely protected shopping environment.</p>
           </div>
-
           <div class="feature-card">
             <h3>Customer Focus</h3>
             <p>Dedicated customer care team ready to assist before, during, and after your purchase.</p>
@@ -782,7 +779,6 @@
     <section id="products" class="section" aria-labelledby="products-heading">
       <div class="container">
         <h2 id="products-heading" class="section-title">Featured Products</h2>
-
         <!-- Search Box -->
         <div class="search-wrapper">
           <form class="search-form" role="search" onSubmit="event.preventDefault();">
@@ -800,7 +796,6 @@
             >
           </form>
         </div>
-
         <!-- Product Dynamic Insertion Container -->
         <div class="product-grid" id="product-list">
           <!-- Dynamic product items populated by script.js -->
@@ -812,7 +807,6 @@
     <section class="section" aria-labelledby="trust-heading">
       <div class="container trust-container">
         <h2 id="trust-heading" class="section-title">Shop With Confidence</h2>
-
         <ul class="trust-list">
           <li class="trust-item">
             <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -841,7 +835,6 @@
       <div class="container newsletter-container">
         <h2 id="newsletter-heading" class="section-title">Stay Updated</h2>
         <p class="newsletter-subtitle">New products, technology reviews, and special offers delivered straight to your inbox.</p>
-
         <form class="newsletter-form" aria-label="Newsletter Subscription" onSubmit="event.preventDefault();">
           <label for="newsletter-email" class="sr-only">Enter your email address</label>
           <input 
@@ -856,7 +849,6 @@
         </form>
       </div>
     </section>
-
   </main>
 
   <!-- Footer -->
@@ -869,6 +861,5 @@
   <!-- Core Scripts -->
   <script src="js/script.js" defer></script>
   <script src="js/cart-count.js" defer></script>
-
 </body>
 </html>
