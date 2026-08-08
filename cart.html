@@ -7,32 +7,23 @@
   <meta name="description" content="Review your shopping cart and proceed securely to checkout at Prasun Shop.">
   <title>Shopping Cart — Prasun Shop</title>
 
-  <!-- Google Fonts: Inter -->
+  <!-- Resource Hints & Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-        },
-      },
-    }
-  </script>
-
-  <!-- Custom CSS Override -->
+  <!-- Production Stylesheet (Replaces heavy Tailwind Runtime CDN) -->
+  <link rel="stylesheet" href="css/tailwind.min.css">
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- Non-blocking JavaScript Execution -->
+  <script src="js/cart.js" defer></script>
 </head>
 
 <body class="bg-zinc-50 text-zinc-900 font-sans antialiased selection:bg-zinc-900 selection:text-white min-h-screen flex flex-col">
 
-  <!-- Modern Header -->
+  <!-- Header Section -->
   <header class="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-zinc-200 transition-all">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
@@ -41,7 +32,7 @@
         Prasun Shop<span class="text-zinc-400">.</span>
       </a>
 
-      <!-- Desktop Navigation Links -->
+      <!-- Desktop Navigation -->
       <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-600">
         <a href="index.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Home</a>
         <a href="products.html" class="hover:text-zinc-900 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-sm">Products</a>
@@ -50,7 +41,7 @@
 
       <!-- Right Action Items -->
       <div class="flex items-center gap-3">
-        <!-- Shopping Cart Icon Badge -->
+        <!-- Shopping Cart Badge -->
         <a href="cart.html" class="relative p-2 text-zinc-900 hover:text-zinc-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 rounded-full" aria-label="Shopping Cart">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
@@ -97,14 +88,13 @@
       <!-- Left Column: Cart Items List -->
       <section class="lg:col-span-7" aria-label="Shopping cart items">
         <div id="cart-items" class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm space-y-6 divide-y divide-zinc-100" aria-live="polite">
-          <!-- cart.js dynamically renders cart items here -->
           <div class="py-8 text-center">
             <p class="text-sm text-zinc-500 font-medium">Loading your cart...</p>
           </div>
         </div>
       </section>
 
-      <!-- Right Column: Order Summary (Sticky on Desktop) -->
+      <!-- Right Column: Order Summary (Sticky) -->
       <aside class="lg:col-span-5" aria-label="Order summary">
         <div class="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm lg:sticky lg:top-24 space-y-6">
           <h2 class="text-lg font-medium text-zinc-900">Order Summary</h2>
@@ -141,7 +131,7 @@
     </div>
   </main>
 
-  <!-- Minimal Footer -->
+  <!-- Footer -->
   <footer class="border-t border-zinc-200 bg-white py-8 mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
       <p>&copy; 2026 Prasun Shop. All rights reserved.</p>
@@ -152,15 +142,13 @@
     </div>
   </footer>
 
-  <!-- External & Inline Scripts -->
-  <script src="js/cart.js"></script>
+  <!-- Inline Lightweight Event Handlers -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const menuButton = document.getElementById("mobile-menu-button");
       const mobileMenu = document.getElementById("mobile-menu");
       const checkoutButton = document.getElementById("checkout-button");
 
-      // Mobile Menu Toggle Handler with Accessibility
       if (menuButton && mobileMenu) {
         menuButton.addEventListener("click", () => {
           const isOpen = menuButton.getAttribute("aria-expanded") === "true";
@@ -169,18 +157,18 @@
         });
       }
 
-      // Checkout Navigation Logic with Validation
       if (checkoutButton) {
         checkoutButton.addEventListener("click", () => {
           try {
-            const cart = JSON.parse(localStorage.getItem("prasunShopCart") || localStorage.getItem("cart") || "[]");
+            const rawCart = localStorage.getItem("prasunShopCart") || localStorage.getItem("cart") || "[]";
+            const cart = JSON.parse(rawCart);
             if (!Array.isArray(cart) || cart.length === 0) {
               alert("Your cart is empty. Please add items before proceeding.");
               return;
             }
             window.location.href = "checkout.html";
           } catch (e) {
-            console.error("Error checking cart state:", e);
+            console.error("Error reading cart state:", e);
             window.location.href = "checkout.html";
           }
         });
