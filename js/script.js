@@ -1,8 +1,8 @@
 /**
  * ============================================================================
- * PRASUN SHOP — PRODUCTS & INTERACTIVITY (PRODUCTION ENTERPRISE)
- * High-performance product listing, async fetch, fuzzy/token search,
- * dynamic pagination, event-driven architecture, and zero-CLS rendering.
+ * PRASUN SHOP — PRODUCTS & INTERACTIVITY (ENTERPRISE EDITION)
+ * High-performance product catalog, resilient async fetch, token-based search,
+ * intelligent pagination, event delegation, and accessible DOM rendering.
  * ============================================================================
  */
 
@@ -13,12 +13,14 @@
        CONFIG & CONSTANTS
        ========================================================================= */
 
-    const CONFIG = {
+    const CONFIG = Object.freeze({
         STORAGE_KEYS: ["products", "prasun_products"],
         API_ENDPOINT: "/api/products.json",
+        FETCH_TIMEOUT_MS: 8000,
         DEBOUNCE_MS: 150,
         ITEMS_PER_PAGE: 12,
         EAGER_IMAGE_COUNT: 4, // Prevent LCP degradation on above-the-fold cards
+        MAX_PAGINATION_BUTTONS: 5, // Max page buttons visible in sliding window
         FALLBACK_IMAGE: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
             <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
                 <rect width="800" height="600" fill="#f4f4f5"/>
@@ -27,9 +29,9 @@
                 </text>
             </svg>
         `)}`
-    };
+    });
 
-    // Reusable Formatters & Collators (Instantiated once to eliminate GC overhead)
+    // Reusable Formatters & Collators (Instantiated once to avoid Garbage Collection overhead)
     const CURRENCY_FORMATTER = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -43,7 +45,7 @@
     });
 
     /* =========================================================================
-       STATE & CACHED DOM ELEMENTS
+       STATE & DOM CACHE
        ========================================================================= */
 
     const state = {
@@ -84,7 +86,6 @@
             .replace(/'/g, "&#039;");
     }
 
-    // Strips diacritics/accents and normalizes text for search
     function normalize(value) {
         return String(value ?? "")
             .normalize("NFD")
@@ -93,7 +94,6 @@
             .toLowerCase();
     }
 
-    // Parses mixed numeric/string prices (e.g., "$29.99" -> 29.99)
     function parsePrice(value) {
         if (typeof value === "number") return Number.isFinite(value) ? value : 0;
         if (!value) return 0;
@@ -119,7 +119,7 @@
     }
 
     /* =========================================================================
-       PRODUCT NORMALIZATION (Pre-computing Search Index)
+       PRODUCT DATA NORMALIZATION
        ========================================================================= */
 
     function normalizeProduct(item, index) {
@@ -146,14 +146,29 @@
             description,
             brand,
             rating,
-            // Pre-computed normalized search index (title, description, category, brand, tags)
+            // Pre-computed normalized index for lightning-fast token matching
             searchIndex: normalize(`${name} ${description} ${category} ${brand} ${tags}`)
         };
     }
 
     /* =========================================================================
-       DATA LOADING
+       DATA FETCHING & CACHING
        ========================================================================= */
+
+    async function fetchWithTimeout(resource, options = {}) {
+        const { timeout = CONFIG.FETCH_TIMEOUT_MS } = options;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeout);
+
+        try {
+            const response = await fetch(resource, { ...options, signal: controller.signal });
+            clearTimeout(timer);
+            return response;
+        } catch (error) {
+            clearTimeout(timer);
+            throw error;
+        }
+    }
 
     async function loadProducts() {
         if (!elements.productList) return;
@@ -164,7 +179,7 @@
         try {
             let rawData = null;
 
-            // 1. Check LocalStorage Cache
+            // 1. LocalStorage Retrieval
             for (const key of CONFIG.STORAGE_KEYS) {
                 const stored = localStorage.getItem(key);
                 if (stored) {
@@ -181,19 +196,19 @@
                         state.allProducts = list.map(normalizeProduct).filter(Boolean);
                     }
                 } catch (err) {
-                    console.warn("[Prasun Shop] Invalid JSON in localStorage:", err);
+                    console.warn("[Prasun Shop] Invalid JSON payload in localStorage:", err);
                 }
             }
 
-            // 2. Fallback to API Endpoint
+            // 2. Network Endpoint Fallback
             if (!state.allProducts.length) {
-                const response = await fetch(CONFIG.API_ENDPOINT);
-                if (response.ok) {
-                    const json = await response.json();
-                    const list = Array.isArray(json) ? json : (json.products || json.data || []);
-                    if (Array.isArray(list)) {
-                        state.allProducts = list.map(normalizeProduct).filter(Boolean);
-                    }
+                const response = await fetchWithTimeout(CONFIG.API_ENDPOINT);
+                if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+                
+                const json = await response.json();
+                const list = Array.isArray(json) ? json : (json.products || json.data || []);
+                if (Array.isArray(list)) {
+                    state.allProducts = list.map(normalizeProduct).filter(Boolean);
                 }
             }
 
@@ -211,13 +226,13 @@
 
         } catch (error) {
             state.isLoading = false;
-            console.error("[Prasun Shop] Unable to load products:", error);
+            console.error("[Prasun Shop] Failed to initialize product catalog:", error);
             renderErrorState();
         }
     }
 
     /* =========================================================================
-       URL & STATE MANAGEMENT
+       URL & ROUTING SYNCHRONIZATION
        ========================================================================= */
 
     function readStateFromURL() {
@@ -286,7 +301,7 @@
     }
 
     /* =========================================================================
-       FILTER, SORT & PAGINATION ENGINE
+       FILTER, SORT & PAGINATION LOGIC
        ========================================================================= */
 
     function applyFilters() {
@@ -294,16 +309,16 @@
         const rawKw = normalize(state.currentKeyword);
         const kwTokens = rawKw ? rawKw.split(/\s+/).filter(Boolean) : [];
 
-        // Filter products using token matching & category comparison
-        state.filteredProducts = state.allProducts.filter(p => {
-            if (cat && p.normalizedCategory !== cat) return false;
+        // 1. Filtering (Multi-token match + Category)
+        state.filteredProducts = state.allProducts.filter(product => {
+            if (cat && product.normalizedCategory !== cat) return false;
             if (kwTokens.length > 0) {
-                return kwTokens.every(token => p.searchIndex.includes(token));
+                return kwTokens.every(token => product.searchIndex.includes(token));
             }
             return true;
         });
 
-        // Fast sorting
+        // 2. Sorting
         switch (state.currentSort) {
             case "price-asc":
                 state.filteredProducts.sort((a, b) => a.price - b.price);
@@ -324,11 +339,11 @@
                 break;
         }
 
-        // Clamp pagination bounds
+        // 3. Clamp Bounds
         const totalPages = Math.ceil(state.filteredProducts.length / CONFIG.ITEMS_PER_PAGE) || 1;
         if (state.currentPage > totalPages) state.currentPage = totalPages;
 
-        // Schedule DOM batch update on frame
+        // 4. Batch Frame Rendering
         if (state.renderFrame) cancelAnimationFrame(state.renderFrame);
         state.renderFrame = requestAnimationFrame(() => {
             renderPaginatedProducts();
@@ -344,6 +359,7 @@
     function renderPaginatedProducts() {
         if (!elements.productList) return;
 
+        elements.productList.removeAttribute("aria-busy");
         updateResultsCount(state.filteredProducts.length);
 
         if (!state.filteredProducts.length) {
@@ -362,12 +378,11 @@
     }
 
     /* =========================================================================
-       PRODUCT RENDERING
+       DOM CARD RENDERING (ACCESSIBLE & COMPLIANT HTML)
        ========================================================================= */
 
     function renderProductCard(product, index) {
         const image = product.image || CONFIG.FALLBACK_IMAGE;
-        // Prioritize first N images to optimize Largest Contentful Paint (LCP)
         const isEager = index < CONFIG.EAGER_IMAGE_COUNT;
         const loadingAttr = isEager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" decoding="async"';
 
@@ -376,7 +391,7 @@
             : "";
 
         const ratingHTML = product.rating > 0
-            ? `<span class="product-rating" aria-label="Rating ${product.rating} out of 5">
+            ? `<span class="product-rating" aria-label="Rated ${product.rating} out of 5 stars">
                    ★ ${product.rating.toFixed(1)}
                </span>`
             : "";
@@ -385,32 +400,39 @@
             ? `<span class="product-brand">${escapeHTML(product.brand)}</span>`
             : "";
 
+        // Valid HTML structure: Interactive elements (<button> and <a>) are decoupled
         return `
             <article class="product-card" data-id="${product.safeId}">
-                <a class="product-card-link" href="product.html?id=${product.safeId}" aria-label="View ${escapeHTML(product.name)}">
-                    <div class="product-card-image">
-                        <img 
-                            src="${escapeHTML(image)}" 
-                            alt="${escapeHTML(product.name)}" 
-                            ${loadingAttr}
-                        />
-                        ${categoryHTML}
+                <div class="product-card-image">
+                    <img 
+                        src="${escapeHTML(image)}" 
+                        alt="${escapeHTML(product.name)}" 
+                        ${loadingAttr}
+                    />
+                    ${categoryHTML}
+                </div>
+                <div class="product-card-body">
+                    ${(ratingHTML || brandHTML) ? `<div class="product-meta">${brandHTML}${ratingHTML}</div>` : ""}
+                    <h3 class="product-title">
+                        <a href="product.html?id=${product.safeId}" class="product-title-link">
+                            ${escapeHTML(product.name)}
+                        </a>
+                    </h3>
+                    ${product.description ? `<p class="product-description">${escapeHTML(product.description)}</p>` : ""}
+                    <div class="product-bottom">
+                        <p class="product-price">${formatPrice(product.price)}</p>
+                        <button type="button" class="product-add-btn" data-action="add-to-cart" data-id="${product.safeId}" aria-label="Add ${escapeHTML(product.name)} to cart">
+                            Add to Cart
+                        </button>
                     </div>
-                    <div class="product-card-body">
-                        ${(ratingHTML || brandHTML) ? `<div class="product-meta">${brandHTML}${ratingHTML}</div>` : ""}
-                        <h3 class="product-title">${escapeHTML(product.name)}</h3>
-                        ${product.description ? `<p class="product-description">${escapeHTML(product.description)}</p>` : ""}
-                        <div class="product-bottom">
-                            <p class="product-price">${formatPrice(product.price)}</p>
-                            <button type="button" class="product-add-btn" data-action="add-to-cart" data-id="${product.safeId}" aria-label="Add ${escapeHTML(product.name)} to cart">
-                                Add to Cart
-                            </button>
-                        </div>
-                    </div>
-                </a>
+                </div>
             </article>
         `;
     }
+
+    /* =========================================================================
+       WINDOWED PAGINATION (Smart Ellipsis Logic)
+       ========================================================================= */
 
     function renderPagination(totalItems) {
         if (!elements.paginationContainer) {
@@ -430,13 +452,34 @@
         elements.paginationContainer.style.display = "flex";
         let html = `<nav aria-label="Product pagination" class="pagination-nav">`;
 
-        // Previous Button
+        // Prev Button
         html += `<button type="button" class="pagination-btn prev" ${state.currentPage === 1 ? "disabled" : ""} data-page="${state.currentPage - 1}" aria-label="Previous Page">&laquo; Prev</button>`;
 
-        // Page Number Buttons
-        for (let i = 1; i <= totalPages; i++) {
+        // Smart Windowing Logic
+        const maxButtons = CONFIG.MAX_PAGINATION_BUTTONS;
+        let startPage = Math.max(1, state.currentPage - Math.floor(maxButtons / 2));
+        let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+        if (endPage - startPage + 1 < maxButtons) {
+            startPage = Math.max(1, endPage - maxButtons + 1);
+        }
+
+        // First Page + Ellipsis
+        if (startPage > 1) {
+            html += `<button type="button" class="pagination-btn number" data-page="1" aria-label="Page 1">1</button>`;
+            if (startPage > 2) html += `<span class="pagination-ellipsis" aria-hidden="true">&hellip;</span>`;
+        }
+
+        // Page Range
+        for (let i = startPage; i <= endPage; i++) {
             const isCurrent = i === state.currentPage;
-            html += `<button type="button" class="pagination-btn number ${isCurrent ? "active" : ""}" data-page="${i}" aria-current="${isCurrent ? "page" : "false"}">${i}</button>`;
+            html += `<button type="button" class="pagination-btn number ${isCurrent ? "active" : ""}" data-page="${i}" aria-current="${isCurrent ? "page" : "false"}" aria-label="Page ${i}">${i}</button>`;
+        }
+
+        // Last Page + Ellipsis
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) html += `<span class="pagination-ellipsis" aria-hidden="true">&hellip;</span>`;
+            html += `<button type="button" class="pagination-btn number" data-page="${totalPages}" aria-label="Page ${totalPages}">${totalPages}</button>`;
         }
 
         // Next Button
@@ -445,6 +488,10 @@
 
         elements.paginationContainer.innerHTML = html;
     }
+
+    /* =========================================================================
+       EVENT DELEGATION & LISTENERS
+       ========================================================================= */
 
     function setupImageErrorDelegation() {
         if (!elements.productList) return;
@@ -459,10 +506,6 @@
         }, true);
     }
 
-    /* =========================================================================
-       CONTROLS & DELEGATED EVENTS
-       ========================================================================= */
-
     function cacheDOMElements() {
         elements.productList = $("#product-list");
         elements.searchInput = $("#searchInput") || $(".search-input") || $(".products-search-input");
@@ -471,7 +514,6 @@
         elements.heading = $("#products-heading") || $(".products-heading");
         elements.paginationContainer = $(".products-pagination");
 
-        // Dynamic category pill parsing
         elements.categoryPills = $$(".category-pill, .products-categories a");
         elements.categoryPills.forEach(pill => {
             try {
@@ -491,7 +533,7 @@
     }
 
     function initializeControls() {
-        // Search Input handler with debouncing
+        // Search handler
         if (elements.searchInput) {
             elements.searchInput.addEventListener("input", debounce(() => {
                 state.currentKeyword = elements.searchInput.value.trim();
@@ -501,7 +543,7 @@
             }, CONFIG.DEBOUNCE_MS));
         }
 
-        // Sort Select Dropdown handler
+        // Sort handler
         if (elements.sortSelect) {
             elements.sortSelect.addEventListener("change", () => {
                 state.currentSort = elements.sortSelect.value;
@@ -511,9 +553,9 @@
             });
         }
 
-        // Delegated Click Listener (Handles Category Pills, Pagination & Add-to-Cart)
+        // Delegated Document Click Handler
         document.addEventListener("click", (event) => {
-            // 1. Add to Cart Button Click
+            // 1. Add to Cart Button
             const addBtn = event.target.closest('[data-action="add-to-cart"]');
             if (addBtn) {
                 event.preventDefault();
@@ -524,7 +566,7 @@
                 return;
             }
 
-            // 2. Category Pill Click
+            // 2. Category Pill
             const pill = event.target.closest(".category-pill, .products-categories a");
             if (pill) {
                 event.preventDefault();
@@ -540,7 +582,7 @@
                 return;
             }
 
-            // 3. Pagination Button Click
+            // 3. Pagination Button
             const pageBtn = event.target.closest(".pagination-btn");
             if (pageBtn && !pageBtn.disabled) {
                 event.preventDefault();
@@ -549,14 +591,20 @@
                     state.currentPage = newPage;
                     syncStateToURL(false);
                     applyFilters();
+                    
+                    // Accessibility: Scroll and shift focus to top of list
                     elements.productList?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    elements.productList?.focus({ preventScroll: true });
                 }
             }
         });
 
-        // Global Shortcut (Cmd/Ctrl + K to focus search)
+        // Global Shortcut: Cmd/Ctrl + K to focus search
         document.addEventListener("keydown", (event) => {
             if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+                const activeTag = document.activeElement?.tagName;
+                if (activeTag === "INPUT" || activeTag === "TEXTAREA") return;
+
                 if (elements.searchInput) {
                     event.preventDefault();
                     elements.searchInput.focus();
@@ -565,7 +613,7 @@
             }
         });
 
-        // Browser Back/Forward navigation support
+        // Browser History Popstate Support
         window.addEventListener("popstate", () => {
             readStateFromURL();
             applyFilters();
@@ -585,11 +633,13 @@
     }
 
     /* =========================================================================
-       SKELETON, EMPTY & ERROR STATES
+       UI STATES (SKELETON, EMPTY & ERROR)
        ========================================================================= */
 
     function renderSkeletonState() {
         if (!elements.productList) return;
+
+        elements.productList.setAttribute("aria-busy", "true");
 
         const skeletons = Array.from({ length: 6 }).map(() => `
             <div class="product-card skeleton-card" aria-hidden="true">
@@ -665,7 +715,7 @@
     }
 
     /* =========================================================================
-       INITIALIZATION
+       BOOTSTRAP INITIALIZATION
        ========================================================================= */
 
     function initialize() {
