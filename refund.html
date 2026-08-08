@@ -1,20 +1,249 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Refund Policy — PRASUN SHOP</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --apple-bg: #f5f5f7;
+      --apple-card-bg: #ffffff;
+      --apple-text: #1d1d1f;
+      --apple-gray: #86868b;
+      --apple-border: #d2d2d7;
+      --apple-dark: #1d1d1f;
+      --apple-dark-hover: #333336;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--apple-card-bg);
+      color: var(--apple-text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .header {
+      border-bottom: 1px solid var(--apple-border);
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 100;
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--apple-text);
+      font-weight: 600;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--apple-gray);
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--apple-text);
+    }
+
+    .cart-icon-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      color: var(--apple-text);
+      text-decoration: none;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -10px;
+      background-color: var(--apple-dark);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 600;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem 2rem 2rem;
+    }
+
+    .hero h1 {
+      font-size: 2.75rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -0.015em;
+    }
+
+    .hero p {
+      color: var(--apple-gray);
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    .main-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem 2rem;
+      line-height: 1.7;
+      color: #48484a;
+    }
+
+    .main-container h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--apple-text);
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .main-container p, .main-container li {
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+
+    .main-container ul {
+      padding-left: 1.25rem;
+    }
+
+    .main-container a {
+      color: var(--apple-text);
+      font-weight: 500;
+    }
+
+    .footer {
+      border-top: 1px solid var(--apple-border);
+      background-color: var(--apple-bg);
+      padding: 2rem;
+      text-align: center;
+      color: var(--apple-gray);
+      font-size: 0.85rem;
+      margin-top: 4rem;
+    }
+  </style>
 </head>
 <body>
-  <main class="main-container" style="max-width: 800px; margin: 0 auto; padding: 4rem 2rem; line-height: 1.6; color: #1d1d1f;">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <a href="index.html" class="logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span>PRASUN SHOP</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <div class="header-actions">
+        <a href="cart.html" class="cart-icon-wrap">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span id="cart-count" class="cart-badge">0</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
     <h1>Refund Policy</h1>
-    <p><em>Last updated: August 2026</em></p>
+    <p>Last updated: August 2026</p>
+  </section>
 
-    <h2>Digital Products Refund Guidelines</h2>
-    <p>Due to the digital nature of our products (downloadable PDF ebooks), all sales are generally final once the download link has been accessed or sent. However, customer satisfaction is important to us.</p>
+  <!-- Main Content -->
+  <main class="main-container">
+    <p>At <strong>PRASUN SHOP</strong>, we want you to be completely satisfied with your purchase. Our refund and returns policy lasts <strong>30 days</strong> from the date of delivery.</p>
 
-    <p>If you experience technical issues with your file download, or if you accidentally purchased the wrong title, please reach out to us within <strong>14 days</strong> of your purchase at <a href="mailto:contact@prasunbarua.com">contact@prasunbarua.com</a>. Refund requests are evaluated on a case-by-case basis and are processed securely through our payment provider, Lemon Squeezy.</p>
+    <h2>1. Return Eligibility</h2>
+    <p>To be eligible for a return, your item must meet the following criteria:</p>
+    <ul>
+      <li>The return request must be submitted within 30 days of receiving your item.</li>
+      <li>The product must be unused, unworn, and in the same condition that you received it.</li>
+      <li>The item must be in its original packaging with all manuals and accessories included.</li>
+      <li>A valid proof of purchase or order confirmation is required.</li>
+    </ul>
+
+    <h2>2. How to Initiate a Return</h2>
+    <p>To start a return, contact us at <a href="mailto:contact@prasunbarua.com">contact@prasunbarua.com</a> with your order number and the reason for the return. If your return is accepted, we will send you shipping instructions on where and how to send your package.</p>
+
+    <h2>3. Damaged or Defective Goods</h2>
+    <p>Please inspect your order upon receipt and contact us immediately if the item is defective, damaged, or if you receive the wrong item. We will evaluate the issue and arrange a replacement or full refund at no extra cost to you.</p>
+
+    <h2>4. Refunds Process</h2>
+    <p>Once your return is received and inspected, we will send you an email to notify you that we have received your returned item. We will also notify you of the approval or rejection of your refund.</p>
+    <p>If approved, your refund will be processed, and a credit will automatically be applied to your original method of payment within 5 to 10 business days.</p>
+
+    <h2>5. Return Shipping Costs</h2>
+    <p>Customers are responsible for paying for their own shipping costs for returning items, unless the return is due to a defect or error on our part. Shipping costs are non-refundable.</p>
+
+    <h2>6. Contact Support</h2>
+    <p>If you have any questions concerning our refund process, please reach out to our team at <a href="mailto:contact@prasunbarua.com">contact@prasunbarua.com</a>.</p>
   </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+      <a href="privacy.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Privacy Policy</a>
+      <a href="terms.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Terms of Service</a>
+      <a href="refund.html" style="color: var(--apple-text); text-decoration: none; font-size: 0.85rem; font-weight: 600;">Refund Policy</a>
+      <a href="contact.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Contact</a>
+    </div>
+    <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
+  </footer>
+
+  <script>
+    function updateCartBadge() {
+      try {
+        const cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
+        const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+        const badge = document.getElementById('cart-count');
+        if (badge) badge.textContent = totalItems;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    document.addEventListener('DOMContentLoaded', updateCartBadge);
+  </script>
 </body>
 </html>
