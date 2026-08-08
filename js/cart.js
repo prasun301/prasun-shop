@@ -1,368 +1,243 @@
-// =====================================
-// Prasun Shop - Cart Page System
-// =====================================
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
 
-// Load cart from localStorage
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-let cart = JSON.parse(
-    localStorage.getItem("cart")
-) || [];
+<title>Shopping Cart | Prasun Shop</title>
 
+<meta
+  name="description"
+  content="Review your selected products and proceed securely to checkout at Prasun Shop."
+>
 
-// Cart page elements
+<link rel="stylesheet" href="css/style.css">
 
-const cartItems =
-document.getElementById("cart-items");
+</head>
 
 
-const cartTotal =
-document.getElementById("cart-total");
+<body>
 
 
+<!-- =====================================
+     Header
+===================================== -->
 
+<header>
 
-// =====================================
-// Load Cart Products
-// =====================================
+<div class="container nav">
 
-if(cartItems){
+<a href="index.html" class="logo" aria-label="Prasun Shop Home">
 
+Prasun Shop<span>.</span>
 
-fetch("data/products.json")
+</a>
 
 
-.then(response => response.json())
+<nav aria-label="Main navigation">
 
+<a href="index.html">
+Home
+</a>
 
-.then(products => {
 
+<a href="products.html">
+Products
+</a>
 
-    let total = 0;
 
+<a
+href="cart.html"
+class="cart-icon"
+aria-label="Shopping Cart"
+>
 
-    // Empty cart
+<svg
+width="20"
+height="20"
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+stroke-width="1.8"
+aria-hidden="true"
+>
 
-    if(cart.length === 0){
+<path d="M6 6h15l-1.5 9h-12z"/>
 
+<path d="M6 6 5 3H2"/>
 
-        cartItems.innerHTML = `
+<circle cx="9" cy="20" r="1"/>
 
-        <div class="empty-cart">
+<circle cx="18" cy="20" r="1"/>
 
-            <h3>
-            Your cart is empty
-            </h3>
+</svg>
 
-            <p>
-            Start shopping and add your favourite products.
-            </p>
 
-            <a href="products.html">
-            Continue Shopping
-            </a>
+<span
+id="cart-count"
+aria-label="Items in cart"
+>
+0
+</span>
 
-        </div>
+</a>
 
-        `;
+</nav>
 
+</div>
 
-        cartTotal.innerHTML =
-        "Total: $0.00";
+</header>
 
 
-        return;
 
-    }
+<!-- =====================================
+     Cart Page
+===================================== -->
 
+<main class="cart-page">
 
+<div class="container">
 
 
-    // Display cart products
+<!-- Breadcrumb -->
 
-    cart.forEach(item => {
+<nav
+class="cart-breadcrumb"
+aria-label="Breadcrumb"
+>
 
+<a href="index.html">
+Home
+</a>
 
-        const product =
-        products.find(
-            p => p.id === item.id
-        );
+<span aria-hidden="true">
+/
+</span>
 
+<span aria-current="page">
+Cart
+</span>
 
+</nav>
 
-        if(product){
 
 
-            const subtotal =
-            product.price * item.quantity;
+<!-- Page Header -->
 
+<div class="cart-header">
 
+<div>
 
-            total += subtotal;
+<h1>
+Your Shopping Cart
+</h1>
 
+<p>
+Review your selected products before checkout.
+</p>
 
+</div>
 
+</div>
 
-            cartItems.innerHTML += `
 
 
-            <div class="cart-card">
+<!-- Cart Layout -->
 
+<div class="cart-layout">
 
 
-                <img
+<!-- Cart Items -->
 
-                src="${product.image}"
+<section
+class="cart-products"
+aria-label="Cart items"
+>
 
-                alt="${product.name}"
+<div id="cart-items">
 
-                >
+<!-- cart.js renders products here -->
 
+</div>
 
+</section>
 
 
-                <div class="cart-details">
 
+<!-- Order Summary -->
 
+<aside
+class="cart-summary"
+aria-label="Order summary"
+>
 
-                    <h3>
+<div class="cart-summary-inner">
 
-                    ${product.name}
+<h2>
+Order Summary
+</h2>
 
-                    </h3>
 
+<div class="cart-summary-row">
 
+<span>
+Subtotal
+</span>
 
+<strong id="cart-total">
+$0.00
+</strong>
 
-                    <p>
+</div>
 
-                    Category:
-                    ${product.category || "Product"}
 
-                    </p>
+<p class="cart-summary-note">
 
+Taxes and payment details are calculated at checkout.
 
+</p>
 
 
-                    <p>
+<button
+type="button"
+class="checkout-button"
+onclick="window.location.href='checkout.html'"
+>
 
-                    Price:
-                    $${product.price.toFixed(2)}
+Proceed to Checkout
 
-                    </p>
+</button>
 
 
+<a
+href="products.html"
+class="continue-shopping"
+>
 
+Continue Shopping
 
+</a>
 
-                    <div class="quantity-control">
+</div>
 
+</aside>
 
-                        <button onclick="changeQuantity('${product.id}', -1)">
 
-                        -
+</div>
 
-                        </button>
+</div>
 
+</main>
 
 
-                        <span>
 
-                        ${item.quantity}
+<script src="js/cart.js"></script>
 
-                        </span>
+<script src="js/cart-count.js"></script>
 
 
+</body>
 
-
-                        <button onclick="changeQuantity('${product.id}', 1)">
-
-                        +
-
-                        </button>
-
-
-
-                    </div>
-
-
-
-
-
-
-                    <p>
-
-                    Subtotal:
-                    $${subtotal.toFixed(2)}
-
-                    </p>
-
-
-
-
-
-                    <button
-
-                    class="remove-btn"
-
-                    onclick="removeFromCart('${product.id}')"
-
-                    >
-
-                    Remove
-
-                    </button>
-
-
-
-                </div>
-
-
-            </div>
-
-
-
-            `;
-
-
-        }
-
-
-    });
-
-
-
-
-    cartTotal.innerHTML =
-
-    "Total: $" + total.toFixed(2);
-
-
-
-})
-
-
-
-.catch(error => {
-
-
-console.log(
-
-"Error loading cart:",
-
-error
-
-);
-
-
-});
-
-
-
-}
-
-
-
-
-// =====================================
-// Change Quantity
-// =====================================
-
-
-function changeQuantity(id, change){
-
-
-
-    const item =
-
-    cart.find(
-
-        product => product.id === id
-
-    );
-
-
-
-    if(item){
-
-
-
-        item.quantity += change;
-
-
-
-        if(item.quantity <= 0){
-
-
-            cart =
-
-            cart.filter(
-
-                product => product.id !== id
-
-            );
-
-
-        }
-
-
-    }
-
-
-
-
-    localStorage.setItem(
-
-        "cart",
-
-        JSON.stringify(cart)
-
-    );
-
-
-
-    location.reload();
-
-
-
-}
-
-
-
-
-
-// =====================================
-// Remove Product
-// =====================================
-
-
-function removeFromCart(id){
-
-
-
-    cart =
-
-    cart.filter(
-
-        item => item.id !== id
-
-    );
-
-
-
-
-    localStorage.setItem(
-
-        "cart",
-
-        JSON.stringify(cart)
-
-    );
-
-
-
-    location.reload();
-
-
-
-}
+</html>
