@@ -1,6 +1,6 @@
 /* ==========================================================================
    PRASUN SHOP — PREMIUM E-COMMERCE STYLESHEET
-   Refined Design Architecture & Design Tokens
+   Refined Design Architecture & High-Performance Design Tokens
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -81,7 +81,7 @@ html {
   background-color: var(--color-bg-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  text-rendering: optimizeSpeed;
   scroll-behavior: smooth;
 }
 
@@ -98,6 +98,7 @@ a {
   color: inherit;
   text-decoration: none;
   transition: color var(--transition-fast);
+  touch-action: manipulation;
 }
 
 button, input, select, textarea {
@@ -107,6 +108,7 @@ button, input, select, textarea {
   border: none;
   background: none;
   outline: none;
+  touch-action: manipulation;
 }
 
 button {
@@ -119,7 +121,7 @@ img, picture, svg {
   max-width: 100%;
 }
 
-/* Strict Global Icon Sizing Rules — Prevents giant icon bugs */
+/* Strict Global Icon Sizing Rules */
 svg {
   flex-shrink: 0;
   vertical-align: middle;
@@ -183,6 +185,8 @@ main {
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--color-border-subtle);
   transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .header-container {
@@ -338,6 +342,7 @@ main {
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--transition-fast), transform var(--transition-fast);
+  will-change: opacity, transform;
   z-index: 999;
 }
 
@@ -430,7 +435,7 @@ main {
   border: 1px solid transparent;
   font-size: 14px;
   color: var(--color-text-primary);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .products-search-input::placeholder {
@@ -470,7 +475,7 @@ main {
   color: var(--color-bg-primary);
   opacity: 0;
   visibility: hidden;
-  transition: all var(--transition-fast);
+  transition: opacity var(--transition-fast), visibility var(--transition-fast), background-color var(--transition-fast);
 }
 
 .search-clear.is-visible,
@@ -493,12 +498,13 @@ main {
   margin-bottom: 32px;
   overflow-x: auto;
   padding: 4px 0;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* IE */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .products-categories::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
 }
 
 .category-pill {
@@ -513,8 +519,9 @@ main {
   font-weight: 500;
   color: var(--color-text-secondary);
   white-space: nowrap;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .category-pill:hover {
@@ -564,10 +571,11 @@ main {
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%206e6e73' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236e6e73' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 8px center;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  touch-action: manipulation;
 }
 
 .products-sort select:hover {
@@ -594,6 +602,10 @@ main {
   border-radius: var(--radius-md);
   overflow: hidden;
   transition: transform var(--transition-smooth), box-shadow var(--transition-smooth), border-color var(--transition-smooth);
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 380px;
+  contain: layout paint style;
+  will-change: transform;
 }
 
 .product-card:hover {
@@ -620,6 +632,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
+  contain: strict;
 }
 
 .product-card-image img {
@@ -627,6 +640,7 @@ main {
   height: 100%;
   object-fit: cover;
   transition: transform 0.5s var(--ease-out-apple);
+  will-change: transform;
 }
 
 .product-card:hover .product-card-image img {
@@ -706,8 +720,9 @@ main {
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-primary);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
   white-space: nowrap;
+  touch-action: manipulation;
 }
 
 .product-cart-button svg {
@@ -729,11 +744,11 @@ main {
 }
 
 /* --------------------------------------------------------------------------
-   9. SKELETON LOADING STATES
+   9. SKELETON LOADING STATES (GPU Composited)
    -------------------------------------------------------------------------- */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
 
 .product-skeleton {
@@ -742,14 +757,19 @@ main {
   border-radius: var(--radius-md);
   overflow: hidden;
   pointer-events: none;
+  contain: layout paint;
+}
+
+.skeleton-image,
+.skeleton-line {
+  background-color: var(--color-bg-tertiary);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  will-change: opacity;
 }
 
 .skeleton-image {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background: linear-gradient(90deg, #f0f0f2 25%, #e8e8ed 37%, #f0f0f2 63%);
-  background-size: 200% 100%;
-  animation: shimmer 1.8s infinite ease-in-out;
 }
 
 .skeleton-content {
@@ -762,9 +782,6 @@ main {
 .skeleton-line {
   height: 12px;
   border-radius: var(--radius-xs);
-  background: linear-gradient(90deg, #f0f0f2 25%, #e8e8ed 37%, #f0f0f2 63%);
-  background-size: 200% 100%;
-  animation: shimmer 1.8s infinite ease-in-out;
 }
 
 .skeleton-line.short { width: 40%; }
@@ -832,6 +849,7 @@ main {
   font-size: 14px;
   font-weight: 500;
   transition: background-color var(--transition-fast);
+  touch-action: manipulation;
 }
 
 .products-empty-button:hover,
@@ -925,7 +943,7 @@ main {
   }
 
   .nav-links {
-    display: none; /* Handled via mobile dropdown */
+    display: none;
   }
 
   .mobile-menu-btn {
@@ -987,7 +1005,7 @@ main {
   }
 
   .products-search-shortcut {
-    display: none; /* Hide shortcut badge on touch screens */
+    display: none;
   }
 
   .products-search-input {
@@ -1033,7 +1051,7 @@ main {
   .skeleton-image,
   .skeleton-line {
     animation: none;
-    background: var(--color-bg-tertiary);
+    background-color: var(--color-bg-tertiary);
   }
 }
 
