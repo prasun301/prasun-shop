@@ -328,7 +328,7 @@
     }
 
     /* Action Buttons */
-    .btn-amazon-buy {
+    .btn-buy-now {
       background-color: var(--store-btn-bg);
       border: 1px solid var(--store-btn-border);
       border-radius: 9999px;
@@ -345,16 +345,16 @@
       user-select: none;
     }
 
-    .btn-amazon-buy:hover {
+    .btn-buy-now:hover {
       background-color: var(--store-btn-hover);
     }
 
-    .btn-amazon-buy:active {
+    .btn-buy-now:active {
       background-color: var(--store-btn-active);
       transform: scale(0.98);
     }
 
-    .btn-amazon-buy:focus-visible {
+    .btn-buy-now:focus-visible {
       outline: 2px solid var(--store-focus-ring);
       outline-offset: 2px;
     }
@@ -417,6 +417,7 @@
       </a>
       <nav class="nav-links">
         <a href="index.html" class="active">eBooks</a>
+        <a href="products.html">Products</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
       </nav>
@@ -447,7 +448,7 @@
         </div>
         <div class="ebook-card-bottom">
           <div class="ebook-price">$9.99</div>
-          <a class="btn-amazon-buy" href="#" onclick="event.preventDefault(); Paddle.Checkout.open({ items: [{ priceId: 'pri_YOUR_PRICE_ID_1', quantity: 1 }] });">Buy Now</a>
+          <a class="btn-buy-now lemonsqueezy-button" href="https://prasunshop.lemonsqueezy.com/buy/PRODUCT_OR_VARIANT_ID_1?embed=1">Buy Now</a>
         </div>
       </div>
 
@@ -466,7 +467,7 @@
         </div>
         <div class="ebook-card-bottom">
           <div class="ebook-price">$12.99</div>
-          <a class="btn-amazon-buy" href="#" onclick="event.preventDefault(); Paddle.Checkout.open({ items: [{ priceId: 'pri_YOUR_PRICE_ID_2', quantity: 1 }] });">Buy Now</a>
+          <a class="btn-buy-now lemonsqueezy-button" href="https://prasunshop.lemonsqueezy.com/buy/PRODUCT_OR_VARIANT_ID_2?embed=1">Buy Now</a>
         </div>
       </div>
 
@@ -485,7 +486,7 @@
         </div>
         <div class="ebook-card-bottom">
           <div class="ebook-price">$6.99</div>
-          <a class="btn-amazon-buy" href="#" onclick="event.preventDefault(); Paddle.Checkout.open({ items: [{ priceId: 'pri_0wgfm097d93ay2kxea', quantity: 1 }] });">Buy Now</a>
+          <a class="btn-buy-now lemonsqueezy-button" href="https://prasunshop.lemonsqueezy.com/buy/PRODUCT_OR_VARIANT_ID_3?embed=1">Buy Now</a>
         </div>
       </div>
 
@@ -504,7 +505,7 @@
         </div>
         <div class="ebook-card-bottom">
           <div class="ebook-price">$5.99</div>
-          <a class="btn-amazon-buy" href="#" onclick="event.preventDefault(); Paddle.Checkout.open({ items: [{ priceId: 'pri_YOUR_PRICE_ID_4', quantity: 1 }] });">Buy Now</a>
+          <a class="btn-buy-now lemonsqueezy-button" href="https://prasunshop.lemonsqueezy.com/buy/PRODUCT_OR_VARIANT_ID_4?embed=1">Buy Now</a>
         </div>
       </div>
 
@@ -513,7 +514,7 @@
     <!-- Storefront Information Footer -->
     <div class="store-footer">
       <h3>Digital Product Delivery Notice</h3>
-      <p>All items listed are digital products. No physical products will be shipped. Upon successful payment verification via Paddle, you will immediately receive secure access download options for your chosen digital format.</p>
+      <p>All items listed are digital products. No physical products will be shipped. Upon successful payment verification via Lemon Squeezy, you will immediately receive secure access download options for your chosen digital format.</p>
     </div>
 
   </div>
@@ -523,14 +524,10 @@
     <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">Prasun Barua</a>. All rights reserved.</p>
   </footer>
 
-  <!-- Paddle.js Integration -->
-  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+  <!-- Lemon Squeezy Integration -->
+  <script src="https://assets.lemonsqueezy.com/lemon.js" defer></script>
   <script type="text/javascript">
-    Paddle.Environment.set('production'); // Change to 'sandbox' for testing
-    
-    Paddle.Initialize({ 
-      token: 'YOUR_PADDLE_CLIENT_TOKEN' // Replace with your actual Paddle Client Token
-    });
+    window.createLemonSqueezy && window.createLemonSqueezy();
   </script>
 </body>
 </html>
