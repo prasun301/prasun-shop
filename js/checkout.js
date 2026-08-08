@@ -1,25 +1,50 @@
 /**
  * Prasun Shop — Checkout System Module
- * Production-Grade 10/10 Implementation
+ * Production-Grade Performance Optimized Implementation
  */
 "use strict";
 
 (function () {
     const CART_KEY = "prasunShopCart";
 
-    // Cart Retrieval & Robust Validation
+    // Reusable Intl.NumberFormat instance to avoid costly re-instantiations
+    const currencyFormatter = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD"
+    });
+
+    // Single-pass HTML escaping setup
+    const ESCAPE_MAP = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    };
+    const ESCAPE_REGEX = /[&<>"']/g;
+
+    function escapeHTML(str) {
+        if (str === null || str === undefined) return "";
+        return String(str).replace(ESCAPE_REGEX, char => ESCAPE_MAP[char]);
+    }
+
+    function formatPrice(price) {
+        const num = Number(price);
+        return Number.isFinite(num) ? currencyFormatter.format(num) : "$0.00";
+    }
+
+    // Cart Retrieval & Validation
     function getCart() {
         try {
-            let stored = localStorage.getItem(CART_KEY);
-            if (!stored) {
-                stored = localStorage.getItem("cart");
-            }
+            const stored = localStorage.getItem(CART_KEY) || localStorage.getItem("cart");
             if (!stored) return [];
+
             const parsed = JSON.parse(stored);
             if (!Array.isArray(parsed)) return [];
 
             const validCart = [];
-            for (const item of parsed) {
+            for (let i = 0; i < parsed.length; i++) {
+                const item = parsed[i];
                 if (!item || item.id === undefined || item.id === null) continue;
                 const qty = Number(item.quantity);
                 validCart.push({
@@ -37,28 +62,7 @@
     let cart = getCart();
     const orderSummary = document.getElementById("order-summary");
     let total = 0;
-    let allProducts = [];
-
-    // Format price cleanly using Intl.NumberFormat
-    function formatPrice(price) {
-        const num = Number(price);
-        if (!Number.isFinite(num)) return "$0.00";
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD"
-        }).format(num);
-    }
-
-    // Basic HTML escaping helper to prevent XSS / script injection
-    function escapeHTML(str) {
-        if (str === null || str === undefined) return "";
-        return String(str)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
+    let productMap = new Map();
 
     // =====================================
     // Display Order Summary
@@ -77,7 +81,8 @@
                 throw new Error("Invalid data format: products.json must contain an array.");
             }
 
-            allProducts = data;
+            // Map products by ID for O(1) lookups
+            productMap = new Map(data.filter(Boolean).map(p => [String(p.id), p]));
 
             if (cart.length === 0) {
                 orderSummary.innerHTML = `
@@ -94,8 +99,9 @@
             total = 0;
             let itemsHTML = '<div class="max-h-72 overflow-y-auto space-y-4 pr-1 divide-y divide-zinc-100">';
 
-            cart.forEach(item => {
-                const product = allProducts.find(p => p && String(p.id) === String(item.id));
+            for (let i = 0; i < cart.length; i++) {
+                const item = cart[i];
+                const product = productMap.get(String(item.id));
 
                 if (product) {
                     const price = Number(product.price) || 0;
@@ -123,7 +129,7 @@
                         </div>
                     `;
                 }
-            });
+            }
 
             itemsHTML += '</div>';
 
@@ -184,24 +190,21 @@
 
             const originalButtonText = submitButton.textContent;
             
-            // Set loading state for maximum responsiveness feel
+            // UI state transition
             submitButton.disabled = true;
             submitButton.textContent = "Processing Order...";
             submitButton.classList.add("opacity-75", "cursor-not-allowed");
 
-            const nameInput = document.getElementById("name");
-            const emailInput = document.getElementById("email");
-            const phoneInput = document.getElementById("phone");
-            const addressInput = document.getElementById("address");
+            // Extract form inputs efficiently in one pass
+            const formData = new FormData(checkoutForm);
+            const customerName = (formData.get("name") || "").toString().trim();
+            const email = (formData.get("email") || "").toString().trim();
+            const phone = (formData.get("phone") || "").toString().trim();
+            const address = (formData.get("address") || "").toString().trim();
 
-            const customerName = nameInput ? nameInput.value.trim() : "";
-            const email = emailInput ? emailInput.value.trim() : "";
-            const phone = phoneInput ? phoneInput.value.trim() : "";
-            const address = addressInput ? addressInput.value.trim() : "";
-
-            // Enrich cart items with product data for backend payload
+            // O(1) product map retrieval during payload construction
             const enrichedCart = cart.map(item => {
-                const product = allProducts.find(p => p && String(p.id) === String(item.id));
+                const product = productMap.get(String(item.id));
                 return {
                     id: item.id,
                     name: product?.name ?? "Unknown Product",
@@ -233,18 +236,15 @@
                 const data = await response.json();
                 console.log("Order successfully sent:", data);
 
-                // Clear local storage cart keys cleanly
                 localStorage.removeItem(CART_KEY);
                 localStorage.removeItem("cart");
 
-                // Redirect to success page
                 window.location.href = "order-success.html";
 
             } catch (error) {
                 console.error("Order submission error:", error);
                 alert("Something went wrong while placing your order. Please try again.");
                 
-                // Restore button state
                 submitButton.disabled = false;
                 submitButton.textContent = originalButtonText;
                 submitButton.classList.remove("opacity-75", "cursor-not-allowed");
