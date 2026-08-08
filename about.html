@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About — PRASUN SHOP</title>
-  <link rel="stylesheet" href="style.css">
   <style>
     :root {
       --apple-bg: #f5f5f7;
@@ -13,6 +12,7 @@
       --apple-gray: #86868b;
       --apple-border: #d2d2d7;
       --apple-dark: #1d1d1f;
+      --apple-dark-hover: #333336;
     }
 
     * { box-sizing: border-box; }
@@ -67,14 +67,14 @@
     .nav-links a:hover, .nav-links a.active { color: var(--apple-text); }
 
     .main-container {
-      max-width: 1200px;
+      max-width: 800px;
       margin: 0 auto;
       padding: 4rem 2rem;
     }
 
     .hero {
       text-align: center;
-      margin-bottom: 3rem;
+      margin-bottom: 3.5rem;
     }
 
     .hero h1 {
@@ -85,13 +85,14 @@
     }
 
     .hero p {
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       color: var(--apple-gray);
       margin: 0;
     }
 
     .content-section {
       font-size: 1.05rem;
+      line-height: 1.7;
       color: #48484a;
     }
 
@@ -132,19 +133,25 @@
   <main class="main-container">
     <div class="hero">
       <h1>About Prasun Shop</h1>
-      <p>Practical guides and technical documentation for engineers and professionals.</p>
+      <p>Independent engineering publications built for clarity and impact.</p>
     </div>
 
-    <div class="content-section" style="max-width: 700px; margin: 0 auto; line-height: 1.7;">
-      <p>Welcome to Prasun Shop, an independent digital publishing platform founded and authored by <strong>Prasun Barua</strong>. Our mission is to break down complex engineering concepts into clear, actionable, and intuitive guides.</p>
+    <div class="content-section">
+      <p><strong>Prasun Shop</strong> is an independent digital publishing platform founded and authored by engineer <strong>Prasun Barua</strong>. Our mission is to bridge the gap between complex industrial theories and practical, everyday application.</p>
       
-      <p>Whether you are looking to understand residential solar systems, dive deep into electrical engineering fundamentals, or explore the intricacies of semiconductor manufacturing, these publications are designed to help you make informed technical decisions.</p>
+      <p>From the fundamentals of residential solar systems and electrical engineering to the precise science of modern semiconductor manufacturing, every guide is written with one core focus: clarity. We strip away unnecessary academic jargon to deliver structured, highly actionable knowledge that helps professionals, students, and homeowners make confident technical decisions.</p>
       
-      <p>All books are delivered as high-quality digital PDFs instantly upon purchase, ensuring you get immediate access to the resources you need.</p>
+      <p>All books are written exclusively by Prasun Barua and provided as high-resolution digital PDFs, ready for instant download the moment your checkout is complete.</p>
     </div>
   </main>
 
   <footer class="footer">
+    <div style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+      <a href="privacy.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Privacy Policy</a>
+      <a href="terms.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Terms of Service</a>
+      <a href="refund.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Refund Policy</a>
+      <a href="contact.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Contact</a>
+    </div>
     <p>&copy; 2026 PRASUN SHOP. All rights reserved. Secure digital delivery powered by Lemon Squeezy.</p>
   </footer>
 
