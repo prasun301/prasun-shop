@@ -364,9 +364,7 @@
       <h1>Review Your Bag</h1>
       <button type="button" class="btn-clear" onclick="clearEntireCart()">Clear Cart</button>
     </div>
-    <div id="cart-content-area">
-      <!-- Dynamically populated -->
-    </div>
+    <div id="cart-content-area">Loading bag...</div>
   </main>
 
   <script>
@@ -386,7 +384,6 @@
       } catch (e) {
         console.error("Cart storage save error:", e);
       }
-      updateCartBadge();
       renderCart();
     }
 
@@ -404,82 +401,86 @@
       const container = document.getElementById('cart-content-area');
       if (!container) return;
 
-      let cart = [];
       try {
-        cart = getCart();
-      } catch (err) {
-        container.innerHTML = `<div class="empty-cart"><h2>Error loading cart</h2><p>Your cart data appears corrupted.</p><button class="btn-apple-primary" onclick="clearEntireCart()">Reset Cart</button></div>`;
-        return;
-      }
-
-      if (!Array.isArray(cart) || cart.length === 0) {
-        container.innerHTML = `
-          <div class="empty-cart">
-            <h2>Your cart is empty</h2>
-            <p>Discover our latest products and add something you love to your cart.</p>
-            <a href="index.html" class="btn-apple-primary">Continue Shopping</a>
-          </div>
-        `;
-        return;
-      }
-
-      let subtotal = 0;
-      let itemsHTML = '';
-
-      cart.forEach((item, index) => {
-        const title = item.title || "Selected Item";
-        const priceStr = item.price || "$0.00";
-        const priceNum = parseFloat(priceStr.toString().replace('$', '')) || 0;
-        const qty = Number(item.quantity) || 1;
-        const itemTotal = priceNum * qty;
-        subtotal += itemTotal;
-        const image = item.image || "images/placeholder.jpg";
-        const id = item.id || "#";
-
-        itemsHTML += `
-          <div class="cart-item-card">
-            <div class="cart-item-image">
-              <img src="${image}" alt="${title}" width="90" height="90" onerror="this.src='images/placeholder.jpg'" />
+        const cart = getCart();
+        if (!Array.isArray(cart) || cart.length === 0) {
+          container.innerHTML = `
+            <div class="empty-cart">
+              <h2>Your cart is empty</h2>
+              <p>Discover our latest products and add something you love to your cart.</p>
+              <a href="index.html" class="btn-apple-primary">Continue Shopping</a>
             </div>
-            <div class="cart-item-details">
-              <a href="product.html?id=${id}" class="cart-item-title">${title}</a>
-              <span class="cart-item-price">${priceStr}</span>
-              <div class="cart-item-actions">
-                <div class="quantity-selector">
-                  <button type="button" class="qty-btn" onclick="updateQty(${index}, -1)">−</button>
-                  <span class="qty-value">${qty}</span>
-                  <button type="button" class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
+          `;
+          return;
+        }
+
+        let subtotal = 0;
+        let itemsHTML = '';
+
+        cart.forEach((item, index) => {
+          const title = item.title || "Selected Item";
+          const priceStr = item.price || "$0.00";
+          const priceNum = parseFloat(priceStr.toString().replace('$', '')) || 0;
+          const qty = Number(item.quantity) || 1;
+          const itemTotal = priceNum * qty;
+          subtotal += itemTotal;
+          const image = item.image || "";
+          const id = item.id || "smart-lamp";
+
+          itemsHTML += `
+            <div class="cart-item-card">
+              <div class="cart-item-image">
+                <img src="${image}" alt="${title}" width="90" height="90" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'90\' height=\'90\'><rect width=\'90\' height=\'90\' fill=\'%23eee\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%23aaa\' font-size=\'12\'>No Image</text></svg>'" />
+              </div>
+              <div class="cart-item-details">
+                <a href="product.html?id=${id}" class="cart-item-title">${title}</a>
+                <span class="cart-item-price">${priceStr}</span>
+                <div class="cart-item-actions">
+                  <div class="quantity-selector">
+                    <button type="button" class="qty-btn" onclick="updateQty(${index}, -1)">−</button>
+                    <span class="qty-value">${qty}</span>
+                    <button type="button" class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
+                  </div>
+                  <button type="button" class="btn-remove" onclick="removeItem(${index})">Remove</button>
                 </div>
-                <button type="button" class="btn-remove" onclick="removeItem(${index})">Remove</button>
               </div>
             </div>
+          `;
+        });
+
+        container.innerHTML = `
+          <div class="cart-layout">
+            <div class="cart-items-container">
+              ${itemsHTML}
+            </div>
+            <div class="order-summary">
+              <h2>Order Summary</h2>
+              <div class="summary-row">
+                <span>Subtotal</span>
+                <span>$${subtotal.toFixed(2)}</span>
+              </div>
+              <div class="summary-row">
+                <span>Shipping & Taxes</span>
+                <span>Calculated at checkout</span>
+              </div>
+              <div class="summary-row total">
+                <span>Total</span>
+                <span>$${subtotal.toFixed(2)}</span>
+              </div>
+              <a href="checkout.html" class="btn-apple-primary">Proceed to Checkout</a>
+            </div>
           </div>
         `;
-      });
-
-      container.innerHTML = `
-        <div class="cart-layout">
-          <div class="cart-items-container">
-            ${itemsHTML}
+      } catch (err) {
+        console.error("Cart render runtime error:", err);
+        container.innerHTML = `
+          <div class="empty-cart">
+            <h2>Unable to load cart items</h2>
+            <p>Your local cart storage encountered an error.</p>
+            <button type="button" class="btn-apple-primary" onclick="clearEntireCart()" style="max-width: 220px; margin: 0 auto;">Reset Cart</button>
           </div>
-          <div class="order-summary">
-            <h2>Order Summary</h2>
-            <div class="summary-row">
-              <span>Subtotal</span>
-              <span>$${subtotal.toFixed(2)}</span>
-            </div>
-            <div class="summary-row">
-              <span>Shipping & Taxes</span>
-              <span>Calculated at checkout</span>
-            </div>
-            <div class="summary-row total">
-              <span>Total</span>
-              <span>$${subtotal.toFixed(2)}</span>
-            </div>
-            <a href="checkout.html" class="btn-apple-primary">Proceed to Checkout</a>
-          </div>
-        </div>
-      `;
+        `;
+      }
     }
 
     function updateQty(index, change) {
@@ -504,7 +505,12 @@
       renderCart();
     }
 
-    document.addEventListener('DOMContentLoaded', renderCart);
+    // Execute immediately if DOM is ready, otherwise wait
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderCart);
+    } else {
+      renderCart();
+    }
   </script>
 </body>
 </html>
