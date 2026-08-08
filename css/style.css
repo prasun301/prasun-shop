@@ -1,32 +1,69 @@
 /* ==========================================================================
-   PRASUN SHOP - COMPLETE STYLESHEET (style.css)
+   PRASUN SHOP - ENTERPRISE STYLESHEET (style.css)
+   Full DOM-alignment, accessible focus rings, skeleton shimmer, 
+   pagination windowing, empty/error states, & responsive design.
    ========================================================================== */
 
-/* 1. RESET & CSS VARIABLES
+/* 1. RESET & CSS DESIGN TOKENS
    -------------------------------------------------------------------------- */
 :root {
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
-  --text-dark: #0f172a;
-  --text-muted: #64748b;
-  --bg-light: #f8fafc;
+  /* Color Palette */
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+
+  --neutral-50: #f8fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+  --neutral-400: #94a3b8;
+  --neutral-500: #64748b;
+  --neutral-700: #334155;
+  --neutral-800: #1e293b;
+  --neutral-900: #0f172a;
+
+  --accent-amber: #f59e0b;
+  --accent-red: #ef4444;
+
+  /* Semantic Variables */
+  --primary-color: var(--primary-600);
+  --primary-hover: var(--primary-700);
+  --text-dark: var(--neutral-900);
+  --text-muted: var(--neutral-500);
+  --bg-light: var(--neutral-50);
   --bg-card: #ffffff;
-  --border-color: #e2e8f0;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  --border-color: var(--neutral-200);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
+
+  /* Radius & Borders */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
   --radius-full: 9999px;
-  --transition: all 0.2s ease-in-out;
-  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Focus & Motion */
+  --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.35);
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
+/* Global Reset */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: light;
 }
 
 body {
@@ -35,6 +72,7 @@ body {
   color: var(--text-dark);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -55,13 +93,22 @@ img {
   display: block;
 }
 
+/* Accessible Focus States */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 4px;
+}
+
 /* 2. HEADER & NAVIGATION
    -------------------------------------------------------------------------- */
 .header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
 }
@@ -99,7 +146,7 @@ img {
   font-weight: 500;
   font-size: 0.95rem;
   color: var(--text-muted);
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .nav-links a:hover,
@@ -119,6 +166,13 @@ img {
   align-items: center;
   justify-content: center;
   color: var(--text-dark);
+  padding: 0.25rem;
+  border-radius: var(--radius-full);
+  transition: var(--transition-fast);
+}
+
+.cart-icon-wrap:hover {
+  color: var(--primary-color);
 }
 
 .cart-icon-wrap svg {
@@ -128,11 +182,11 @@ img {
 
 .cart-badge {
   position: absolute;
-  top: -8px;
-  right: -10px;
+  top: -4px;
+  right: -8px;
   background-color: var(--primary-color);
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.725rem;
   font-weight: 700;
   height: 18px;
   min-width: 18px;
@@ -146,6 +200,7 @@ img {
 .mobile-menu-btn {
   display: none;
   color: var(--text-dark);
+  padding: 0.25rem;
 }
 
 .mobile-menu-btn svg {
@@ -166,12 +221,12 @@ img {
   display: flex;
 }
 
-/* 3. MAIN PRODUCTS PAGE
+/* 3. MAIN PRODUCTS PAGE & HERO
    -------------------------------------------------------------------------- */
 .products-page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 3rem 1.5rem;
+  padding: 2.5rem 1.5rem 4rem 1.5rem;
 }
 
 .products-hero {
@@ -183,7 +238,7 @@ img {
   text-transform: uppercase;
   font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: var(--primary-color);
   margin-bottom: 0.5rem;
 }
@@ -199,16 +254,23 @@ img {
 .products-intro {
   color: var(--text-muted);
   font-size: 1.05rem;
-  max-width: 500px;
+  max-width: 520px;
   margin: 0 auto;
 }
 
-/* 4. SEARCH BAR
+/* 4. SEARCH BAR & CONTROLS TOOLBAR
    -------------------------------------------------------------------------- */
+.products-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 650px;
+  margin: 0 auto 2rem auto;
+}
+
 .products-search {
   position: relative;
-  max-width: 550px;
-  margin: 0 auto 2rem auto;
+  width: 100%;
 }
 
 .products-search-icon {
@@ -216,7 +278,7 @@ img {
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-muted);
+  color: var(--neutral-400);
   display: flex;
   align-items: center;
   pointer-events: none;
@@ -234,14 +296,53 @@ img {
   border: 1px solid var(--border-color);
   background-color: #ffffff;
   font-size: 0.95rem;
+  color: var(--text-dark);
   outline: none;
-  transition: var(--transition);
+  transition: var(--transition-fast);
   box-shadow: var(--shadow-sm);
 }
 
 .products-search-input:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  box-shadow: var(--focus-ring);
+}
+
+/* Sorting & Results Count Bar */
+.products-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.products-result-count {
+  font-weight: 500;
+}
+
+.products-sort-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.products-sort-select {
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: #ffffff;
+  color: var(--text-dark);
+  font-size: 0.875rem;
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.products-sort-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: var(--focus-ring);
 }
 
 /* 5. CATEGORY FILTERS
@@ -250,8 +351,8 @@ img {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 3rem;
+  gap: 0.6rem;
+  margin-bottom: 2.5rem;
 }
 
 .category-pill {
@@ -260,14 +361,15 @@ img {
   background-color: #ffffff;
   color: var(--text-muted);
   border: 1px solid var(--border-color);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .category-pill:hover {
-  background-color: #f1f5f9;
+  background-color: var(--neutral-100);
   color: var(--text-dark);
+  border-color: var(--neutral-300);
 }
 
 .category-pill.active {
@@ -280,8 +382,9 @@ img {
    -------------------------------------------------------------------------- */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 1.75rem;
+  min-height: 400px;
 }
 
 .product-card {
@@ -290,26 +393,22 @@ img {
   border: 1px solid var(--border-color);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  transition: var(--transition);
+  transition: var(--transition-normal);
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .product-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
-}
-
-.product-card-link {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  border-color: var(--neutral-300);
 }
 
 .product-card-image {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background-color: #f1f5f9;
+  background-color: var(--neutral-100);
   overflow: hidden;
   position: relative;
 }
@@ -318,10 +417,16 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: var(--transition);
+  transition: transform 0.35s ease;
 }
 
-.product-card:hover .product-card-image img {
+.product-card-image img.is-fallback {
+  object-fit: contain;
+  padding: 2rem;
+  opacity: 0.6;
+}
+
+.product-card:hover .product-card-image img:not(.is-fallback) {
   transform: scale(1.05);
 }
 
@@ -332,21 +437,68 @@ img {
   flex-grow: 1;
 }
 
+/* Brand & Rating Meta Row */
+.product-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+  font-size: 0.75rem;
+}
+
+.product-brand {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.product-rating {
+  font-weight: 700;
+  color: var(--accent-amber);
+}
+
 .product-category {
   font-size: 0.75rem;
   text-transform: uppercase;
   font-weight: 700;
   color: var(--primary-color);
   letter-spacing: 0.05em;
-  margin-bottom: 0.25rem;
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
 }
 
 .product-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-dark);
   line-height: 1.35;
   margin-bottom: 0.5rem;
+}
+
+.product-title-link {
+  color: inherit;
+  transition: var(--transition-fast);
+}
+
+.product-title-link:hover {
+  color: var(--primary-color);
+}
+
+/* Hover-overlay focus area for card title */
+.product-title-link::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 4.5rem; /* Leaves room for bottom 'Add to Cart' button interaction */
+  left: 0;
 }
 
 .product-description {
@@ -358,6 +510,7 @@ img {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-height: 1.45;
 }
 
 .product-bottom {
@@ -365,31 +518,181 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 0.75rem;
-  border-top: 1px solid #f1f5f9;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--neutral-100);
+  position: relative;
+  z-index: 2; /* Keeps price and button clickable above link overlay */
 }
 
 .product-price {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-dark);
 }
 
-.product-cart-button {
+.product-add-btn {
   background-color: var(--text-dark);
   color: #ffffff;
-  padding: 0.5rem 1rem;
+  padding: 0.55rem 1rem;
   border-radius: var(--radius-sm);
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
-.product-cart-button:hover {
+.product-add-btn:hover {
   background-color: var(--primary-color);
 }
 
-/* 7. FOOTER
+.product-add-btn:active {
+  transform: scale(0.97);
+}
+
+/* 7. SKELETON SHIMMER LOADING STATES
+   -------------------------------------------------------------------------- */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-image,
+.skeleton-line {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.skeleton-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skeleton-line.short { width: 30%; height: 12px; }
+.skeleton-line.title { width: 80%; height: 18px; }
+.skeleton-line.text { width: 100%; height: 14px; }
+.skeleton-line.btn { width: 40%; height: 32px; margin-top: auto; }
+
+/* 8. EMPTY & ERROR UI STATES
+   -------------------------------------------------------------------------- */
+.products-empty,
+.products-error {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 1.5rem;
+  background-color: #ffffff;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-color);
+  max-width: 500px;
+  margin: 2rem auto;
+}
+
+.products-empty-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 1rem auto;
+  color: var(--neutral-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.products-empty h2,
+.products-error h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+.products-empty p,
+.products-error p {
+  color: var(--text-muted);
+  font-size: 0.925rem;
+  margin-bottom: 1.5rem;
+}
+
+.products-empty-button {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: var(--transition-fast);
+}
+
+.products-empty-button:hover {
+  background-color: var(--primary-hover);
+}
+
+/* 9. WINDOWED PAGINATION CONTROLS
+   -------------------------------------------------------------------------- */
+.products-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 3.5rem;
+}
+
+.pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pagination-btn {
+  padding: 0.5rem 0.85rem;
+  min-width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: #ffffff;
+  color: var(--text-dark);
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background-color: var(--primary-50);
+}
+
+.pagination-btn.active {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  border-color: var(--primary-color);
+  font-weight: 700;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: var(--neutral-100);
+}
+
+.pagination-ellipsis {
+  padding: 0 0.4rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* 10. FOOTER
    -------------------------------------------------------------------------- */
 .footer {
   background-color: #ffffff;
@@ -409,10 +712,12 @@ img {
 
 .footer-col h4,
 .footer-col .footer-heading {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-dark);
   margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .footer-col p {
@@ -432,7 +737,7 @@ img {
 .footer-col ul li a {
   color: var(--text-muted);
   font-size: 0.9rem;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .footer-col ul li a:hover {
@@ -449,7 +754,7 @@ img {
   font-size: 0.85rem;
 }
 
-/* 8. RESPONSIVE BREAKPOINTS
+/* 11. RESPONSIVE BREAKPOINTS & ACCESSIBILITY
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
   .nav-links {
@@ -460,17 +765,37 @@ img {
     display: block;
   }
 
+  .products-page {
+    padding-top: 1.5rem;
+  }
+
   .products-heading {
     font-size: 1.75rem;
   }
 
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1.25rem;
+  }
+
+  .products-meta-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
   .footer-content {
     grid-template-columns: 1fr;
     gap: 2rem;
+  }
+}
+
+/* Reduced Motion Preference for Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
