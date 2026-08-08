@@ -3,58 +3,145 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PRASUN SHOP — Minimalist Store</title>
-  <meta name="description" content="Discover premium products and digital guides at PRASUN SHOP." />
+  <title>PRASUN SHOP — Digital eBook Store</title>
+  <meta name="description" content="Practical guides written by Prasun Barua to help you make informed technical decisions." />
 
-  <!-- Lemon Squeezy Embed Library (Opens checkout in an overlay) -->
-  <script src="https://assets.lemonsqueezy.com/lemon.js" defer></script>
-
-  <style>
-    :root {
-      --apple-bg: #f5f5f7;
-      --apple-card-bg: #ffffff;
-      --apple-text: #1d1d1f;
-      --apple-gray: #86868b;
-      --apple-border: #d2d2d7;
-      --apple-dark: #1d1d1f;
-      --apple-dark-hover: #333336;
-      --apple-accent: #0071e3;
-      --apple-accent-hover: #0077ed;
+  <style type="text/css">
+    /* ----------------------------------------------------
+       1. BASE / LIGHT MODE VARIABLES
+       ---------------------------------------------------- */
+    .ebook-store-container {
+      --store-text: #334155;
+      --store-heading: #0f172a;
+      --store-subtext: #64748b;
+      --store-divider: #e2e8f0;
+      --store-card-bg: #ffffff;
+      --store-card-border: #e2e8f0;
+      --store-cover-bg: #f8fafc;
+      --store-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --store-card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      --store-price: #b12704;
+      --store-btn-bg: #ffd814;
+      --store-btn-text: #0f172a;
+      --store-btn-hover: #f7ca00;
+      --store-btn-active: #f0b800;
+      --store-btn-border: #f2c200;
+      --store-link: #0066cc;
+      --store-focus-ring: #2563eb;
     }
 
+    /* ----------------------------------------------------
+       2. AUTOMATIC SYSTEM DARK MODE
+       ---------------------------------------------------- */
+    @media (prefers-color-scheme: dark) {
+      .ebook-store-container {
+        --store-text: #cbd5e1;
+        --store-heading: #f8fafc;
+        --store-subtext: #94a3b8;
+        --store-divider: #334155;
+        --store-card-bg: #1e293b;
+        --store-card-border: #334155;
+        --store-cover-bg: #0f172a;
+        --store-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+        --store-card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+        --store-price: #ffa41c;
+        --store-btn-bg: #f7c948;
+        --store-btn-text: #0f172a;
+        --store-btn-hover: #f0b829;
+        --store-btn-active: #e2a81a;
+        --store-btn-border: #c89512;
+        --store-link: #38bdf8;
+        --store-focus-ring: #38bdf8;
+      }
+    }
+
+    /* ----------------------------------------------------
+       3. MANUAL LIGHT OVERRIDES
+       ---------------------------------------------------- */
+    :root.light .ebook-store-container,
+    body.light .ebook-store-container,
+    .light .ebook-store-container,
+    [data-theme="light"] .ebook-store-container {
+      --store-text: #334155;
+      --store-heading: #0f172a;
+      --store-subtext: #64748b;
+      --store-divider: #e2e8f0;
+      --store-card-bg: #ffffff;
+      --store-card-border: #e2e8f0;
+      --store-cover-bg: #f8fafc;
+      --store-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --store-card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      --store-price: #b12704;
+      --store-btn-bg: #ffd814;
+      --store-btn-text: #0f172a;
+      --store-btn-hover: #f7ca00;
+      --store-btn-active: #f0b800;
+      --store-btn-border: #f2c200;
+      --store-link: #0066cc;
+      --store-focus-ring: #2563eb;
+    }
+
+    /* ----------------------------------------------------
+       4. MANUAL DARK OVERRIDES
+       ---------------------------------------------------- */
+    :root.dark .ebook-store-container,
+    body.dark .ebook-store-container,
+    .dark .ebook-store-container,
+    .dark-mode .ebook-store-container,
+    [data-theme="dark"] .ebook-store-container {
+      --store-text: #cbd5e1;
+      --store-heading: #f8fafc;
+      --store-subtext: #94a3b8;
+      --store-divider: #334155;
+      --store-card-bg: #1e293b;
+      --store-card-border: #334155;
+      --store-cover-bg: #0f172a;
+      --store-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+      --store-card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      --store-price: #ffa41c;
+      --store-btn-bg: #f7c948;
+      --store-btn-text: #0f172a;
+      --store-btn-hover: #f0b829;
+      --store-btn-active: #e2a81a;
+      --store-btn-border: #c89512;
+      --store-link: #38bdf8;
+      --store-focus-ring: #38bdf8;
+    }
+
+    /* ----------------------------------------------------
+       5. GLOBAL & PAGE STYLES
+       ---------------------------------------------------- */
     * {
       box-sizing: border-box;
     }
 
     body {
-      background-color: var(--apple-card-bg);
-      color: var(--apple-text);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #334155;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
       -webkit-font-smoothing: antialiased;
-    }
-
-    button:focus, input:focus, a:focus {
-      outline: none !important;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.5;
     }
 
     .header {
-      border-bottom: 1px solid var(--apple-border);
+      border-bottom: 1px solid #e2e8f0;
       position: sticky;
       top: 0;
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       z-index: 100;
     }
 
     .header-container {
-      max-width: 1200px;
+      max-width: 1080px;
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem 2rem;
+      padding: 1rem 1.5rem;
     }
 
     .logo {
@@ -62,8 +149,9 @@
       align-items: center;
       gap: 8px;
       text-decoration: none;
-      color: var(--apple-text);
-      font-weight: 600;
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 1.1rem;
     }
 
     .nav-links {
@@ -73,347 +161,375 @@
 
     .nav-links a {
       text-decoration: none;
-      color: var(--apple-gray);
-      font-size: 0.9rem;
+      color: #64748b;
+      font-size: 0.95rem;
+      font-weight: 500;
       transition: color 0.2s;
     }
 
     .nav-links a:hover, .nav-links a.active {
-      color: var(--apple-text);
+      color: #0f172a;
     }
 
-    .cart-icon-wrap {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      color: var(--apple-text);
-      text-decoration: none;
+    .ebook-store-container {
+      max-width: 1080px;
+      margin: 20px auto 40px auto;
+      padding: 24px;
+      box-sizing: border-box;
+      color: var(--store-text);
+      transition: color 0.25s ease;
     }
 
-    .cart-badge {
-      position: absolute;
-      top: -8px;
-      right: -10px;
-      background-color: var(--apple-dark);
-      color: white;
-      font-size: 0.7rem;
-      font-weight: 600;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
+    .store-title {
+      color: var(--store-heading);
+      font-size: 2rem;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+      letter-spacing: -0.02em;
     }
 
-    .hero {
-      text-align: center;
-      padding: 4rem 2rem 2rem 2rem;
+    .store-subtitle {
+      color: var(--store-subtext);
+      font-size: 1.05rem;
+      margin: 0 0 32px 0;
     }
 
-    .hero h1 {
-      font-size: 2.75rem;
-      font-weight: 700;
-      margin: 0 0 0.5rem 0;
-      letter-spacing: -0.015em;
-    }
-
-    .hero p {
-      color: var(--apple-gray);
-      font-size: 1.1rem;
-      margin: 0;
-    }
-
-    .main-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem 2rem 4rem 2rem;
-    }
-
-    .product-grid {
+    .ebook-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 2rem;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 28px;
+      margin-bottom: 48px;
     }
 
-    .product-card {
-      position: relative;
-      background-color: var(--apple-bg);
-      border: 1px solid var(--apple-border);
-      border-radius: 20px;
-      padding: 1.5rem;
+    /* ----------------------------------------------------
+       6. CARD STYLES
+       ---------------------------------------------------- */
+    .ebook-card {
+      background-color: var(--store-card-bg);
+      border: 1px solid var(--store-card-border);
+      border-radius: 12px;
+      padding: 20px;
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: var(--store-card-shadow);
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+                  box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                  background-color 0.25s ease,
+                  border-color 0.25s ease;
+      will-change: transform;
     }
 
-    .product-card:hover {
+    .ebook-card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      box-shadow: var(--store-card-hover-shadow);
     }
 
-    /* Digital Ebook Badge */
-    .badge-digital {
-      position: absolute;
-      top: 1.25rem;
-      right: 1.25rem;
-      background-color: var(--apple-dark);
-      color: #ffffff;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      padding: 0.25rem 0.6rem;
-      border-radius: 980px;
-      letter-spacing: 0.05em;
-      z-index: 2;
+    .ebook-card-top {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
     }
 
-    .product-image {
+    .ebook-card-bottom {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Cover Frame */
+    .ebook-cover-wrap {
+      text-align: center;
+      margin-bottom: 16px;
       width: 100%;
-      height: 220px;
-      object-fit: contain;
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border: 1px solid var(--apple-border);
-    }
-
-    .product-info h3 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin: 0 0 0.25rem 0;
-    }
-
-    .product-meta {
-      font-size: 0.8rem;
-      color: var(--apple-gray);
-      margin-bottom: 0.5rem;
+      aspect-ratio: 3 / 4;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 8px;
+      background-color: var(--store-cover-bg);
+      border: 1px solid var(--store-card-border);
+      transition: background-color 0.25s ease, border-color 0.25s ease;
     }
 
-    .product-price {
-      font-weight: 600;
-      color: var(--apple-text);
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
+    .ebook-cover-wrap img {
+      max-height: 100%;
+      max-width: 100%;
+      object-fit: contain;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ebook-card:hover .ebook-cover-wrap img {
+      transform: scale(1.03);
+    }
+
+    /* Metadata Typography */
+    .ebook-details {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+
+    .ebook-format {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--store-subtext);
+      margin-bottom: 4px;
+      transition: color 0.25s ease;
+    }
+
+    .ebook-title {
+      color: var(--store-heading);
+      font-size: 17px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+      line-height: 1.3;
+      min-height: 44px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      transition: color 0.25s ease;
+    }
+
+    .ebook-author {
+      color: var(--store-subtext);
+      font-size: 13px;
+      font-weight: 500;
+      margin: 0 0 10px 0;
+      transition: color 0.25s ease;
+    }
+
+    .ebook-description {
+      color: var(--store-text);
+      font-size: 13.5px;
+      line-height: 1.45;
+      margin: 0 0 12px 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      transition: color 0.25s ease;
+    }
+
+    .ebook-price {
+      color: var(--store-price);
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      line-height: 1;
+      transition: color 0.25s ease;
     }
 
     /* Action Buttons */
-    .button-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      width: 100%;
-    }
-
-    .btn-buy, .btn-add {
-      background-color: var(--apple-dark);
-      color: #ffffff;
-      border: none;
-      padding: 0.75rem 1rem;
-      border-radius: 980px;
-      font-size: 0.9rem;
-      font-weight: 500;
+    .btn-amazon-buy {
+      background-color: var(--store-btn-bg);
+      border: 1px solid var(--store-btn-border);
+      border-radius: 9999px;
+      color: var(--store-btn-text) !important;
       cursor: pointer;
-      width: 100%;
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 0;
       text-align: center;
       text-decoration: none;
-      display: inline-block;
-      transition: background-color 0.2s, transform 0.1s;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+      user-select: none;
     }
 
-    .btn-buy:hover, .btn-add:hover {
-      background-color: var(--apple-dark-hover);
+    .btn-amazon-buy:hover {
+      background-color: var(--store-btn-hover);
     }
 
-    .btn-preview {
-      background-color: transparent;
-      color: var(--apple-accent);
-      border: 1px solid var(--apple-border);
-      padding: 0.65rem 1rem;
-      border-radius: 980px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      width: 100%;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      transition: background-color 0.2s, border-color 0.2s;
+    .btn-amazon-buy:active {
+      background-color: var(--store-btn-active);
+      transform: scale(0.98);
     }
 
-    .btn-preview:hover {
-      background-color: #ffffff;
-      border-color: var(--apple-accent);
+    .btn-amazon-buy:focus-visible {
+      outline: 2px solid var(--store-focus-ring);
+      outline-offset: 2px;
+    }
+
+    .store-footer {
+      border-top: 1px solid var(--store-divider);
+      padding-top: 24px;
+      margin-top: 32px;
+    }
+
+    .store-footer h3 {
+      color: var(--store-heading);
+      font-size: 1rem;
+      margin: 0 0 8px 0;
+    }
+
+    .store-footer p {
+      color: var(--store-subtext);
+      font-size: 0.875rem;
+      margin: 0;
     }
 
     .footer {
-      border-top: 1px solid var(--apple-border);
-      background-color: var(--apple-bg);
+      border-top: 1px solid #e2e8f0;
+      background-color: #ffffff;
       padding: 2rem;
       text-align: center;
-      color: var(--apple-gray);
+      color: #64748b;
       font-size: 0.85rem;
-      margin-top: 4rem;
+      margin-top: 2rem;
+    }
+
+    /* Responsive Layout */
+    @media (max-width: 640px) {
+      .ebook-store-container {
+        padding: 16px;
+        margin: 16px auto;
+      }
+      .ebook-grid {
+        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      }
+      .ebook-card {
+        padding: 16px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- Navigation Header -->
   <header class="header">
     <div class="header-container">
       <a href="index.html" class="logo">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <path d="M16 10a4 4 0 0 1-8 0"></path>
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
         </svg>
         <span>PRASUN SHOP</span>
       </a>
       <nav class="nav-links">
-        <a href="index.html" class="active">Shop</a>
+        <a href="index.html" class="active">eBooks</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
       </nav>
-      <div class="header-actions">
-        <a href="cart.html" class="cart-icon-wrap">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="9" cy="21" r="1"></circle>
-            <circle cx="20" cy="21" r="1"></circle>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-          </svg>
-          <span id="cart-count" class="cart-badge">0</span>
-        </a>
-      </div>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <h1>Explore Our Products & Guides</h1>
-    <p>Designed with simplicity. Built for performance.</p>
-  </section>
+  <!-- eBook Store Container -->
+  <div class="ebook-store-container">
 
-  <!-- Main Product Grid -->
-  <main class="main-container">
-    <div class="product-grid" id="product-grid">
+    <h1 class="store-title">Digital eBook Store</h1>
+    <p class="store-subtitle">Practical guides written by Prasun Barua to help you make informed technical decisions.</p>
 
-      <!-- ========================================================= -->
-      <!-- FEATURED EBOOK PRODUCT CARD (Lemon Squeezy Integration)     -->
-      <!-- ========================================================= -->
-      <div class="product-card">
-        <span class="badge-digital">PDF Ebook</span>
-        <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=500&q=80" alt="Ebook Cover" class="product-image" />
-        
-        <div class="product-info">
-          <h3>Mastering Web Development</h3>
-          <div class="product-meta">
-            <span>By Prasun Barua</span> • <span>180 Pages</span> • <span>PDF / ePub</span>
+    <!-- Product Grid Layout -->
+    <div class="ebook-grid">
+
+      <!-- BOOK CARD 1: Solar Power for Homeowners -->
+      <div class="ebook-card">
+        <div class="ebook-card-top">
+          <div class="ebook-cover-wrap">
+            <img alt="Solar Power for Homeowners eBook Cover" loading="lazy" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiIxfOGUbYa98pQoN_FP6uTG7jBHXlzXAgJSmsO7cOzDJm916VTJFC25oR-osUlnjkUYOmBvcbVoIylf0tJOna6Jce9kxAPcYLLLNum5Cn5RlpLVXaZGbC9tSxxc4O4XFukXwtHJWMd3pMSZl4NWCsKhpaIfDWporp1rHKs2g46ce8egss5ZuKmoYuNBGc/s1536/Solar_Power_for_Homeowners_Cover.png" />
           </div>
-          <div class="product-price">$19.00</div>
+          <div class="ebook-details">
+            <div class="ebook-format">PDF eBook</div>
+            <h2 class="ebook-title" title="Solar Power for Homeowners">Solar Power for Homeowners</h2>
+            <p class="ebook-author">by Prasun Barua</p>
+            <p class="ebook-description">Learn how residential solar systems work and make informed solar investment decisions.</p>
+          </div>
         </div>
-
-        <div class="button-group">
-          <!-- Lemon Squeezy Instant Overlay Checkout Button -->
-          <!-- REPLACE 'https://prasun.lemonsqueezy.com/buy/xxxx-xxxx-xxxx?embed=1' WITH YOUR ACTUAL LEMON SQUEEZY BUY LINK -->
-          <a href="https://prasun.lemonsqueezy.com/buy/xxxx-xxxx-xxxx?embed=1" class="lemonsqueezy-button btn-buy">
-            Buy Now (Instant Download)
-          </a>
-
-          <!-- Optional Sample Preview PDF Button -->
-          <a href="sample-preview.pdf" target="_blank" class="btn-preview">
-            Read Free Preview (PDF)
-          </a>
+        <div class="ebook-card-bottom">
+          <div class="ebook-price">$9.99</div>
+          <a class="btn-amazon-buy" href="#" onclick="event.preventDefault(); Paddle.Checkout.open({ items: [{ priceId: 'pri_YOUR_PRICE_ID_1', quantity: 1 }] });">Buy Now</a>
         </div>
       </div>
 
-      <!-- Sample Physical Products -->
-      <div class="product-card">
-        <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80" alt="Wireless Headphones" class="product-image" />
-        <div class="product-info">
-          <h3>Wireless Headphones</h3>
-          <div class="product-price">$199.00</div>
+      <!-- BOOK CARD 2: Basic Electrical Engineering -->
+      <div class="ebook-card">
+        <div class="ebook-card-top">
+          <div class="ebook-cover-wrap">
+            <img alt="Basic Electrical Engineering eBook Cover" loading="lazy" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwQurv7BNGLHSjwz-rjt5AqanGmklvpmutwlcbh4VBT6zguNg14Z1DShVq8lLn4TZq2ctxeOGrCeurTk_vW15FyzUkIpQTLbM3KRhXi0waUGk6DwKaYOZqOTELmqjGkbvYUX-jh6sCe_obdKQnSDhX4hyLhA25mRztDrFiBA_3QbM7Lc8QyHTs8jr8Hwo/s1600/Basic_Electrical_Engineering_A_Complete_Intuitive_Guide_Cover.png" />
+          </div>
+          <div class="ebook-details">
+            <div class="ebook-format">PDF eBook</div>
+            <h2 class="ebook-title" title="Basic Electrical Engineering: A Complete Intuitive Guide">Basic Electrical Engineering: A Complete Intuitive Guide</h2>
+            <p class="ebook-author">by Prasun Barua</p>
+            <p class="ebook-description">A beginner-friendly guide to the fundamental concepts of electrical engineering.</p>
+          </div>
         </div>
-        <button class="btn-add" onclick="addToCart('Wireless Headphones', '$199.00', 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80')">Add to Bag</button>
+        <div class="ebook-card-bottom">
+          <div class="ebook-price">$12.99</div>
+          <a class="btn-amazon-buy" href="#" onclick="event.preventDefault(); Paddle.Checkout.open({ items: [{ priceId: 'pri_YOUR_PRICE_ID_2', quantity: 1 }] });">Buy Now</a>
+        </div>
       </div>
 
-      <div class="product-card">
-        <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=500&q=80" alt="Minimalist Watch" class="product-image" />
-        <div class="product-info">
-          <h3>Minimalist Watch</h3>
-          <div class="product-price">$149.00</div>
+      <!-- BOOK CARD 3: Solar PV Testing and Commissioning -->
+      <div class="ebook-card">
+        <div class="ebook-card-top">
+          <div class="ebook-cover-wrap">
+            <img alt="Solar PV Testing and Commissioning eBook Cover" loading="lazy" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhAd71nCQo13VxXWRcoz-WQUpRA5cktSl5UV0lTz5wzT0zWMZNQyMfeHGRJqanK2jjDh8etDpS2Amiv6pPN2SwVuJ7m3RwhE2784tPaZyCgQ1fy_kUMMbqx0wpReUEBvl_wfGv7uKL5ye9Zy6UFBuMd_34KOqlNBOY6E2W6CnCehOe0WFueXMDHt0ByBJE/s1600/Solar%20PV%20Testing%20and%20Commissioning.png" />
+          </div>
+          <div class="ebook-details">
+            <div class="ebook-format">PDF eBook</div>
+            <h2 class="ebook-title" title="Solar PV Testing and Commissioning">Solar PV Testing and Commissioning</h2>
+            <p class="ebook-author">by Prasun Barua</p>
+            <p class="ebook-description">Practical procedures and best practices for testing and commissioning solar PV systems.</p>
+          </div>
         </div>
-        <button class="btn-add" onclick="addToCart('Minimalist Watch', '$149.00', 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=500&q=80')">Add to Bag</button>
+        <div class="ebook-card-bottom">
+          <div class="ebook-price">$6.99</div>
+          <a class="btn-amazon-buy" href="#" onclick="event.preventDefault(); Paddle.Checkout.open({ items: [{ priceId: 'pri_0wgfm097d93ay2kxea', quantity: 1 }] });">Buy Now</a>
+        </div>
       </div>
 
-      <div class="product-card">
-        <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=500&q=80" alt="Classic Camera" class="product-image" />
-        <div class="product-info">
-          <h3>Classic Camera</h3>
-          <div class="product-price">$349.00</div>
+      <!-- BOOK CARD 4: Semiconductor Manufacturing Explained -->
+      <div class="ebook-card">
+        <div class="ebook-card-top">
+          <div class="ebook-cover-wrap">
+            <img alt="Semiconductor Manufacturing Explained eBook Cover" loading="lazy" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKkRpJtcCHXxhFSJ84JOBqjJuTEXwT2BmCPGv8dVVyWiuQgT9Y0JKXA1GczoSuzakmp-bIzO-BmMYbPf6tDGZdASsKVYFNEHWyEAJPPXfesTKxRDvhJMmRe062Y-ZB9MHY3X9FBPjhLBwsEIQEPPhGS5bwjp-836loYiXSlf_GAVpaUgegWZgZi-_uge8/s1600/Semiconductor%20Manufacturing%20Explained.png" />
+          </div>
+          <div class="ebook-details">
+            <div class="ebook-format">PDF eBook</div>
+            <h2 class="ebook-title" title="Semiconductor Manufacturing Explained">Semiconductor Manufacturing Explained</h2>
+            <p class="ebook-author">by Prasun Barua</p>
+            <p class="ebook-description">A structured and accessible guide to the science, engineering, and industrial processes behind modern chip manufacturing.</p>
+          </div>
         </div>
-        <button class="btn-add" onclick="addToCart('Classic Camera', '$349.00', 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=500&q=80')">Add to Bag</button>
+        <div class="ebook-card-bottom">
+          <div class="ebook-price">$5.99</div>
+          <a class="btn-amazon-buy" href="#" onclick="event.preventDefault(); Paddle.Checkout.open({ items: [{ priceId: 'pri_YOUR_PRICE_ID_4', quantity: 1 }] });">Buy Now</a>
+        </div>
       </div>
 
     </div>
-  </main>
 
-  <!-- Footer -->
+    <!-- Storefront Information Footer -->
+    <div class="store-footer">
+      <h3>Digital Product Delivery Notice</h3>
+      <p>All items listed are digital products. No physical products will be shipped. Upon successful payment verification via Paddle, you will immediately receive secure access download options for your chosen digital format.</p>
+    </div>
+
+  </div>
+
+  <!-- Main Site Footer -->
   <footer class="footer">
-    <div style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
-      <a href="privacy.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Privacy Policy</a>
-      <a href="terms.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Terms of Service</a>
-      <a href="refund.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Refund Policy</a>
-      <a href="contact.html" style="color: var(--apple-gray); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;">Contact</a>
-    </div>
-    <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color: var(--apple-text); text-decoration: underline; font-weight: 500;">Prasun Barua</a>. All rights reserved.</p>
+    <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color: inherit; text-decoration: underline;">Prasun Barua</a>. All rights reserved.</p>
   </footer>
 
-  <script>
-    function updateCartBadge() {
-      try {
-        const cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
-        const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
-        const badge = document.getElementById('cart-count');
-        if (badge) badge.textContent = totalItems;
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    function addToCart(title, price, image) {
-      let cart = [];
-      try {
-        cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
-      } catch (e) {
-        cart = [];
-      }
-
-      const existingIndex = cart.findIndex(item => item.title === title);
-      if (existingIndex > -1) {
-        cart[existingIndex].quantity = (Number(cart[existingIndex].quantity) || 1) + 1;
-      } else {
-        cart.push({ title, price, image, quantity: 1 });
-      }
-
-      localStorage.setItem('prasun_cart', JSON.stringify(cart));
-      updateCartBadge();
-      
-      window.location.href = 'cart.html';
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      updateCartBadge();
-      
-      // Initialize Lemon Squeezy JS listener
-      if (window.createLemonSqueezy) {
-        window.createLemonSqueezy();
-      }
+  <!-- Paddle.js Integration -->
+  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+  <script type="text/javascript">
+    Paddle.Environment.set('production'); // Change to 'sandbox' for testing
+    
+    Paddle.Initialize({ 
+      token: 'YOUR_PADDLE_CLIENT_TOKEN' // Replace with your actual Paddle Client Token
     });
   </script>
 </body>
