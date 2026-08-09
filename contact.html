@@ -225,7 +225,7 @@
   <!-- MAIN CONTENT -->
   <main class="content-card">
     <h1>Contact & Support</h1>
-    <p class="subtitle">Have questions about an eBook order, download access, or institutional licensing? Send a message directly below.</p>
+    <p class="subtitle">Have questions about an eBook order, download access, or institutional licensing? Send a message directly below or email us at <a href="mailto:contact@prasunbarua.com">contact@prasunbarua.com</a>.</p>
 
     <!-- TRUST & EXPECTATION METRICS -->
     <div class="support-meta">
@@ -244,7 +244,7 @@
     </div>
 
     <!-- FORM -->
-    <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+    <form id="contactForm">
       <!-- Hidden Spam Protection Honeypot -->
       <input type="text" name="_gotcha" style="display:none !important" tabindex="-1" autocomplete="off" />
 
@@ -286,9 +286,10 @@
           <textarea id="message" name="message" placeholder="Please describe how we can assist you..." required aria-required="true"></textarea>
         </div>
 
-        <!-- Submit Button -->
+        <!-- Submit Button & Status -->
         <div class="form-group full-width">
-          <button type="submit" class="btn-submit">Send Message</button>
+          <button type="submit" id="submitBtn" class="btn-submit">Send Message</button>
+          <p id="formStatus" style="margin-top: 14px; font-size: 0.9rem; font-weight: 500;"></p>
         </div>
 
       </div>
@@ -309,5 +310,52 @@
     </div>
   </footer>
 
+  <script>
+    document.getElementById('contactForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const btn = document.getElementById('submitBtn');
+      const status = document.getElementById('formStatus');
+      
+      btn.textContent = 'Sending...';
+      btn.disabled = true;
+      status.textContent = '';
+
+      const payload = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        topic: document.getElementById('topic').value,
+        order_id: document.getElementById('order_id').value,
+        message: document.getElementById('message').value
+      };
+
+      try {
+        // Replace with your actual deployed Cloudflare Worker URL
+        const workerUrl = 'https://YOUR_CLOUDFLARE_WORKER_URL.workers.dev';
+
+        const response = await fetch(workerUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          status.style.color = '#16a34a';
+          status.textContent = '✓ Message sent successfully! We will get back to you soon.';
+          document.getElementById('contactForm').reset();
+        } else {
+          throw new Error(result.error || 'Submission failed');
+        }
+      } catch (err) {
+        status.style.color = '#dc2626';
+        status.textContent = '✕ Failed to send message. Please email directly at contact@prasunbarua.com';
+      } finally {
+        btn.textContent = 'Send Message';
+        btn.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>
