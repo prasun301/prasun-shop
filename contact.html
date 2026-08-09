@@ -2,236 +2,170 @@
 <html lang="en">
 <head>
   <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-    gtag('config', 'G-D9F2VQ4247');
-  </script>
+  gtag('config', 'G-D9F2VQ4247');
+</script>
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contact Us</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact & Support — PRASUN SHOP</title>
+  <meta name="description" content="Get official customer support, order assistance, or licensing inquiries for technical eBooks by Prasun Barua." />
+
+  <!-- Favicon Links -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
   <style>
-    /* ========================================================
-       FORM THEME VARIABLES (Adaptive Color Token System)
-       ======================================================== */
-    .premium-google-container {
-      /* DEFAULT: Light Theme Settings */
-      --f-bg: transparent;
-      --f-text: #374151;
-      --f-heading: #111827;
-      --f-subtitle: #6b7280;
-      --f-label: #4b5563;
-      --f-input-bg: #f9fafb;
-      --f-input-border: #e5e7eb;
-      --f-input-text: #111827;
-      --f-placeholder: #9ca3af;
-      --f-input-focus-bg: #ffffff;
-      --f-focus-border: #2563eb;
-      --f-focus-glow: rgba(37, 99, 235, 0.12);
-      --f-btn-bg: #111827;
-      --f-btn-text: #ffffff;
-      --f-btn-hover: #1f2937;
-      --f-btn-shadow: rgba(0, 0, 0, 0.08);
-      --f-success-bg: #dcfce7;
-      --f-success-icon: #15803d;
-    }
-
-    /* AUTOMATIC: System Dark Mode Settings */
-    @media (prefers-color-scheme: dark) {
-      .premium-google-container {
-        --f-bg: transparent;
-        --f-text: #cbd5e1;
-        --f-heading: #f8fafc;
-        --f-subtitle: #94a3b8;
-        --f-label: #94a3b8;
-        --f-input-bg: rgba(255, 255, 255, 0.05);
-        --f-input-border: #334155;
-        --f-input-text: #f1f5f9;
-        --f-placeholder: #64748b;
-        --f-input-focus-bg: rgba(15, 23, 42, 0.3);
-        --f-focus-border: #38bdf8;
-        --f-focus-glow: rgba(56, 189, 248, 0.15);
-        --f-btn-bg: #f8fafc;
-        --f-btn-text: #0f172a;
-        --f-btn-hover: #e2e8f0;
-        --f-btn-shadow: rgba(0, 0, 0, 0.3);
-        --f-success-bg: rgba(21, 128, 61, 0.2);
-        --f-success-icon: #4ade80;
-      }
-    }
-
-    /* MANUAL TOGGLE OVERRIDE: For theme scripts (.dark, .dark-mode, etc.) */
-    :root.dark .premium-google-container,
-    body.dark .premium-google-container,
-    .dark .premium-google-container,
-    .dark-mode .premium-google-container,
-    [data-theme="dark"] .premium-google-container {
-      --f-bg: transparent;
-      --f-text: #cbd5e1;
-      --f-heading: #f8fafc;
-      --f-subtitle: #94a3b8;
-      --f-label: #94a3b8;
-      --f-input-bg: rgba(255, 255, 255, 0.05);
-      --f-input-border: #334155;
-      --f-input-text: #f1f5f9;
-      --f-placeholder: #64748b;
-      --f-input-focus-bg: rgba(15, 23, 42, 0.3);
-      --f-focus-border: #38bdf8;
-      --f-focus-glow: rgba(56, 189, 248, 0.15);
-      --f-btn-bg: #f8fafc;
-      --f-btn-text: #0f172a;
-      --f-btn-hover: #e2e8f0;
-      --f-btn-shadow: rgba(0, 0, 0, 0.3);
-      --f-success-bg: rgba(21, 128, 61, 0.2);
-      --f-success-icon: #4ade80;
-    }
-
-    /* MANUAL LIGHT TOGGLE FORCE */
-    :root.light .premium-google-container,
-    body.light .premium-google-container,
-    .light .premium-google-container,
-    .light-mode .premium-google-container,
-    [data-theme="light"] .premium-google-container {
-      --f-bg: transparent;
-      --f-text: #374151;
-      --f-heading: #111827;
-      --f-subtitle: #6b7280;
-      --f-label: #4b5563;
-      --f-input-bg: #f9fafb;
-      --f-input-border: #e5e7eb;
-      --f-input-text: #111827;
-      --f-placeholder: #9ca3af;
-      --f-input-focus-bg: #ffffff;
-      --f-focus-border: #2563eb;
-      --f-focus-glow: rgba(37, 99, 235, 0.12);
-      --f-btn-bg: #111827;
-      --f-btn-text: #ffffff;
-      --f-btn-hover: #1f2937;
-      --f-btn-shadow: rgba(0, 0, 0, 0.08);
-      --f-success-bg: #dcfce7;
-      --f-success-icon: #15803d;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      margin: 0;
-      padding: 20px;
-      background-color: var(--f-bg);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #334155;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ========================================================
-       LAYOUT & STRUCTURAL INTEGRATION
-       ======================================================== */
-    .premium-google-container {
-      max-width: 100%;
+    /* HEADER */
+    .header {
+      border-bottom: 1px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .header-container {
+      max-width: 1080px;
       margin: 0 auto;
-      padding: 15px 0;
-      background: var(--f-bg);
-      box-sizing: border-box;
-      transition: color 0.2s ease, background-color 0.2s ease;
-    }
-
-    .premium-google-container h2 {
-      margin: 0 0 8px 0;
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--f-heading);
-      letter-spacing: -0.5px;
-      transition: color 0.2s ease;
-    }
-
-    .form-subtitle {
-      margin: 0 0 32px 0;
-      font-size: 15px;
-      color: var(--f-subtitle);
-      line-height: 1.5;
-      transition: color 0.2s ease;
-    }
-
-    .contact-form {
       display: flex;
-      flex-direction: column;
-      gap: 20px;
-      max-width: 550px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a {
+      text-decoration: none;
+      color: #64748b;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: #0f172a;
+      font-weight: 600;
     }
 
+    /* MAIN CONTAINER */
+    .content-card {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 2.5rem;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    h1 { color: #0f172a; font-size: 2.2rem; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+    .subtitle { color: #64748b; font-size: 1.05rem; margin-bottom: 2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; }
+
+    /* SUPPORT META (E-E-A-T TRUST BOX) */
+    .support-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+      background-color: #f8fafc;
+      padding: 1.25rem;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .meta-item h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      margin-bottom: 0.25rem;
+    }
+    .meta-item p {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    /* FORM STYLES */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      text-align: left;
+      gap: 0.375rem;
     }
-
-    .form-group label {
-      font-size: 13px;
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+    label {
+      font-size: 0.875rem;
       font-weight: 600;
-      color: var(--f-label);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      transition: color 0.2s ease;
+      color: #0f172a;
     }
-
-    .form-group input,
-    .form-group textarea {
+    label .required { color: #dc2626; }
+    label .optional { color: #94a3b8; font-weight: 400; font-size: 0.8rem; }
+    input, select, textarea {
       width: 100%;
-      padding: 14px 16px;
-      font-size: 15px;
-      color: var(--f-input-text);
-      background-color: var(--f-input-bg);
-      border: 1px solid var(--f-input-border);
+      padding: 0.75rem 0.875rem;
+      border: 1px solid #cbd5e1;
       border-radius: 8px;
-      box-sizing: border-box;
-      transition: all 0.2s ease-in-out;
+      background-color: #ffffff;
+      color: #0f172a;
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-
-    .form-group input::placeholder,
-    .form-group textarea::placeholder {
-      color: var(--f-placeholder);
-      opacity: 1;
-      transition: color 0.2s ease;
-    }
-
-    .form-group input:focus,
-    .form-group textarea:focus {
+    input::placeholder, textarea::placeholder { color: #94a3b8; }
+    input:focus, select:focus, textarea:focus {
       outline: none;
-      background-color: var(--f-input-focus-bg);
-      border-color: var(--f-focus-border);
-      box-shadow: 0 0 0 4px var(--f-focus-glow);
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
-
-    .submit-btn {
+    textarea { resize: vertical; min-height: 140px; }
+    
+    .btn-submit {
+      background-color: #0f172a;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.875rem 1.75rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.15s ease, transform 0.08s ease;
+      align-self: flex-start;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      width: 100%;
-      padding: 14px 24px;
-      margin-top: 10px;
-      background-color: var(--f-btn-bg);
-      color: var(--f-btn-text);
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
     }
-
-    .submit-btn:hover:not(:disabled) {
-      background-color: var(--f-btn-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px var(--f-btn-shadow);
-    }
-
-    .submit-btn:disabled {
-      opacity: 0.75;
-      cursor: not-allowed;
-    }
+    .btn-submit:hover:not(:disabled) { background-color: #1e293b; }
+    .btn-submit:active { transform: scale(0.98); }
+    .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
 
     .btn-spinner {
       width: 16px;
@@ -240,6 +174,7 @@
       border-top-color: currentColor;
       border-radius: 50%;
       animation: f-spin 0.8s linear infinite;
+      display: none;
     }
 
     @keyframes f-spin {
@@ -248,103 +183,231 @@
 
     .success-state {
       text-align: center;
-      padding: 40px 10px;
-      max-width: 550px;
+      padding: 30px 0;
     }
-    
-    .success-icon {
-      width: 60px;
-      height: 60px;
-      background: var(--f-success-bg);
-      color: var(--f-success-icon);
-      border-radius: 50%;
+    .success-state h3 { font-size: 1.5rem; color: #0f172a; margin-bottom: 0.5rem; }
+    .success-state p { color: #64748b; }
+
+    .error-msg {
+      color: #dc2626;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    /* FOOTER STYLES */
+    .footer {
+      border-top: 1px solid #e2e8f0;
+      background-color: #ffffff;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.875rem;
+      margin-top: 4rem;
+    }
+    .footer-container {
+      max-width: 1080px;
+      margin: 0 auto;
       display: flex;
+      flex-direction: column;
       align-items: center;
+      gap: 1.25rem;
+    }
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
       justify-content: center;
-      font-size: 28px;
-      margin: 0 auto 20px auto;
-      transition: background 0.2s ease, color 0.2s ease;
+      gap: 1.5rem;
     }
-    
-    .success-state h3 {
-      font-size: 22px;
-      margin: 0 0 10px 0;
-      color: var(--f-heading);
+    .footer-links a {
+      color: #64748b;
+      text-decoration: none;
+      font-weight: 500;
       transition: color 0.2s ease;
     }
-    
-    .success-state p {
-      color: var(--f-subtitle);
-      font-size: 15px;
-      margin: 0;
-      transition: color 0.2s ease;
+    .footer-links a:hover { color: #0f172a; text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      .content-card { padding: 1.5rem; margin: 20px 1rem; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full-width { grid-column: span 1; }
+      .btn-submit { width: 100%; }
     }
   </style>
 </head>
 <body>
 
-  <div class="premium-google-container">
-    <h2>Get in Touch</h2>
-    <p class="form-subtitle">Have a question? Drop us a line.</p>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-container">
+      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>PRASUN SHOP</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">eBooks</a>
+        <a href="about.html">About</a>
+        <a href="contact.html" class="active">Contact</a>
+      </nav>
+    </div>
+  </header>
 
-    <form action="https://docs.google.com/forms/d/13zrrzAQ86_f89vxEzNsewjrb6VfRzOa6wEQDF3hqWDk/formResponse" class="contact-form" method="POST" target="hidden_iframe" onsubmit="return handleFormSubmit(event)">
-      
-      <!-- Spam Protection Honeypot Field -->
-      <input type="text" name="contact_bot_check" id="hp_check" style="display:none !important;" tabindex="-1" autocomplete="off">
+  <!-- MAIN CONTENT -->
+  <main class="content-card">
+    <h1>Contact & Support</h1>
+    <p class="subtitle">Have questions about an eBook order, download access, or institutional licensing? Send a message directly below.</p>
 
-      <div class="form-group">
-        <label>Full Name</label>
-        <input id="name" name="entry.111111111" required="" type="text" />
+    <!-- TRUST & EXPECTATION METRICS -->
+    <div class="support-meta">
+      <div class="meta-item">
+        <h3>Average Response</h3>
+        <p>Within 24 Hours</p>
       </div>
-
-      <div class="form-group">
-        <label>Email Address</label>
-        <input id="email" name="entry.222222222" placeholder="you@example.com" required="" type="email" />
+      <div class="meta-item">
+        <h3>Order Fulfillment</h3>
+        <p>Lemon Squeezy</p>
       </div>
-
-      <div class="form-group">
-        <label>Your Message</label>
-        <textarea id="message" name="entry.333333333" required="" rows="5"></textarea>
+      <div class="meta-item">
+        <h3>Author Portfolio</h3>
+        <p><a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:none;">prasunbarua.com</a></p>
       </div>
+    </div>
 
-      <button class="submit-btn" id="submitBtn" type="submit">
-        <span id="btnText">Send Message</span>
-        <span id="btnSpinner" class="btn-spinner" style="display: none;"></span>
-      </button>
+    <!-- FORM -->
+    <form id="contactForm" onsubmit="handleFormSubmit(event)">
+      <!-- Hidden Spam Protection Honeypot -->
+      <input type="text" name="_gotcha" id="hp_check" style="display:none !important" tabindex="-1" autocomplete="off" />
+
+      <div class="form-grid">
+        
+        <!-- Name -->
+        <div class="form-group">
+          <label for="name">Full Name <span class="required" aria-hidden="true">*</span></label>
+          <input type="text" id="name" name="name" placeholder="John Doe" required aria-required="true" />
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email">Email Address <span class="required" aria-hidden="true">*</span></label>
+          <input type="email" id="email" name="email" placeholder="john@example.com" required aria-required="true" />
+        </div>
+
+        <!-- Topic -->
+        <div class="form-group">
+          <label for="topic">Topic / Category <span class="required" aria-hidden="true">*</span></label>
+          <select id="topic" name="topic" required aria-required="true">
+            <option value="" disabled selected>Select a topic...</option>
+            <option value="Download / Access Issue">eBook Download / Access Support</option>
+            <option value="Pre-Purchase Inquiry">Pre-Purchase Technical Inquiry</option>
+            <option value="Bulk / Educational Licensing">Educational / Multi-User Licensing</option>
+            <option value="Feedback / General">General Feedback or Author Inquiry</option>
+          </select>
+        </div>
+
+        <!-- Order ID -->
+        <div class="form-group">
+          <label for="order_id">Lemon Squeezy Order ID <span class="optional">(Optional)</span></label>
+          <input type="text" id="order_id" name="order_id" placeholder="e.g. #1029384" />
+        </div>
+
+        <!-- Message -->
+        <div class="form-group full-width">
+          <label for="message">Message <span class="required" aria-hidden="true">*</span></label>
+          <textarea id="message" name="message" placeholder="Please describe how we can assist you..." required aria-required="true"></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-group full-width">
+          <button type="submit" class="btn-submit" id="submitBtn">
+            <span id="btnText">Send Message</span>
+            <span class="btn-spinner" id="btnSpinner"></span>
+          </button>
+          <div class="error-msg" id="errorMsg">Something went wrong. Please try again.</div>
+        </div>
+
+      </div>
     </form>
 
+    <!-- Success Message State -->
     <div class="success-state" id="successMessage" style="display: none;">
-      <div class="success-icon">✓</div>
-      <h3>Thank you!</h3>
-      <p>Your message has been sent successfully. We'll get back to you shortly.</p>
+      <h3>Message Sent Successfully!</h3>
+      <p>Thank you for reaching out. We will get back to you within 24 hours.</p>
     </div>
-  </div>
+  </main>
 
-  <iframe id="hidden_iframe" name="hidden_iframe" style="display: none;"></iframe>
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-links">
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="refund.html">Refund Policy</a>
+      </div>
+      <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">Prasun Barua</a>. All rights reserved.</p>
+    </div>
+  </footer>
 
   <script>
-    function handleFormSubmit(e) {
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+
+      // Honeypot spam check
       const honeypot = document.getElementById('hp_check').value;
       if (honeypot !== "") {
-        e.preventDefault();
         return false;
       }
 
       const btn = document.getElementById('submitBtn');
       const btnText = document.getElementById('btnText');
       const btnSpinner = document.getElementById('btnSpinner');
+      const errorMsg = document.getElementById('errorMsg');
 
+      // Loading state UI
       btn.disabled = true;
       btnText.textContent = 'Sending...';
       btnSpinner.style.display = 'inline-block';
+      errorMsg.style.display = 'none';
 
-      setTimeout(function() {
-        document.querySelector('.contact-form').style.display = 'none';
-        document.querySelector('.form-subtitle').style.display = 'none';
-        document.getElementById('successMessage').style.display = 'block';
-      }, 900);
+      // Gather Payload
+      const payload = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        topic: document.getElementById('topic').value,
+        order_id: document.getElementById('order_id').value,
+        message: document.getElementById('message').value,
+        siteName: "PRASUN SHOP"
+      };
 
-      return true;
+      try {
+        const workerUrl = "https://multi-site-contact-backend.prasun301.workers.dev";
+
+        const response = await fetch(workerUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          document.getElementById('contactForm').style.display = 'none';
+          document.getElementById('successMessage').style.display = 'block';
+        } else {
+          throw new Error(result.error || "Failed to send");
+        }
+      } catch (err) {
+        errorMsg.style.display = 'block';
+        btn.disabled = false;
+        btnText.textContent = 'Send Message';
+        btnSpinner.style.display = 'none';
+      }
     }
   </script>
 
