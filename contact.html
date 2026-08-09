@@ -17,11 +17,10 @@
 
     <style>
       /* ========================================================
-         FORM THEME VARIABLES (Adaptive Color Token System)
+         THEME VARIABLES (Adaptive Color Token System)
          ======================================================== */
-      .premium-google-container {
-        /* DEFAULT: Light Theme Settings */
-        --f-bg: transparent;
+      :root {
+        --f-bg: #ffffff;
         --f-text: #374151;
         --f-heading: #111827;
         --f-subtitle: #6b7280;
@@ -39,12 +38,16 @@
         --f-btn-shadow: rgba(0, 0, 0, 0.08);
         --f-success-bg: #dcfce7;
         --f-success-icon: #15803d;
+        --nav-bg: #ffffff;
+        --nav-border: #e5e7eb;
+        --nav-text: #374151;
+        --nav-hover: #2563eb;
       }
 
       /* AUTOMATIC: System Dark Mode Settings */
       @media (prefers-color-scheme: dark) {
-        .premium-google-container {
-          --f-bg: transparent;
+        :root {
+          --f-bg: #0f172a;
           --f-text: #cbd5e1;
           --f-heading: #f8fafc;
           --f-subtitle: #94a3b8;
@@ -62,16 +65,16 @@
           --f-btn-shadow: rgba(0, 0, 0, 0.3);
           --f-success-bg: rgba(21, 128, 61, 0.2);
           --f-success-icon: #4ade80;
+          --nav-bg: #0f172a;
+          --nav-border: #334155;
+          --nav-text: #cbd5e1;
+          --nav-hover: #38bdf8;
         }
       }
 
-      /* MANUAL TOGGLE OVERRIDE: For theme scripts (.dark, .dark-mode, [data-theme="dark"]) */
-      :root.dark .premium-google-container,
-      body.dark .premium-google-container,
-      .dark .premium-google-container,
-      .dark-mode .premium-google-container,
-      [data-theme="dark"] .premium-google-container {
-        --f-bg: transparent;
+      /* MANUAL TOGGLE OVERRIDE */
+      :root.dark, body.dark, .dark, .dark-mode, [data-theme="dark"] {
+        --f-bg: #0f172a;
         --f-text: #cbd5e1;
         --f-heading: #f8fafc;
         --f-subtitle: #94a3b8;
@@ -89,15 +92,14 @@
         --f-btn-shadow: rgba(0, 0, 0, 0.3);
         --f-success-bg: rgba(21, 128, 61, 0.2);
         --f-success-icon: #4ade80;
+        --nav-bg: #0f172a;
+        --nav-border: #334155;
+        --nav-text: #cbd5e1;
+        --nav-hover: #38bdf8;
       }
 
-      /* MANUAL LIGHT TOGGLE FORCE */
-      :root.light .premium-google-container,
-      body.light .premium-google-container,
-      .light .premium-google-container,
-      .light-mode .premium-google-container,
-      [data-theme="light"] .premium-google-container {
-        --f-bg: transparent;
+      :root.light, body.light, .light, .light-mode, [data-theme="light"] {
+        --f-bg: #ffffff;
         --f-text: #374151;
         --f-heading: #111827;
         --f-subtitle: #6b7280;
@@ -115,25 +117,81 @@
         --f-btn-shadow: rgba(0, 0, 0, 0.08);
         --f-success-bg: #dcfce7;
         --f-success-icon: #15803d;
+        --nav-bg: #ffffff;
+        --nav-border: #e5e7eb;
+        --nav-text: #374151;
+        --nav-hover: #2563eb;
       }
 
       body {
         margin: 0;
-        padding: 20px;
+        padding: 0;
         background-color: var(--f-bg);
+        color: var(--f-text);
         font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        transition: background-color 0.2s ease, color 0.2s ease;
       }
 
       /* ========================================================
-         LAYOUT & STRUCTURAL INTEGRATION
+         NAVIGATION & PAGE LINKS HEADER
          ======================================================== */
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 32px;
+        background-color: var(--nav-bg);
+        border-bottom: 1px solid var(--nav-border);
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+
+      .logo {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--f-heading);
+        text-decoration: none;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 24px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .nav-links a {
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--nav-text);
+        transition: color 0.2s ease;
+      }
+
+      .nav-links a:hover,
+      .nav-links a.active {
+        color: var(--nav-hover);
+      }
+
+      /* ========================================================
+         FORM CONTAINER & LAYOUT
+         ======================================================== */
+      .main-content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 16px;
+        min-height: calc(100vh - 120px);
+        box-sizing: border-box;
+      }
+
       .premium-google-container {
-        max-width: 100%;
+        width: 100%;
+        max-width: 550px;
         margin: 0 auto;
-        padding: 20px 16px;
+        padding: 30px;
         background: var(--f-bg);
         box-sizing: border-box;
-        transition: color 0.2s ease, background-color 0.2s ease;
       }
 
       .premium-google-container h2 {
@@ -157,7 +215,6 @@
         display: flex;
         flex-direction: column;
         gap: 20px;
-        max-width: 550px;
       }
 
       .form-group {
@@ -251,7 +308,6 @@
       .success-state {
         text-align: center;
         padding: 40px 10px;
-        max-width: 550px;
       }
       
       .success-icon {
@@ -281,54 +337,79 @@
         margin: 0;
         transition: color 0.2s ease;
       }
+
+      @media (max-width: 600px) {
+        header {
+          padding: 16px;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .nav-links {
+          gap: 16px;
+        }
+      }
     </style>
 </head>
 <body>
 
-  <div class="premium-google-container">
-    <h2>Get in Touch</h2>
-    <p class="form-subtitle">Have a question? Drop us a line.</p>
+  <!-- Header Navigation with Page Links -->
+  <header>
+    <a href="index.html" class="logo">BrandName</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="services.html">Services</a></li>
+      <li><a href="contact.html" class="active">Contact</a></li>
+    </ul>
+  </header>
 
-    <!-- IMPORTANT: Replace the form action URL and entry names with your actual Google Form details -->
-    <form 
-      action="https://docs.google.com/forms/d/13zrrzAQ86_f89vxEzNsewjrb6VfRzOa6wEQDF3hqWDk/formResponse" 
-      class="contact-form" 
-      method="POST" 
-      target="hidden_iframe" 
-      onsubmit="return handleFormSubmit(event)"
-    >
-      
-      <!-- Spam Protection Honeypot Field (Kept hidden from real users) -->
-      <input type="text" name="contact_bot_check" id="hp_check" style="display:none !important;" tabindex="-1" autocomplete="off">
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <div class="premium-google-container">
+      <h2>Get in Touch</h2>
+      <p class="form-subtitle">Have a question? Drop us a line.</p>
 
-      <div class="form-group">
-        <label for="name">Full Name</label>
-        <input id="name" name="entry.111111111" required type="text" placeholder="John Doe" />
+      <!-- IMPORTANT: Replace the form action URL and entry names with your actual Google Form details -->
+      <form 
+        action="https://docs.google.com/forms/d/13zrrzAQ86_f89vxEzNsewjrb6VfRzOa6wEQDF3hqWDk/formResponse" 
+        class="contact-form" 
+        method="POST" 
+        target="hidden_iframe" 
+        onsubmit="return handleFormSubmit(event)"
+      >
+        
+        <!-- Spam Protection Honeypot Field (Kept hidden from real users) -->
+        <input type="text" name="contact_bot_check" id="hp_check" style="display:none !important;" tabindex="-1" autocomplete="off">
+
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input id="name" name="entry.111111111" required type="text" placeholder="John Doe" />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input id="email" name="entry.222222222" placeholder="you@example.com" required type="email" />
+        </div>
+
+        <div class="form-group">
+          <label for="message">Your Message</label>
+          <textarea id="message" name="entry.333333333" required rows="5" placeholder="Write your message here..."></textarea>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" type="submit">
+          <span id="btnText">Send Message</span>
+          <span id="btnSpinner" class="btn-spinner" style="display: none;"></span>
+        </button>
+      </form>
+
+      <!-- Success State -->
+      <div class="success-state" id="successMessage" style="display: none;" aria-live="polite">
+        <div class="success-icon">✓</div>
+        <h3>Thank you!</h3>
+        <p>Your message has been sent successfully. We'll get back to you shortly.</p>
       </div>
-
-      <div class="form-group">
-        <label for="email">Email Address</label>
-        <input id="email" name="entry.222222222" placeholder="you@example.com" required type="email" />
-      </div>
-
-      <div class="form-group">
-        <label for="message">Your Message</label>
-        <textarea id="message" name="entry.333333333" required rows="5" placeholder="Write your message here..."></textarea>
-      </div>
-
-      <button class="submit-btn" id="submitBtn" type="submit">
-        <span id="btnText">Send Message</span>
-        <span id="btnSpinner" class="btn-spinner" style="display: none;"></span>
-      </button>
-    </form>
-
-    <!-- Success State -->
-    <div class="success-state" id="successMessage" style="display: none;" aria-live="polite">
-      <div class="success-icon">✓</div>
-      <h3>Thank you!</h3>
-      <p>Your message has been sent successfully. We'll get back to you shortly.</p>
     </div>
-  </div>
+  </main>
 
   <!-- Hidden iFrame for background submission without page reload -->
   <iframe id="hidden_iframe" name="hidden_iframe" style="display: none;"></iframe>
