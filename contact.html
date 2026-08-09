@@ -1,80 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
 
-      gtag('config', 'G-D9F2VQ4247');
-    </script>
+    gtag('config', 'G-D9F2VQ4247');
+  </script>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Us</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us</title>
 
-    <style>
-      /* ========================================================
-         THEME VARIABLES (Adaptive Color Token System)
-         ======================================================== */
-      :root {
-        --f-bg: #ffffff;
-        --f-text: #374151;
-        --f-heading: #111827;
-        --f-subtitle: #6b7280;
-        --f-label: #4b5563;
-        --f-input-bg: #f9fafb;
-        --f-input-border: #e5e7eb;
-        --f-input-text: #111827;
-        --f-placeholder: #9ca3af;
-        --f-input-focus-bg: #ffffff;
-        --f-focus-border: #2563eb;
-        --f-focus-glow: rgba(37, 99, 235, 0.12);
-        --f-btn-bg: #111827;
-        --f-btn-text: #ffffff;
-        --f-btn-hover: #1f2937;
-        --f-btn-shadow: rgba(0, 0, 0, 0.08);
-        --f-success-bg: #dcfce7;
-        --f-success-icon: #15803d;
-        --nav-bg: #ffffff;
-        --nav-border: #e5e7eb;
-        --nav-text: #374151;
-        --nav-hover: #2563eb;
-      }
+  <style>
+    /* ========================================================
+       FORM THEME VARIABLES (Adaptive Color Token System)
+       ======================================================== */
+    .premium-google-container {
+      /* DEFAULT: Light Theme Settings */
+      --f-bg: transparent;
+      --f-text: #374151;
+      --f-heading: #111827;
+      --f-subtitle: #6b7280;
+      --f-label: #4b5563;
+      --f-input-bg: #f9fafb;
+      --f-input-border: #e5e7eb;
+      --f-input-text: #111827;
+      --f-placeholder: #9ca3af;
+      --f-input-focus-bg: #ffffff;
+      --f-focus-border: #2563eb;
+      --f-focus-glow: rgba(37, 99, 235, 0.12);
+      --f-btn-bg: #111827;
+      --f-btn-text: #ffffff;
+      --f-btn-hover: #1f2937;
+      --f-btn-shadow: rgba(0, 0, 0, 0.08);
+      --f-success-bg: #dcfce7;
+      --f-success-icon: #15803d;
+    }
 
-      /* AUTOMATIC: System Dark Mode Settings */
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --f-bg: #0f172a;
-          --f-text: #cbd5e1;
-          --f-heading: #f8fafc;
-          --f-subtitle: #94a3b8;
-          --f-label: #94a3b8;
-          --f-input-bg: rgba(255, 255, 255, 0.05);
-          --f-input-border: #334155;
-          --f-input-text: #f1f5f9;
-          --f-placeholder: #64748b;
-          --f-input-focus-bg: rgba(15, 23, 42, 0.3);
-          --f-focus-border: #38bdf8;
-          --f-focus-glow: rgba(56, 189, 248, 0.15);
-          --f-btn-bg: #f8fafc;
-          --f-btn-text: #0f172a;
-          --f-btn-hover: #e2e8f0;
-          --f-btn-shadow: rgba(0, 0, 0, 0.3);
-          --f-success-bg: rgba(21, 128, 61, 0.2);
-          --f-success-icon: #4ade80;
-          --nav-bg: #0f172a;
-          --nav-border: #334155;
-          --nav-text: #cbd5e1;
-          --nav-hover: #38bdf8;
-        }
-      }
-
-      /* MANUAL TOGGLE OVERRIDE */
-      :root.dark, body.dark, .dark, .dark-mode, [data-theme="dark"] {
-        --f-bg: #0f172a;
+    /* AUTOMATIC: System Dark Mode Settings */
+    @media (prefers-color-scheme: dark) {
+      .premium-google-container {
+        --f-bg: transparent;
         --f-text: #cbd5e1;
         --f-heading: #f8fafc;
         --f-subtitle: #94a3b8;
@@ -92,347 +62,282 @@
         --f-btn-shadow: rgba(0, 0, 0, 0.3);
         --f-success-bg: rgba(21, 128, 61, 0.2);
         --f-success-icon: #4ade80;
-        --nav-bg: #0f172a;
-        --nav-border: #334155;
-        --nav-text: #cbd5e1;
-        --nav-hover: #38bdf8;
       }
+    }
 
-      :root.light, body.light, .light, .light-mode, [data-theme="light"] {
-        --f-bg: #ffffff;
-        --f-text: #374151;
-        --f-heading: #111827;
-        --f-subtitle: #6b7280;
-        --f-label: #4b5563;
-        --f-input-bg: #f9fafb;
-        --f-input-border: #e5e7eb;
-        --f-input-text: #111827;
-        --f-placeholder: #9ca3af;
-        --f-input-focus-bg: #ffffff;
-        --f-focus-border: #2563eb;
-        --f-focus-glow: rgba(37, 99, 235, 0.12);
-        --f-btn-bg: #111827;
-        --f-btn-text: #ffffff;
-        --f-btn-hover: #1f2937;
-        --f-btn-shadow: rgba(0, 0, 0, 0.08);
-        --f-success-bg: #dcfce7;
-        --f-success-icon: #15803d;
-        --nav-bg: #ffffff;
-        --nav-border: #e5e7eb;
-        --nav-text: #374151;
-        --nav-hover: #2563eb;
-      }
+    /* MANUAL TOGGLE OVERRIDE: For theme scripts (.dark, .dark-mode, etc.) */
+    :root.dark .premium-google-container,
+    body.dark .premium-google-container,
+    .dark .premium-google-container,
+    .dark-mode .premium-google-container,
+    [data-theme="dark"] .premium-google-container {
+      --f-bg: transparent;
+      --f-text: #cbd5e1;
+      --f-heading: #f8fafc;
+      --f-subtitle: #94a3b8;
+      --f-label: #94a3b8;
+      --f-input-bg: rgba(255, 255, 255, 0.05);
+      --f-input-border: #334155;
+      --f-input-text: #f1f5f9;
+      --f-placeholder: #64748b;
+      --f-input-focus-bg: rgba(15, 23, 42, 0.3);
+      --f-focus-border: #38bdf8;
+      --f-focus-glow: rgba(56, 189, 248, 0.15);
+      --f-btn-bg: #f8fafc;
+      --f-btn-text: #0f172a;
+      --f-btn-hover: #e2e8f0;
+      --f-btn-shadow: rgba(0, 0, 0, 0.3);
+      --f-success-bg: rgba(21, 128, 61, 0.2);
+      --f-success-icon: #4ade80;
+    }
 
-      body {
-        margin: 0;
-        padding: 0;
-        background-color: var(--f-bg);
-        color: var(--f-text);
-        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        transition: background-color 0.2s ease, color 0.2s ease;
-      }
+    /* MANUAL LIGHT TOGGLE FORCE */
+    :root.light .premium-google-container,
+    body.light .premium-google-container,
+    .light .premium-google-container,
+    .light-mode .premium-google-container,
+    [data-theme="light"] .premium-google-container {
+      --f-bg: transparent;
+      --f-text: #374151;
+      --f-heading: #111827;
+      --f-subtitle: #6b7280;
+      --f-label: #4b5563;
+      --f-input-bg: #f9fafb;
+      --f-input-border: #e5e7eb;
+      --f-input-text: #111827;
+      --f-placeholder: #9ca3af;
+      --f-input-focus-bg: #ffffff;
+      --f-focus-border: #2563eb;
+      --f-focus-glow: rgba(37, 99, 235, 0.12);
+      --f-btn-bg: #111827;
+      --f-btn-text: #ffffff;
+      --f-btn-hover: #1f2937;
+      --f-btn-shadow: rgba(0, 0, 0, 0.08);
+      --f-success-bg: #dcfce7;
+      --f-success-icon: #15803d;
+    }
 
-      /* ========================================================
-         NAVIGATION & PAGE LINKS HEADER
-         ======================================================== */
-      header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 32px;
-        background-color: var(--nav-bg);
-        border-bottom: 1px solid var(--nav-border);
-        transition: background-color 0.2s ease, border-color 0.2s ease;
-      }
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: var(--f-bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-      .logo {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--f-heading);
-        text-decoration: none;
-      }
+    /* ========================================================
+       LAYOUT & STRUCTURAL INTEGRATION
+       ======================================================== */
+    .premium-google-container {
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 15px 0;
+      background: var(--f-bg);
+      box-sizing: border-box;
+      transition: color 0.2s ease, background-color 0.2s ease;
+    }
 
-      .nav-links {
-        display: flex;
-        gap: 24px;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
+    .premium-google-container h2 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--f-heading);
+      letter-spacing: -0.5px;
+      transition: color 0.2s ease;
+    }
 
-      .nav-links a {
-        text-decoration: none;
-        font-size: 15px;
-        font-weight: 500;
-        color: var(--nav-text);
-        transition: color 0.2s ease;
-      }
+    .form-subtitle {
+      margin: 0 0 32px 0;
+      font-size: 15px;
+      color: var(--f-subtitle);
+      line-height: 1.5;
+      transition: color 0.2s ease;
+    }
 
-      .nav-links a:hover,
-      .nav-links a.active {
-        color: var(--nav-hover);
-      }
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 550px;
+    }
 
-      /* ========================================================
-         FORM CONTAINER & LAYOUT
-         ======================================================== */
-      .main-content {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 40px 16px;
-        min-height: calc(100vh - 120px);
-        box-sizing: border-box;
-      }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+    }
 
-      .premium-google-container {
-        width: 100%;
-        max-width: 550px;
-        margin: 0 auto;
-        padding: 30px;
-        background: var(--f-bg);
-        box-sizing: border-box;
-      }
+    .form-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--f-label);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: color 0.2s ease;
+    }
 
-      .premium-google-container h2 {
-        margin: 0 0 8px 0;
-        font-size: 28px;
-        font-weight: 700;
-        color: var(--f-heading);
-        letter-spacing: -0.5px;
-        transition: color 0.2s ease;
-      }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 15px;
+      color: var(--f-input-text);
+      background-color: var(--f-input-bg);
+      border: 1px solid var(--f-input-border);
+      border-radius: 8px;
+      box-sizing: border-box;
+      transition: all 0.2s ease-in-out;
+    }
 
-      .form-subtitle {
-        margin: 0 0 32px 0;
-        font-size: 15px;
-        color: var(--f-subtitle);
-        line-height: 1.5;
-        transition: color 0.2s ease;
-      }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: var(--f-placeholder);
+      opacity: 1;
+      transition: color 0.2s ease;
+    }
 
-      .contact-form {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-      }
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      background-color: var(--f-input-focus-bg);
+      border-color: var(--f-focus-border);
+      box-shadow: 0 0 0 4px var(--f-focus-glow);
+    }
 
-      .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        text-align: left;
-      }
+    .submit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px 24px;
+      margin-top: 10px;
+      background-color: var(--f-btn-bg);
+      color: var(--f-btn-text);
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
 
-      .form-group label {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--f-label);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        transition: color 0.2s ease;
-      }
+    .submit-btn:hover:not(:disabled) {
+      background-color: var(--f-btn-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--f-btn-shadow);
+    }
 
-      .form-group input,
-      .form-group textarea {
-        width: 100%;
-        padding: 14px 16px;
-        font-size: 15px;
-        color: var(--f-input-text);
-        background-color: var(--f-input-bg);
-        border: 1px solid var(--f-input-border);
-        border-radius: 8px;
-        box-sizing: border-box;
-        transition: all 0.2s ease-in-out;
-      }
+    .submit-btn:disabled {
+      opacity: 0.75;
+      cursor: not-allowed;
+    }
 
-      .form-group input::placeholder,
-      .form-group textarea::placeholder {
-        color: var(--f-placeholder);
-        opacity: 1;
-        transition: color 0.2s ease;
-      }
+    .btn-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: f-spin 0.8s linear infinite;
+    }
 
-      .form-group input:focus,
-      .form-group textarea:focus {
-        outline: none;
-        background-color: var(--f-input-focus-bg);
-        border-color: var(--f-focus-border);
-        box-shadow: 0 0 0 4px var(--f-focus-glow);
-      }
+    @keyframes f-spin {
+      to { transform: rotate(360deg); }
+    }
 
-      .submit-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        width: 100%;
-        padding: 14px 24px;
-        margin-top: 10px;
-        background-color: var(--f-btn-bg);
-        color: var(--f-btn-text);
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-      }
-
-      .submit-btn:hover:not(:disabled) {
-        background-color: var(--f-btn-hover);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px var(--f-btn-shadow);
-      }
-
-      .submit-btn:disabled {
-        opacity: 0.75;
-        cursor: not-allowed;
-      }
-
-      /* Button Loading Spinner */
-      .btn-spinner {
-        width: 16px;
-        height: 16px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: currentColor;
-        border-radius: 50%;
-        animation: f-spin 0.8s linear infinite;
-      }
-
-      @keyframes f-spin {
-        to { transform: rotate(360deg); }
-      }
-
-      /* Success State UI Rules */
-      .success-state {
-        text-align: center;
-        padding: 40px 10px;
-      }
-      
-      .success-icon {
-        width: 60px;
-        height: 60px;
-        background: var(--f-success-bg);
-        color: var(--f-success-icon);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 28px;
-        margin: 0 auto 20px auto;
-        transition: background 0.2s ease, color 0.2s ease;
-      }
-      
-      .success-state h3 {
-        font-size: 22px;
-        margin: 0 0 10px 0;
-        color: var(--f-heading);
-        transition: color 0.2s ease;
-      }
-      
-      .success-state p {
-        color: var(--f-subtitle);
-        font-size: 15px;
-        margin: 0;
-        transition: color 0.2s ease;
-      }
-
-      @media (max-width: 600px) {
-        header {
-          padding: 16px;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .nav-links {
-          gap: 16px;
-        }
-      }
-    </style>
+    .success-state {
+      text-align: center;
+      padding: 40px 10px;
+      max-width: 550px;
+    }
+    
+    .success-icon {
+      width: 60px;
+      height: 60px;
+      background: var(--f-success-bg);
+      color: var(--f-success-icon);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 20px auto;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+    
+    .success-state h3 {
+      font-size: 22px;
+      margin: 0 0 10px 0;
+      color: var(--f-heading);
+      transition: color 0.2s ease;
+    }
+    
+    .success-state p {
+      color: var(--f-subtitle);
+      font-size: 15px;
+      margin: 0;
+      transition: color 0.2s ease;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Header Navigation with Page Links -->
-  <header>
-    <a href="index.html" class="logo">BrandName</a>
-    <ul class="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="about.html">About</a></li>
-      <li><a href="services.html">Services</a></li>
-      <li><a href="contact.html" class="active">Contact</a></li>
-    </ul>
-  </header>
+  <div class="premium-google-container">
+    <h2>Get in Touch</h2>
+    <p class="form-subtitle">Have a question? Drop us a line.</p>
 
-  <!-- Main Content Area -->
-  <main class="main-content">
-    <div class="premium-google-container">
-      <h2>Get in Touch</h2>
-      <p class="form-subtitle">Have a question? Drop us a line.</p>
+    <form action="https://docs.google.com/forms/d/13zrrzAQ86_f89vxEzNsewjrb6VfRzOa6wEQDF3hqWDk/formResponse" class="contact-form" method="POST" target="hidden_iframe" onsubmit="return handleFormSubmit(event)">
+      
+      <!-- Spam Protection Honeypot Field -->
+      <input type="text" name="contact_bot_check" id="hp_check" style="display:none !important;" tabindex="-1" autocomplete="off">
 
-      <!-- IMPORTANT: Replace the form action URL and entry names with your actual Google Form details -->
-      <form 
-        action="https://docs.google.com/forms/d/13zrrzAQ86_f89vxEzNsewjrb6VfRzOa6wEQDF3hqWDk/formResponse" 
-        class="contact-form" 
-        method="POST" 
-        target="hidden_iframe" 
-        onsubmit="return handleFormSubmit(event)"
-      >
-        
-        <!-- Spam Protection Honeypot Field (Kept hidden from real users) -->
-        <input type="text" name="contact_bot_check" id="hp_check" style="display:none !important;" tabindex="-1" autocomplete="off">
-
-        <div class="form-group">
-          <label for="name">Full Name</label>
-          <input id="name" name="entry.111111111" required type="text" placeholder="John Doe" />
-        </div>
-
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input id="email" name="entry.222222222" placeholder="you@example.com" required type="email" />
-        </div>
-
-        <div class="form-group">
-          <label for="message">Your Message</label>
-          <textarea id="message" name="entry.333333333" required rows="5" placeholder="Write your message here..."></textarea>
-        </div>
-
-        <button class="submit-btn" id="submitBtn" type="submit">
-          <span id="btnText">Send Message</span>
-          <span id="btnSpinner" class="btn-spinner" style="display: none;"></span>
-        </button>
-      </form>
-
-      <!-- Success State -->
-      <div class="success-state" id="successMessage" style="display: none;" aria-live="polite">
-        <div class="success-icon">✓</div>
-        <h3>Thank you!</h3>
-        <p>Your message has been sent successfully. We'll get back to you shortly.</p>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input id="name" name="entry.111111111" required="" type="text" />
       </div>
-    </div>
-  </main>
 
-  <!-- Hidden iFrame for background submission without page reload -->
+      <div class="form-group">
+        <label>Email Address</label>
+        <input id="email" name="entry.222222222" placeholder="you@example.com" required="" type="email" />
+      </div>
+
+      <div class="form-group">
+        <label>Your Message</label>
+        <textarea id="message" name="entry.333333333" required="" rows="5"></textarea>
+      </div>
+
+      <button class="submit-btn" id="submitBtn" type="submit">
+        <span id="btnText">Send Message</span>
+        <span id="btnSpinner" class="btn-spinner" style="display: none;"></span>
+      </button>
+    </form>
+
+    <div class="success-state" id="successMessage" style="display: none;">
+      <div class="success-icon">✓</div>
+      <h3>Thank you!</h3>
+      <p>Your message has been sent successfully. We'll get back to you shortly.</p>
+    </div>
+  </div>
+
   <iframe id="hidden_iframe" name="hidden_iframe" style="display: none;"></iframe>
 
   <script>
     function handleFormSubmit(e) {
-      // Check if the honeypot field was filled by a spam bot
       const honeypot = document.getElementById('hp_check').value;
       if (honeypot !== "") {
         e.preventDefault();
-        return false; // Silently discard bot submission
+        return false;
       }
 
       const btn = document.getElementById('submitBtn');
       const btnText = document.getElementById('btnText');
       const btnSpinner = document.getElementById('btnSpinner');
 
-      // UI Feedback: Loading state
       btn.disabled = true;
       btnText.textContent = 'Sending...';
       btnSpinner.style.display = 'inline-block';
 
-      // Transition smoothly to success state after iframe receives request
       setTimeout(function() {
         document.querySelector('.contact-form').style.display = 'none';
         document.querySelector('.form-subtitle').style.display = 'none';
