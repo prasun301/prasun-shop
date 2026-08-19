@@ -1,5 +1,5 @@
 /**
- * products.js - Prasun Shop Local Catalog & Search Manager
+ * products.js - Prasun Shop Catalog & Live Search Manager
  */
 (function () {
     "use strict";
@@ -10,23 +10,21 @@
     };
 
     let state = {
-        keyword: "",
         searchTimer: null
     };
 
     const DOM = {
         productList: null,
         searchInput: null,
-        searchClearBtn: null,
         resultsCount: null,
         cartBadge: null
     };
 
-    // Master Mock CJ Dropshipping Catalog
+    // CJ Dropshipping Product Catalog Mock Dataset
     const mockProductsCatalog = [
-        { pid: "1", productNameEn: "Wireless Bluetooth Headphones", sellPrice: 29.99, description: "High-quality wireless headphones from CJ Dropshipping.", productImage: "" },
-        { pid: "2", productNameEn: "Ergonomic Desk Chair", sellPrice: 189.00, description: "Comfortable ergonomic office chair for long working hours.", productImage: "" },
-        { pid: "3", productNameEn: "Smart Fitness Watch", sellPrice: 45.50, description: "Track your health, steps, and heart rate seamlessly.", productImage: "" },
+        { pid: "1", productNameEn: "Wireless Bluetooth Headphones", sellPrice: 29.99, description: "High-quality wireless headphones sourced directly from CJ.", productImage: "" },
+        { pid: "2", productNameEn: "Ergonomic Desk Chair", sellPrice: 189.00, description: "Comfortable ergonomic office chair designed for long hours.", productImage: "" },
+        { pid: "3", productNameEn: "Smart Fitness Watch", sellPrice: 45.50, description: "Track your health, step counter, and heart rate seamlessly.", productImage: "" },
         { pid: "4", productNameEn: "Portable LED Desk Lamp", sellPrice: 19.99, description: "Adjustable brightness touch-control desk lamp.", productImage: "" },
         { pid: "5", productNameEn: "Stainless Steel Water Bottle", sellPrice: 15.00, description: "Double-walled vacuum insulated thermal bottle.", productImage: "" }
     ];
@@ -34,7 +32,6 @@
     function cacheDOM() {
         DOM.productList = document.getElementById("product-list");
         DOM.searchInput = document.querySelector(".products-search-input");
-        DOM.searchClearBtn = document.querySelector(".search-clear");
         DOM.resultsCount = document.querySelector(".products-result-count");
         DOM.cartBadge = document.getElementById("cart-badge");
     }
@@ -64,7 +61,7 @@
         DOM.cartBadge.style.display = total > 0 ? "inline-block" : "none";
     }
 
-    // Instant Search & Display Logic
+    // Search and Render Catalog Items
     function loadProducts(keyword = "") {
         if (!DOM.productList) return;
 
@@ -75,7 +72,10 @@
         setTimeout(() => {
             const query = keyword.toLowerCase().trim();
             const filtered = query 
-                ? mockProductsCatalog.filter(p => p.productNameEn.toLowerCase().includes(query) || p.description.toLowerCase().includes(query))
+                ? mockProductsCatalog.filter(p => 
+                    p.productNameEn.toLowerCase().includes(query) || 
+                    p.description.toLowerCase().includes(query)
+                  )
                 : mockProductsCatalog;
 
             renderProducts(filtered);
@@ -83,7 +83,7 @@
             if (DOM.resultsCount) {
                 DOM.resultsCount.textContent = `Showing ${filtered.length} of ${mockProductsCatalog.length} products`;
             }
-        }, 200);
+        }, 150);
     }
 
     function renderProducts(products) {
@@ -93,7 +93,7 @@
             DOM.productList.innerHTML = `
                 <div class="no-results">
                     <h3>No Products Found</h3>
-                    <p>No CJ products match your search query. Try another keyword.</p>
+                    <p>No products match your search criteria. Try a different keyword.</p>
                 </div>
             `;
             return;
@@ -159,14 +159,10 @@
         if (DOM.searchInput) {
             DOM.searchInput.addEventListener("input", (e) => {
                 const query = e.target.value;
-                if (DOM.searchClearBtn) {
-                    DOM.searchClearBtn.style.display = query ? "block" : "none";
-                }
-
                 clearTimeout(state.searchTimer);
                 state.searchTimer = setTimeout(() => {
                     loadProducts(query);
-                }, 300);
+                }, 250);
             });
         }
 
