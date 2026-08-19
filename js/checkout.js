@@ -1,29 +1,22 @@
 /**
  * ============================================================================
- * PRASUN SHOP — CHECKOUT.JS
- * Production Checkout System
+ * PRASUN SHOP — CHECKOUT SYSTEM
  * ============================================================================
  *
- * Compatible with:
- *   - checkout.html
- *   - cart.html
- *   - products.html
- *   - prasun_cart localStorage
+ * Canonical cart:
+ *
+ *     prasun_cart
  *
  * Features:
- *   ✓ Unified cart storage
- *   ✓ Secure HTML escaping
- *   ✓ Product data from cart
- *   ✓ Quantity handling
- *   ✓ Shipping calculation
- *   ✓ Country selection
- *   ✓ Customer validation
- *   ✓ Order submission
- *   ✓ Cloudflare Worker API support
- *   ✓ Loading / processing states
- *   ✓ Duplicate-submit protection
- *   ✓ Mobile-friendly behavior
- *   ✓ Graceful empty-cart handling
+ * - Legacy cart migration
+ * - Product validation
+ * - Product lookup
+ * - Order summary
+ * - Secure HTML escaping
+ * - Quantity validation
+ * - Dynamic total calculation
+ * - API order submission
+ * - Duplicate-submit protection
  * ============================================================================
  */
 
@@ -31,2053 +24,807 @@
 
 (() => {
 
-  /* ==========================================================================
-     CONFIGURATION
-     ========================================================================== */
-
-  const CART_KEY = "prasun_cart";
-
-  const LEGACY_CART_KEYS = [
-    "prasunShopCart",
-    "cart"
-  ];
-
-  const API_ENDPOINT =
-    "https://prasun-shop-api.prasun301.workers.dev/";
-
-  const SHOP_URL = "index.html";
-  const CART_URL = "cart.html";
-  const SUCCESS_URL = "order-success.html";
-
-  const SHIPPING_FEE = 5.00;
-
-
-  /* ==========================================================================
-     DOM REFERENCES
-     ========================================================================== */
-
-  const summaryContainer =
-    document.getElementById("summary-items-container");
-
-  const countryDropdown =
-    document.getElementById("country-dropdown");
-
-  const countrySelected =
-    document.getElementById("dropdown-selected-text");
-
-  const countryInput =
-    document.getElementById("country-input");
-
-
-  /* ==========================================================================
-     CURRENCY
-     ========================================================================== */
-
-  const currencyFormatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-
-
-  function formatPrice(value) {
-
-    const number = Number(value);
-
-    return Number.isFinite(number)
-      ? currencyFormatter.format(number)
-      : "$0.00";
-  }
-
-
-  /* ==========================================================================
-     HTML ESCAPING
-     ========================================================================== */
-
-  const ESCAPE_MAP = {
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  };
-
-  const ESCAPE_REGEX = /[&<>"']/g;
-
-
-  function escapeHTML(value) {
-
-    if (value === null || value === undefined) {
-      return "";
-    }
-
-    return String(value).replace(
-      ESCAPE_REGEX,
-      character => ESCAPE_MAP[character]
-    );
-  }
-
-
-  /* ==========================================================================
-     PRICE NORMALIZATION
-     ========================================================================== */
-
-  function parsePrice(value) {
-
-    if (typeof value === "number") {
-      return Number.isFinite(value) ? value : 0;
-    }
-
-    if (typeof value !== "string") {
-      return 0;
-    }
-
-    const cleaned = value
-      .replace(/[^0-9.-]/g, "")
-      .trim();
-
-    const number = Number(cleaned);
-
-    return Number.isFinite(number)
-      ? number
-      : 0;
-  }
-
-
-  /* ==========================================================================
-     QUANTITY NORMALIZATION
-     ========================================================================== */
-
-  function normalizeQuantity(value) {
-
-    const quantity = Number(value);
-
-    if (!Number.isFinite(quantity)) {
-      return 1;
-    }
-
-    return Math.max(
-      1,
-      Math.floor(quantity)
-    );
-  }
-
-
-  /* ==========================================================================
-     IMAGE FALLBACK
-     ========================================================================== */
-
-  const FALLBACK_IMAGE =
-    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f5f5f7'/%3E%3Ctext x='100' y='100' dominant-baseline='middle' text-anchor='middle' fill='%2386868b' font-family='Arial,sans-serif' font-size='14'%3ENo Image%3C/text%3E%3C/svg%3E";
-
-
-  /* ==========================================================================
-     CART STORAGE
-     ========================================================================== */
-
-  function readStorageCart(key) {
-
-    try {
-
-      const stored =
-        localStorage.getItem(key);
-
-      if (!stored) {
-        return [];
-      }
-
-      const parsed =
-        JSON.parse(stored);
-
-      return Array.isArray(parsed)
-        ? parsed
-        : [];
-
-    } catch (error) {
-
-      console.error(
-        `Failed to read cart key "${key}":`,
-        error
-      );
-
-      return [];
-    }
-  }
-
-
-  function normalizeCart(cart) {
-
-    if (!Array.isArray(cart)) {
-      return [];
-    }
-
-    return cart
-      .filter(item =>
-        item &&
-        (
-          item.id !== undefined ||
-          item.sku !== undefined
-        )
-      )
-      .map(item => {
-
-        const quantity =
-          normalizeQuantity(item.quantity);
-
-        const id =
-          item.id ??
-          item.sku ??
-          item.productId ??
-          "";
-
-        const name =
-          item.name ??
-          item.title ??
-          "Product";
-
-        const price =
-          parsePrice(
-            item.price ??
-            item.salePrice ??
-            item.unitPrice ??
-            0
-          );
-
-        const image =
-          item.image ??
-          item.imageUrl ??
-          item.productImage ??
-          FALLBACK_IMAGE;
-
-        return {
-
-          id: String(id),
-
-          sku:
-            item.sku
-              ? String(item.sku)
-              : "",
-
-          name: String(name),
-
-          title: String(
-            item.title ??
-            name
-          ),
-
-          price,
-
-          quantity,
-
-          image: String(image),
-
-          category:
-            item.category
-              ? String(item.category)
-              : "",
-
-          variant:
-            item.variant
-              ? String(item.variant)
-              : ""
-        };
-
-      });
-  }
-
-
-  function getCart() {
-
-    /*
-     * Primary storage used by current cart.html
-     */
-    const primaryCart =
-      normalizeCart(
-        readStorageCart(CART_KEY)
-      );
-
-    if (primaryCart.length > 0) {
-      return primaryCart;
-    }
-
-
-    /*
-     * Legacy compatibility
-     */
-    for (const key of LEGACY_CART_KEYS) {
-
-      const legacyCart =
-        normalizeCart(
-          readStorageCart(key)
-        );
-
-      if (legacyCart.length > 0) {
-
-        /*
-         * Migrate old cart automatically.
-         */
-        saveCart(legacyCart);
-
-        return legacyCart;
-      }
-    }
-
-    return [];
-  }
-
-
-  function saveCart(cart) {
-
-    try {
-
-      const normalized =
-        normalizeCart(cart);
-
-      localStorage.setItem(
-        CART_KEY,
-        JSON.stringify(normalized)
-      );
-
-      /*
-       * Remove obsolete formats so the
-       * application has one source of truth.
-       */
-      localStorage.removeItem("prasunShopCart");
-      localStorage.removeItem("cart");
-
-    } catch (error) {
-
-      console.error(
-        "Unable to save cart:",
-        error
-      );
-    }
-  }
-
-
-  /* ==========================================================================
-     CART BADGE
-     ========================================================================== */
-
-  function updateCartBadge() {
-
-    const cart =
-      getCart();
-
-    const totalItems =
-      cart.reduce(
-        (sum, item) =>
-          sum + normalizeQuantity(item.quantity),
-        0
-      );
-
-    const badge =
-      document.getElementById("cart-count");
-
-    if (!badge) {
-      return;
-    }
-
-    badge.textContent =
-      String(totalItems);
-
-    /*
-     * Hide badge when cart is empty.
-     */
-    if (totalItems <= 0) {
-      badge.hidden = true;
-    } else {
-      badge.hidden = false;
-    }
-  }
-
-
-  /* ==========================================================================
-     ORDER CALCULATION
-     ========================================================================== */
-
-  function calculateSubtotal(cart) {
-
-    return cart.reduce(
-      (total, item) => {
-
-        const price =
-          parsePrice(item.price);
-
-        const quantity =
-          normalizeQuantity(item.quantity);
-
-        return total +
-          (price * quantity);
-
-      },
-      0
-    );
-  }
-
-
-  function calculateShipping(cart) {
-
-    if (!cart.length) {
-      return 0;
-    }
-
-    return SHIPPING_FEE;
-  }
-
-
-  function calculateOrderTotals(cart) {
-
-    const subtotal =
-      calculateSubtotal(cart);
-
-    const shipping =
-      calculateShipping(cart);
-
-    const total =
-      subtotal + shipping;
-
-    return {
-      subtotal,
-      shipping,
-      total
-    };
-  }
-
-
-  /* ==========================================================================
-     SUMMARY ITEM
-     ========================================================================== */
-
-  function createSummaryItem(item) {
-
-    const price =
-      parsePrice(item.price);
-
-    const quantity =
-      normalizeQuantity(item.quantity);
-
-    const lineTotal =
-      price * quantity;
-
-    const image =
-      escapeHTML(
-        item.image || FALLBACK_IMAGE
-      );
-
-    const title =
-      escapeHTML(
-        item.title ||
-        item.name ||
-        "Product"
-      );
-
-    return `
-      <div class="summary-item">
-
-        <img
-          src="${image}"
-          alt="${title}"
-          loading="lazy"
-          decoding="async"
-          onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}'"
-        >
-
-        <div style="min-width:0;flex:1;">
-
-          <h4
-            style="
-              margin:0 0 .25rem;
-              font-size:.95rem;
-              font-weight:600;
-              line-height:1.35;
-              overflow:hidden;
-              text-overflow:ellipsis;
-              display:-webkit-box;
-              -webkit-line-clamp:2;
-              -webkit-box-orient:vertical;
-            "
-          >
-            ${title}
-          </h4>
-
-          <p
-            style="
-              margin:0;
-              font-size:.82rem;
-              color:var(--apple-gray);
-            "
-          >
-            Qty: ${quantity}
-          </p>
-
-          <p
-            style="
-              margin:.2rem 0 0;
-              font-size:.78rem;
-              color:var(--apple-gray);
-            "
-          >
-            ${formatPrice(price)} each
-          </p>
-
-        </div>
-
-        <div
-          style="
-            margin-left:auto;
-            font-weight:600;
-            font-size:.9rem;
-            white-space:nowrap;
-          "
-        >
-          ${formatPrice(lineTotal)}
-        </div>
-
-      </div>
-    `;
-  }
-
-
-  /* ==========================================================================
-     CHECKOUT SUMMARY
-     ========================================================================== */
-
-  function renderCheckoutSummary() {
-
-    updateCartBadge();
-
-    const cart =
-      getCart();
-
-    if (!summaryContainer) {
-      return;
-    }
-
-
-    /* ------------------------------------------------------------------------
-       EMPTY CART
-       ------------------------------------------------------------------------ */
-
-    if (cart.length === 0) {
-
-      summaryContainer.innerHTML = `
-
-        <div
-          style="
-            text-align:center;
-            padding:1.5rem 0;
-          "
-        >
-
-          <div
-            style="
-              width:56px;
-              height:56px;
-              margin:0 auto 1rem;
-              border-radius:50%;
-              background:#ffffff;
-              border:1px solid var(--apple-border);
-              display:flex;
-              align-items:center;
-              justify-content:center;
-              color:var(--apple-gray);
-            "
-          >
-
-            <svg
-              width="25"
-              height="25"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="9" cy="21" r="1"></circle>
-              <circle cx="20" cy="21" r="1"></circle>
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-            </svg>
-
-          </div>
-
-          <p
-            style="
-              margin:0 0 .25rem;
-              font-weight:600;
-              color:var(--apple-text);
-            "
-          >
-            Your bag is empty
-          </p>
-
-          <p
-            style="
-              margin:0 0 1.25rem;
-              font-size:.85rem;
-              color:var(--apple-gray);
-            "
-          >
-            Add products to continue checkout.
-          </p>
-
-          <button
-            type="button"
-            class="btn-place-order"
-            id="btn-return-shop"
-          >
-            Continue Shopping
-          </button>
-
-        </div>
-
-      `;
-
-      const returnButton =
-        document.getElementById(
-          "btn-return-shop"
-        );
-
-      if (returnButton) {
-
-        returnButton.addEventListener(
-          "click",
-          () => {
-            window.location.href =
-              SHOP_URL;
-          }
-        );
-      }
-
-      return;
-    }
-
-
-    /* ------------------------------------------------------------------------
-       POPULATE PRODUCTS
-       ------------------------------------------------------------------------ */
-
-    const totals =
-      calculateOrderTotals(cart);
-
-    let itemsHTML = "";
-
-    cart.forEach(item => {
-
-      itemsHTML +=
-        createSummaryItem(item);
-
-    });
-
-
-    /* ------------------------------------------------------------------------
-       TOTALS
-       ------------------------------------------------------------------------ */
-
-    summaryContainer.innerHTML = `
-
-      <div class="summary-items-list">
-        ${itemsHTML}
-      </div>
-
-      <div
-        style="
-          border-top:1px solid var(--apple-border);
-          padding-top:1.2rem;
-          margin-top:.25rem;
-        "
-      >
-
-        <div class="summary-row">
-          <span>Subtotal</span>
-          <span>${formatPrice(totals.subtotal)}</span>
-        </div>
-
-        <div class="summary-row">
-          <span>Shipping</span>
-          <span>${formatPrice(totals.shipping)}</span>
-        </div>
-
-        <div class="summary-total">
-          <span>Total</span>
-          <span>${formatPrice(totals.total)}</span>
-        </div>
-
-      </div>
-
-      <button
-        type="button"
-        class="btn-place-order"
-        id="btn-place-order"
-      >
-        Place Order
-      </button>
-
-      <p
-        style="
-          margin:.8rem 0 0;
-          text-align:center;
-          font-size:.72rem;
-          color:var(--apple-gray);
-          line-height:1.45;
-        "
-      >
-        By placing your order, you agree to our
-        <a
-          href="terms.html"
-          style="color:inherit;text-decoration:underline;"
-        >
-          Terms of Service
-        </a>.
-      </p>
-
-    `;
-
-
-    const placeOrderButton =
-      document.getElementById(
-        "btn-place-order"
-      );
-
-    if (placeOrderButton) {
-
-      placeOrderButton.addEventListener(
-        "click",
-        handlePlaceOrder
-      );
-    }
-  }
-
-
-  /* ==========================================================================
-     FORM VALIDATION
-     ========================================================================== */
-
-  function getFieldValue(id) {
-
-    const element =
-      document.getElementById(id);
-
-    if (!element) {
-      return "";
-    }
-
-    return String(
-      element.value || ""
-    ).trim();
-  }
-
-
-  function validateEmail(email) {
-
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      .test(email);
-  }
-
-
-  function validateCheckoutForm() {
-
-    const email =
-      getFieldValueByLabel(
-        "Email Address"
-      );
-
-    const phone =
-      getFieldValueByLabel(
-        "Phone Number"
-      );
-
-    const firstName =
-      getFieldValueByLabel(
-        "First Name"
-      );
-
-    const lastName =
-      getFieldValueByLabel(
-        "Last Name"
-      );
-
-    const street =
-      getFieldValueByLabel(
-        "Street Address"
-      );
-
-    const city =
-      getFieldValueByLabel(
-        "City"
-      );
-
-    const postal =
-      getFieldValueByLabel(
-        "Postal / ZIP Code"
-      );
-
-    const country =
-      countryInput
-        ? countryInput.value.trim()
-        : "";
-
-
-    if (!email) {
-
-      alert(
-        "Please enter your email address."
-      );
-
-      focusFieldByLabel(
-        "Email Address"
-      );
-
-      return false;
-    }
-
-
-    if (!validateEmail(email)) {
-
-      alert(
-        "Please enter a valid email address."
-      );
-
-      focusFieldByLabel(
-        "Email Address"
-      );
-
-      return false;
-    }
-
-
-    if (!phone) {
-
-      alert(
-        "Please enter your phone number."
-      );
-
-      focusFieldByLabel(
-        "Phone Number"
-      );
-
-      return false;
-    }
-
-
-    if (!firstName) {
-
-      alert(
-        "Please enter your first name."
-      );
-
-      focusFieldByLabel(
-        "First Name"
-      );
-
-      return false;
-    }
-
-
-    if (!lastName) {
-
-      alert(
-        "Please enter your last name."
-      );
-
-      focusFieldByLabel(
-        "Last Name"
-      );
-
-      return false;
-    }
-
-
-    if (!street) {
-
-      alert(
-        "Please enter your street address."
-      );
-
-      focusFieldByLabel(
-        "Street Address"
-      );
-
-      return false;
-    }
-
-
-    if (!city) {
-
-      alert(
-        "Please enter your city."
-      );
-
-      focusFieldByLabel(
-        "City"
-      );
-
-      return false;
-    }
-
-
-    if (!postal) {
-
-      alert(
-        "Please enter your postal / ZIP code."
-      );
-
-      focusFieldByLabel(
-        "Postal / ZIP Code"
-      );
-
-      return false;
-    }
-
-
-    if (!country) {
-
-      alert(
-        "Please select your country."
-      );
-
-      if (countrySelected) {
-        countrySelected.focus();
-      }
-
-      return false;
-    }
-
-
-    return true;
-  }
-
-
-  /* ==========================================================================
-     LABEL-BASED FIELD HELPERS
-     ========================================================================== */
-
-  function getFieldByLabel(labelText) {
-
-    const labels =
-      document.querySelectorAll(
-        ".form-group label"
-      );
-
-    for (const label of labels) {
-
-      if (
-        label.textContent.trim()
-          .toLowerCase() ===
-        labelText.toLowerCase()
-      ) {
-
-        const group =
-          label.closest(".form-group");
-
-        if (!group) {
-          continue;
-        }
-
-        const input =
-          group.querySelector(
-            "input:not([type='hidden'])"
-          );
-
-        if (input) {
-          return input;
-        }
-      }
-    }
-
-    return null;
-  }
-
-
-  function getFieldValueByLabel(labelText) {
-
-    const field =
-      getFieldByLabel(labelText);
-
-    return field
-      ? String(field.value || "").trim()
-      : "";
-  }
-
-
-  function focusFieldByLabel(labelText) {
-
-    const field =
-      getFieldByLabel(labelText);
-
-    if (field) {
-      field.focus();
-      field.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-      });
-    }
-  }
-
-
-  /* ==========================================================================
-     CUSTOMER DATA
-     ========================================================================== */
-
-  function collectCustomerData() {
-
-    return {
-
-      firstName:
-        getFieldValueByLabel(
-          "First Name"
-        ),
-
-      lastName:
-        getFieldValueByLabel(
-          "Last Name"
-        ),
-
-      customerName:
-        [
-          getFieldValueByLabel("First Name"),
-          getFieldValueByLabel("Last Name")
-        ]
-        .filter(Boolean)
-        .join(" "),
-
-      email:
-        getFieldValueByLabel(
-          "Email Address"
-        ),
-
-      phone:
-        getFieldValueByLabel(
-          "Phone Number"
-        ),
-
-      street:
-        getFieldValueByLabel(
-          "Street Address"
-        ),
-
-      city:
-        getFieldValueByLabel(
-          "City"
-        ),
-
-      postalCode:
-        getFieldValueByLabel(
-          "Postal / ZIP Code"
-        ),
-
-      country:
-        countryInput
-          ? countryInput.value.trim()
-          : "United States"
-
-    };
-  }
-
-
-  /* ==========================================================================
-     ADDRESS
-     ========================================================================== */
-
-  function buildAddress(customer) {
-
-    return [
-      customer.street,
-      customer.city,
-      customer.postalCode,
-      customer.country
-    ]
-      .filter(Boolean)
-      .join(", ");
-  }
-
-
-  /* ==========================================================================
-     ORDER ID
-     ========================================================================== */
-
-  function generateOrderId() {
-
-    const timestamp =
-      Date.now()
-        .toString(36)
-        .toUpperCase();
-
-    const random =
-      Math.random()
-        .toString(36)
-        .substring(2, 8)
-        .toUpperCase();
-
-    return `PS-${timestamp}-${random}`;
-  }
-
-
-  /* ==========================================================================
-     ORDER PAYLOAD
-     ========================================================================== */
-
-  function buildOrderPayload(cart, customer) {
-
-    const totals =
-      calculateOrderTotals(cart);
-
-    const orderId =
-      generateOrderId();
-
-
-    const enrichedCart =
-      cart.map(item => {
-
-        const quantity =
-          normalizeQuantity(
-            item.quantity
-          );
-
-        const price =
-          parsePrice(
-            item.price
-          );
-
-        return {
-
-          id: item.id,
-
-          sku:
-            item.sku || "",
-
-          name:
-            item.name ||
-            item.title ||
-            "Product",
-
-          price,
-
-          quantity,
-
-          subtotal:
-            Number(
-              (price * quantity)
-                .toFixed(2)
-            ),
-
-          image:
-            item.image || "",
-
-          category:
-            item.category || "",
-
-          variant:
-            item.variant || ""
-
-        };
-
-      });
-
-
-    return {
-
-      orderId,
-
-      customer: {
-
-        firstName:
-          customer.firstName,
-
-        lastName:
-          customer.lastName,
-
-        name:
-          customer.customerName,
-
-        email:
-          customer.email,
-
-        phone:
-          customer.phone
-
-      },
-
-      shippingAddress: {
-
-        street:
-          customer.street,
-
-        city:
-          customer.city,
-
-        postalCode:
-          customer.postalCode,
-
-        country:
-          customer.country,
-
-        fullAddress:
-          buildAddress(customer)
-
-      },
-
-      cart:
-        enrichedCart,
-
-      subtotal:
-        Number(
-          totals.subtotal.toFixed(2)
-        ),
-
-      shipping:
-        Number(
-          totals.shipping.toFixed(2)
-        ),
-
-      total:
-        Number(
-          totals.total.toFixed(2)
-        ),
-
-      currency:
-        "USD",
-
-      source:
-        "PRASUN SHOP",
-
-      createdAt:
-        new Date().toISOString()
-
-    };
-  }
-
-
-  /* ==========================================================================
-     PLACE ORDER
-     ========================================================================== */
-
-  let orderProcessing =
-    false;
-
-
-  async function handlePlaceOrder() {
-
-    if (orderProcessing) {
-      return;
-    }
-
-
-    const cart =
-      getCart();
-
-
-    if (!cart.length) {
-
-      alert(
-        "Your cart is empty."
-      );
-
-      window.location.href =
-        CART_URL;
-
-      return;
-    }
-
-
-    if (!validateCheckoutForm()) {
-      return;
-    }
-
-
-    const button =
-      document.getElementById(
-        "btn-place-order"
-      );
-
-    if (!button) {
-      return;
-    }
-
-
-    orderProcessing = true;
-
-
-    const originalText =
-      button.textContent;
-
-
-    button.disabled = true;
-
-    button.setAttribute(
-      "aria-busy",
-      "true"
-    );
-
-    button.textContent =
-      "Processing Order...";
-
-    button.style.opacity =
-      "0.7";
-
-    button.style.cursor =
-      "wait";
-
-
-    try {
-
-      const customer =
-        collectCustomerData();
-
-      const payload =
-        buildOrderPayload(
-          cart,
-          customer
-        );
-
-
-      /*
-       * Send order to Cloudflare Worker.
-       */
-      const response =
-        await fetch(
-          API_ENDPOINT,
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-
-              "Accept":
-                "application/json"
-            },
-
-            body:
-              JSON.stringify(payload)
-          }
-        );
-
-
-      /*
-       * Try to parse JSON even when
-       * server returns an error.
-       */
-      let responseData = null;
-
-      try {
-
-        responseData =
-          await response.json();
-
-      } catch {
-
-        responseData = null;
-
-      }
-
-
-      if (!response.ok) {
-
-        const serverMessage =
-          responseData &&
-          (
-            responseData.message ||
-            responseData.error
-          );
-
-        throw new Error(
-          serverMessage ||
-          `Server error (${response.status})`
-        );
-      }
-
-
-      console.log(
-        "PRASUN SHOP order created:",
-        responseData
-      );
-
-
-      /*
-       * Save order locally before clearing
-       * the shopping cart.
-       */
-      try {
-
-        localStorage.setItem(
-          "prasun_last_order",
-          JSON.stringify(
-            payload
-          )
-        );
-
-      } catch (storageError) {
-
-        console.warn(
-          "Could not save local order copy:",
-          storageError
-        );
-      }
-
-
-      /*
-       * Clear all supported cart keys.
-       */
-      localStorage.removeItem(
-        CART_KEY
-      );
-
-      localStorage.removeItem(
-        "prasunShopCart"
-      );
-
-      localStorage.removeItem(
-        "cart"
-      );
-
-
-      /*
-       * Store server response separately.
-       */
-      try {
-
-        localStorage.setItem(
-          "prasun_order_response",
-          JSON.stringify(
-            responseData || {}
-          )
-        );
-
-      } catch (error) {
-
-        console.warn(
-          "Could not save order response:",
-          error
-        );
-      }
-
-
-      /*
-       * Redirect only after successful
-       * server response.
-       */
-      window.location.href =
-        `${SUCCESS_URL}?order=${encodeURIComponent(payload.orderId)}`;
-
-
-    } catch (error) {
-
-      console.error(
-        "PRASUN SHOP order submission failed:",
-        error
-      );
-
-
-      alert(
-        "We couldn't place your order right now.\n\n" +
-        "Please check your internet connection and try again."
-      );
-
-
-      button.disabled = false;
-
-      button.removeAttribute(
-        "aria-busy"
-      );
-
-      button.textContent =
-        originalText;
-
-      button.style.opacity =
-        "";
-
-      button.style.cursor =
-        "";
-
-      orderProcessing = false;
-    }
-
-  }
-
-
-  /* ==========================================================================
-     COUNTRY DROPDOWN
-     ========================================================================== */
-
-  function initCountryDropdown() {
-
-    if (
-      !countryDropdown ||
-      !countrySelected ||
-      !countryInput
-    ) {
-      return;
-    }
-
-
-    const list =
-      document.getElementById(
-        "dropdown-list"
-      );
-
-    const search =
-      document.getElementById(
-        "country-search"
-      );
-
-    const options =
-      document.getElementById(
-        "dropdown-options-list"
-      );
-
-
-    if (!list || !search || !options) {
-      return;
-    }
-
-
-    function renderOptions(filter = "") {
-
-      const query =
-        String(filter)
-          .trim()
-          .toLowerCase();
-
-
-      const optionElements =
-        options.querySelectorAll(
-          ".dropdown-option"
-        );
-
-      optionElements.forEach(
-        element =>
-          element.remove()
-      );
-
-
-      const countryElements =
-        Array.from(
-          countriesList()
-        )
-        .filter(country =>
-          country
-            .toLowerCase()
-            .includes(query)
-        );
-
-
-      if (countryElements.length === 0) {
-
-        const empty =
-          document.createElement(
-            "div"
-          );
-
-        empty.className =
-          "dropdown-option";
-
-        empty.textContent =
-          "No countries found";
-
-        empty.style.cursor =
-          "default";
-
-        empty.style.color =
-          "var(--apple-gray)";
-
-        options.appendChild(
-          empty
-        );
-
-        return;
-      }
-
-
-      countryElements.forEach(
-        country => {
-
-          const option =
-            document.createElement(
-              "div"
-            );
-
-          option.className =
-            "dropdown-option";
-
-          option.textContent =
-            country;
-
-          if (
-            country ===
-            countryInput.value
-          ) {
-
-            option.classList.add(
-              "selected"
-            );
-          }
-
-
-          option.addEventListener(
-            "click",
-            event => {
-
-              event.stopPropagation();
-
-              countryInput.value =
-                country;
-
-              countrySelected.textContent =
-                country;
-
-              list.classList.remove(
-                "open"
-              );
-
-              countrySelected.classList.remove(
-                "active"
-              );
-
-              renderOptions(
-                search.value
-              );
-            }
-          );
-
-
-          options.appendChild(
-            option
-          );
-
-        }
-      );
-
-    }
-
-
-    countrySelected.addEventListener(
-      "click",
-      event => {
-
-        event.stopPropagation();
-
-        const opening =
-          !list.classList.contains(
-            "open"
-          );
-
-        list.classList.toggle(
-          "open",
-          opening
-        );
-
-        countrySelected.classList.toggle(
-          "active",
-          opening
-        );
-
-
-        if (opening) {
-
-          search.value = "";
-
-          renderOptions();
-
-          setTimeout(
-            () => search.focus(),
-            50
-          );
-        }
-
-      }
-    );
-
-
-    search.addEventListener(
-      "input",
-      () => {
-
-        renderOptions(
-          search.value
-        );
-
-      }
-    );
-
-
-    search.addEventListener(
-      "click",
-      event =>
-        event.stopPropagation()
-    );
-
-
-    document.addEventListener(
-      "click",
-      () => {
-
-        list.classList.remove(
-          "open"
-        );
-
-        countrySelected.classList.remove(
-          "active"
-        );
-
-      }
-    );
-
-
-    renderOptions();
-
-  }
-
-
-  /*
-   * Countries are obtained from the existing
-   * checkout.html dropdown options.
-   */
-  function countriesList() {
-
-    const options =
-      document.querySelectorAll(
-        "#dropdown-options-list .dropdown-option"
-      );
-
-    /*
-     * The HTML already contains the
-     * country list through the existing
-     * inline checkout implementation.
-     *
-     * If options have not yet been generated,
-     * use the built-in complete list below.
-     */
-
-    if (options.length > 0) {
-
-      return Array.from(
-        options
-      )
-      .map(
-        option =>
-          option.textContent.trim()
-      )
-      .filter(Boolean);
-
-    }
-
-
-    return [
-      "United States",
-      "Afghanistan",
-      "Albania",
-      "Algeria",
-      "Andorra",
-      "Angola",
-      "Antigua and Barbuda",
-      "Argentina",
-      "Armenia",
-      "Australia",
-      "Austria",
-      "Azerbaijan",
-      "Bahamas",
-      "Bahrain",
-      "Bangladesh",
-      "Barbados",
-      "Belarus",
-      "Belgium",
-      "Belize",
-      "Benin",
-      "Bhutan",
-      "Bolivia",
-      "Bosnia and Herzegovina",
-      "Botswana",
-      "Brazil",
-      "Brunei",
-      "Bulgaria",
-      "Burkina Faso",
-      "Burundi",
-      "Cabo Verde",
-      "Cambodia",
-      "Cameroon",
-      "Canada",
-      "Central African Republic",
-      "Chad",
-      "Chile",
-      "China",
-      "Colombia",
-      "Comoros",
-      "Congo",
-      "Costa Rica",
-      "Croatia",
-      "Cuba",
-      "Cyprus",
-      "Czechia",
-      "Denmark",
-      "Djibouti",
-      "Dominica",
-      "Dominican Republic",
-      "Ecuador",
-      "Egypt",
-      "El Salvador",
-      "Equatorial Guinea",
-      "Eritrea",
-      "Estonia",
-      "Eswatini",
-      "Ethiopia",
-      "Fiji",
-      "Finland",
-      "France",
-      "Gabon",
-      "Gambia",
-      "Georgia",
-      "Germany",
-      "Ghana",
-      "Greece",
-      "Grenada",
-      "Guatemala",
-      "Guinea",
-      "Guinea-Bissau",
-      "Guyana",
-      "Haiti",
-      "Honduras",
-      "Hungary",
-      "Iceland",
-      "India",
-      "Indonesia",
-      "Iran",
-      "Iraq",
-      "Ireland",
-      "Israel",
-      "Italy",
-      "Jamaica",
-      "Japan",
-      "Jordan",
-      "Kazakhstan",
-      "Kenya",
-      "Kiribati",
-      "Kuwait",
-      "Kyrgyzstan",
-      "Laos",
-      "Latvia",
-      "Lebanon",
-      "Lesotho",
-      "Liberia",
-      "Libya",
-      "Liechtenstein",
-      "Lithuania",
-      "Luxembourg",
-      "Madagascar",
-      "Malawi",
-      "Malaysia",
-      "Maldives",
-      "Mali",
-      "Malta",
-      "Marshall Islands",
-      "Mauritania",
-      "Mauritius",
-      "Mexico",
-      "Micronesia",
-      "Moldova",
-      "Monaco",
-      "Mongolia",
-      "Montenegro",
-      "Morocco",
-      "Mozambique",
-      "Myanmar",
-      "Namibia",
-      "Nauru",
-      "Nepal",
-      "Netherlands",
-      "New Zealand",
-      "Nicaragua",
-      "Niger",
-      "Nigeria",
-      "North Korea",
-      "North Macedonia",
-      "Norway",
-      "Oman",
-      "Pakistan",
-      "Palau",
-      "Panama",
-      "Papua New Guinea",
-      "Paraguay",
-      "Peru",
-      "Philippines",
-      "Poland",
-      "Portugal",
-      "Qatar",
-      "Romania",
-      "Russia",
-      "Rwanda",
-      "Saint Kitts and Nevis",
-      "Saint Lucia",
-      "Saint Vincent and the Grenadines",
-      "Samoa",
-      "San Marino",
-      "Sao Tome and Principe",
-      "Saudi Arabia",
-      "Senegal",
-      "Serbia",
-      "Seychelles",
-      "Sierra Leone",
-      "Singapore",
-      "Slovakia",
-      "Slovenia",
-      "Solomon Islands",
-      "Somalia",
-      "South Africa",
-      "South Korea",
-      "South Sudan",
-      "Spain",
-      "Sri Lanka",
-      "Sudan",
-      "Suriname",
-      "Sweden",
-      "Switzerland",
-      "Syria",
-      "Taiwan",
-      "Tajikistan",
-      "Tanzania",
-      "Thailand",
-      "Togo",
-      "Tonga",
-      "Trinidad and Tobago",
-      "Tunisia",
-      "Turkey",
-      "Turkmenistan",
-      "Tuvalu",
-      "Uganda",
-      "Ukraine",
-      "United Arab Emirates",
-      "United Kingdom",
-      "Uruguay",
-      "Uzbekistan",
-      "Vanuatu",
-      "Vatican City",
-      "Venezuela",
-      "Vietnam",
-      "Yemen",
-      "Zambia",
-      "Zimbabwe"
+    const CART_KEY = "prasun_cart";
+
+    const LEGACY_KEYS = [
+        "prasunShopCart",
+        "cart",
+        "prasun_cart_items"
     ];
-  }
 
+    const API_ORDER_ENDPOINT =
+        "https://prasun-shop-api.prasun301.workers.dev/";
 
-  /* ==========================================================================
-     KEYBOARD ACCESSIBILITY
-     ========================================================================== */
+    const PRODUCTS_ENDPOINT =
+        "data/products.json";
 
-  function initKeyboardSupport() {
+    const MAX_QUANTITY = 99;
 
-    if (!countrySelected) {
-      return;
-    }
+    const currencyFormatter =
+        new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
 
-    countrySelected.setAttribute(
-      "tabindex",
-      "0"
-    );
+    const ESCAPE_MAP = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    };
 
-    countrySelected.setAttribute(
-      "role",
-      "button"
-    );
-
-    countrySelected.addEventListener(
-      "keydown",
-      event => {
+    function escapeHTML(value) {
 
         if (
-          event.key === "Enter" ||
-          event.key === " "
+            value === null ||
+            value === undefined
         ) {
-
-          event.preventDefault();
-
-          countrySelected.click();
-
+            return "";
         }
 
-        if (event.key === "Escape") {
-
-          const list =
-            document.getElementById(
-              "dropdown-list"
-            );
-
-          if (list) {
-            list.classList.remove(
-              "open"
-            );
-          }
-
-        }
-
-      }
-    );
-
-  }
-
-
-  /* ==========================================================================
-     AUTO-REFRESH WHEN CART CHANGES
-     ========================================================================== */
-
-  window.addEventListener(
-    "storage",
-    event => {
-
-      if (
-        event.key === CART_KEY ||
-        event.key === "prasunShopCart" ||
-        event.key === "cart"
-      ) {
-
-        renderCheckoutSummary();
-
-      }
-
+        return String(value).replace(
+            /[&<>"']/g,
+            character => ESCAPE_MAP[character]
+        );
     }
-  );
 
+    function formatPrice(value) {
 
-  /* ==========================================================================
-     INITIALIZATION
-     ========================================================================== */
+        const number =
+            Number(value);
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+        return Number.isFinite(number)
+            ? currencyFormatter.format(number)
+            : "$0.00";
+    }
 
-      /*
-       * Ensure primary cart exists.
-       */
-      const cart =
+    function normalizeCartItem(item) {
+
+        if (
+            !item ||
+            item.id === undefined ||
+            item.id === null
+        ) {
+            return null;
+        }
+
+        const quantity =
+            Number(item.quantity);
+
+        return {
+
+            id:
+                String(item.id),
+
+            quantity:
+                Number.isFinite(quantity) &&
+                quantity > 0
+                    ? Math.min(
+                        MAX_QUANTITY,
+                        Math.floor(quantity)
+                    )
+                    : 1
+
+        };
+    }
+
+    function parseCart(raw) {
+
+        if (!raw) {
+            return [];
+        }
+
+        try {
+
+            const parsed =
+                JSON.parse(raw);
+
+            if (!Array.isArray(parsed)) {
+                return [];
+            }
+
+            return parsed
+                .map(normalizeCartItem)
+                .filter(Boolean);
+
+        } catch (error) {
+
+            console.error(
+                "[PRASUN SHOP] Checkout cart error:",
+                error
+            );
+
+            return [];
+        }
+    }
+
+    function getCart() {
+
+        try {
+
+            const primary =
+                localStorage.getItem(
+                    CART_KEY
+                );
+
+            if (primary) {
+                return parseCart(primary);
+            }
+
+            for (
+                const legacyKey of LEGACY_KEYS
+            ) {
+
+                const legacy =
+                    localStorage.getItem(
+                        legacyKey
+                    );
+
+                if (legacy) {
+
+                    const cart =
+                        parseCart(legacy);
+
+                    if (cart.length) {
+
+                        localStorage.setItem(
+                            CART_KEY,
+                            JSON.stringify(cart)
+                        );
+
+                        return cart;
+                    }
+                }
+            }
+
+            return [];
+
+        } catch (error) {
+
+            console.error(
+                "[PRASUN SHOP] Checkout cart read error:",
+                error
+            );
+
+            return [];
+        }
+    }
+
+    let cart =
         getCart();
 
-      if (cart.length > 0) {
-        saveCart(cart);
-      }
+    const orderSummary =
+        document.getElementById(
+            "order-summary"
+        );
 
+    const checkoutForm =
+        document.getElementById(
+            "checkout-form"
+        );
 
-      /*
-       * Render summary.
-       */
-      renderCheckoutSummary();
+    let productMap =
+        new Map();
 
+    let productsLoaded =
+        false;
 
-      /*
-       * Initialize country selector.
-       */
-      initCountryDropdown();
+    async function fetchProducts() {
 
+        if (
+            productsLoaded &&
+            productMap.size
+        ) {
+            return productMap;
+        }
 
-      /*
-       * Keyboard support.
-       */
-      initKeyboardSupport();
+        const response =
+            await fetch(
+                PRODUCTS_ENDPOINT,
+                {
+                    method: "GET",
+                    cache: "no-cache",
+                    headers: {
+                        "Accept":
+                            "application/json"
+                    }
+                }
+            );
 
+        if (!response.ok) {
+
+            throw new Error(
+                `Products HTTP ${response.status}`
+            );
+        }
+
+        const data =
+            await response.json();
+
+        if (!Array.isArray(data)) {
+
+            throw new Error(
+                "products.json must contain an array"
+            );
+        }
+
+        productMap =
+            new Map(
+                data
+                    .filter(Boolean)
+                    .map(
+                        product => [
+                            String(product.id),
+                            product
+                        ]
+                    )
+            );
+
+        productsLoaded = true;
+
+        return productMap;
     }
-  );
 
+    function renderEmptySummary() {
+
+        if (!orderSummary) {
+            return;
+        }
+
+        orderSummary.innerHTML = `
+
+            <div class="py-8 text-center">
+
+                <p class="text-zinc-500 text-sm font-medium mb-4">
+                    Your cart is empty.
+                </p>
+
+                <a
+                    href="products.html"
+                    class="inline-flex items-center justify-center
+                           px-4 py-2 text-xs font-semibold
+                           text-white bg-zinc-900
+                           hover:bg-zinc-800 rounded-xl
+                           transition-all"
+                >
+                    Continue Shopping
+                </a>
+
+            </div>
+
+        `;
+    }
+
+    async function loadCheckoutSummary() {
+
+        if (!orderSummary) {
+            return;
+        }
+
+        try {
+
+            cart =
+                getCart();
+
+            if (!cart.length) {
+
+                renderEmptySummary();
+
+                return;
+            }
+
+            await fetchProducts();
+
+            let total = 0;
+
+            const validItems = [];
+
+            let itemsHTML = `
+                <div class="max-h-72 overflow-y-auto
+                            space-y-4 pr-1">
+            `;
+
+            cart.forEach(item => {
+
+                const product =
+                    productMap.get(
+                        String(item.id)
+                    );
+
+                if (!product) {
+                    return;
+                }
+
+                const price =
+                    Number(product.price) || 0;
+
+                const quantity =
+                    Number(item.quantity) || 1;
+
+                const subtotal =
+                    price * quantity;
+
+                total += subtotal;
+
+                validItems.push({
+                    id: String(item.id),
+                    name:
+                        String(
+                            product.name ||
+                            "Product"
+                        ),
+                    price,
+                    quantity
+                });
+
+                const image =
+                    escapeHTML(
+                        product.image ||
+                        ""
+                    );
+
+                const name =
+                    escapeHTML(
+                        product.name ||
+                        "Product"
+                    );
+
+                itemsHTML += `
+
+                    <div class="flex items-center gap-4
+                                py-4 border-b border-zinc-100">
+
+                        <img
+                            src="${image}"
+                            alt="${name}"
+                            class="w-16 h-16 object-contain
+                                   rounded-xl border
+                                   border-zinc-200/60
+                                   bg-zinc-100 shrink-0"
+                            loading="lazy"
+                            decoding="async"
+                        >
+
+                        <div class="flex-grow min-w-0">
+
+                            <h3
+                                class="text-sm font-semibold
+                                       text-zinc-900"
+                            >
+                                ${name}
+                            </h3>
+
+                            <p class="text-xs text-zinc-500">
+                                Qty: ${quantity}
+                            </p>
+
+                        </div>
+
+                        <div class="text-right shrink-0">
+
+                            <p class="text-sm font-bold text-zinc-900">
+                                ${formatPrice(subtotal)}
+                            </p>
+
+                            <p class="text-[11px] text-zinc-400">
+                                ${formatPrice(price)} each
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                `;
+            });
+
+            itemsHTML += "</div>";
+
+            if (!validItems.length) {
+
+                renderEmptySummary();
+
+                return;
+            }
+
+            itemsHTML += `
+
+                <div class="pt-4 space-y-2">
+
+                    <div class="flex justify-between
+                                text-xs text-zinc-500">
+
+                        <span>Subtotal</span>
+
+                        <span class="font-medium text-zinc-900">
+                            ${formatPrice(total)}
+                        </span>
+
+                    </div>
+
+                    <div class="flex justify-between
+                                text-xs text-zinc-500">
+
+                        <span>Shipping</span>
+
+                        <span class="text-emerald-600
+                                     font-semibold">
+                            Free
+                        </span>
+
+                    </div>
+
+                    <div class="flex justify-between
+                                text-base font-bold
+                                text-zinc-900
+                                pt-3 border-t
+                                border-zinc-100">
+
+                        <span>Total</span>
+
+                        <span>
+                            ${formatPrice(total)}
+                        </span>
+
+                    </div>
+
+                </div>
+
+            `;
+
+            orderSummary.innerHTML =
+                itemsHTML;
+
+        } catch (error) {
+
+            console.error(
+                "[PRASUN SHOP] Checkout summary error:",
+                error
+            );
+
+            orderSummary.innerHTML = `
+
+                <div class="py-6 text-center">
+
+                    <p class="text-xs text-red-500
+                              font-medium mb-3">
+                        Failed to load order summary.
+                    </p>
+
+                    <button
+                        type="button"
+                        onclick="window.location.reload()"
+                        class="px-3 py-1.5 text-xs
+                               font-semibold text-white
+                               bg-zinc-900 rounded-lg"
+                    >
+                        Retry
+                    </button>
+
+                </div>
+            `;
+        }
+    }
+
+    if (checkoutForm) {
+
+        checkoutForm.addEventListener(
+            "submit",
+            async event => {
+
+                event.preventDefault();
+
+                cart =
+                    getCart();
+
+                if (!cart.length) {
+
+                    alert(
+                        "Your cart is empty."
+                    );
+
+                    window.location.href =
+                        "cart.html";
+
+                    return;
+                }
+
+                const submitButton =
+                    checkoutForm.querySelector(
+                        'button[type="submit"]'
+                    );
+
+                if (!submitButton) {
+                    return;
+                }
+
+                if (
+                    submitButton.dataset.processing ===
+                    "true"
+                ) {
+                    return;
+                }
+
+                submitButton.dataset.processing =
+                    "true";
+
+                const originalText =
+                    submitButton.textContent;
+
+                submitButton.disabled =
+                    true;
+
+                submitButton.textContent =
+                    "Processing Order...";
+
+                submitButton.classList.add(
+                    "opacity-75",
+                    "cursor-not-allowed"
+                );
+
+                try {
+
+                    const formData =
+                        new FormData(
+                            checkoutForm
+                        );
+
+                    const customerName =
+                        String(
+                            formData.get("name") ||
+                            ""
+                        ).trim();
+
+                    const email =
+                        String(
+                            formData.get("email") ||
+                            ""
+                        ).trim();
+
+                    const phone =
+                        String(
+                            formData.get("phone") ||
+                            ""
+                        ).trim();
+
+                    const address =
+                        String(
+                            formData.get("address") ||
+                            ""
+                        ).trim();
+
+                    if (!customerName) {
+                        throw new Error(
+                            "Please enter your name."
+                        );
+                    }
+
+                    if (!email) {
+                        throw new Error(
+                            "Please enter your email."
+                        );
+                    }
+
+                    if (!address) {
+                        throw new Error(
+                            "Please enter your address."
+                        );
+                    }
+
+                    await fetchProducts();
+
+                    const enrichedCart =
+                        cart
+                            .map(item => {
+
+                                const product =
+                                    productMap.get(
+                                        String(item.id)
+                                    );
+
+                                if (!product) {
+                                    return null;
+                                }
+
+                                const price =
+                                    Number(
+                                        product.price
+                                    ) || 0;
+
+                                const quantity =
+                                    Math.min(
+                                        MAX_QUANTITY,
+                                        Math.max(
+                                            1,
+                                            Math.floor(
+                                                Number(
+                                                    item.quantity
+                                                ) || 1
+                                            )
+                                        )
+                                    );
+
+                                return {
+
+                                    id:
+                                        String(
+                                            product.id
+                                        ),
+
+                                    sku:
+                                        String(
+                                            product.sku ||
+                                            product.id
+                                        ),
+
+                                    name:
+                                        String(
+                                            product.name ||
+                                            "Product"
+                                        ),
+
+                                    price,
+
+                                    quantity
+
+                                };
+
+                            })
+                            .filter(Boolean);
+
+                    if (!enrichedCart.length) {
+
+                        throw new Error(
+                            "No valid products were found in your cart."
+                        );
+                    }
+
+                    const calculatedTotal =
+                        enrichedCart.reduce(
+                            (
+                                sum,
+                                item
+                            ) =>
+                                sum +
+                                (
+                                    item.price *
+                                    item.quantity
+                                ),
+                            0
+                        );
+
+                    const response =
+                        await fetch(
+                            API_ORDER_ENDPOINT,
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+
+                                    "Accept":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify({
+
+                                        customerName,
+                                        email,
+                                        phone,
+                                        address,
+
+                                        cart:
+                                            enrichedCart,
+
+                                        total:
+                                            Number(
+                                                calculatedTotal
+                                                    .toFixed(2)
+                                            )
+
+                                    })
+                            }
+                        );
+
+                    const responseText =
+                        await response.text();
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            `Order server returned HTTP ${response.status}`
+                        );
+                    }
+
+                    let responseData = null;
+
+                    try {
+
+                        responseData =
+                            responseText
+                                ? JSON.parse(
+                                    responseText
+                                )
+                                : null;
+
+                    } catch (_) {
+
+                        responseData =
+                            {
+                                success:
+                                    true
+                            };
+                    }
+
+                    console.log(
+                        "[PRASUN SHOP] Order successfully submitted:",
+                        responseData
+                    );
+
+                    /*
+                     * Clear every supported cart key after
+                     * successful order creation.
+                     */
+
+                    localStorage.removeItem(
+                        CART_KEY
+                    );
+
+                    LEGACY_KEYS.forEach(
+                        key =>
+                            localStorage.removeItem(
+                                key
+                            )
+                    );
+
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            "prasunCartUpdated",
+                            {
+                                detail: {
+                                    cart: []
+                                }
+                            }
+                        )
+                    );
+
+                    window.location.href =
+                        "order-success.html";
+
+                } catch (error) {
+
+                    console.error(
+                        "[PRASUN SHOP] Order submission error:",
+                        error
+                    );
+
+                    alert(
+                        error?.message ||
+                        "Something went wrong while placing your order. Please try again."
+                    );
+
+                    submitButton.disabled =
+                        false;
+
+                    submitButton.textContent =
+                        originalText;
+
+                    submitButton.classList.remove(
+                        "opacity-75",
+                        "cursor-not-allowed"
+                    );
+
+                    submitButton.dataset.processing =
+                        "false";
+                }
+            }
+        );
+    }
+
+    loadCheckoutSummary();
 
 })();
