@@ -2,8 +2,17 @@
 <html lang="en">
 
 <head>
+
+  <!-- ======================================================================
+       DOCUMENT META
+       ====================================================================== -->
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>PRASUN SHOP — Quality Physical Products</title>
 
@@ -11,139 +20,389 @@
     name="description"
     content="Shop selected physical products at PRASUN SHOP, including useful electronics, smart devices, accessories, and everyday products with convenient online ordering."
   >
-  <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#ffffff">
 
-  <link rel="canonical" href="https://shop.prasunbarua.com/">
+  <meta
+    name="robots"
+    content="index, follow"
+  >
 
-  <!-- ================================================================
+  <meta
+    name="theme-color"
+    content="#ffffff"
+  >
+
+  <link
+    rel="canonical"
+    href="https://shop.prasunbarua.com/"
+  >
+
+
+  <!-- ======================================================================
        GOOGLE ANALYTICS
-       ================================================================ -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"></script>
+       ====================================================================== -->
+
+  <script
+    async
+    src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"
+  ></script>
+
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
     gtag("js", new Date());
-    gtag("config", "G-D9F2VQ4247");
+
+    gtag(
+      "config",
+      "G-D9F2VQ4247"
+    );
   </script>
 
-  <!-- ================================================================
+
+  <!-- ======================================================================
        FAVICON
-       ================================================================ -->
-  <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+       ====================================================================== -->
 
-  <!-- ================================================================
-       MAIN CSS
-       ================================================================ -->
-  <link rel="stylesheet" href="/css/style.css?v=20260819-03">
+  <link
+    rel="icon"
+    href="/favicon.ico"
+    sizes="any"
+  >
 
-  <!-- ================================================================
-       GOOGLE FONTS & PAGE-SPECIFIC ACCESSIBILITY / UTILITY STYLES
-       ================================================================ -->
+  <link
+    rel="icon"
+    href="/icon.svg"
+    type="image/svg+xml"
+  >
+
+  <link
+    rel="apple-touch-icon"
+    href="/apple-touch-icon.png"
+  >
+
+
+  <!-- ======================================================================
+       MAIN STYLESHEET
+       ====================================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="/css/style.css?v=20260819-04"
+  >
+
+
+  <!-- ======================================================================
+       GOOGLE FONTS + PAGE-SPECIFIC STYLES
+       ====================================================================== -->
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400&family=Fira+Sans:ital,wght@0,400..800;1,400..800&family=Noto+Sans:ital,wght@0,400..800;1,400..800&display=swap');
 
-    html, body {
+    /*
+     * ================================================================
+     * FONT SYSTEM
+     * ================================================================
+     *
+     * Noto Sans:
+     * Main storefront font.
+     *
+     * Fira Sans:
+     * Secondary interface font.
+     *
+     * Fira Mono:
+     * Inputs, buttons and numerical interface elements.
+     */
+
+    @import url(
+      'https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400&family=Fira+Sans:ital,wght@0,400..800;1,400..800&family=Noto+Sans:ital,wght@0,400..800;1,400..800&display=swap'
+    );
+
+
+    /* ================================================================
+       GLOBAL PAGE FONT
+       ================================================================ */
+
+    html,
+    body {
+
       max-width: 100%;
+
       overflow-x: hidden;
-      font-family: 'Noto Sans', 'Fira Sans', system-ui, -apple-system, sans-serif;
+
+      font-family:
+        'Noto Sans',
+        'Fira Sans',
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
     }
 
-    /* Monospace font for inputs and button tags */
-    input, select, button, code {
-      font-family: 'Fira Mono', monospace, sans-serif;
+
+    /* ================================================================
+       FORM / CONTROL FONT
+       ================================================================ */
+
+    input,
+    select,
+    button,
+    code {
+
+      font-family:
+        'Fira Mono',
+        monospace,
+        sans-serif;
     }
+
+
+    /* ================================================================
+       ACCESSIBILITY
+       ================================================================ */
 
     .visually-hidden {
+
       position: absolute !important;
+
       width: 1px !important;
       height: 1px !important;
+
       padding: 0 !important;
       margin: -1px !important;
+
       overflow: hidden !important;
+
       clip: rect(0, 0, 0, 0) !important;
       clip-path: inset(50%) !important;
+
       white-space: nowrap !important;
+
       border: 0 !important;
     }
 
+
+    /* ================================================================
+       SEARCH WRAPPER
+       ================================================================ */
+
     .search-wrapper {
+
       position: relative;
+
       width: 100%;
     }
 
+
     .products-search-input {
+
       width: 100%;
+
       padding-right: 48px;
+
       box-sizing: border-box;
     }
 
+
+    /* ================================================================
+       SEARCH CLEAR BUTTON
+       ================================================================ */
+
     .search-clear {
+
       position: absolute;
+
       top: 50%;
       right: 9px;
+
       width: 30px;
       height: 30px;
-      transform: translateY(-50%);
+
+      transform:
+        translateY(-50%);
+
       border: 0;
+
       border-radius: 50%;
+
       background: transparent;
+
       color: #64748b;
+
       font-size: 20px;
+
       line-height: 1;
+
       cursor: pointer;
+
       display: inline-flex;
+
       align-items: center;
       justify-content: center;
     }
 
+
     .search-clear:hover {
+
       background: #f1f5f9;
+
       color: #0f172a;
     }
 
+
     .search-clear:focus-visible {
-      outline: 2px solid currentColor;
-      outline-offset: 2px;
+
+      outline:
+        2px solid currentColor;
+
+      outline-offset:
+        2px;
     }
+
+
+    /* ================================================================
+       EMPTY / LOADING PRODUCT AREA
+       ================================================================ */
 
     .products-empty {
+
       min-height: 220px;
-      padding: 50px 20px;
+
+      padding:
+        50px 20px;
+
       text-align: center;
-      grid-column: 1 / -1;
+
+      grid-column:
+        1 / -1;
     }
 
+
+    /* ================================================================
+       PRODUCT IMAGES
+       ================================================================ */
+
     .product-card img {
+
       max-width: 100%;
+
       height: auto;
     }
 
+
+    /* ================================================================
+       CART COUNT
+       ================================================================ */
+
     .cart-count[hidden] {
+
       display: none !important;
     }
+
+
+    /*
+     * Cart count should visually behave like a badge.
+     * This remains compatible with your existing style.css.
+     */
+
+    .cart-count {
+
+      display: inline-flex;
+
+      align-items: center;
+      justify-content: center;
+
+      min-width: 20px;
+      height: 20px;
+
+      margin-left: 5px;
+
+      padding:
+        0 6px;
+
+      border-radius: 999px;
+
+      background: #2563eb;
+
+      color: #ffffff;
+
+      font-size: 11px;
+
+      font-weight: 700;
+
+      line-height: 1;
+    }
+
+
+    /* ================================================================
+       CART LINK
+       ================================================================ */
+
+    .cart-link {
+
+      display: inline-flex;
+
+      align-items: center;
+    }
+
+
+    /* ================================================================
+       REDUCED MOTION
+       ================================================================ */
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+
+        scroll-behavior: auto !important;
+
+        animation: none !important;
+
+        transition: none !important;
+      }
+
+    }
+
   </style>
 
-  <!-- ================================================================
+
+  <!-- ======================================================================
        GOOGLE ADSENSE
-       ================================================================ -->
+       ====================================================================== -->
+
   <script
     async
     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168"
     crossorigin="anonymous"
   ></script>
+
 </head>
+
 
 <body>
 
-  <!-- ================================================================
+
+  <!-- ======================================================================
        HEADER
-       ================================================================ -->
+       ====================================================================== -->
+
   <header class="header">
+
     <div class="header-container">
-      <a href="/" class="logo" aria-label="PRASUN SHOP Homepage">
+
+
+      <!-- ==============================================================
+           LOGO
+           ============================================================== -->
+
+      <a
+        href="/"
+        class="logo"
+        aria-label="PRASUN SHOP Homepage"
+      >
+
         <svg
           width="22"
           height="22"
@@ -155,46 +414,125 @@
           stroke-linejoin="round"
           aria-hidden="true"
         >
+
           <path d="M3 9l9-6 9 6"></path>
+
           <path d="M5 10v10h14V10"></path>
+
           <path d="M9 20v-6h6v6"></path>
+
         </svg>
-        <span>PRASUN SHOP</span>
+
+        <span>
+          PRASUN SHOP
+        </span>
+
       </a>
 
-      <nav class="nav-links" aria-label="Main navigation">
-        <a href="/" class="active" aria-current="page">Shop</a>
-        <a href="/cart.html" class="cart-link" aria-label="View Shopping Cart">
-          Cart
+
+      <!-- ==============================================================
+           NAVIGATION
+           ============================================================== -->
+
+      <nav
+        class="nav-links"
+        aria-label="Main navigation"
+      >
+
+        <a
+          href="/"
+          class="active"
+          aria-current="page"
+        >
+          Shop
+        </a>
+
+
+        <a
+          href="/cart.html"
+          class="cart-link"
+          aria-label="View Shopping Cart"
+        >
+
+          <span>
+            Cart
+          </span>
+
           <span
             id="cart-count"
             class="cart-count"
             hidden
             aria-label="0 items in cart"
-          >0</span>
+          >
+            0
+          </span>
+
         </a>
-        <a href="/about.html">About</a>
-        <a href="/contact.html">Contact</a>
+
+
+        <a href="/about.html">
+          About
+        </a>
+
+
+        <a href="/contact.html">
+          Contact
+        </a>
+
       </nav>
+
     </div>
+
   </header>
 
-  <!-- ================================================================
+
+  <!-- ======================================================================
        MAIN SHOP
-       ================================================================ -->
+       ====================================================================== -->
+
   <main class="shop-container">
 
-    <header class="shop-header">
-      <h1 class="shop-title">Shop Physical Products</h1>
-      <p class="shop-subtitle">Discover useful products selected for everyday life.</p>
-    </header>
 
     <!-- ==============================================================
-         SEARCH / SORT
+         SHOP HEADER
          ============================================================== -->
-    <section class="products-toolbar" aria-label="Product search and sorting">
+
+    <header class="shop-header">
+
+      <h1 class="shop-title">
+        Shop Physical Products
+      </h1>
+
+      <p class="shop-subtitle">
+        Discover useful products selected for everyday life.
+      </p>
+
+    </header>
+
+
+    <!-- ==============================================================
+         SEARCH / SORT TOOLBAR
+         ============================================================== -->
+
+    <section
+      class="products-toolbar"
+      aria-label="Product search and sorting"
+    >
+
+
+      <!-- ============================================================
+           SEARCH
+           ============================================================ -->
+
       <div class="search-wrapper">
-        <label for="product-search" class="visually-hidden">Search products</label>
+
+        <label
+          for="product-search"
+          class="visually-hidden"
+        >
+          Search products
+        </label>
+
         <input
           id="product-search"
           class="products-search-input"
@@ -205,6 +543,8 @@
           enterkeyhint="search"
           aria-label="Search products"
         >
+
+
         <button
           id="clear-search"
           class="search-clear"
@@ -215,22 +555,62 @@
         >
           &times;
         </button>
+
       </div>
 
-      <label for="product-sort" class="visually-hidden">Sort products</label>
-      <select id="product-sort" class="products-sort" aria-label="Sort products">
-        <option value="featured">Featured</option>
-        <option value="price-low">Price: Low to High</option>
-        <option value="price-high">Price: High to Low</option>
-        <option value="rating">Highest Rated</option>
-        <option value="name-az">Name: A to Z</option>
+
+      <!-- ============================================================
+           SORT
+           ============================================================ -->
+
+      <label
+        for="product-sort"
+        class="visually-hidden"
+      >
+        Sort products
+      </label>
+
+      <select
+        id="product-sort"
+        class="products-sort"
+        aria-label="Sort products"
+      >
+
+        <option value="featured">
+          Featured
+        </option>
+
+        <option value="price-low">
+          Price: Low to High
+        </option>
+
+        <option value="price-high">
+          Price: High to Low
+        </option>
+
+        <option value="rating">
+          Highest Rated
+        </option>
+
+        <option value="name-az">
+          Name: A to Z
+        </option>
+
       </select>
+
     </section>
+
 
     <!-- ==============================================================
          CATEGORIES
          ============================================================== -->
-    <div id="products-categories" class="products-categories" aria-label="Product categories">
+
+    <div
+      id="products-categories"
+      class="products-categories"
+      aria-label="Product categories"
+    >
+
       <button
         type="button"
         class="category-pill active"
@@ -239,21 +619,35 @@
       >
         All
       </button>
+
     </div>
+
 
     <!-- ==============================================================
          RESULT BAR
          ============================================================== -->
+
     <div class="products-result-bar">
-      <span id="page-heading">All Products</span>
-      <span id="results-count" class="products-result-count" aria-live="polite">
+
+      <span id="page-heading">
+        All Products
+      </span>
+
+      <span
+        id="results-count"
+        class="products-result-count"
+        aria-live="polite"
+      >
         Loading products...
       </span>
+
     </div>
+
 
     <!-- ==============================================================
          PRODUCT GRID
          ============================================================== -->
+
     <section
       id="product-list"
       class="product-grid"
@@ -261,50 +655,153 @@
       aria-busy="true"
       aria-label="Products"
     >
-      <div class="products-empty" role="status">
-        <h2>Loading products...</h2>
-        <p>Please wait while products are loaded.</p>
+
+      <div
+        class="products-empty"
+        role="status"
+      >
+
+        <h2>
+          Loading products...
+        </h2>
+
+        <p>
+          Please wait while products are loaded.
+        </p>
+
       </div>
+
     </section>
 
-    <!-- ARIA LIVE REGION FOR ACCESSIBILITY ANNOUNCEMENTS -->
-    <div id="aria-live-region" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
 
-    <!-- STORE INFORMATION -->
-    <section class="store-info" aria-labelledby="store-info-title">
-      <h2 id="store-info-title">About PRASUN SHOP</h2>
+    <!-- ==============================================================
+         ACCESSIBILITY LIVE REGION
+         ============================================================== -->
+
+    <div
+      id="aria-live-region"
+      class="visually-hidden"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+
+
+    <!-- ==============================================================
+         STORE INFORMATION
+         ============================================================== -->
+
+    <section
+      class="store-info"
+      aria-labelledby="store-info-title"
+    >
+
+      <h2 id="store-info-title">
+        About PRASUN SHOP
+      </h2>
+
       <p>
         PRASUN SHOP offers selected physical products through trusted
         fulfillment partners. Product availability, pricing, shipping
         options, and delivery times may vary by product and destination.
       </p>
+
     </section>
 
   </main>
 
-  <!-- ================================================================
+
+  <!-- ======================================================================
        FOOTER
-       ================================================================ -->
+       ====================================================================== -->
+
   <footer class="footer">
+
     <div class="footer-links">
-      <a href="/privacy.html">Privacy Policy</a>
-      <a href="/terms.html">Terms of Service</a>
-      <a href="/refund.html">Refund Policy</a>
-      <a href="/contact.html">Contact</a>
+
+      <a href="/privacy.html">
+        Privacy Policy
+      </a>
+
+      <a href="/terms.html">
+        Terms of Service
+      </a>
+
+      <a href="/refund.html">
+        Refund Policy
+      </a>
+
+      <a href="/contact.html">
+        Contact
+      </a>
+
     </div>
 
+
     <p>
+
       &copy; 2026 PRASUN SHOP by
-      <a href="https://prasunbarua.com" target="_blank" rel="noopener noreferrer">Prasun Barua</a>.
+
+      <a
+        href="https://prasunbarua.com"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Prasun Barua
+      </a>.
+
       All rights reserved.
+
     </p>
+
   </footer>
 
-  <!-- ================================================================
-       JAVASCRIPT
-       ================================================================ -->
-  <script src="/js/cart-count.js?v=20260819-03" defer></script>
-  <script src="/js/script.js?v=20260819-03" defer></script>
+
+  <!-- ======================================================================
+       JAVASCRIPT LOAD ORDER
+       ====================================================================== -->
+
+  <!--
+    IMPORTANT:
+
+    cart.js MUST load before script.js.
+
+    cart.js creates:
+
+        window.PrasunCart
+
+    script.js can then call:
+
+        PrasunCart.addItem(...)
+        PrasunCart.getCart()
+        PrasunCart.getTotals()
+        PrasunCart.updateQuantity(...)
+        PrasunCart.removeItem(...)
+
+    Both index.html and cart.html therefore use the SAME cart.
+  -->
+
+  <script
+    src="/js/cart.js?v=20260819-04"
+    defer
+  ></script>
+
+
+  <script
+    src="/js/script.js?v=20260819-04"
+    defer
+  ></script>
+
+
+  <!--
+    DO NOT load cart-count.js here.
+
+    cart.js already handles:
+
+        #cart-count
+
+    Loading a second cart-management script can cause
+    localStorage/event synchronization conflicts.
+  -->
 
 </body>
 
