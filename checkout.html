@@ -8,7 +8,7 @@
 
   <meta
     name="description"
-    content="Complete your PRASUN SHOP order securely and review your shipping information before placing your order."
+    content="Complete your PRASUN SHOP order securely with your contact, shipping and payment information."
   >
 
   <meta name="theme-color" content="#0f172a">
@@ -33,11 +33,13 @@
   <style>
     /* =========================================================
        PRASUN SHOP — CHECKOUT
+       Production-oriented checkout UI
        ========================================================= */
 
     :root {
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
+      --primary-soft: #eff6ff;
 
       --dark: #0f172a;
       --dark-hover: #1e293b;
@@ -58,10 +60,20 @@
       --radius: 14px;
       --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
 
-      --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
     }
 
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       box-sizing: border-box;
     }
 
@@ -79,11 +91,19 @@
       text-rendering: optimizeLegibility;
     }
 
+    body.is-loading {
+      cursor: progress;
+    }
+
     img {
+      display: block;
       max-width: 100%;
     }
 
-    button, input, select {
+    button,
+    input,
+    select,
+    textarea {
       font: inherit;
     }
 
@@ -93,6 +113,10 @@
 
     a {
       color: inherit;
+    }
+
+    [hidden] {
+      display: none !important;
     }
 
     .sr-only {
@@ -112,7 +136,10 @@
       outline-offset: 2px;
     }
 
-    /* HEADER */
+    /* =========================================================
+       HEADER
+       ========================================================= */
+
     .header {
       position: sticky;
       top: 0;
@@ -127,6 +154,7 @@
       width: min(1180px, calc(100% - 32px));
       min-height: 68px;
       margin: 0 auto;
+
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -137,8 +165,10 @@
       display: inline-flex;
       align-items: center;
       gap: 9px;
-      text-decoration: none;
+
       color: var(--dark);
+      text-decoration: none;
+
       font-size: 17px;
       font-weight: 800;
       letter-spacing: -0.02em;
@@ -158,9 +188,12 @@
     .nav-links a {
       color: var(--muted);
       text-decoration: none;
+
       font-size: 14px;
       font-weight: 600;
-      transition: color 0.18s ease;
+
+      transition:
+        color 0.18s ease;
     }
 
     .nav-links a:hover,
@@ -170,10 +203,12 @@
 
     .cart-link {
       position: relative;
+
       display: inline-flex;
       align-items: center;
-      text-decoration: none;
+
       color: var(--dark);
+      text-decoration: none;
     }
 
     .cart-icon {
@@ -183,27 +218,32 @@
 
     .cart-badge {
       position: absolute;
+
       min-width: 18px;
       height: 18px;
       padding: 0 5px;
+
       top: -9px;
       right: -11px;
+
       display: inline-flex;
       align-items: center;
       justify-content: center;
+
       border-radius: 999px;
+
       background: var(--dark);
-      color: #ffffff;
+      color: #fff;
+
       font-size: 10px;
       font-weight: 800;
       line-height: 1;
     }
 
-    .cart-badge[hidden] {
-      display: none;
-    }
+    /* =========================================================
+       CHECKOUT INTRO
+       ========================================================= */
 
-    /* CHECKOUT HEADER */
     .checkout-header {
       width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
@@ -214,7 +254,9 @@
       display: flex;
       align-items: center;
       gap: 8px;
+
       margin-bottom: 12px;
+
       color: var(--muted);
       font-size: 13px;
     }
@@ -234,7 +276,9 @@
 
     .checkout-title {
       margin: 0;
+
       color: var(--dark);
+
       font-size: clamp(28px, 4vw, 40px);
       font-weight: 800;
       letter-spacing: -0.035em;
@@ -242,17 +286,22 @@
     }
 
     .checkout-subtitle {
+      max-width: 680px;
       margin: 10px 0 0;
-      max-width: 650px;
+
       color: var(--muted);
       font-size: 15px;
     }
 
-    /* MAIN LAYOUT */
+    /* =========================================================
+       MAIN LAYOUT
+       ========================================================= */
+
     .checkout-container {
       width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
       padding: 8px 0 60px;
+
       display: grid;
       grid-template-columns: minmax(0, 1fr) 390px;
       gap: 28px;
@@ -260,11 +309,12 @@
     }
 
     .checkout-section {
+      padding: 26px;
+
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 26px;
     }
 
     .checkout-section + .checkout-section {
@@ -275,6 +325,7 @@
       display: flex;
       align-items: flex-start;
       gap: 13px;
+
       margin-bottom: 22px;
     }
 
@@ -282,30 +333,40 @@
       width: 30px;
       height: 30px;
       flex: 0 0 30px;
+
       display: flex;
       align-items: center;
       justify-content: center;
+
       border-radius: 50%;
-      background: #eff6ff;
+
+      background: var(--primary-soft);
       color: var(--primary);
+
       font-size: 13px;
       font-weight: 800;
     }
 
     .section-heading-content h2 {
       margin: 0;
+
       color: var(--dark);
+
       font-size: 18px;
       font-weight: 750;
     }
 
     .section-heading-content p {
       margin: 3px 0 0;
+
       color: var(--muted);
       font-size: 13px;
     }
 
-    /* FORMS */
+    /* =========================================================
+       FORMS
+       ========================================================= */
+
     .form-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -314,6 +375,7 @@
 
     .form-group {
       min-width: 0;
+
       display: flex;
       flex-direction: column;
       gap: 7px;
@@ -325,6 +387,7 @@
 
     .form-label {
       color: var(--dark);
+
       font-size: 13px;
       font-weight: 700;
     }
@@ -334,40 +397,68 @@
       margin-left: 2px;
     }
 
-    .form-input, .form-select {
+    .form-input,
+    .form-select,
+    .form-textarea {
       width: 100%;
       min-height: 46px;
+
       padding: 11px 13px;
-      background: #ffffff;
+
+      background: #fff;
       border: 1px solid var(--border-dark);
       border-radius: 10px;
+
       color: var(--dark);
       font-size: 14px;
-      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+
+      transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
     }
 
-    .form-input::placeholder {
+    .form-textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
       color: #94a3b8;
     }
 
-    .form-input:hover, .form-select:hover {
+    .form-input:hover,
+    .form-select:hover,
+    .form-textarea:hover {
       border-color: #94a3b8;
     }
 
-    .form-input:focus, .form-select:focus {
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
       outline: none;
+
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.11);
+
+      box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.11);
     }
 
-    .form-input.invalid, .form-select.invalid {
+    .form-input.invalid,
+    .form-select.invalid,
+    .form-textarea.invalid {
       border-color: var(--danger);
-      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
+
+      box-shadow:
+        0 0 0 3px rgba(220, 38, 38, 0.08);
     }
 
     .field-error {
       display: none;
+
       color: var(--danger);
+
       font-size: 12px;
       font-weight: 600;
     }
@@ -376,7 +467,10 @@
       display: block;
     }
 
-    /* COUNTRY DROPDOWN */
+    /* =========================================================
+       COUNTRY
+       ========================================================= */
+
     .country-dropdown {
       position: relative;
     }
@@ -384,16 +478,22 @@
     .country-trigger {
       width: 100%;
       min-height: 46px;
+
       display: flex;
       align-items: center;
       justify-content: space-between;
+
       padding: 11px 13px;
+
       border: 1px solid var(--border-dark);
       border-radius: 10px;
-      background: #ffffff;
+
+      background: #fff;
       color: var(--dark);
+
       cursor: pointer;
       text-align: left;
+
       font-size: 14px;
     }
 
@@ -403,14 +503,18 @@
 
     .country-trigger.open {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.11);
+
+      box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.11);
     }
 
     .country-arrow {
       width: 8px;
       height: 8px;
+
       border-right: 2px solid #64748b;
       border-bottom: 2px solid #64748b;
+
       transform: rotate(45deg);
       transition: transform 0.18s ease;
     }
@@ -421,15 +525,23 @@
 
     .country-menu {
       position: absolute;
+
       left: 0;
       right: 0;
       top: calc(100% + 7px);
+
       z-index: 100;
+
       display: none;
-      background: #ffffff;
+
+      background: #fff;
+
       border: 1px solid var(--border);
       border-radius: 12px;
-      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+
+      box-shadow:
+        0 18px 40px rgba(15, 23, 42, 0.14);
+
       overflow: hidden;
     }
 
@@ -439,11 +551,15 @@
 
     .country-search {
       width: 100%;
+
       padding: 11px 13px;
+
       border: 0;
       border-bottom: 1px solid var(--border);
+
+      background: #fff;
       color: var(--dark);
-      background: #ffffff;
+
       font-size: 13px;
     }
 
@@ -453,40 +569,51 @@
     }
 
     .country-options {
-      max-height: 220px;
+      max-height: 250px;
       overflow-y: auto;
     }
 
     .country-option {
       width: 100%;
+
+      display: block;
+
       padding: 10px 13px;
+
       border: 0;
-      background: #ffffff;
+      background: #fff;
+
       color: var(--text);
+
       cursor: pointer;
       text-align: left;
+
       font-size: 13px;
-      display: block;
     }
 
-    .country-option:hover, .country-option.selected {
-      background: #eff6ff;
+    .country-option:hover,
+    .country-option.selected {
+      background: var(--primary-soft);
       color: var(--primary);
     }
 
     .country-no-results {
       padding: 18px;
-      text-align: center;
+
       color: var(--muted);
+
+      text-align: center;
       font-size: 13px;
     }
 
-    /* PAYMENT METHOD OPTIONS */
+    /* =========================================================
+       PAYMENT
+       ========================================================= */
+
     .payment-options {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
-      margin-bottom: 20px;
     }
 
     .payment-option {
@@ -495,49 +622,89 @@
 
     .payment-option input {
       position: absolute;
+
       opacity: 0;
-      width: 0;
-      height: 0;
+      width: 1px;
+      height: 1px;
     }
 
     .payment-label {
+      min-height: 82px;
+
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+
       padding: 12px 8px;
+
       border: 1px solid var(--border-dark);
       border-radius: 10px;
+
       cursor: pointer;
+
+      color: var(--muted);
+
       font-size: 12px;
       font-weight: 700;
-      color: var(--muted);
-      transition: all 0.18s ease;
+
       text-align: center;
-      height: 100%;
+
+      transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        color 0.18s ease;
     }
 
     .payment-option input:checked + .payment-label {
       border-color: var(--primary);
-      background: #eff6ff;
+      background: var(--primary-soft);
       color: var(--primary);
     }
 
     .payment-label svg {
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
-    /* TRUST MESSAGE */
+    .payment-info {
+      margin-top: 16px;
+
+      padding: 15px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: #f8fafc;
+
+      color: var(--muted);
+
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .payment-info strong {
+      color: var(--dark);
+    }
+
+    /* =========================================================
+       TRUST NOTE
+       ========================================================= */
+
     .checkout-note {
       margin-top: 20px;
+
       display: flex;
       align-items: flex-start;
       gap: 10px;
+
       padding: 13px 14px;
+
       background: #f8fafc;
       border: 1px solid var(--border);
       border-radius: 10px;
+
       color: var(--muted);
+
       font-size: 12px;
     }
 
@@ -546,19 +713,27 @@
       margin-top: 1px;
     }
 
-    /* ORDER SUMMARY */
+    /* =========================================================
+       ORDER SUMMARY
+       ========================================================= */
+
     .order-summary {
       position: sticky;
       top: 92px;
+
+      overflow: hidden;
+
       background: var(--card);
+
       border: 1px solid var(--border);
       border-radius: var(--radius);
+
       box-shadow: var(--shadow);
-      overflow: hidden;
     }
 
     .summary-header {
-      padding: 22px 22px 18px;
+      padding: 22px;
+
       border-bottom: 1px solid var(--border);
     }
 
@@ -571,20 +746,24 @@
 
     .summary-title {
       margin: 0;
+
       color: var(--dark);
+
       font-size: 18px;
       font-weight: 750;
     }
 
     .summary-count {
       color: var(--muted);
+
       font-size: 12px;
       font-weight: 600;
     }
 
     .summary-items {
       padding: 0 22px;
-      max-height: 380px;
+
+      max-height: 390px;
       overflow-y: auto;
     }
 
@@ -593,7 +772,9 @@
       grid-template-columns: 68px minmax(0, 1fr) auto;
       gap: 12px;
       align-items: center;
+
       padding: 17px 0;
+
       border-bottom: 1px solid var(--border);
     }
 
@@ -604,28 +785,36 @@
     .summary-image {
       width: 68px;
       height: 68px;
+
       display: flex;
       align-items: center;
       justify-content: center;
+
       background: #f8fafc;
+
       border: 1px solid var(--border);
       border-radius: 10px;
+
       overflow: hidden;
     }
 
     .summary-image img {
       width: 100%;
       height: 100%;
+
       object-fit: contain;
       padding: 6px;
     }
 
     .summary-product-title {
       margin: 0 0 5px;
+
       color: var(--dark);
+
       font-size: 13px;
       font-weight: 700;
       line-height: 1.35;
+
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -634,20 +823,25 @@
 
     .summary-product-meta {
       margin: 0;
+
       color: var(--muted);
       font-size: 11px;
     }
 
     .summary-item-price {
       color: var(--dark);
+
       font-size: 13px;
       font-weight: 750;
+
       white-space: nowrap;
     }
 
     .summary-calculation {
       padding: 20px 22px;
+
       background: #fafbfc;
+
       border-top: 1px solid var(--border);
     }
 
@@ -656,7 +850,9 @@
       align-items: center;
       justify-content: space-between;
       gap: 15px;
+
       margin-bottom: 10px;
+
       color: var(--muted);
       font-size: 13px;
     }
@@ -671,10 +867,14 @@
       align-items: center;
       justify-content: space-between;
       gap: 15px;
+
       margin-top: 16px;
       padding-top: 17px;
+
       border-top: 1px solid var(--border);
+
       color: var(--dark);
+
       font-size: 17px;
       font-weight: 800;
     }
@@ -683,7 +883,10 @@
       font-size: 21px;
     }
 
-    /* PLACE ORDER BUTTON */
+    /* =========================================================
+       PLACE ORDER
+       ========================================================= */
+
     .summary-action {
       padding: 0 22px 22px;
       background: #fafbfc;
@@ -692,18 +895,27 @@
     .btn-place-order {
       width: 100%;
       min-height: 50px;
+
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 9px;
+
       border: 0;
       border-radius: 10px;
+
       background: var(--dark);
-      color: #ffffff;
+      color: #fff;
+
       cursor: pointer;
+
       font-size: 14px;
       font-weight: 750;
-      transition: background 0.18s ease, transform 0.1s ease, opacity 0.18s ease;
+
+      transition:
+        background 0.18s ease,
+        transform 0.1s ease,
+        opacity 0.18s ease;
     }
 
     .btn-place-order:hover {
@@ -724,59 +936,110 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
+
       margin-top: 11px;
+
       color: var(--muted);
+
       font-size: 11px;
       text-align: center;
     }
 
-    /* EMPTY CART */
+    /* =========================================================
+       STATUS MESSAGE
+       ========================================================= */
+
+    .checkout-status {
+      margin-top: 15px;
+
+      padding: 12px 14px;
+
+      border-radius: 10px;
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .checkout-status.error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    .checkout-status.success {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+
+    /* =========================================================
+       EMPTY CART
+       ========================================================= */
+
     .empty-cart {
       width: min(600px, calc(100% - 32px));
+
       margin: 60px auto 90px;
       padding: 50px 25px;
+
       text-align: center;
-      background: #ffffff;
+
+      background: #fff;
+
       border: 1px solid var(--border);
       border-radius: var(--radius);
+
       box-shadow: var(--shadow);
     }
 
     .empty-cart-icon {
       width: 58px;
       height: 58px;
+
       margin: 0 auto 18px;
+
       display: flex;
       align-items: center;
       justify-content: center;
+
       border-radius: 50%;
+
       background: #f1f5f9;
       color: var(--muted);
     }
 
     .empty-cart h1 {
       margin: 0 0 8px;
+
       color: var(--dark);
       font-size: 24px;
     }
 
     .empty-cart p {
-      margin: 0 auto 22px;
       max-width: 430px;
+
+      margin: 0 auto 22px;
+
       color: var(--muted);
       font-size: 14px;
     }
 
     .btn-shop {
+      min-height: 44px;
+
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 44px;
+
       padding: 0 22px;
+
       border-radius: 9px;
+
       background: var(--dark);
-      color: #ffffff;
+      color: #fff;
+
       text-decoration: none;
+
       font-size: 13px;
       font-weight: 700;
     }
@@ -785,13 +1048,19 @@
       background: var(--dark-hover);
     }
 
-    /* FOOTER */
+    /* =========================================================
+       FOOTER
+       ========================================================= */
+
     .footer {
       margin-top: 20px;
       padding: 30px 20px;
+
       border-top: 1px solid var(--border);
-      background: #ffffff;
+
+      background: #fff;
       color: var(--muted);
+
       text-align: center;
       font-size: 12px;
     }
@@ -802,6 +1071,7 @@
       justify-content: center;
       flex-wrap: wrap;
       gap: 15px;
+
       margin-bottom: 12px;
     }
 
@@ -818,39 +1088,104 @@
       margin: 0;
     }
 
+    /* =========================================================
+       SPINNER
+       ========================================================= */
+
     .spinner {
       width: 20px;
       height: 20px;
+
       border: 2.5px solid rgba(255, 255, 255, 0.3);
-      border-top-color: #ffffff;
+      border-top-color: #fff;
+
       border-radius: 50%;
+
       animation: checkout-spin 0.8s linear infinite;
     }
 
     @keyframes checkout-spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
     @media (max-width: 900px) {
-      .checkout-container { grid-template-columns: 1fr; }
-      .order-summary { position: static; }
-      .summary-items { max-height: none; }
+      .checkout-container {
+        grid-template-columns: 1fr;
+      }
+
+      .order-summary {
+        position: static;
+      }
+
+      .summary-items {
+        max-height: none;
+      }
     }
 
     @media (max-width: 700px) {
-      .header-container { width: calc(100% - 24px); min-height: 62px; }
-      .nav-links { gap: 12px; }
-      .nav-links a:not(.cart-link) { display: none; }
-      .checkout-header { width: calc(100% - 24px); padding: 28px 0 17px; }
-      .checkout-container { width: calc(100% - 24px); padding-bottom: 40px; gap: 18px; }
-      .checkout-section { padding: 20px; }
-      .form-grid { grid-template-columns: 1fr; gap: 15px; }
-      .form-group.full { grid-column: auto; }
-      .payment-options { grid-template-columns: 1fr; }
+      .header-container {
+        width: calc(100% - 24px);
+        min-height: 62px;
+      }
+
+      .nav-links {
+        gap: 12px;
+      }
+
+      .nav-links a:not(.cart-link) {
+        display: none;
+      }
+
+      .checkout-header {
+        width: calc(100% - 24px);
+        padding: 28px 0 17px;
+      }
+
+      .checkout-container {
+        width: calc(100% - 24px);
+
+        padding-bottom: 40px;
+
+        gap: 18px;
+      }
+
+      .checkout-section {
+        padding: 20px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .form-group.full {
+        grid-column: auto;
+      }
+
+      .payment-options {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-item {
+        grid-template-columns: 58px minmax(0, 1fr) auto;
+      }
+
+      .summary-image {
+        width: 58px;
+        height: 58px;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
+      *,
+      *::before,
+      *::after {
         scroll-behavior: auto !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
@@ -862,15 +1197,34 @@
 
 <body>
 
-  <!-- HEADER -->
+  <!-- =========================================================
+       HEADER
+       ========================================================= -->
+
   <header class="header">
     <div class="header-container">
-      <a href="index.html" class="logo" aria-label="PRASUN SHOP homepage">
-        <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+      <a
+        href="index.html"
+        class="logo"
+        aria-label="PRASUN SHOP homepage"
+      >
+        <svg
+          width="23"
+          height="23"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
           <path d="M3 9l9-6 9 6"></path>
           <path d="M5 10v10h14V10"></path>
           <path d="M9 20v-6h6v6"></path>
         </svg>
+
         <span>PRASUN SHOP</span>
       </a>
 
@@ -878,549 +1232,2518 @@
         <a href="index.html">Shop</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
-        <a href="cart.html" class="cart-link" aria-label="Shopping cart">
-          <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+        <a
+          href="cart.html"
+          class="cart-link"
+          aria-label="Shopping cart"
+        >
+          <svg
+            class="cart-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
             <circle cx="9" cy="21" r="1"></circle>
             <circle cx="20" cy="21" r="1"></circle>
             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
           </svg>
-          <span id="cart-count" class="cart-badge" hidden>0</span>
+
+          <span
+            id="cart-count"
+            class="cart-badge"
+            hidden
+          >
+            0
+          </span>
         </a>
       </nav>
+
     </div>
   </header>
 
-  <!-- CHECKOUT INTRO -->
+  <!-- =========================================================
+       INTRO
+       ========================================================= -->
+
   <section class="checkout-header">
+
     <div class="breadcrumb">
       <a href="index.html">Shop</a>
       <span class="breadcrumb-separator">/</span>
+
       <a href="cart.html">Cart</a>
       <span class="breadcrumb-separator">/</span>
-      <span>Checkout</span>
+
+      <span aria-current="page">Checkout</span>
     </div>
-    <h1 class="checkout-title">Checkout</h1>
+
+    <h1 class="checkout-title">
+      Checkout
+    </h1>
+
     <p class="checkout-subtitle">
       Enter your contact and shipping information to complete your order.
     </p>
+
   </section>
 
-  <!-- EMPTY CART VIEW -->
-  <section id="empty-cart" class="empty-cart" hidden>
+  <!-- =========================================================
+       EMPTY CART
+       ========================================================= -->
+
+  <section
+    id="empty-cart"
+    class="empty-cart"
+    hidden
+  >
+
     <div class="empty-cart-icon">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg
+        width="28"
+        height="28"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
         <circle cx="9" cy="21" r="1"></circle>
         <circle cx="20" cy="21" r="1"></circle>
         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
       </svg>
     </div>
-    <h1>Your cart is empty</h1>
-    <p>Add some products to your cart before continuing to checkout.</p>
-    <a href="index.html" class="btn-shop">Continue Shopping</a>
+
+    <h1>
+      Your cart is empty
+    </h1>
+
+    <p>
+      Add some products to your cart before continuing to checkout.
+    </p>
+
+    <a
+      href="index.html"
+      class="btn-shop"
+    >
+      Continue Shopping
+    </a>
+
   </section>
 
-  <!-- MAIN CHECKOUT CONTENT -->
-  <main id="checkout-main" class="checkout-container">
+  <!-- =========================================================
+       MAIN CHECKOUT
+       ========================================================= -->
 
-    <!-- LEFT COLUMN: CUSTOMER FORM -->
+  <main
+    id="checkout-main"
+    class="checkout-container"
+  >
+
+    <!-- =======================================================
+         LEFT
+         ======================================================= -->
+
     <div class="checkout-form-column">
-      <form id="checkout-form" novalidate>
 
-        <!-- 1. CONTACT INFORMATION -->
+      <form
+        id="checkout-form"
+        novalidate
+      >
+
+        <!-- =================================================
+             CONTACT
+             ================================================= -->
+
         <section class="checkout-section">
+
           <div class="section-heading">
-            <div class="section-number">1</div>
-            <div class="section-heading-content">
-              <h2>Contact Information</h2>
-              <p>We'll use this information for order updates.</p>
+
+            <div class="section-number">
+              1
             </div>
+
+            <div class="section-heading-content">
+
+              <h2>
+                Contact Information
+              </h2>
+
+              <p>
+                We'll use this information for order updates.
+              </p>
+
+            </div>
+
           </div>
 
           <div class="form-grid">
+
             <div class="form-group">
-              <label class="form-label" for="email">
-                Email Address <span class="required">*</span>
+
+              <label
+                class="form-label"
+                for="email"
+              >
+                Email Address
+                <span class="required">*</span>
               </label>
-              <input id="email" name="email" class="form-input" type="email" autocomplete="email" placeholder="you@example.com" required>
-              <span id="email-error" class="field-error">Please enter a valid email address.</span>
+
+              <input
+                id="email"
+                name="email"
+                class="form-input"
+                type="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                required
+              >
+
+              <span
+                id="email-error"
+                class="field-error"
+              >
+                Please enter a valid email address.
+              </span>
+
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="phone">
-                Phone Number <span class="required">*</span>
+
+              <label
+                class="form-label"
+                for="phone"
+              >
+                Phone Number
+                <span class="required">*</span>
               </label>
-              <input id="phone" name="phone" class="form-input" type="tel" autocomplete="tel" placeholder="+1 555 000 0000" required>
-              <span id="phone-error" class="field-error">Please enter a valid phone number.</span>
+
+              <input
+                id="phone"
+                name="phone"
+                class="form-input"
+                type="tel"
+                autocomplete="tel"
+                placeholder="+1 555 000 0000"
+                required
+              >
+
+              <span
+                id="phone-error"
+                class="field-error"
+              >
+                Please enter a valid phone number.
+              </span>
+
             </div>
+
           </div>
+
         </section>
 
-        <!-- 2. SHIPPING ADDRESS -->
+        <!-- =================================================
+             SHIPPING
+             ================================================= -->
+
         <section class="checkout-section">
+
           <div class="section-heading">
-            <div class="section-number">2</div>
-            <div class="section-heading-content">
-              <h2>Shipping Address</h2>
-              <p>Where should we deliver your order?</p>
+
+            <div class="section-number">
+              2
             </div>
+
+            <div class="section-heading-content">
+
+              <h2>
+                Shipping Address
+              </h2>
+
+              <p>
+                Where should we deliver your order?
+              </p>
+
+            </div>
+
           </div>
 
           <div class="form-grid">
+
             <div class="form-group">
-              <label class="form-label" for="first-name">
-                First Name <span class="required">*</span>
+
+              <label
+                class="form-label"
+                for="first-name"
+              >
+                First Name
+                <span class="required">*</span>
               </label>
-              <input id="first-name" name="firstName" class="form-input" type="text" autocomplete="given-name" placeholder="John" required>
-              <span id="first-name-error" class="field-error">Please enter your first name.</span>
+
+              <input
+                id="first-name"
+                name="firstName"
+                class="form-input"
+                type="text"
+                autocomplete="given-name"
+                placeholder="John"
+                required
+              >
+
+              <span
+                id="first-name-error"
+                class="field-error"
+              >
+                Please enter your first name.
+              </span>
+
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="last-name">
-                Last Name <span class="required">*</span>
+
+              <label
+                class="form-label"
+                for="last-name"
+              >
+                Last Name
+                <span class="required">*</span>
               </label>
-              <input id="last-name" name="lastName" class="form-input" type="text" autocomplete="family-name" placeholder="Doe" required>
-              <span id="last-name-error" class="field-error">Please enter your last name.</span>
+
+              <input
+                id="last-name"
+                name="lastName"
+                class="form-input"
+                type="text"
+                autocomplete="family-name"
+                placeholder="Doe"
+                required
+              >
+
+              <span
+                id="last-name-error"
+                class="field-error"
+              >
+                Please enter your last name.
+              </span>
+
             </div>
 
             <div class="form-group full">
-              <label class="form-label" for="address">
-                Street Address <span class="required">*</span>
+
+              <label
+                class="form-label"
+                for="address"
+              >
+                Street Address
+                <span class="required">*</span>
               </label>
-              <input id="address" name="address" class="form-input" type="text" autocomplete="street-address" placeholder="123 Main Street" required>
-              <span id="address-error" class="field-error">Please enter your street address.</span>
+
+              <input
+                id="address"
+                name="address"
+                class="form-input"
+                type="text"
+                autocomplete="street-address"
+                placeholder="123 Main Street"
+                required
+              >
+
+              <span
+                id="address-error"
+                class="field-error"
+              >
+                Please enter your street address.
+              </span>
+
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="city">
-                City <span class="required">*</span>
+
+              <label
+                class="form-label"
+                for="city"
+              >
+                City
+                <span class="required">*</span>
               </label>
-              <input id="city" name="city" class="form-input" type="text" autocomplete="address-level2" placeholder="New York" required>
-              <span id="city-error" class="field-error">Please enter your city.</span>
+
+              <input
+                id="city"
+                name="city"
+                class="form-input"
+                type="text"
+                autocomplete="address-level2"
+                placeholder="New York"
+                required
+              >
+
+              <span
+                id="city-error"
+                class="field-error"
+              >
+                Please enter your city.
+              </span>
+
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="postal-code">
-                Postal / ZIP Code <span class="required">*</span>
+
+              <label
+                class="form-label"
+                for="state"
+              >
+                State / Province
               </label>
-              <input id="postal-code" name="postalCode" class="form-input" type="text" autocomplete="postal-code" placeholder="10001" required>
-              <span id="postal-code-error" class="field-error">Please enter your postal or ZIP code.</span>
+
+              <input
+                id="state"
+                name="state"
+                class="form-input"
+                type="text"
+                autocomplete="address-level1"
+                placeholder="State / Province"
+              >
+
             </div>
 
-            <!-- SEARCHABLE COUNTRY DROPDOWN -->
-            <div class="form-group full">
-              <label class="form-label" for="country-trigger">
-                Country / Region <span class="required">*</span>
+            <div class="form-group">
+
+              <label
+                class="form-label"
+                for="postal-code"
+              >
+                Postal / ZIP Code
+                <span class="required">*</span>
               </label>
 
-              <input type="hidden" id="country" name="country" value="United States">
+              <input
+                id="postal-code"
+                name="postalCode"
+                class="form-input"
+                type="text"
+                autocomplete="postal-code"
+                placeholder="10001"
+                required
+              >
 
-              <div id="country-dropdown" class="country-dropdown">
-                <button id="country-trigger" class="country-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
-                  <span id="country-selected">United States</span>
-                  <span class="country-arrow" aria-hidden="true"></span>
+              <span
+                id="postal-code-error"
+                class="field-error"
+              >
+                Please enter your postal or ZIP code.
+              </span>
+
+            </div>
+
+            <!-- COUNTRY -->
+
+            <div class="form-group">
+
+              <label
+                class="form-label"
+                for="country-trigger"
+              >
+                Country / Region
+                <span class="required">*</span>
+              </label>
+
+              <input
+                type="hidden"
+                id="country"
+                name="country"
+                value="United States"
+              >
+
+              <div
+                id="country-dropdown"
+                class="country-dropdown"
+              >
+
+                <button
+                  id="country-trigger"
+                  class="country-trigger"
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                >
+
+                  <span id="country-selected">
+                    United States
+                  </span>
+
+                  <span
+                    class="country-arrow"
+                    aria-hidden="true"
+                  ></span>
+
                 </button>
 
-                <div id="country-menu" class="country-menu">
-                  <input id="country-search" class="country-search" type="search" placeholder="Search country..." aria-label="Search countries">
-                  <div id="country-options" class="country-options" role="listbox">
-                    <!-- Populated dynamically via JS -->
-                  </div>
+                <div
+                  id="country-menu"
+                  class="country-menu"
+                >
+
+                  <input
+                    id="country-search"
+                    class="country-search"
+                    type="search"
+                    placeholder="Search country..."
+                    aria-label="Search countries"
+                    autocomplete="off"
+                  >
+
+                  <div
+                    id="country-options"
+                    class="country-options"
+                    role="listbox"
+                  ></div>
+
                 </div>
+
               </div>
+
             </div>
+
+            <div class="form-group full">
+
+              <label
+                class="form-label"
+                for="order-notes"
+              >
+                Order Notes
+                <span style="font-weight:500;color:#94a3b8;">
+                  (Optional)
+                </span>
+              </label>
+
+              <textarea
+                id="order-notes"
+                name="orderNotes"
+                class="form-textarea"
+                placeholder="Delivery instructions or other notes..."
+                maxlength="500"
+              ></textarea>
+
+            </div>
+
           </div>
+
         </section>
 
-        <!-- 3. PAYMENT METHOD -->
+        <!-- =================================================
+             PAYMENT
+             ================================================= -->
+
         <section class="checkout-section">
+
           <div class="section-heading">
-            <div class="section-number">3</div>
-            <div class="section-heading-content">
-              <h2>Payment Method</h2>
-              <p>All transactions are secure and encrypted.</p>
+
+            <div class="section-number">
+              3
             </div>
+
+            <div class="section-heading-content">
+
+              <h2>
+                Payment Method
+              </h2>
+
+              <p>
+                Choose your preferred payment method.
+              </p>
+
+            </div>
+
           </div>
 
           <div class="payment-options">
+
             <div class="payment-option">
-              <input type="radio" id="pay-card" name="paymentMethod" value="card" checked>
-              <label for="pay-card" class="payment-label">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                Credit Card
+
+              <input
+                type="radio"
+                id="pay-card"
+                name="paymentMethod"
+                value="card"
+                checked
+              >
+
+              <label
+                for="pay-card"
+                class="payment-label"
+              >
+
+                <svg
+                  width="21"
+                  height="21"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect
+                    x="1"
+                    y="4"
+                    width="22"
+                    height="16"
+                    rx="2"
+                  ></rect>
+
+                  <line
+                    x1="1"
+                    y1="10"
+                    x2="23"
+                    y2="10"
+                  ></line>
+                </svg>
+
+                Credit / Debit Card
+
               </label>
+
             </div>
+
             <div class="payment-option">
-              <input type="radio" id="pay-paypal" name="paymentMethod" value="paypal">
-              <label for="pay-paypal" class="payment-label">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13l2.5 0c2.5 0 4 -1 4.5 -3.5c.5 -2.5 -1 -3.5 -3.5 -3.5h-5l-2.5 13h3l1 -6z"/></svg>
+
+              <input
+                type="radio"
+                id="pay-paypal"
+                name="paymentMethod"
+                value="paypal"
+              >
+
+              <label
+                for="pay-paypal"
+                class="payment-label"
+              >
+
+                <svg
+                  width="21"
+                  height="21"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M7 20l2.5-14h5.2c2.9 0 4.7 1.3 4.2 3.9-.5 2.8-2.7 4.1-5.4 4.1H11l-1 6H7z"></path>
+                </svg>
+
                 PayPal
+
               </label>
+
             </div>
+
             <div class="payment-option">
-              <input type="radio" id="pay-apple" name="paymentMethod" value="applepay">
-              <label for="pay-apple" class="payment-label">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/></svg>
-                Apple Pay
+
+              <input
+                type="radio"
+                id="pay-other"
+                name="paymentMethod"
+                value="other"
+              >
+
+              <label
+                for="pay-other"
+                class="payment-label"
+              >
+
+                <svg
+                  width="21"
+                  height="21"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                  ></circle>
+
+                  <path d="M8 12h8"></path>
+                </svg>
+
+                Other
+
               </label>
+
             </div>
+
           </div>
 
-          <div id="card-fields" class="form-grid">
-            <div class="form-group full">
-              <label class="form-label" for="card-number">Card Number <span class="required">*</span></label>
-              <input id="card-number" class="form-input" type="text" placeholder="4532 •••• •••• 8890" maxlength="19">
-              <span id="card-number-error" class="field-error">Enter a valid 16-digit card number.</span>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="card-exp">Expiry Date <span class="required">*</span></label>
-              <input id="card-exp" class="form-input" type="text" placeholder="MM / YY" maxlength="5">
-              <span id="card-exp-error" class="field-error">Invalid expiry.</span>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="card-cvc">CVC / CVV <span class="required">*</span></label>
-              <input id="card-cvc" class="form-input" type="text" placeholder="123" maxlength="4">
-              <span id="card-cvc-error" class="field-error">Invalid CVC.</span>
-            </div>
+          <div
+            id="payment-info"
+            class="payment-info"
+          >
+            <strong>Secure payment:</strong>
+            You will be redirected to the selected payment provider when payment processing is enabled.
+            PRASUN SHOP does not store your full card number or CVV in your browser or local storage.
           </div>
 
           <div class="checkout-note">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <rect
+                x="3"
+                y="11"
+                width="18"
+                height="11"
+                rx="2"
+              ></rect>
+
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
-            <span>Your personal data will be used to process your order, support your experience, and for other purposes described in our privacy policy.</span>
+
+            <span>
+              Your personal information is used only to process and fulfill your order,
+              provide support, and communicate important order updates.
+            </span>
+
           </div>
+
         </section>
 
       </form>
+
     </div>
 
-    <!-- RIGHT COLUMN: ORDER SUMMARY -->
+    <!-- =======================================================
+         RIGHT: ORDER SUMMARY
+         ======================================================= -->
+
     <aside class="order-summary-column">
+
       <div class="order-summary">
+
         <div class="summary-header">
+
           <div class="summary-header-row">
-            <h2 class="summary-title">Order Summary</h2>
-            <span id="summary-count" class="summary-count">0 Items</span>
+
+            <h2 class="summary-title">
+              Order Summary
+            </h2>
+
+            <span
+              id="summary-count"
+              class="summary-count"
+            >
+              0 Items
+            </span>
+
           </div>
+
         </div>
 
-        <div id="summary-items" class="summary-items">
-          <!-- Dynamic Items Injected Here -->
-        </div>
+        <div
+          id="summary-items"
+          class="summary-items"
+        ></div>
 
         <div class="summary-calculation">
+
           <div class="summary-row">
             <span>Subtotal</span>
             <strong id="summary-subtotal">$0.00</strong>
           </div>
+
           <div class="summary-row">
             <span>Shipping</span>
-            <strong id="summary-shipping">Free</strong>
+            <strong id="summary-shipping">Calculated at checkout</strong>
           </div>
+
           <div class="summary-row">
-            <span>Estimated Tax (8%)</span>
-            <strong id="summary-tax">$0.00</strong>
+            <span>Tax</span>
+            <strong id="summary-tax">Calculated at checkout</strong>
           </div>
 
           <div class="summary-total">
-            <span>Total</span>
-            <span id="summary-total-price" class="summary-total-price">$0.00</span>
+
+            <span>
+              Total
+            </span>
+
+            <span
+              id="summary-total-price"
+              class="summary-total-price"
+            >
+              $0.00
+            </span>
+
           </div>
+
         </div>
 
         <div class="summary-action">
-          <button id="btn-place-order" type="button" class="btn-place-order">
-            <span id="btn-text">Place Order</span>
-            <span id="btn-spinner" class="spinner" hidden></span>
+
+          <button
+            id="btn-place-order"
+            type="submit"
+            form="checkout-form"
+            class="btn-place-order"
+          >
+
+            <span id="btn-text">
+              Continue to Payment
+            </span>
+
+            <span
+              id="btn-spinner"
+              class="spinner"
+              hidden
+            ></span>
+
           </button>
 
           <div class="secure-text">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <rect
+                x="3"
+                y="11"
+                width="18"
+                height="11"
+                rx="2"
+              ></rect>
+
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
-            <span>256-Bit SSL Encrypted Checkout</span>
+
+            <span>
+              Secure checkout
+            </span>
+
           </div>
+
+          <div
+            id="checkout-status"
+            class="checkout-status"
+            hidden
+            role="status"
+            aria-live="polite"
+          ></div>
+
         </div>
+
       </div>
+
     </aside>
 
   </main>
 
-  <!-- FOOTER -->
+  <!-- =========================================================
+       FOOTER
+       ========================================================= -->
+
   <footer class="footer">
+
     <div class="footer-links">
-      <a href="index.html">Shop</a>
-      <a href="about.html">About Us</a>
-      <a href="contact.html">Contact</a>
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Service</a>
+
+      <a href="index.html">
+        Shop
+      </a>
+
+      <a href="about.html">
+        About Us
+      </a>
+
+      <a href="contact.html">
+        Contact
+      </a>
+
+      <a href="privacy.html">
+        Privacy Policy
+      </a>
+
+      <a href="terms.html">
+        Terms of Service
+      </a>
+
     </div>
-    <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
+
+    <p>
+      &copy; 2026 PRASUN SHOP. All rights reserved.
+    </p>
+
   </footer>
 
-  <!-- SCRIPT LOGIC -->
+  <!-- =========================================================
+       CHECKOUT JAVASCRIPT
+       ========================================================= -->
+
   <script>
+    "use strict";
+
     document.addEventListener("DOMContentLoaded", () => {
-      // -----------------------------------------------------------------
-      // Mock Data & Storage State
-      // -----------------------------------------------------------------
+
+      /* =======================================================
+         CONFIGURATION
+         ======================================================= */
+
+      const CONFIG = {
+        /*
+         * IMPORTANT:
+         *
+         * Leave this empty until your Cloudflare Worker has
+         * a real order/payment endpoint.
+         *
+         * Example:
+         *
+         * API_ENDPOINT:
+         * "https://shop-api.prasunbarua.com/api/orders"
+         */
+        API_ENDPOINT: "",
+
+        /*
+         * Frontend display only.
+         *
+         * Do NOT use this as authoritative tax calculation.
+         * The backend should calculate the final amount.
+         */
+        DISPLAY_TAX_RATE: 0,
+
+        CURRENCY: "USD"
+      };
+
+
+      /* =======================================================
+         COUNTRIES
+         ======================================================= */
+
       const countries = [
-        "United States", "Canada", "United Kingdom", "Australia",
-        "Germany", "France", "Japan", "India", "Brazil", "Mexico",
-        "Italy", "Spain", "Netherlands", "Singapore", "Sweden"
+        "Afghanistan",
+        "Albania",
+        "Algeria",
+        "Andorra",
+        "Angola",
+        "Antigua and Barbuda",
+        "Argentina",
+        "Armenia",
+        "Australia",
+        "Austria",
+        "Azerbaijan",
+        "Bahamas",
+        "Bahrain",
+        "Bangladesh",
+        "Barbados",
+        "Belarus",
+        "Belgium",
+        "Belize",
+        "Benin",
+        "Bhutan",
+        "Bolivia",
+        "Bosnia and Herzegovina",
+        "Botswana",
+        "Brazil",
+        "Brunei",
+        "Bulgaria",
+        "Burkina Faso",
+        "Cambodia",
+        "Cameroon",
+        "Canada",
+        "Cape Verde",
+        "Central African Republic",
+        "Chad",
+        "Chile",
+        "China",
+        "Colombia",
+        "Comoros",
+        "Congo",
+        "Costa Rica",
+        "Croatia",
+        "Cuba",
+        "Cyprus",
+        "Czech Republic",
+        "Denmark",
+        "Djibouti",
+        "Dominica",
+        "Dominican Republic",
+        "Ecuador",
+        "Egypt",
+        "El Salvador",
+        "Estonia",
+        "Eswatini",
+        "Ethiopia",
+        "Fiji",
+        "Finland",
+        "France",
+        "Gabon",
+        "Gambia",
+        "Georgia",
+        "Germany",
+        "Ghana",
+        "Greece",
+        "Grenada",
+        "Guatemala",
+        "Guinea",
+        "Guyana",
+        "Haiti",
+        "Honduras",
+        "Hungary",
+        "Iceland",
+        "India",
+        "Indonesia",
+        "Iran",
+        "Iraq",
+        "Ireland",
+        "Israel",
+        "Italy",
+        "Jamaica",
+        "Japan",
+        "Jordan",
+        "Kazakhstan",
+        "Kenya",
+        "Kiribati",
+        "Kuwait",
+        "Kyrgyzstan",
+        "Laos",
+        "Latvia",
+        "Lebanon",
+        "Lesotho",
+        "Liberia",
+        "Libya",
+        "Liechtenstein",
+        "Lithuania",
+        "Luxembourg",
+        "Madagascar",
+        "Malawi",
+        "Malaysia",
+        "Maldives",
+        "Mali",
+        "Malta",
+        "Marshall Islands",
+        "Mauritania",
+        "Mauritius",
+        "Mexico",
+        "Micronesia",
+        "Moldova",
+        "Monaco",
+        "Mongolia",
+        "Montenegro",
+        "Morocco",
+        "Mozambique",
+        "Myanmar",
+        "Namibia",
+        "Nauru",
+        "Nepal",
+        "Netherlands",
+        "New Zealand",
+        "Nicaragua",
+        "Niger",
+        "Nigeria",
+        "North Korea",
+        "North Macedonia",
+        "Norway",
+        "Oman",
+        "Pakistan",
+        "Palau",
+        "Panama",
+        "Papua New Guinea",
+        "Paraguay",
+        "Peru",
+        "Philippines",
+        "Poland",
+        "Portugal",
+        "Qatar",
+        "Romania",
+        "Russia",
+        "Rwanda",
+        "Saint Kitts and Nevis",
+        "Saint Lucia",
+        "Saint Vincent and the Grenadines",
+        "Samoa",
+        "San Marino",
+        "Saudi Arabia",
+        "Senegal",
+        "Serbia",
+        "Seychelles",
+        "Sierra Leone",
+        "Singapore",
+        "Slovakia",
+        "Slovenia",
+        "Solomon Islands",
+        "Somalia",
+        "South Africa",
+        "South Korea",
+        "South Sudan",
+        "Spain",
+        "Sri Lanka",
+        "Sudan",
+        "Suriname",
+        "Sweden",
+        "Switzerland",
+        "Syria",
+        "Taiwan",
+        "Tajikistan",
+        "Tanzania",
+        "Thailand",
+        "Timor-Leste",
+        "Togo",
+        "Tonga",
+        "Trinidad and Tobago",
+        "Tunisia",
+        "Turkey",
+        "Turkmenistan",
+        "Tuvalu",
+        "Uganda",
+        "Ukraine",
+        "United Arab Emirates",
+        "United Kingdom",
+        "United States",
+        "Uruguay",
+        "Uzbekistan",
+        "Vanuatu",
+        "Vatican City",
+        "Venezuela",
+        "Vietnam",
+        "Yemen",
+        "Zambia",
+        "Zimbabwe"
       ];
 
-      // Sample fallback items if LocalStorage is empty for testing
-      const defaultCart = [
-        { id: 1, title: "Minimalist Wireless Headphones", price: 129.99, quantity: 1, image: "https://via.placeholder.com/68?text=Headphones" },
-        { id: 2, title: "Ergonomic Desk Mat", price: 29.50, quantity: 2, image: "https://via.placeholder.com/68?text=Mat" }
-      ];
 
-      let cart = JSON.parse(localStorage.getItem("cart")) || defaultCart;
+      /* =======================================================
+         DOM
+         ======================================================= */
 
-      // -----------------------------------------------------------------
-      // UI Elements
-      // -----------------------------------------------------------------
-      const cartCountEl = document.getElementById("cart-count");
-      const emptyCartEl = document.getElementById("empty-cart");
-      const checkoutMainEl = document.getElementById("checkout-main");
+      const cartCountEl =
+        document.getElementById("cart-count");
 
-      const summaryItemsEl = document.getElementById("summary-items");
-      const summaryCountEl = document.getElementById("summary-count");
-      const summarySubtotalEl = document.getElementById("summary-subtotal");
-      const summaryTaxEl = document.getElementById("summary-tax");
-      const summaryTotalEl = document.getElementById("summary-total-price");
+      const emptyCartEl =
+        document.getElementById("empty-cart");
 
-      const form = document.getElementById("checkout-form");
-      const placeOrderBtn = document.getElementById("btn-place-order");
-      const btnText = document.getElementById("btn-text");
-      const btnSpinner = document.getElementById("btn-spinner");
+      const checkoutMainEl =
+        document.getElementById("checkout-main");
 
-      // -----------------------------------------------------------------
-      // Render Cart & Summaries
-      // -----------------------------------------------------------------
+      const summaryItemsEl =
+        document.getElementById("summary-items");
+
+      const summaryCountEl =
+        document.getElementById("summary-count");
+
+      const summarySubtotalEl =
+        document.getElementById("summary-subtotal");
+
+      const summaryShippingEl =
+        document.getElementById("summary-shipping");
+
+      const summaryTaxEl =
+        document.getElementById("summary-tax");
+
+      const summaryTotalEl =
+        document.getElementById("summary-total-price");
+
+      const form =
+        document.getElementById("checkout-form");
+
+      const placeOrderBtn =
+        document.getElementById("btn-place-order");
+
+      const btnText =
+        document.getElementById("btn-text");
+
+      const btnSpinner =
+        document.getElementById("btn-spinner");
+
+      const statusEl =
+        document.getElementById("checkout-status");
+
+
+      /* =======================================================
+         SAFE HELPERS
+         ======================================================= */
+
+      function escapeHTML(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+
+      function formatMoney(value) {
+        const amount = Number(value);
+
+        if (!Number.isFinite(amount)) {
+          return "$0.00";
+        }
+
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: CONFIG.CURRENCY
+        }).format(amount);
+      }
+
+
+      function safeNumber(value, fallback = 0) {
+        const number = Number(value);
+
+        return Number.isFinite(number)
+          ? number
+          : fallback;
+      }
+
+
+      /* =======================================================
+         LOAD CART
+         ======================================================= */
+
+      function loadCart() {
+
+        try {
+
+          const raw =
+            localStorage.getItem("cart");
+
+          if (!raw) {
+            return [];
+          }
+
+          const parsed =
+            JSON.parse(raw);
+
+          if (!Array.isArray(parsed)) {
+            return [];
+          }
+
+          return parsed
+            .map(item => ({
+              id: item.id ?? item.sku ?? "",
+              sku: item.sku ?? "",
+              title:
+                String(
+                  item.title ??
+                  item.name ??
+                  "Product"
+                ),
+
+              price:
+                safeNumber(
+                  item.price ??
+                  item.salePrice ??
+                  item.sellingPrice,
+                  0
+                ),
+
+              quantity:
+                Math.max(
+                  1,
+                  Math.floor(
+                    safeNumber(
+                      item.quantity ??
+                      item.qty,
+                      1
+                    )
+                  )
+                ),
+
+              image:
+                typeof item.image === "string"
+                  ? item.image
+                  : (
+                      typeof item.imageUrl === "string"
+                        ? item.imageUrl
+                        : ""
+                    )
+            }))
+            .filter(item =>
+              item.id !== "" &&
+              item.price >= 0 &&
+              item.quantity > 0
+            );
+
+        } catch (error) {
+
+          console.error(
+            "Unable to read cart:",
+            error
+          );
+
+          return [];
+        }
+      }
+
+
+      let cart = loadCart();
+
+
+      /* =======================================================
+         CART SUMMARY
+         ======================================================= */
+
+      function calculateCart() {
+
+        const subtotal =
+          cart.reduce(
+            (sum, item) =>
+              sum +
+              (item.price * item.quantity),
+            0
+          );
+
+        const itemCount =
+          cart.reduce(
+            (sum, item) =>
+              sum + item.quantity,
+            0
+          );
+
+        /*
+         * Display-only tax.
+         *
+         * The final backend amount MUST be recalculated
+         * server-side.
+         */
+
+        const tax =
+          subtotal *
+          CONFIG.DISPLAY_TAX_RATE;
+
+        const shipping = 0;
+
+        const total =
+          subtotal +
+          tax +
+          shipping;
+
+        return {
+          subtotal,
+          tax,
+          shipping,
+          total,
+          itemCount
+        };
+      }
+
+
+      /* =======================================================
+         RENDER CART
+         ======================================================= */
+
       function renderCart() {
-        const totalItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-        if (totalItemsCount > 0) {
-          cartCountEl.textContent = totalItemsCount;
-          cartCountEl.hidden = false;
-        } else {
+        const totals =
+          calculateCart();
+
+        if (totals.itemCount <= 0) {
+
           cartCountEl.hidden = true;
-          checkoutMainEl.style.display = "none";
+
+          checkoutMainEl.hidden = true;
+
           emptyCartEl.hidden = false;
+
           return;
         }
 
-        // Calculate Prices
-        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const tax = subtotal * 0.08; // 8% tax rate
-        const total = subtotal + tax;
+        checkoutMainEl.hidden = false;
+        emptyCartEl.hidden = true;
 
-        // Populate Items list
-        summaryItemsEl.innerHTML = cart.map(item => `
-          <div class="summary-item">
-            <div class="summary-image">
-              <img src="${item.image || 'https://via.placeholder.com/68'}" alt="${item.title}">
-            </div>
-            <div>
-              <p class="summary-product-title">${item.title}</p>
-              <p class="summary-product-meta">Qty: ${item.quantity}</p>
-            </div>
-            <div class="summary-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
-          </div>
-        `).join("");
+        cartCountEl.textContent =
+          String(totals.itemCount);
 
-        summaryCountEl.textContent = `${totalItemsCount} ${totalItemsCount === 1 ? 'Item' : 'Items'}`;
-        summarySubtotalEl.textContent = `$${subtotal.toFixed(2)}`;
-        summaryTaxEl.textContent = `$${tax.toFixed(2)}`;
-        summaryTotalEl.textContent = `$${total.toFixed(2)}`;
+        cartCountEl.hidden = false;
+
+
+        summaryCountEl.textContent =
+          `${totals.itemCount} ${
+            totals.itemCount === 1
+              ? "Item"
+              : "Items"
+          }`;
+
+
+        summarySubtotalEl.textContent =
+          formatMoney(totals.subtotal);
+
+
+        /*
+         * Shipping is intentionally not hard-coded as free.
+         */
+        summaryShippingEl.textContent =
+          "Calculated at checkout";
+
+
+        /*
+         * Tax is not guessed.
+         */
+        summaryTaxEl.textContent =
+          CONFIG.DISPLAY_TAX_RATE > 0
+            ? formatMoney(totals.tax)
+            : "Calculated at checkout";
+
+
+        /*
+         * Until backend pricing is connected,
+         * subtotal is the safe frontend display total.
+         */
+        summaryTotalEl.textContent =
+          CONFIG.DISPLAY_TAX_RATE > 0
+            ? formatMoney(totals.total)
+            : formatMoney(totals.subtotal);
+
+
+        summaryItemsEl.innerHTML = "";
+
+        const fragment =
+          document.createDocumentFragment();
+
+
+        cart.forEach(item => {
+
+          const row =
+            document.createElement("div");
+
+          row.className =
+            "summary-item";
+
+
+          const imageWrapper =
+            document.createElement("div");
+
+          imageWrapper.className =
+            "summary-image";
+
+
+          if (item.image) {
+
+            const image =
+              document.createElement("img");
+
+            image.src =
+              item.image;
+
+            image.alt =
+              item.title;
+
+            image.loading =
+              "lazy";
+
+            image.referrerPolicy =
+              "no-referrer";
+
+            image.addEventListener(
+              "error",
+              () => {
+                image.removeAttribute("src");
+              },
+              { once: true }
+            );
+
+            imageWrapper.appendChild(image);
+          }
+
+
+          const details =
+            document.createElement("div");
+
+
+          const title =
+            document.createElement("p");
+
+          title.className =
+            "summary-product-title";
+
+          title.textContent =
+            item.title;
+
+
+          const meta =
+            document.createElement("p");
+
+          meta.className =
+            "summary-product-meta";
+
+          meta.textContent =
+            `Qty: ${item.quantity}`;
+
+
+          details.appendChild(title);
+          details.appendChild(meta);
+
+
+          const price =
+            document.createElement("div");
+
+          price.className =
+            "summary-item-price";
+
+          price.textContent =
+            formatMoney(
+              item.price *
+              item.quantity
+            );
+
+
+          row.appendChild(
+            imageWrapper
+          );
+
+          row.appendChild(
+            details
+          );
+
+          row.appendChild(
+            price
+          );
+
+          fragment.appendChild(row);
+
+        });
+
+
+        summaryItemsEl.appendChild(
+          fragment
+        );
       }
+
 
       renderCart();
 
-      // -----------------------------------------------------------------
-      // Searchable Country Dropdown Logic
-      // -----------------------------------------------------------------
-      const countryTrigger = document.getElementById("country-trigger");
-      const countryMenu = document.getElementById("country-menu");
-      const countrySearch = document.getElementById("country-search");
-      const countryOptionsEl = document.getElementById("country-options");
-      const countrySelectedEl = document.getElementById("country-selected");
-      const countryInputHidden = document.getElementById("country");
 
-      function populateCountries(filter = "") {
-        const filtered = countries.filter(c => c.toLowerCase().includes(filter.toLowerCase()));
+      /* =======================================================
+         COUNTRY DROPDOWN
+         ======================================================= */
+
+      const countryTrigger =
+        document.getElementById(
+          "country-trigger"
+        );
+
+      const countryMenu =
+        document.getElementById(
+          "country-menu"
+        );
+
+      const countrySearch =
+        document.getElementById(
+          "country-search"
+        );
+
+      const countryOptionsEl =
+        document.getElementById(
+          "country-options"
+        );
+
+      const countrySelectedEl =
+        document.getElementById(
+          "country-selected"
+        );
+
+      const countryInputHidden =
+        document.getElementById(
+          "country"
+        );
+
+
+      function populateCountries(
+        filter = ""
+      ) {
+
+        const query =
+          filter
+            .trim()
+            .toLowerCase();
+
+
+        const filtered =
+          countries.filter(
+            country =>
+              country
+                .toLowerCase()
+                .includes(query)
+          );
+
+
+        countryOptionsEl.innerHTML =
+          "";
+
 
         if (filtered.length === 0) {
-          countryOptionsEl.innerHTML = `<div class="country-no-results">No countries found</div>`;
+
+          const empty =
+            document.createElement(
+              "div"
+            );
+
+          empty.className =
+            "country-no-results";
+
+          empty.textContent =
+            "No countries found.";
+
+          countryOptionsEl.appendChild(
+            empty
+          );
+
           return;
         }
 
-        countryOptionsEl.innerHTML = filtered.map(c => `
-          <button type="button" class="country-option ${c === countryInputHidden.value ? 'selected' : ''}" data-value="${c}">
-            ${c}
-          </button>
-        `).join("");
 
-        // Attach click handler to choices
-        countryOptionsEl.querySelectorAll(".country-option").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const val = btn.getAttribute("data-value");
-            countryInputHidden.value = val;
-            countrySelectedEl.textContent = val;
-            closeCountryDropdown();
-          });
+        const fragment =
+          document.createDocumentFragment();
+
+
+        filtered.forEach(country => {
+
+          const button =
+            document.createElement(
+              "button"
+            );
+
+          button.type =
+            "button";
+
+          button.className =
+            "country-option";
+
+
+          if (
+            country ===
+            countryInputHidden.value
+          ) {
+            button.classList.add(
+              "selected"
+            );
+          }
+
+
+          button.textContent =
+            country;
+
+
+          button.setAttribute(
+            "role",
+            "option"
+          );
+
+
+          button.setAttribute(
+            "aria-selected",
+            String(
+              country ===
+              countryInputHidden.value
+            )
+          );
+
+
+          button.addEventListener(
+            "click",
+            () => {
+
+              countryInputHidden.value =
+                country;
+
+              countrySelectedEl.textContent =
+                country;
+
+              closeCountryDropdown();
+
+            }
+          );
+
+
+          fragment.appendChild(
+            button
+          );
+
         });
+
+
+        countryOptionsEl.appendChild(
+          fragment
+        );
       }
 
-      function toggleCountryDropdown() {
-        const isOpen = countryMenu.classList.contains("open");
-        if (isOpen) {
-          closeCountryDropdown();
-        } else {
-          countryMenu.classList.add("open");
-          countryTrigger.classList.add("open");
-          countryTrigger.setAttribute("aria-expanded", "true");
-          countrySearch.value = "";
-          populateCountries();
-          countrySearch.focus();
-        }
+
+      function openCountryDropdown() {
+
+        countryMenu.classList.add(
+          "open"
+        );
+
+        countryTrigger.classList.add(
+          "open"
+        );
+
+        countryTrigger.setAttribute(
+          "aria-expanded",
+          "true"
+        );
+
+        countrySearch.value =
+          "";
+
+        populateCountries();
+
+        requestAnimationFrame(
+          () => countrySearch.focus()
+        );
       }
+
 
       function closeCountryDropdown() {
-        countryMenu.classList.remove("open");
-        countryTrigger.classList.remove("open");
-        countryTrigger.setAttribute("aria-expanded", "false");
+
+        countryMenu.classList.remove(
+          "open"
+        );
+
+        countryTrigger.classList.remove(
+          "open"
+        );
+
+        countryTrigger.setAttribute(
+          "aria-expanded",
+          "false"
+        );
       }
 
-      countryTrigger.addEventListener("click", toggleCountryDropdown);
-      countrySearch.addEventListener("input", (e) => populateCountries(e.target.value));
 
-      document.addEventListener("click", (e) => {
-        if (!document.getElementById("country-dropdown").contains(e.target)) {
-          closeCountryDropdown();
-        }
-      });
+      countryTrigger.addEventListener(
+        "click",
+        () => {
 
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeCountryDropdown();
-      });
+          const isOpen =
+            countryMenu.classList.contains(
+              "open"
+            );
 
-      // -----------------------------------------------------------------
-      // Payment Type Toggle Logic
-      // -----------------------------------------------------------------
-      const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
-      const cardFields = document.getElementById("card-fields");
-
-      paymentRadios.forEach(radio => {
-        radio.addEventListener("change", (e) => {
-          if (e.target.value === "card") {
-            cardFields.style.display = "grid";
+          if (isOpen) {
+            closeCountryDropdown();
           } else {
-            cardFields.style.display = "none";
+            openCountryDropdown();
           }
-        });
-      });
 
-      // -----------------------------------------------------------------
-      // Dynamic Form Input Formatting & Clear Errors
-      // -----------------------------------------------------------------
-      const cardNumberInput = document.getElementById("card-number");
-      const cardExpInput = document.getElementById("card-exp");
+        }
+      );
 
-      cardNumberInput.addEventListener("input", (e) => {
-        let val = e.target.value.replace(/\D/g, "");
-        val = val.substring(0, 16);
-        e.target.value = val.replace(/(.{4})/g, "$1 ").trim();
-      });
 
-      cardExpInput.addEventListener("input", (e) => {
-        let val = e.target.value.replace(/\D/g, "");
-        if (val.length >= 2) {
-          e.target.value = val.substring(0, 2) + " / " + val.substring(2, 4);
+      countrySearch.addEventListener(
+        "input",
+        event => {
+
+          populateCountries(
+            event.target.value
+          );
+
+        }
+      );
+
+
+      document.addEventListener(
+        "click",
+        event => {
+
+          const dropdown =
+            document.getElementById(
+              "country-dropdown"
+            );
+
+          if (
+            dropdown &&
+            !dropdown.contains(
+              event.target
+            )
+          ) {
+            closeCountryDropdown();
+          }
+
+        }
+      );
+
+
+      document.addEventListener(
+        "keydown",
+        event => {
+
+          if (event.key === "Escape") {
+            closeCountryDropdown();
+          }
+
+        }
+      );
+
+
+      /* =======================================================
+         PAYMENT METHOD
+         ======================================================= */
+
+      const paymentRadios =
+        document.querySelectorAll(
+          'input[name="paymentMethod"]'
+        );
+
+      const paymentInfo =
+        document.getElementById(
+          "payment-info"
+        );
+
+
+      function updatePaymentMessage(
+        method
+      ) {
+
+        if (method === "card") {
+
+          paymentInfo.innerHTML =
+            "<strong>Card payment:</strong> " +
+            "You will be redirected to a secure payment provider " +
+            "when card processing is enabled. " +
+            "PRASUN SHOP does not store your full card number or CVV.";
+
+        } else if (method === "paypal") {
+
+          paymentInfo.innerHTML =
+            "<strong>PayPal:</strong> " +
+            "You will be redirected to PayPal to authorize payment " +
+            "when PayPal checkout is connected.";
+
         } else {
-          e.target.value = val;
+
+          paymentInfo.innerHTML =
+            "<strong>Payment:</strong> " +
+            "This payment method will be handled according to the " +
+            "payment options configured by PRASUN SHOP.";
+
         }
-      });
 
-      form.querySelectorAll(".form-input").forEach(input => {
-        input.addEventListener("input", () => {
-          input.classList.remove("invalid");
-          const errorSpan = document.getElementById(`${input.id}-error`);
-          if (errorSpan) errorSpan.classList.remove("show");
-        });
-      });
+      }
 
-      // -----------------------------------------------------------------
-      // Validation & Order Submission
-      // -----------------------------------------------------------------
-      function validateForm() {
-        let isValid = true;
 
-        const validateField = (id, condition) => {
-          const field = document.getElementById(id);
-          const errorSpan = document.getElementById(`${id}-error`);
-          if (!field) return true;
+      paymentRadios.forEach(
+        radio => {
 
-          if (!condition(field.value.trim())) {
-            field.classList.add("invalid");
-            if (errorSpan) errorSpan.classList.add("show");
-            isValid = false;
-          } else {
-            field.classList.remove("invalid");
-            if (errorSpan) errorSpan.classList.remove("show");
+          radio.addEventListener(
+            "change",
+            event => {
+
+              updatePaymentMessage(
+                event.target.value
+              );
+
+            }
+          );
+
+        }
+      );
+
+
+      /* =======================================================
+         FORM ERRORS
+         ======================================================= */
+
+      function clearFieldError(
+        input
+      ) {
+
+        input.classList.remove(
+          "invalid"
+        );
+
+        const error =
+          document.getElementById(
+            `${input.id}-error`
+          );
+
+        if (error) {
+          error.classList.remove(
+            "show"
+          );
+        }
+
+      }
+
+
+      form.querySelectorAll(
+        ".form-input, .form-select, .form-textarea"
+      ).forEach(
+        input => {
+
+          input.addEventListener(
+            "input",
+            () => clearFieldError(input)
+          );
+
+          input.addEventListener(
+            "change",
+            () => clearFieldError(input)
+          );
+
+        }
+      );
+
+
+      /* =======================================================
+         VALIDATION
+         ======================================================= */
+
+      function showFieldError(
+        id,
+        message = null
+      ) {
+
+        const field =
+          document.getElementById(id);
+
+        if (!field) {
+          return false;
+        }
+
+
+        field.classList.add(
+          "invalid"
+        );
+
+
+        const error =
+          document.getElementById(
+            `${id}-error`
+          );
+
+
+        if (error) {
+
+          if (message) {
+            error.textContent =
+              message;
           }
+
+          error.classList.add(
+            "show"
+          );
+
+        }
+
+
+        return false;
+      }
+
+
+      function validateForm() {
+
+        let valid =
+          true;
+
+
+        const email =
+          document.getElementById(
+            "email"
+          );
+
+        const phone =
+          document.getElementById(
+            "phone"
+          );
+
+        const firstName =
+          document.getElementById(
+            "first-name"
+          );
+
+        const lastName =
+          document.getElementById(
+            "last-name"
+          );
+
+        const address =
+          document.getElementById(
+            "address"
+          );
+
+        const city =
+          document.getElementById(
+            "city"
+          );
+
+        const postal =
+          document.getElementById(
+            "postal-code"
+          );
+
+
+        if (
+          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+            .test(email.value.trim())
+        ) {
+
+          showFieldError(
+            "email"
+          );
+
+          valid = false;
+
+        }
+
+
+        const phoneDigits =
+          phone.value.replace(
+            /[^\d]/g,
+            ""
+          );
+
+
+        if (
+          phoneDigits.length < 7 ||
+          phoneDigits.length > 15
+        ) {
+
+          showFieldError(
+            "phone"
+          );
+
+          valid = false;
+
+        }
+
+
+        const textFields = [
+          ["first-name", firstName],
+          ["last-name", lastName],
+          ["address", address],
+          ["city", city]
+        ];
+
+
+        textFields.forEach(
+          ([id, field]) => {
+
+            if (
+              field.value.trim().length < 1
+            ) {
+
+              showFieldError(id);
+
+              valid = false;
+
+            }
+
+          }
+        );
+
+
+        if (
+          postal.value.trim().length < 3
+        ) {
+
+          showFieldError(
+            "postal-code"
+          );
+
+          valid = false;
+
+        }
+
+
+        if (
+          !countryInputHidden.value
+        ) {
+
+          valid = false;
+
+          countryTrigger.classList.add(
+            "open"
+          );
+
+        }
+
+
+        return valid;
+      }
+
+
+      /* =======================================================
+         COLLECT ORDER DATA
+         ======================================================= */
+
+      function collectOrderData() {
+
+        const paymentMethod =
+          document.querySelector(
+            'input[name="paymentMethod"]:checked'
+          )?.value || "card";
+
+
+        return {
+
+          customer: {
+
+            email:
+              document.getElementById(
+                "email"
+              ).value.trim(),
+
+            phone:
+              document.getElementById(
+                "phone"
+              ).value.trim(),
+
+            firstName:
+              document.getElementById(
+                "first-name"
+              ).value.trim(),
+
+            lastName:
+              document.getElementById(
+                "last-name"
+              ).value.trim()
+
+          },
+
+          shippingAddress: {
+
+            address:
+              document.getElementById(
+                "address"
+              ).value.trim(),
+
+            city:
+              document.getElementById(
+                "city"
+              ).value.trim(),
+
+            state:
+              document.getElementById(
+                "state"
+              ).value.trim(),
+
+            postalCode:
+              document.getElementById(
+                "postal-code"
+              ).value.trim(),
+
+            country:
+              countryInputHidden.value
+
+          },
+
+          orderNotes:
+            document.getElementById(
+              "order-notes"
+            ).value.trim(),
+
+          paymentMethod,
+
+          /*
+           * IMPORTANT:
+           *
+           * Only send product identifiers and quantities
+           * to the backend.
+           *
+           * The backend must look up authoritative prices.
+           */
+
+          items:
+            cart.map(item => ({
+              id: item.id,
+              sku: item.sku || null,
+              quantity: item.quantity
+            }))
+
         };
 
-        // Text Validations
-        validateField("email", val => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val));
-        validateField("phone", val => val.length >= 7);
-        validateField("first-name", val => val.length > 0);
-        validateField("last-name", val => val.length > 0);
-        validateField("address", val => val.length > 0);
-        validateField("city", val => val.length > 0);
-        validateField("postal-code", val => val.length >= 3);
-
-        // Conditional Card Validations
-        const selectedPayment = document.querySelector('input[name="paymentMethod"]:checked').value;
-        if (selectedPayment === "card") {
-          validateField("card-number", val => val.replace(/\s/g, "").length === 16);
-          validateField("card-exp", val => val.length === 7);
-          validateField("card-cvc", val => val.length >= 3);
-        }
-
-        return isValid;
       }
 
-      placeOrderBtn.addEventListener("click", (e) => {
-        e.preventDefault();
 
-        if (!validateForm()) {
-          // Scroll smoothly to first error element
-          const firstError = document.querySelector(".form-input.invalid");
-          if (firstError) {
-            firstError.scrollIntoView({ behavior: "smooth", block: "center" });
-            firstError.focus();
-          }
-          return;
+      /* =======================================================
+         STATUS
+         ======================================================= */
+
+      function showStatus(
+        message,
+        type = "error"
+      ) {
+
+        statusEl.hidden =
+          false;
+
+        statusEl.className =
+          `checkout-status ${type}`;
+
+        statusEl.textContent =
+          message;
+
+      }
+
+
+      function clearStatus() {
+
+        statusEl.hidden =
+          true;
+
+        statusEl.textContent =
+          "";
+
+      }
+
+
+      /* =======================================================
+         SUBMIT
+         ======================================================= */
+
+      async function submitOrder(
+        order
+      ) {
+
+        /*
+         * No backend configured yet.
+         *
+         * Do not pretend the order has been placed.
+         */
+
+        if (!CONFIG.API_ENDPOINT) {
+
+          console.info(
+            "Checkout payload ready:",
+            order
+          );
+
+          /*
+           * Save temporarily so the next payment/backend
+           * integration can use it.
+           *
+           * This does NOT mean the order is confirmed.
+           */
+
+          sessionStorage.setItem(
+            "pendingCheckout",
+            JSON.stringify({
+              ...order,
+              createdAt:
+                new Date().toISOString()
+            })
+          );
+
+
+          showStatus(
+            "Your order information is valid. Payment processing is not connected yet. Please connect the payment/order API before accepting live orders.",
+            "error"
+          );
+
+
+          return {
+            success: false,
+            configured: false
+          };
+
         }
 
-        // Processing State UI
-        placeOrderBtn.disabled = true;
-        btnText.textContent = "Processing Order...";
-        btnSpinner.hidden = false;
 
-        // Mock Order Processing Delay
-        setTimeout(() => {
-          localStorage.removeItem("cart");
-          alert("Order placed successfully! Thank you for shopping with PRASUN SHOP.");
-          window.location.href = "index.html";
-        }, 2000);
-      });
+        const response =
+          await fetch(
+            CONFIG.API_ENDPOINT,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                "Accept":
+                  "application/json"
+              },
+
+              credentials:
+                "include",
+
+              body:
+                JSON.stringify(order)
+            }
+          );
+
+
+        let result =
+          null;
+
+
+        try {
+          result =
+            await response.json();
+        } catch {
+          result = null;
+        }
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            result?.message ||
+            "Unable to process the order."
+          );
+
+        }
+
+
+        return {
+          success: true,
+          result
+        };
+
+      }
+
+
+      /* =======================================================
+         PLACE ORDER
+         ======================================================= */
+
+      form.addEventListener(
+        "submit",
+        async event => {
+
+          event.preventDefault();
+
+          clearStatus();
+
+
+          /*
+           * Reload cart in case another tab changed it.
+           */
+
+          cart =
+            loadCart();
+
+
+          if (!cart.length) {
+
+            renderCart();
+
+            return;
+
+          }
+
+
+          if (!validateForm()) {
+
+            const firstInvalid =
+              document.querySelector(
+                ".invalid"
+              );
+
+
+            if (firstInvalid) {
+
+              firstInvalid.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+              });
+
+              setTimeout(
+                () => firstInvalid.focus(),
+                250
+              );
+
+            }
+
+            return;
+
+          }
+
+
+          const order =
+            collectOrderData();
+
+
+          placeOrderBtn.disabled =
+            true;
+
+          btnText.textContent =
+            "Processing...";
+
+          btnSpinner.hidden =
+            false;
+
+          document.body.classList.add(
+            "is-loading"
+          );
+
+
+          try {
+
+            const result =
+              await submitOrder(
+                order
+              );
+
+
+            if (!result.success) {
+
+              /*
+               * Backend is not configured.
+               * Keep cart intact.
+               */
+
+              placeOrderBtn.disabled =
+                false;
+
+              btnText.textContent =
+                "Continue to Payment";
+
+              btnSpinner.hidden =
+                true;
+
+              document.body.classList.remove(
+                "is-loading"
+              );
+
+              return;
+
+            }
+
+
+            /*
+             * Only clear the cart after the backend
+             * has successfully accepted the order.
+             */
+
+            localStorage.removeItem(
+              "cart"
+            );
+
+
+            showStatus(
+              "Order accepted successfully.",
+              "success"
+            );
+
+
+            /*
+             * If the backend returns a payment URL,
+             * redirect to it.
+             */
+
+            if (
+              result.result?.paymentUrl
+            ) {
+
+              window.location.href =
+                result.result.paymentUrl;
+
+              return;
+
+            }
+
+
+            /*
+             * If backend returns an order URL.
+             */
+
+            if (
+              result.result?.orderUrl
+            ) {
+
+              window.location.href =
+                result.result.orderUrl;
+
+              return;
+
+            }
+
+
+            /*
+             * Otherwise go back to shop.
+             */
+
+            setTimeout(
+              () => {
+                window.location.href =
+                  "index.html";
+              },
+              1200
+            );
+
+          } catch (error) {
+
+            console.error(
+              "Checkout error:",
+              error
+            );
+
+
+            showStatus(
+              error.message ||
+              "Something went wrong while processing your order. Please try again.",
+              "error"
+            );
+
+
+            placeOrderBtn.disabled =
+              false;
+
+            btnText.textContent =
+              "Continue to Payment";
+
+            btnSpinner.hidden =
+              true;
+
+            document.body.classList.remove(
+              "is-loading"
+            );
+
+          }
+
+        }
+      );
+
+
+      /* =======================================================
+         CART STORAGE SYNC
+         ======================================================= */
+
+      window.addEventListener(
+        "storage",
+        event => {
+
+          if (
+            event.key === "cart"
+          ) {
+
+            cart =
+              loadCart();
+
+            renderCart();
+
+          }
+
+        }
+      );
+
+
+      /* =======================================================
+         INITIAL PAYMENT MESSAGE
+         ======================================================= */
+
+      updatePaymentMessage(
+        "card"
+      );
+
     });
   </script>
+
 </body>
 </html>
