@@ -1,410 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
   <!-- =====================================================
        GOOGLE ANALYTICS
        ===================================================================== -->
-
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"></script>
-
   <script>
     window.dataLayer = window.dataLayer || [];
-
     function gtag() {
       dataLayer.push(arguments);
     }
-
     gtag('js', new Date());
     gtag('config', 'G-D9F2VQ4247');
   </script>
 
-
   <!-- =====================================================
        BASIC META
        ===================================================================== -->
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PRASUN SHOP — Physical Products</title>
-
-  <meta
-    name="description"
-    content="Shop quality physical products from PRASUN SHOP."
-  >
-
+  <meta name="description" content="Shop quality physical products from PRASUN SHOP.">
 
   <!-- =====================================================
        FAVICON
        ===================================================================== -->
-
-  <link
-    rel="icon"
-    href="favicon.ico"
-    sizes="any"
-  >
-
-  <link
-    rel="icon"
-    href="icon.svg"
-    type="image/svg+xml"
-  >
-
-  <link
-    rel="apple-touch-icon"
-    href="apple-touch-icon.png"
-  >
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
   <link rel="stylesheet" href="style.css">
-
 
   <!-- =====================================================
        GOOGLE ADSENSE
        ===================================================================== -->
-
-  <script
-    async
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168"
-    crossorigin="anonymous">
-  </script>
-
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168" crossorigin="anonymous"></script>
 </head>
 
-
 <body>
-
 
   <!-- =====================================================
        HEADER
        ===================================================================== -->
-
   <header class="header">
-
     <div class="header-container">
-
-      <a
-        href="index.html"
-        class="logo"
-        aria-label="PRASUN SHOP Homepage">
-
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true">
-
+      <a href="index.html" class="logo" aria-label="PRASUN SHOP Homepage">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M3 9l9-6 9 6"></path>
-
           <path d="M5 10v10h14V10"></path>
-
           <path d="M9 20v-6h6v6"></path>
-
         </svg>
-
         <span>PRASUN SHOP</span>
-
       </a>
 
-
       <nav class="nav-links" aria-label="Main navigation">
-
-        <a
-          href="index.html"
-          class="active">
-          Shop
-        </a>
-
+        <a href="index.html" class="active">Shop</a>
         <a href="cart.html" class="cart-link">
-
           Cart
-
-          <span
-            id="cart-count"
-            class="cart-count"
-            hidden>
-            0
-          </span>
-
+          <span id="cart-count" class="cart-count" hidden>0</span>
         </a>
-
-        <a href="about.html">
-          About
-        </a>
-
-        <a href="contact.html">
-          Contact
-        </a>
-
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
       </nav>
-
     </div>
-
   </header>
-
 
   <!-- =====================================================
        MAIN SHOP
        ===================================================================== -->
-
   <main class="shop-container">
-
-    <h1 class="shop-title">
-      Shop Physical Products
-    </h1>
-
-
-    <p class="shop-subtitle">
-      Discover useful products from PRASUN SHOP.
-    </p>
-
+    <h1 class="shop-title">Shop Physical Products</h1>
+    <p class="shop-subtitle">Discover useful products from PRASUN SHOP.</p>
 
     <!-- ===================================================
          SEARCH + SORT
          =================================================== -->
-
     <div class="products-toolbar">
-
       <div class="search-wrapper">
-
-        <label
-          for="product-search"
-          class="visually-hidden">
-          Search products
-        </label>
-
-        <input
-          id="product-search"
-          class="products-search-input"
-          type="search"
-          placeholder="Search products..."
-          autocomplete="off"
-          spellcheck="false"
-        >
-
-        <button
-          id="clear-search"
-          class="search-clear"
-          type="button"
-          aria-label="Clear search"
-          aria-hidden="true"
-          hidden>
-          &times;
-        </button>
-
+        <label for="product-search" class="visually-hidden">Search products</label>
+        <input id="product-search" class="products-search-input" type="search" placeholder="Search products..." autocomplete="off" spellcheck="false">
+        <button id="clear-search" class="search-clear" type="button" aria-label="Clear search" aria-hidden="true" hidden>&times;</button>
       </div>
 
-
-      <label
-        for="product-sort"
-        class="visually-hidden">
-        Sort products
-      </label>
-
-      <select
-        id="product-sort"
-        class="products-sort">
-
-        <option value="featured">
-          Featured
-        </option>
-
-        <option value="price-low">
-          Price: Low to High
-        </option>
-
-        <option value="price-high">
-          Price: High to Low
-        </option>
-
-        <option value="rating">
-          Highest Rated
-        </option>
-
-        <option value="name">
-          Name: A to Z
-        </option>
-
+      <label for="product-sort" class="visually-hidden">Sort products</label>
+      <select id="product-sort" class="products-sort">
+        <option value="featured">Featured</option>
+        <option value="price-low">Price: Low to High</option>
+        <option value="price-high">Price: High to Low</option>
+        <option value="rating">Highest Rated</option>
+        <option value="name">Name: A to Z</option>
       </select>
-
     </div>
-
 
     <!-- ===================================================
          CATEGORY FILTERS
          =================================================== -->
-
-    <div
-      class="products-categories"
-      aria-label="Product categories">
-
-      <button
-        type="button"
-        class="category-pill active"
-        data-category="all"
-        aria-pressed="true">
-        All
-      </button>
-
-      <button
-        type="button"
-        class="category-pill"
-        data-category="Electronics"
-        aria-pressed="false">
-        Electronics
-      </button>
-
-      <button
-        type="button"
-        class="category-pill"
-        data-category="Home & Living"
-        aria-pressed="false">
-        Home & Living
-      </button>
-
-      <button
-        type="button"
-        class="category-pill"
-        data-category="Fitness"
-        aria-pressed="false">
-        Fitness
-      </button>
-
+    <div class="products-categories" aria-label="Product categories">
+      <button type="button" class="category-pill active" data-category="all" aria-pressed="true">All</button>
+      <button type="button" class="category-pill" data-category="Electronics" aria-pressed="false">Electronics</button>
+      <button type="button" class="category-pill" data-category="Home & Living" aria-pressed="false">Home & Living</button>
+      <button type="button" class="category-pill" data-category="Fitness" aria-pressed="false">Fitness</button>
     </div>
-
 
     <!-- ===================================================
          RESULT INFORMATION
          =================================================== -->
-
     <div class="products-result-bar">
-
-      <span id="page-heading">
-        All Products
-      </span>
-
-      <span
-        id="results-count"
-        class="products-result-count">
-        Loading products...
-      </span>
-
+      <span id="page-heading">All Products</span>
+      <span id="results-count" class="products-result-count">Loading products...</span>
     </div>
-
 
     <!-- ===================================================
          PRODUCT GRID
          =================================================== -->
-
-    <section
-      id="product-list"
-      class="product-grid"
-      aria-live="polite"
-      aria-busy="true"
-      aria-label="Products">
-
-      <div
-        class="products-empty"
-        role="status">
-
-        <h2>
-          Loading products...
-        </h2>
-
-        <p>
-          Please wait while products are loaded from CJ Dropshipping.
-        </p>
-
+    <section id="product-list" class="product-grid" aria-live="polite" aria-busy="true" aria-label="Products">
+      <div class="products-empty" role="status">
+        <h2>Loading products...</h2>
+        <p>Please wait while products are loaded from CJ Dropshipping.</p>
       </div>
-
     </section>
 
     <!-- Hidden Live Region for Screen Readers -->
     <div id="aria-live-region" class="visually-hidden" aria-live="polite"></div>
 
-
     <!-- ===================================================
          STORE INFORMATION
          =================================================== -->
-
-    <section class="store-info">
-
-      <h2>
-        About PRASUN SHOP
-      </h2>
-
-      <p>
-        PRASUN SHOP offers selected physical products through
-        trusted fulfillment partners. Product availability,
-        pricing, shipping options, and delivery times may vary
-        by product and destination.
-      </p>
-
+    <section class="store-info" style="margin-top: 60px;">
+      <h2>About PRASUN SHOP</h2>
+      <p>PRASUN SHOP offers selected physical products through trusted fulfillment partners. Product availability, pricing, shipping options, and delivery times may vary by product and destination.</p>
     </section>
-
   </main>
-
 
   <!-- =====================================================
        FOOTER
        ===================================================== -->
-
   <footer class="footer">
-
     <div class="footer-links">
-
-      <a href="privacy.html">
-        Privacy Policy
-      </a>
-
-      <a href="terms.html">
-        Terms of Service
-      </a>
-
-      <a href="refund.html">
-        Refund Policy
-      </a>
-
-      <a href="contact.html">
-        Contact
-      </a>
-
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="refund.html">Refund Policy</a>
+      <a href="contact.html">Contact</a>
     </div>
 
-
     <p>
-
       &copy; 2026 PRASUN SHOP by
-
-      <a
-        href="https://prasunbarua.com"
-        target="_blank"
-        rel="noopener">
-        Prasun Barua
-      </a>.
-
-      All rights reserved.
-
+      <a href="https://prasunbarua.com" target="_blank" rel="noopener">Prasun Barua</a>. All rights reserved.
     </p>
-
   </footer>
-
 
   <!-- =====================================================
        JAVASCRIPT
        ===================================================== -->
-
   <script src="script.js" defer></script>
-
-
 </body>
 </html>
