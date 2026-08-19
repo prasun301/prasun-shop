@@ -224,18 +224,20 @@ img {
 
 .product-image-wrapper {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  height: 200px; /* Fixed uniform height for all product cards */
   background-color: #f1f5f9;
+  overflow: hidden;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 }
 
 .product-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* Ensures images neatly fill the box without distorting */
+  object-position: center;
 }
 
 .product-image.is-fallback {
