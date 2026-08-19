@@ -1,35 +1,37 @@
 /**
- * products.js - CJ Dropshipping Live Search & Catalog Manager
+ * products.js - Prasun Shop Catalog & Live Search Manager
  */
 (function () {
     "use strict";
 
     const CONFIG = {
-        API_URL: "/api/cj-products", // Points to your backend proxy route
         CART_KEY: "prasun_cart_items",
-        DEBOUNCE_DELAY_MS: 400,
         FALLBACK_IMAGE: "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='14'%3ENo CJ Image Available%3C/text%3E%3C/svg%3E"
     };
 
     let state = {
-        keyword: "",
-        pageNum: 1,
-        pageSize: 20,
         searchTimer: null
     };
 
     const DOM = {
         productList: null,
         searchInput: null,
-        searchClearBtn: null,
         resultsCount: null,
         cartBadge: null
     };
 
+    // CJ Dropshipping Product Catalog Mock Dataset
+    const mockProductsCatalog = [
+        { pid: "1", productNameEn: "Wireless Bluetooth Headphones", sellPrice: 29.99, description: "High-quality wireless headphones sourced directly from CJ.", productImage: "" },
+        { pid: "2", productNameEn: "Ergonomic Desk Chair", sellPrice: 189.00, description: "Comfortable ergonomic office chair designed for long hours.", productImage: "" },
+        { pid: "3", productNameEn: "Smart Fitness Watch", sellPrice: 45.50, description: "Track your health, step counter, and heart rate seamlessly.", productImage: "" },
+        { pid: "4", productNameEn: "Portable LED Desk Lamp", sellPrice: 19.99, description: "Adjustable brightness touch-control desk lamp.", productImage: "" },
+        { pid: "5", productNameEn: "Stainless Steel Water Bottle", sellPrice: 15.00, description: "Double-walled vacuum insulated thermal bottle.", productImage: "" }
+    ];
+
     function cacheDOM() {
         DOM.productList = document.getElementById("product-list");
         DOM.searchInput = document.querySelector(".products-search-input");
-        DOM.searchClearBtn = document.querySelector(".search-clear");
         DOM.resultsCount = document.querySelector(".products-result-count");
         DOM.cartBadge = document.getElementById("cart-badge");
     }
@@ -59,100 +61,63 @@
         DOM.cartBadge.style.display = total > 0 ? "inline-block" : "none";
     }
 
-  async function fetchCJProducts(keyword = "", page = 1) {
-    if (!DOM.productList) return;
-
-    if (DOM.resultsCount) {
-        DOM.resultsCount.textContent = "Loading products...";
-    }
-
-    // Local mock products catalog for frontend-only testing
-    const mockProducts = [
-        { pid: "1", productNameEn: "Wireless Bluetooth Headphones", sellPrice: 29.99, description: "High-quality wireless headphones from CJ.", productImage: "" },
-        { pid: "2", productNameEn: "Ergonomic Desk Chair", sellPrice: 189.00, description: "Comfortable ergonomic office chair.", productImage: "" },
-        { pid: "3", productNameEn: "Smart Fitness Watch", sellPrice: 45.50, description: "Track your health, steps, and heart rate seamlessly.", productImage: "" }
-    ];
-
-    // Simulate a brief network delay (0.3s) for realistic UX, then render mock items
-    setTimeout(() => {
-        const filtered = keyword 
-            ? mockProducts.filter(p => p.productNameEn.toLowerCase().includes(keyword.toLowerCase()))
-            : mockProducts;
-
-        renderProducts(filtered);
+    // Search and Render Catalog Items
+    function loadProducts(keyword = "") {
+        if (!DOM.productList) return;
 
         if (DOM.resultsCount) {
-            DOM.resultsCount.textContent = `Showing ${filtered.length} products (Local Demo Mode)`;
+            DOM.resultsCount.textContent = "Loading products...";
         }
-    }, 300);
-}
-    } catch (error) {
-        console.warn("API request failed, switching to local mock products catalog:", error);
-        
-        // Local fallback mock products for immediate offline/frontend testing
-        const mockProducts = [
-            { pid: "1", productNameEn: "Wireless Bluetooth Headphones", sellPrice: 29.99, description: "High-quality wireless headphones from CJ.", productImage: "" },
-            { pid: "2", productNameEn: "Ergonomic Desk Chair", sellPrice: 189.00, description: "Comfortable ergonomic office chair.", productImage: "" },
-            { pid: "3", productNameEn: "Smart Fitness Watch", sellPrice: 45.50, description: "Track your health, steps, and heart rate seamlessly.", productImage: "" }
-        ];
 
-        const filtered = keyword 
-            ? mockProducts.filter(p => p.productNameEn.toLowerCase().includes(keyword.toLowerCase()))
-            : mockProducts;
+        setTimeout(() => {
+            const query = keyword.toLowerCase().trim();
+            const filtered = query 
+                ? mockProductsCatalog.filter(p => 
+                    p.productNameEn.toLowerCase().includes(query) || 
+                    p.description.toLowerCase().includes(query)
+                  )
+                : mockProductsCatalog;
 
-        renderProducts(filtered);
+            renderProducts(filtered);
 
-        if (DOM.resultsCount) {
-            DOM.resultsCount.textContent = `Showing ${filtered.length} products (Offline Mock Mode)`;
-        }
-    }
-}
-        } catch (error) {
-            console.warn("API request failed or using fallback mode:", error);
-            renderErrorState("Unable to reach CJ Dropshipping API server. Please check your backend proxy configuration.");
-        }
+            if (DOM.resultsCount) {
+                DOM.resultsCount.textContent = `Showing ${filtered.length} of ${mockProductsCatalog.length} products`;
+            }
+        }, 150);
     }
 
     function renderProducts(products) {
         if (!DOM.productList) return;
 
         if (!products || products.length === 0) {
-            renderErrorState("No CJ products found matching your search term.");
+            DOM.productList.innerHTML = `
+                <div class="no-results">
+                    <h3>No Products Found</h3>
+                    <p>No products match your search criteria. Try a different keyword.</p>
+                </div>
+            `;
             return;
         }
 
         DOM.productList.innerHTML = products.map(p => {
-            const id = p.pid || p.id || Math.random().toString(36).substring(2);
-            const name = p.productNameEn || p.productName || p.name || "CJ Product";
-            const price = Number(p.sellPrice || p.price || 0);
-            let image = p.productImage || p.image || "";
-            if (image && image.startsWith("//")) image = "https:" + image;
-            const description = p.description || p.entryName || "Quality dropshipped product from CJ Dropshipping.";
-            const available = p.quantity !== 0 && p.available !== false;
-
             return `
-                <article class="product-card ${!available ? 'is-disabled' : ''}" data-id="${id}">
+                <article class="product-card" data-id="${p.pid}">
                     <div class="product-image-wrapper">
                         <img 
-                            src="${image || CONFIG.FALLBACK_IMAGE}" 
-                            alt="${name}" 
+                            src="${p.productImage || CONFIG.FALLBACK_IMAGE}" 
+                            alt="${p.productNameEn}" 
                             class="product-image" 
                             loading="lazy"
                             onerror="this.onerror=null; this.src='${CONFIG.FALLBACK_IMAGE}'; this.classList.add('is-fallback');"
                         />
                     </div>
                     <div class="product-info">
-                        <h3 class="product-title">${name}</h3>
-                        <p class="product-description">${description}</p>
+                        <h3 class="product-title">${p.productNameEn}</h3>
+                        <p class="product-description">${p.description}</p>
                         <div class="product-bottom">
-                            <span class="product-price">$${price.toFixed(2)}</span>
-                            <button 
-                                type="button"
-                                class="add-cart-btn" 
-                                data-action="add-cart" 
-                                data-id="${id}"
-                                ${!available ? 'disabled' : ''}>
-                                ${available ? 'Add to Cart' : 'Out of Stock'}
+                            <span class="product-price">$${p.sellPrice.toFixed(2)}</span>
+                            <button type="button" class="add-cart-btn" data-action="add-cart" data-id="${p.pid}">
+                                Add to Cart
                             </button>
                         </div>
                     </div>
@@ -161,20 +126,7 @@
         }).join("");
     }
 
-    function renderErrorState(message) {
-        if (!DOM.productList) return;
-        if (DOM.resultsCount) DOM.resultsCount.textContent = "0 products found";
-        
-        DOM.productList.innerHTML = `
-            <div class="no-results">
-                <h3>Catalog Notice</h3>
-                <p>${message}</p>
-            </div>
-        `;
-    }
-
     function handleAddToCart(productId, btnElement) {
-        // Find product card element info or store it globally if desired
         const card = btnElement.closest(".product-card");
         if (!card) return;
 
@@ -200,34 +152,17 @@
         setTimeout(() => {
             btnElement.textContent = originalText;
             btnElement.disabled = false;
-        }, 1200);
+        }, 1000);
     }
 
     function initEvents() {
         if (DOM.searchInput) {
             DOM.searchInput.addEventListener("input", (e) => {
-                const query = e.target.value.trim();
-                if (DOM.searchClearBtn) {
-                    DOM.searchClearBtn.style.display = query ? "block" : "none";
-                }
-
+                const query = e.target.value;
                 clearTimeout(state.searchTimer);
                 state.searchTimer = setTimeout(() => {
-                    state.keyword = query;
-                    state.pageNum = 1;
-                    fetchCJProducts(query, state.pageNum);
-                }, CONFIG.DEBOUNCE_DELAY_MS);
-            });
-        }
-
-        if (DOM.searchClearBtn) {
-            DOM.searchClearBtn.addEventListener("click", () => {
-                clearTimeout(state.searchTimer);
-                if (DOM.searchInput) DOM.searchInput.value = "";
-                DOM.searchClearBtn.style.display = "none";
-                state.keyword = "";
-                state.pageNum = 1;
-                fetchCJProducts("", state.pageNum);
+                    loadProducts(query);
+                }, 250);
             });
         }
 
@@ -245,6 +180,6 @@
         cacheDOM();
         updateCartBadge();
         initEvents();
-        fetchCJProducts("", state.pageNum);
+        loadProducts("");
     });
 })();
