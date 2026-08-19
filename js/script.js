@@ -709,7 +709,7 @@
        ======================================================================== */
 
     function populateDOMCache() {
-        DOM.productList = $("#products-grid") || $(".products-grid");
+        DOM.productList = $("#product-list") || $("#products-grid") || $(".products-grid");
         DOM.searchInput = $("#product-search");
         DOM.searchClearBtn = $("#clear-search");
         DOM.sortSelect = $("#product-sort");
