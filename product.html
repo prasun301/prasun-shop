@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Product Details — PRASUN SHOP</title>
-  <meta name="description" content="View product details and purchase securely at PRASUN SHOP." />
+  <meta name="description" content="View live product details from CJ Dropshipping securely at PRASUN SHOP." />
   <style>
     :root {
       --apple-bg: #f5f5f7;
@@ -177,20 +177,23 @@
       margin-top: 1rem;
     }
 
-    .btn-apple-primary {
+    .btn-apple-primary, .btn-apple-secondary {
       display: inline-flex;
       justify-content: center;
       align-items: center;
-      background-color: var(--apple-dark);
-      color: #ffffff;
       font-size: 0.95rem;
       font-weight: 500;
       padding: 0.85rem 1.8rem;
       border-radius: 980px;
-      border: none;
       cursor: pointer;
       text-decoration: none;
       transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+
+    .btn-apple-primary {
+      background-color: var(--apple-dark);
+      color: #ffffff;
+      border: none;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
     }
 
@@ -199,19 +202,9 @@
     }
 
     .btn-apple-secondary {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
       background-color: transparent;
       color: var(--apple-text);
-      font-size: 0.95rem;
-      font-weight: 500;
-      padding: 0.85rem 1.8rem;
-      border-radius: 980px;
       border: 1px solid var(--apple-border);
-      cursor: pointer;
-      text-decoration: none;
-      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
     .btn-apple-secondary:hover {
@@ -219,8 +212,11 @@
       border-color: var(--apple-dark);
     }
 
-    .btn-apple-primary:active, .btn-apple-secondary:active {
-      transform: scale(0.98);
+    .loading-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem;
+      color: var(--apple-gray);
     }
 
     .footer {
@@ -268,11 +264,13 @@
   <!-- Product Main Content -->
   <main class="product-main">
     <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="index.html">Home</a> / <span id="breadcrumb-title" style="color: var(--apple-text);">Product</span>
+      <a href="index.html">Home</a> / <span id="breadcrumb-title" style="color: var(--apple-text);">Loading...</span>
     </nav>
 
     <div class="product-grid" id="product-container">
-      <!-- Dynamically injected product info -->
+      <div class="loading-state">
+        <p>Fetching live product data from CJ Dropshipping...</p>
+      </div>
     </div>
   </main>
 
@@ -282,46 +280,22 @@
   </footer>
 
   <script>
-    const productsData = {
-      "smart-lamp": {
-        id: "smart-lamp",
-        title: "Smart Lamp LED",
-        price: "$49.00",
-        description: "Adaptive lighting engineered with seamless touch response and multiple color temperatures to suit your environment.",
-        image: "images/products/10_57d942b5-c025-425a-a8a4-d87c6a612631.png"
-      },
-      "wireless-buds": {
-        id: "wireless-buds",
-        title: "Wireless Pro Earbuds",
-        price: "$129.00",
-        description: "Immersive spatial audio with active noise cancellation, custom acoustic drivers, and all-day battery life.",
-        image: "images/products/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg"
-      },
-      "power-bank": {
-        id: "power-bank",
-        title: "Ultra-Slim Power Bank",
-        price: "$59.00",
-        description: "High-capacity portable charging packed into an ultra-slim aerospace aluminum shell with fast-delivery power output.",
-        image: "images/products/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg"
-      }
-    };
+    // Global variable to temporarily hold fetched live product object
+    let currentLiveProduct = null;
 
     function updateCartBadge() {
       try {
         const cart = JSON.parse(localStorage.getItem('prasun_cart')) || [];
         const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
         const badge = document.getElementById('cart-count');
-        if (badge) {
-          badge.textContent = totalItems;
-        }
+        if (badge) badge.textContent = totalItems;
       } catch (e) {
         console.error(e);
       }
     }
 
-    function addToCart(productId) {
-      const product = productsData[productId];
-      if (!product) return;
+    function addToCart() {
+      if (!currentLiveProduct) return;
 
       let cart = [];
       try {
@@ -330,55 +304,91 @@
         cart = [];
       }
 
-      const existingIndex = cart.findIndex(item => item.id === productId);
+      const existingIndex = cart.findIndex(item => item.id === currentLiveProduct.id);
       if (existingIndex > -1) {
         cart[existingIndex].quantity = (Number(cart[existingIndex].quantity) || 1) + 1;
       } else {
         cart.push({
-          id: product.id,
-          title: product.title,
-          price: product.price,
-          image: product.image,
+          id: currentLiveProduct.id,
+          title: currentLiveProduct.title,
+          price: currentLiveProduct.price,
+          image: currentLiveProduct.image,
           quantity: 1
         });
       }
 
       localStorage.setItem('prasun_cart', JSON.stringify(cart));
       updateCartBadge();
-      alert(`Added ${product.title} to your bag.`);
+      alert(`Added ${currentLiveProduct.title} to your bag.`);
     }
 
-    function buyNow(productId) {
-      addToCart(productId);
+    function buyNow() {
+      addToCart();
       window.location.href = 'checkout.html';
     }
 
-    function loadProduct() {
+    async function loadProductFromCJAPI() {
       updateCartBadge();
       const params = new URLSearchParams(window.location.search);
-      const productId = params.get('id') || 'smart-lamp';
-      const product = productsData[productId] || productsData['smart-lamp'];
+      const productId = params.get('id');
 
-      document.getElementById('breadcrumb-title').textContent = product.title;
-      
       const container = document.getElementById('product-container');
-      container.innerHTML = `
-        <div class="product-image-container">
-          <img src="${product.image}" alt="${product.title}" />
-        </div>
-        <div class="product-details">
-          <h1 class="product-title">${product.title}</h1>
-          <div class="product-price">${product.price}</div>
-          <p class="product-description">${product.description}</p>
-          <div class="button-group">
-            <button class="btn-apple-secondary" onclick="addToCart('${product.id}')">Add to Bag</button>
-            <button class="btn-apple-primary" onclick="buyNow('${product.id}')">Buy Now</button>
+
+      if (!productId) {
+        container.innerHTML = `<div class="loading-state"><h2>No Product Selected</h2><p>Please return to the <a href="index.html">shop</a> and pick a valid item.</p></div>`;
+        return;
+      }
+
+      try {
+        // NOTE: Securely fetch through your server-side endpoint proxying the CJ API 
+        // to protect your CJ-Access-Token from exposure in frontend browser code.
+        const response = await fetch(`/api/cj-product-detail?id=${encodeURIComponent(productId)}`);
+        
+        if (!response.ok) throw new Error('Failed to retrieve live data from CJ API proxy.');
+        
+        const result = await response.json();
+        
+        // Map fields according to standard CJ product response payload structure
+        const item = result.data || result; 
+
+        currentLiveProduct = {
+          id: item.pid || item.id || productId,
+          title: item.productName || item.title || "Untitled Product",
+          price: `$${(Number(item.sellPrice || item.price || 0)).toFixed(2)}`,
+          description: item.productDescription || item.description || "No description provided by supplier.",
+          image: item.productImage || item.image || "images/placeholder.png"
+        };
+
+        // Render dynamic views safely
+        document.getElementById('breadcrumb-title').textContent = currentLiveProduct.title;
+        document.title = `${currentLiveProduct.title} — PRASUN SHOP`;
+
+        container.innerHTML = `
+          <div class="product-image-container">
+            <img src="${currentLiveProduct.image}" alt="${currentLiveProduct.title}" />
           </div>
-        </div>
-      `;
+          <div class="product-details">
+            <h1 class="product-title">${currentLiveProduct.title}</h1>
+            <div class="product-price">${currentLiveProduct.price}</div>
+            <p class="product-description">${currentLiveProduct.description}</p>
+            <div class="button-group">
+              <button class="btn-apple-secondary" onclick="addToCart()">Add to Bag</button>
+              <button class="btn-apple-primary" onclick="buyNow()">Buy Now</button>
+            </div>
+          </div>
+        `;
+      } catch (error) {
+        console.error("CJ API Fetch Error:", error);
+        container.innerHTML = `
+          <div class="loading-state">
+            <h2>Unable to load product</h2>
+            <p>Could not fetch real-time data from CJ Dropshipping. Please try again later.</p>
+          </div>
+        `;
+      }
     }
 
-    document.addEventListener('DOMContentLoaded', loadProduct);
+    document.addEventListener('DOMContentLoaded', loadProductFromCJAPI);
   </script>
 </body>
 </html>
