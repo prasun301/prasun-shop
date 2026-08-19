@@ -12,14 +12,22 @@
 
     <meta
         name="description"
-        content="Shop quality products at PRASUN SHOP."
+        content="Shop selected physical products from PRASUN SHOP."
     >
 
-    <title>Products — PRASUN SHOP</title>
+    <meta
+        name="robots"
+        content="index, follow"
+    >
 
+    <title>Shop Physical Products — PRASUN SHOP</title>
+
+    <!-- IMPORTANT:
+         style.css must be in the SAME folder as products.html.
+    -->
     <link
         rel="stylesheet"
-        href="style.css"
+        href="./style.css?v=20260819"
     >
 
 </head>
@@ -28,85 +36,21 @@
 <body>
 
 
-<header class="header">
+    <!-- ================================================================
+         HEADER
+         ================================================================ -->
 
-    <div class="header-container">
+    <header class="header">
 
-        <a
-            href="index.html"
-            class="logo"
-            aria-label="PRASUN SHOP Homepage"
-        >
-
-            <svg
-                width="21"
-                height="21"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-            >
-
-                <path
-                    d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"
-                ></path>
-
-                <line
-                    x1="3"
-                    y1="6"
-                    x2="21"
-                    y2="6"
-                ></line>
-
-                <path
-                    d="M16 10a4 4 0 0 1-8 0"
-                ></path>
-
-            </svg>
-
-            <span>PRASUN SHOP</span>
-
-        </a>
-
-
-        <nav
-            class="nav-links"
-            aria-label="Main Navigation"
-        >
-
-            <a href="index.html">
-                Shop
-            </a>
-
-            <a href="about.html">
-                About
-            </a>
-
-            <a href="contact.html">
-                Contact
-            </a>
-
-            <a href="checkout.html">
-                Checkout
-            </a>
-
-        </nav>
-
-
-        <div class="header-actions">
+        <div class="header-container">
 
             <a
-                href="cart.html"
-                class="cart-icon-wrap"
-                aria-label="View Shopping Cart"
+                href="./index.html"
+                class="logo"
+                aria-label="PRASUN SHOP Homepage"
             >
 
                 <svg
-                    width="22"
-                    height="22"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -116,151 +60,241 @@
                     aria-hidden="true"
                 >
 
-                    <circle
-                        cx="9"
-                        cy="21"
-                        r="1"
-                    ></circle>
+                    <path
+                        d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"
+                    ></path>
 
-                    <circle
-                        cx="20"
-                        cy="21"
-                        r="1"
-                    ></circle>
+                    <line
+                        x1="3"
+                        y1="6"
+                        x2="21"
+                        y2="6"
+                    ></line>
 
                     <path
-                        d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
+                        d="M16 10a4 4 0 0 1-8 0"
                     ></path>
 
                 </svg>
 
-
-                <span
-                    id="cart-count"
-                    class="cart-count"
-                    hidden
-                >
-                    0
+                <span>
+                    PRASUN SHOP
                 </span>
 
             </a>
 
+
+            <nav
+                class="nav-links"
+                aria-label="Main Navigation"
+            >
+
+                <a href="./products.html">
+                    Shop
+                </a>
+
+                <a href="./cart.html">
+                    Cart
+                    <span
+                        id="cart-count"
+                        class="cart-count"
+                        hidden
+                    >
+                        0
+                    </span>
+                </a>
+
+                <a href="./about.html">
+                    About
+                </a>
+
+                <a href="./contact.html">
+                    Contact
+                </a>
+
+            </nav>
+
         </div>
 
-    </div>
-
-</header>
+    </header>
 
 
+    <!-- ================================================================
+         MAIN SHOP
+         ================================================================ -->
 
-<main class="shop-container">
-
-
-    <h1 class="shop-title">
-        Products
-    </h1>
+    <main class="shop-container">
 
 
-    <p class="shop-subtitle">
-        Discover products selected for everyday life.
-    </p>
+        <header class="shop-header">
+
+            <h1 class="shop-title">
+                Shop Physical Products
+            </h1>
+
+            <p class="shop-subtitle">
+                Discover useful products from PRASUN SHOP.
+            </p>
+
+        </header>
 
 
-    <section
-        class="products-toolbar"
-        aria-label="Product search and sorting"
-    >
+        <!-- ============================================================
+             TOOLBAR
+             ============================================================ -->
 
-        <div class="search-wrapper">
+        <section
+            class="products-toolbar"
+            aria-label="Product search and sorting"
+        >
+
+            <div class="search-wrapper">
+
+                <label
+                    class="sr-only"
+                    for="products-search"
+                >
+                    Search products
+                </label>
+
+                <input
+                    id="products-search"
+                    class="products-search-input"
+                    type="search"
+                    placeholder="Search products..."
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+
+            </div>
+
 
             <label
-                for="product-search"
                 class="sr-only"
+                for="products-sort"
             >
-                Search products
+                Sort products
             </label>
 
-            <input
-                id="product-search"
-                class="products-search-input"
-                type="search"
-                placeholder="Search products..."
-                autocomplete="off"
-                spellcheck="false"
+            <select
+                id="products-sort"
+                class="products-sort"
             >
+
+                <option value="featured">
+                    Featured
+                </option>
+
+                <option value="price-low">
+                    Price: Low to High
+                </option>
+
+                <option value="price-high">
+                    Price: High to Low
+                </option>
+
+                <option value="name-az">
+                    Name: A–Z
+                </option>
+
+                <option value="rating">
+                    Highest Rated
+                </option>
+
+            </select>
+
+        </section>
+
+
+        <!-- ============================================================
+             CATEGORIES
+             ============================================================ -->
+
+        <nav
+            id="products-categories"
+            class="products-categories"
+            aria-label="Product categories"
+        >
+
+            <button
+                type="button"
+                class="category-pill active"
+                data-category="all"
+            >
+                All
+            </button>
+
+        </nav>
+
+
+        <!-- ============================================================
+             RESULT BAR
+             ============================================================ -->
+
+        <div class="products-result-bar">
+
+            <span id="products-heading">
+                All Products
+            </span>
+
+            <span id="products-count">
+                Loading products...
+            </span>
 
         </div>
 
 
-        <label
-            for="product-sort"
-            class="sr-only"
+        <!-- ============================================================
+             PRODUCT LIST
+             ============================================================ -->
+
+        <section
+            id="product-list"
+            class="product-grid"
+            aria-live="polite"
+            aria-busy="true"
         >
-            Sort products
-        </label>
 
-        <select
-            id="product-sort"
-            class="products-sort"
-        >
+            <div class="products-loading">
 
-            <option value="default">
-                Sort
-            </option>
+                <div
+                    class="products-loading-spinner"
+                    aria-hidden="true"
+                ></div>
 
-            <option value="price-low">
-                Price: Low to High
-            </option>
+                <h2>
+                    Loading products...
+                </h2>
 
-            <option value="price-high">
-                Price: High to Low
-            </option>
+                <p>
+                    Please wait while products are loaded.
+                </p>
 
-            <option value="rating">
-                Highest Rated
-            </option>
+            </div>
 
-            <option value="name">
-                Name
-            </option>
-
-        </select>
-
-    </section>
+        </section>
 
 
-
-    <div
-        id="products-categories"
-        class="products-categories"
-        aria-label="Product categories"
-    ></div>
+    </main>
 
 
+    <!-- ================================================================
+         ABOUT
+         ================================================================ -->
 
-    <div class="products-result-bar">
+    <section class="shop-about">
 
-        <span id="products-result-count">
-            Loading products...
-        </span>
+        <div class="shop-about-inner">
 
-    </div>
-
-
-
-    <section
-        id="product-list"
-        class="product-grid"
-        aria-live="polite"
-        aria-busy="true"
-    >
-
-        <div class="products-loading">
-
-            <div class="products-spinner"></div>
+            <h2>
+                About PRASUN SHOP
+            </h2>
 
             <p>
-                Loading products...
+                PRASUN SHOP offers selected physical products
+                through trusted fulfillment partners. Product
+                availability, pricing, shipping options, and
+                delivery times may vary by product and destination.
             </p>
 
         </div>
@@ -268,24 +302,65 @@
     </section>
 
 
-</main>
+    <!-- ================================================================
+         FOOTER
+         ================================================================ -->
+
+    <footer class="footer">
+
+        <div class="footer-inner">
+
+            <nav
+                class="footer-links"
+                aria-label="Footer Navigation"
+            >
+
+                <a href="./privacy.html">
+                    Privacy Policy
+                </a>
+
+                <a href="./terms.html">
+                    Terms of Service
+                </a>
+
+                <a href="./refund.html">
+                    Refund Policy
+                </a>
+
+                <a href="./contact.html">
+                    Contact
+                </a>
+
+            </nav>
 
 
+            <p>
+                &copy; 2026 PRASUN SHOP by
+                <a
+                    href="https://www.prasunbarua.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Prasun Barua
+                </a>.
+                All rights reserved.
+            </p>
 
-<footer class="footer">
+        </div>
 
-    <p>
-        &copy; 2026 PRASUN SHOP. All rights reserved.
-    </p>
-
-</footer>
+    </footer>
 
 
+    <!-- ================================================================
+         JAVASCRIPT
+         IMPORTANT:
+         script.js must be in the SAME folder as products.html.
+         ================================================================ -->
 
-<script
-    src="script.js"
-    defer
-></script>
+    <script
+        src="./script.js?v=20260819"
+        defer
+    ></script>
 
 
 </body>
