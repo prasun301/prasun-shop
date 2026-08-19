@@ -1,4 +1,87 @@
 /**
+ * Frontend Product Handling (js/products.js)
+ * Manages rendering home products (limit 10) and live searching.
+ */
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Check if we are on the homepage or products page and load initial 10 items
+  const productContainer = document.getElementById("product-grid") || document.getElementById("product-list");
+  if (productContainer) {
+    loadProducts(10); // Pass 10 for homepage view
+  }
+
+  // Bind live search input
+  const searchInput = document.querySelector("input[type='search']") || document.getElementById("searchproducts") || document.querySelector(".search-box input");
+  
+  if (searchInput) {
+    let debounceTimer;
+    searchInput.addEventListener("input", (e) => {
+      clearTimeout(debounceTimer);
+      const keyword = e.target.value.trim();
+
+      debounceTimer = setTimeout(async () => {
+        if (keyword.length > 1) {
+          await searchLiveCJProducts(keyword);
+        } else if (keyword.length === 0) {
+          loadProducts(10); // Reset back to default 10 if search is cleared
+        }
+      }, 400); // 400ms delay to prevent typing spam
+    });
+  }
+});
+
+async function loadProducts(size = 10) {
+  const container = document.getElementById("product-grid") || document.getElementById("product-list");
+  const loadingEl = document.getElementById("loading") || document.getElementById("status-message");
+  
+  if (loadingEl) loadingEl.innerText = "Loading products...";
+
+  try {
+    const response = await fetch(`/api/products?size=${size}`);
+    const products = await response.json();
+    
+    renderProducts(products);
+    if (loadingEl) loadingEl.innerText = "";
+  } catch (error) {
+    console.error("Failed to load products:", error);
+    if (loadingEl) loadingEl.innerText = "Failed to load products.";
+  }
+}
+
+async function searchLiveCJProducts(keyword) {
+  const loadingEl = document.getElementById("loading") || document.getElementById("status-message");
+  if (loadingEl) loadingEl.innerText = `Searching CJ Dropshipping for "${keyword}"...`;
+
+  try {
+    const response = await fetch(`/api/products?keyword=${encodeURIComponent(keyword)}&size=20`);
+    const products = await response.json();
+    
+    renderProducts(products);
+    if (loadingEl) loadingEl.innerText = products.length === 0 ? "No products found." : "";
+  } catch (error) {
+    console.error("Search error:", error);
+    if (loadingEl) loadingEl.innerText = "Error searching products.";
+  }
+}
+
+function renderProducts(products) {
+  const container = document.getElementById("product-grid") || document.getElementById("product-list");
+  if (!container) return;
+
+  if (!Array.isArray(products) || products.length === 0) {
+    container.innerHTML = "<p>No products available.</p>";
+    return;
+  }
+
+  container.innerHTML = products.map(product => `
+    <div class="product-card" style="border: 1px solid #ddd; padding: 15px; margin: 10px; border-radius: 8px; max-width: 220px; display: inline-block; vertical-align: top; background: #fff;">
+      <img src="${product.image}" alt="${product.name}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 4px;">
+      <h4 style="font-size: 14px; margin: 10px 0 5px; height: 40px; overflow: hidden;">${product.name}</h4>
+      <p style="font-weight: bold; color: #2c3e50; margin: 5px 0;">$${product.price.toFixed(2)}</p>
+      <a href="product.html?sku=${product.sku}" style="display: block; text-align: center; background: #000; color: #fff; padding: 8px; text-decoration: none; border-radius: 4px; margin-top: 10px;">View Product</a>
+    </div>
+  `).join('');
+}/**
  * products.js - Prasun Shop Catalog & Live CJ Dropshipping API Manager
  */
 (function () {
