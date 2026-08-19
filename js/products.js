@@ -1,27 +1,29 @@
 /**
- * products.js - Product Catalog Management
- * Handles API fetching, local caching, search/filter/sort, URL synchronization,
- * and cart integration.
+ * products.js - CJ Dropshipping Integrated Product Catalog
+ * Handles fetching, parsing, caching, filtering, and displaying CJ Dropshipping products.
  */
 (function () {
     "use strict";
 
     // ==========================================
-    // Configuration & Mock Data
+    // Configuration & Fallbacks
     // ==========================================
     const CONFIG = {
-        API_URL: "/api/products.json",
-        CACHE_KEY: "prasun_products_cache",
+        // Replace with your backend endpoint that connects to CJ API 
+        // Or your raw JSON feed exported from CJ Dropshipping
+        API_URL: "/api/cj-products", 
+        CACHE_KEY: "prasun_cj_products_cache",
         CACHE_TTL_MS: 1000 * 60 * 30, // 30 Minutes
         CART_KEY: "prasun_cart_items",
-        DEBOUNCE_DELAY_MS: 150
+        DEBOUNCE_DELAY_MS: 150,
+        // Fallback placeholder image when CJ image links are broken or loading
+        FALLBACK_IMAGE: "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='14'%3ENo CJ Image Available%3C/text%3E%3C/svg%3E"
     };
 
+    // Backup local products in case API is unreachable
     const MOCK_PRODUCTS = [
-        { id: "p1", name: "Premium Wireless Headphones", category: "Electronics", price: 199.99, available: true, image: "/images/headphones.jpg" },
-        { id: "p2", name: "Ergonomic Desk Chair", category: "Furniture", price: 289.00, available: true, image: "/images/chair.jpg" },
-        { id: "p3", name: "Organic Dark Roast Coffee", category: "Groceries", price: 14.50, available: true, image: "/images/coffee.jpg" },
-        { id: "p4", name: "Mechanical Gaming Keyboard", category: "Electronics", price: 119.99, available: false, image: "/images/keyboard.jpg" }
+        { id: "cj-p1", name: "Wireless Headphones", category: "Electronics", price: 29.99, available: true, image: "", description: "High-quality wireless headphones from CJ." },
+        { id: "cj-p2", name: "Ergonomic Desk Chair", category: "Furniture", price: 189.00, available: true, image: "", description: "Comfortable ergonomic office chair." }
     ];
 
     // ==========================================
@@ -63,21 +65,41 @@
     }
 
     // ==========================================
-    // Helper & Storage Utilities
+    // CJ Dropshipping Data Normalizer
+    // Maps raw CJ API properties to shop structure
     // ==========================================
     function normalizeProduct(item) {
-        if (!item || !item.id || !item.name) return null;
+        if (!item) return null;
+
+        // CJ API field mappings (supports raw CJ response format & standard format)
+        const id = item.pid || item.productSku || item.id || `cj-${Math.random().toString(36).substring(2, 9)}`;
+        const name = item.productNameEn || item.productName || item.name || "CJ Product";
+        const category = item.categoryName || item.category || "General";
+        const price = Number(item.sellPrice || item.sellPriceMin || item.price || 0);
+        
+        // CJ Image field resolution (CJ delivers images via HTTP/HTTPS URLs)
+        let image = item.productImage || item.productImageSet?.[0] || item.image || "";
+        if (image && image.startsWith("//")) {
+            image = "https:" + image; // Ensure valid protocol
+        }
+
+        // CJ Description parsing
+        const description = item.description || item.entryName || "Quality dropshipped item directly from CJ Dropshipping.";
+
         return {
-            id: String(item.id),
-            name: String(item.name).trim(),
-            category: String(item.category || "Uncategorized").trim(),
-            price: Number(item.price) || 0,
-            available: Boolean(item.available),
-            image: item.image || "/images/placeholder.jpg"
+            id: String(id),
+            name: String(name).trim(),
+            category: String(category).trim(),
+            price: price,
+            available: item.quantity !== 0 && item.available !== false,
+            image: image || CONFIG.FALLBACK_IMAGE,
+            description: String(description)
         };
     }
 
-    // FIX #4: Strictly validate `parsed.timestamp` to prevent stale cache lock-ins
+    // ==========================================
+    // Storage Utilities
+    // ==========================================
     function getCachedProducts() {
         try {
             const raw = localStorage.getItem(CONFIG.CACHE_KEY);
@@ -91,7 +113,6 @@
                 }
                 return Array.isArray(parsed.data) ? parsed.data : null;
             } else {
-                // Remove invalid or legacy un-timestamped cache
                 localStorage.removeItem(CONFIG.CACHE_KEY);
                 return null;
             }
@@ -109,7 +130,7 @@
             };
             localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify(payload));
         } catch (e) {
-            console.warn("[Prasun Shop] LocalStorage quota exceeded or disabled.", e);
+            console.warn("[CJ Shop] LocalStorage quota exceeded or disabled.", e);
         }
     }
 
@@ -126,7 +147,7 @@
             localStorage.setItem(CONFIG.CART_KEY, JSON.stringify(cart));
             updateCartBadge();
         } catch (e) {
-            console.error("[Prasun Shop] Unable to save cart item.", e);
+            console.error("[CJ Shop] Unable to save cart item.", e);
         }
     }
 
@@ -141,7 +162,6 @@
     // ==========================================
     // API Data Fetching
     // ==========================================
-    // FIX #3: Ignore `AbortError` to prevent unnecessary fallback overrides
     async function fetchProductsFromAPI() {
         if (state.fetchAbortController) {
             state.fetchAbortController.abort();
@@ -158,40 +178,44 @@
             }
 
             const rawData = await response.json();
-            const normalized = rawData.map(normalizeProduct).filter(Boolean);
-            setCachedProducts(normalized);
-            return normalized;
-        } catch (error) {
-            if (error.name === "AbortError") {
-                return []; // Silent exit on deliberate request cancellation
+            
+            // Extract array whether returned directly or inside CJ API wrappers (e.g. data.list)
+            const productsList = Array.isArray(rawData) ? rawData : (rawData.data?.list || rawData.data || []);
+            const normalized = productsList.map(normalizeProduct).filter(Boolean);
+
+            if (normalized.length > 0) {
+                setCachedProducts(normalized);
+                return normalized;
             }
-            console.warn("[Prasun Shop] API fetch failed. Using fallback products.", error.message);
+            throw new Error("No valid products returned from CJ feed.");
+        } catch (error) {
+            if (error.name === "AbortError") return [];
+            console.warn("[CJ Shop] API connection failed. Loading local fallback list.", error.message);
             return MOCK_PRODUCTS.map(normalizeProduct).filter(Boolean);
         }
     }
 
     // ==========================================
-    // Product Operations: Filtering & Sorting
+    // Filter & Search Logic
     // ==========================================
     function applyFilters() {
         let results = [...state.allProducts];
 
-        // 1. Category Filter
         if (state.currentCategory) {
             results = results.filter(
                 p => p.category.toLowerCase() === state.currentCategory.toLowerCase()
             );
         }
 
-        // 2. Keyword Search
         if (state.currentKeyword) {
             const kw = state.currentKeyword.toLowerCase();
             results = results.filter(
-                p => p.name.toLowerCase().includes(kw) || p.category.toLowerCase().includes(kw)
+                p => p.name.toLowerCase().includes(kw) || 
+                     p.category.toLowerCase().includes(kw) ||
+                     p.description.toLowerCase().includes(kw)
             );
         }
 
-        // 3. Sorting
         switch (state.currentSort) {
             case "price-low":
                 results.sort((a, b) => a.price - b.price);
@@ -202,7 +226,7 @@
             case "name-asc":
                 results.sort((a, b) => a.name.localeCompare(b.name));
                 break;
-            default: // "featured"
+            default:
                 break;
         }
 
@@ -211,7 +235,6 @@
         syncStateToURL();
     }
 
-    // FIX #2: Use `replaceState` to avoid polluting history on every change
     function syncStateToURL() {
         const url = new URL(window.location.href);
 
@@ -257,7 +280,7 @@
     }
 
     // ==========================================
-    // DOM Rendering & Actions
+    // UI Rendering
     // ==========================================
     function renderProducts() {
         if (!DOM.productList) return;
@@ -270,18 +293,27 @@
             DOM.productList.innerHTML = `
                 <div class="no-results">
                     <h3>No products found</h3>
-                    <p>Try adjusting your search or clear filters to see more results.</p>
+                    <p>Try searching for something else or reset your filters.</p>
                 </div>
             `;
             return;
         }
 
         DOM.productList.innerHTML = state.filteredProducts.map(p => `
-            <div class="product-card ${!p.available ? 'out-of-stock' : ''}">
-                <img src="${p.image}" alt="${p.name}" class="product-image" loading="lazy" />
+            <article class="product-card ${!p.available ? 'is-disabled' : ''}">
+                <div class="product-image-wrapper">
+                    <img 
+                        src="${p.image}" 
+                        alt="${p.name}" 
+                        class="product-image" 
+                        loading="lazy"
+                        onerror="this.onerror=null; this.src='${CONFIG.FALLBACK_IMAGE}';"
+                    />
+                </div>
                 <div class="product-info">
                     <span class="product-category">${p.category}</span>
                     <h3 class="product-name">${p.name}</h3>
+                    <p class="product-description">${p.description}</p>
                     <div class="product-bottom">
                         <span class="product-price">$${p.price.toFixed(2)}</span>
                         <button 
@@ -294,11 +326,10 @@
                         </button>
                     </div>
                 </div>
-            </div>
+            </article>
         `).join("");
     }
 
-    // UX IMPROVEMENT #1: Visual feedback when adding an item to the cart
     function addToCart(productId, targetBtn = null) {
         const product = state.allProducts.find(item => item.id === productId);
         if (!product || !product.available) return;
@@ -330,7 +361,6 @@
         }
     }
 
-    // FIX #1: Clear pending debounce timer on reset
     function resetAllFilters() {
         clearTimeout(state.searchTimer);
         state.currentCategory = "";
@@ -346,10 +376,9 @@
     }
 
     // ==========================================
-    // Event Handlers
+    // Event Listeners
     // ==========================================
     function attachEventListeners() {
-        // Search Input (Debounced)
         if (DOM.searchInput) {
             DOM.searchInput.addEventListener("input", (e) => {
                 const query = e.target.value.trim();
@@ -365,7 +394,6 @@
             });
         }
 
-        // FIX #1: Clear pending search timer on search clear button click
         if (DOM.searchClearBtn) {
             DOM.searchClearBtn.addEventListener("click", () => {
                 clearTimeout(state.searchTimer);
@@ -376,7 +404,6 @@
             });
         }
 
-        // Category Filter
         if (DOM.categoryFilter) {
             DOM.categoryFilter.addEventListener("change", (e) => {
                 state.currentCategory = e.target.value;
@@ -384,7 +411,6 @@
             });
         }
 
-        // Sort Select
         if (DOM.sortSelect) {
             DOM.sortSelect.addEventListener("change", (e) => {
                 state.currentSort = e.target.value;
@@ -392,12 +418,10 @@
             });
         }
 
-        // Reset Filters Button
         if (DOM.resetFiltersBtn) {
             DOM.resetFiltersBtn.addEventListener("click", resetAllFilters);
         }
 
-        // Add to Cart Delegation
         if (DOM.productList) {
             DOM.productList.addEventListener("click", (e) => {
                 const cartBtn = e.target.closest("[data-action='add-cart']");
@@ -405,13 +429,10 @@
 
                 e.preventDefault();
                 const productId = cartBtn.dataset.id;
-                if (productId) {
-                    addToCart(productId, cartBtn);
-                }
+                if (productId) addToCart(productId, cartBtn);
             });
         }
 
-        // Browser History Back/Forward Handling
         window.addEventListener("popstate", () => {
             readStateFromURL();
             applyFilters();
@@ -419,9 +440,8 @@
     }
 
     // ==========================================
-    // Initialization (Stale-While-Revalidate)
+    // Initialization
     // ==========================================
-    // UX IMPROVEMENT #2: Silent background update on cache hit
     async function loadProducts() {
         if (!DOM.productList) return;
 
@@ -436,7 +456,6 @@
             applyFilters();
             DOM.productList.setAttribute("aria-busy", "false");
 
-            // Silent background revalidation
             fetchProductsFromAPI().then(freshData => {
                 if (freshData && freshData.length > 0) {
                     state.allProducts = freshData;
@@ -447,7 +466,6 @@
             return;
         }
 
-        // Fresh Load if no valid cache exists
         const freshData = await fetchProductsFromAPI();
         state.allProducts = freshData;
         buildCategories();
@@ -456,7 +474,6 @@
         DOM.productList.setAttribute("aria-busy", "false");
     }
 
-    // DOM Ready Bootstrap
     document.addEventListener("DOMContentLoaded", () => {
         cacheDOMElements();
         attachEventListeners();
