@@ -2,50 +2,21 @@
  * ============================================================================
  * PRASUN SHOP — PRODUCT DETAILS
  * ============================================================================
- *
- * Single product API:
- *
- *     /api/products?id=001
- *
- * Cart:
- *
- *     prasun_cart
- *
- * Compatible with cart.js.
- *
- * ============================================================================
  */
 
 "use strict";
 
-
 (() => {
 
-    /* ========================================================================
-       CONFIG
-       ======================================================================== */
+    const API_ENDPOINT = "/api/products";
+    const CART_KEY = "prasun_cart";
+    const CART_EVENT_NAME = "prasunCartUpdated";
+    const MAX_QUANTITY = 10;
 
-    const API_ENDPOINT =
-        "/api/products";
-
-    const CART_KEY =
-        "prasun_cart";
-
-    const CART_EVENT_NAME =
-        "prasunCartUpdated";
-
-    const MAX_QUANTITY =
-        10;
-
-
-    /* ========================================================================
-       DOM
-       ======================================================================== */
 
     const container =
-        document.getElementById(
-            "product-detail"
-        );
+        document.getElementById("product-detail");
+
 
     if (!container) {
         return;
@@ -53,14 +24,21 @@
 
 
     const breadcrumb =
-        document.getElementById(
-            "breadcrumb-title"
-        );
+        document.getElementById("breadcrumb-title");
+
 
     const cartCount =
-        document.getElementById(
-            "cart-count"
+        document.getElementById("cart-count");
+
+
+    const params =
+        new URLSearchParams(
+            window.location.search
         );
+
+
+    const productId =
+        params.get("id");
 
 
     /* ========================================================================
@@ -91,17 +69,8 @@
 
 
     /* ========================================================================
-       HTML ESCAPING
+       ESCAPE
        ======================================================================== */
-
-    const ESCAPE_MAP = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-    };
-
 
     function escapeHTML(value) {
 
@@ -113,11 +82,11 @@
         }
 
         return String(value)
-            .replace(
-                /[&<>"']/g,
-                character =>
-                    ESCAPE_MAP[character]
-            );
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
 
@@ -134,6 +103,7 @@
                 height="600"
                 viewBox="0 0 600 600"
             >
+
                 <rect
                     width="600"
                     height="600"
@@ -151,6 +121,7 @@
                 >
                     Image unavailable
                 </text>
+
             </svg>
         `);
 
@@ -179,12 +150,7 @@
                 ? parsed
                 : [];
 
-        } catch (error) {
-
-            console.error(
-                "[PRASUN SHOP] Cart read error:",
-                error
-            );
+        } catch {
 
             return [];
         }
@@ -200,6 +166,7 @@
                 JSON.stringify(cart)
             );
 
+
             window.dispatchEvent(
                 new CustomEvent(
                     CART_EVENT_NAME,
@@ -211,7 +178,11 @@
                 )
             );
 
-            updateCartBadge(cart);
+
+            updateCartBadge(
+                cart
+            );
+
 
             return true;
 
@@ -235,16 +206,15 @@
             return;
         }
 
+
         const cart =
             suppliedCart ||
             readCart();
 
+
         const total =
             cart.reduce(
-                (
-                    sum,
-                    item
-                ) => {
+                (sum, item) => {
 
                     const quantity =
                         Number(
@@ -263,18 +233,22 @@
                 0
             );
 
+
         cartCount.textContent =
             String(total);
+
 
         cartCount.hidden =
             total === 0;
 
-        const cartLink =
+
+        const link =
             cartCount.closest("a");
 
-        if (cartLink) {
 
-            cartLink.setAttribute(
+        if (link) {
+
+            link.setAttribute(
                 "aria-label",
 
                 total > 0
@@ -297,17 +271,22 @@
         const cart =
             readCart();
 
+
         const id =
             String(product.id);
+
 
         const safeQuantity =
             Math.max(
                 1,
                 Math.min(
                     MAX_QUANTITY,
-                    Number(quantity) || 1
+                    Math.floor(
+                        Number(quantity) || 1
+                    )
                 )
             );
+
 
         const existing =
             cart.find(
@@ -319,25 +298,34 @@
         if (existing) {
 
             existing.quantity =
-                (
-                    Number(existing.quantity) ||
-                    0
-                ) +
-                safeQuantity;
+                Math.min(
+                    MAX_QUANTITY,
+                    (
+                        Number(
+                            existing.quantity
+                        ) || 0
+                    ) +
+                    safeQuantity
+                );
 
         } else {
 
             cart.push({
 
-                id: product.id,
+                id:
+                    product.id,
 
-                name: product.name,
+                name:
+                    product.name,
 
-                price: Number(product.price) || 0,
+                price:
+                    Number(product.price) || 0,
 
-                image: product.image || "",
+                image:
+                    product.image || "",
 
-                category: product.category || "",
+                category:
+                    product.category || "",
 
                 description:
                     product.description || "",
@@ -346,71 +334,23 @@
                     Number(product.rating) || 5,
 
                 sku:
-                    product.sku || product.id,
+                    product.sku ||
+                    product.id,
 
                 quantity:
                     safeQuantity
-
             });
         }
 
 
-        return saveCart(cart);
-    }
-
-
-    /* ========================================================================
-       BUTTON FEEDBACK
-       ======================================================================== */
-
-    function buttonFeedback(
-        button,
-        text
-    ) {
-
-        if (!button) {
-            return;
-        }
-
-        const span =
-            button.querySelector(
-                "span"
-            );
-
-        const originalText =
-            span
-                ? span.textContent
-                : button.textContent;
-
-        button.disabled = true;
-
-        if (span) {
-            span.textContent = text;
-        } else {
-            button.textContent = text;
-        }
-
-        window.setTimeout(
-            () => {
-
-                if (span) {
-                    span.textContent =
-                        originalText;
-                } else {
-                    button.textContent =
-                        originalText;
-                }
-
-                button.disabled = false;
-
-            },
-            1200
+        return saveCart(
+            cart
         );
     }
 
 
     /* ========================================================================
-       ERROR STATE
+       ERROR
        ======================================================================== */
 
     function renderError(
@@ -444,7 +384,7 @@
 
 
     /* ========================================================================
-       LOADING STATE
+       LOADING
        ======================================================================== */
 
     function renderLoading() {
@@ -469,20 +409,7 @@
 
 
     /* ========================================================================
-       GET PRODUCT ID
-       ======================================================================== */
-
-    const params =
-        new URLSearchParams(
-            window.location.search
-        );
-
-    const productId =
-        params.get("id");
-
-
-    /* ========================================================================
-       RENDER FEATURES
+       FEATURES
        ======================================================================== */
 
     function renderFeatures(
@@ -491,23 +418,11 @@
 
         if (
             !Array.isArray(features) ||
-            features.length === 0
+            !features.length
         ) {
             return "";
         }
 
-        const validFeatures =
-            features
-                .filter(
-                    feature =>
-                        feature !== null &&
-                        feature !== undefined &&
-                        String(feature).trim() !== ""
-                );
-
-        if (!validFeatures.length) {
-            return "";
-        }
 
         return `
 
@@ -519,7 +434,8 @@
 
                 <ul class="feature-list">
 
-                    ${validFeatures
+                    ${features
+                        .filter(Boolean)
                         .map(
                             feature => `
 
@@ -543,13 +459,12 @@
                 </ul>
 
             </section>
-
         `;
     }
 
 
     /* ========================================================================
-       RENDER SPECIFICATIONS
+       SPECIFICATIONS
        ======================================================================== */
 
     function renderSpecifications(
@@ -563,14 +478,17 @@
             return "";
         }
 
+
         const keys =
             Object.keys(
                 specifications
             );
 
+
         if (!keys.length) {
             return "";
         }
+
 
         return `
 
@@ -611,7 +529,6 @@
                 </table>
 
             </section>
-
         `;
     }
 
@@ -624,16 +541,18 @@
         product
     ) {
 
-        const image =
-            product.image ||
-            FALLBACK_IMAGE;
+        if (
+            !product ||
+            !product.id
+        ) {
 
-        const rating =
-            Number.isFinite(
-                Number(product.rating)
-            )
-                ? Number(product.rating).toFixed(1)
-                : "5.0";
+            renderError(
+                "Product Not Found",
+                "This product could not be found."
+            );
+
+            return;
+        }
 
 
         document.title =
@@ -647,14 +566,23 @@
         }
 
 
+        const rating =
+            Number.isFinite(
+                Number(product.rating)
+            )
+                ? Number(product.rating).toFixed(1)
+                : "5.0";
+
+
+        const image =
+            product.image ||
+            FALLBACK_IMAGE;
+
+
         container.innerHTML = `
 
             <div class="product-grid">
 
-
-                <!-- ========================================================
-                     PRODUCT IMAGE
-                     ======================================================== -->
 
                 <div class="product-image-container">
 
@@ -669,9 +597,6 @@
                 </div>
 
 
-                <!-- ========================================================
-                     PRODUCT DETAILS
-                     ======================================================== -->
 
                 <div class="product-details">
 
@@ -692,7 +617,7 @@
                                 ★
                             </span>
 
-                            ${escapeHTML(rating)}
+                            ${rating}
                             / 5.0
 
                         </span>
@@ -708,13 +633,16 @@
                     <div class="product-meta">
 
                         <span>
+
                             SKU:
+
                             <strong>
                                 ${escapeHTML(
                                     product.sku ||
                                     product.id
                                 )}
                             </strong>
+
                         </span>
 
 
@@ -751,10 +679,6 @@
                     </p>
 
 
-                    <!-- ====================================================
-                         QUANTITY
-                         ==================================================== -->
-
                     <div class="quantity-row">
 
                         <label
@@ -788,7 +712,6 @@
                                 step="1"
                                 value="1"
                                 inputmode="numeric"
-                                aria-label="Product quantity"
                             >
 
 
@@ -805,11 +728,8 @@
                     </div>
 
 
-                    <!-- ====================================================
-                         ACTION BUTTONS
-                         ==================================================== -->
-
                     <div class="button-group">
+
 
                         <button
                             type="button"
@@ -855,30 +775,12 @@
                         </button>
 
 
+
                         <button
                             type="button"
                             id="buy-now-btn"
                             class="product-button product-button-primary"
                         >
-
-                            <svg
-                                width="17"
-                                height="17"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.8"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                aria-hidden="true"
-                            >
-
-                                <path
-                                    d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"
-                                ></path>
-
-                            </svg>
-
 
                             <span>
                                 Buy Now
@@ -901,18 +803,18 @@
                 </div>
 
             </div>
-
         `;
 
 
         /* ================================================================
            IMAGE FALLBACK
-           ================================================================ */
+        ================================================================ */
 
         const imageElement =
             document.getElementById(
                 "product-main-image"
             );
+
 
         if (imageElement) {
 
@@ -926,8 +828,10 @@
                         return;
                     }
 
+
                     imageElement.dataset.fallbackApplied =
                         "true";
+
 
                     imageElement.src =
                         FALLBACK_IMAGE;
@@ -938,28 +842,32 @@
 
 
         /* ================================================================
-           BUTTONS
-           ================================================================ */
+           QUANTITY
+        ================================================================ */
 
         const quantityInput =
             document.getElementById(
                 "product-quantity"
             );
 
+
         const decrementButton =
             document.getElementById(
                 "qty-decrement"
             );
+
 
         const incrementButton =
             document.getElementById(
                 "qty-increment"
             );
 
+
         const addButton =
             document.getElementById(
                 "add-to-cart-btn"
             );
+
 
         const buyButton =
             document.getElementById(
@@ -969,154 +877,158 @@
 
         function getQuantity() {
 
-            if (!quantityInput) {
-                return 1;
-            }
-
-            let quantity =
+            let value =
                 parseInt(
                     quantityInput.value,
                     10
                 );
 
+
             if (
-                !Number.isFinite(quantity)
+                !Number.isFinite(value)
             ) {
-                quantity = 1;
+                value = 1;
             }
 
-            quantity =
+
+            value =
                 Math.max(
                     1,
                     Math.min(
                         MAX_QUANTITY,
-                        quantity
+                        value
                     )
                 );
 
+
             quantityInput.value =
-                String(quantity);
+                String(value);
 
-            return quantity;
+
+            return value;
         }
 
 
-        if (decrementButton) {
+        decrementButton.addEventListener(
+            "click",
+            () => {
 
-            decrementButton.addEventListener(
-                "click",
-                () => {
-
-                    const current =
-                        getQuantity();
-
-                    quantityInput.value =
-                        String(
-                            Math.max(
-                                1,
-                                current - 1
-                            )
-                        );
-                }
-            );
-        }
+                quantityInput.value =
+                    String(
+                        Math.max(
+                            1,
+                            getQuantity() - 1
+                        )
+                    );
+            }
+        );
 
 
-        if (incrementButton) {
+        incrementButton.addEventListener(
+            "click",
+            () => {
 
-            incrementButton.addEventListener(
-                "click",
-                () => {
-
-                    const current =
-                        getQuantity();
-
-                    quantityInput.value =
-                        String(
-                            Math.min(
-                                MAX_QUANTITY,
-                                current + 1
-                            )
-                        );
-                }
-            );
-        }
+                quantityInput.value =
+                    String(
+                        Math.min(
+                            MAX_QUANTITY,
+                            getQuantity() + 1
+                        )
+                    );
+            }
+        );
 
 
-        if (quantityInput) {
+        quantityInput.addEventListener(
+            "change",
+            getQuantity
+        );
 
-            quantityInput.addEventListener(
-                "change",
-                getQuantity
-            );
 
-            quantityInput.addEventListener(
-                "blur",
-                getQuantity
-            );
-        }
+        quantityInput.addEventListener(
+            "blur",
+            getQuantity
+        );
 
 
         /* ================================================================
            ADD TO CART
-           ================================================================ */
+        ================================================================ */
 
-        if (addButton) {
+        addButton.addEventListener(
+            "click",
+            () => {
 
-            addButton.addEventListener(
-                "click",
-                () => {
+                const quantity =
+                    getQuantity();
 
-                    const quantity =
-                        getQuantity();
 
-                    const success =
-                        addProductToCart(
-                            product,
-                            quantity
+                if (
+                    addProductToCart(
+                        product,
+                        quantity
+                    )
+                ) {
+
+                    const span =
+                        addButton.querySelector(
+                            "span"
                         );
 
-                    if (success) {
 
-                        buttonFeedback(
-                            addButton,
-                            "Added ✓"
-                        );
-                    }
+                    const original =
+                        span.textContent;
 
+
+                    span.textContent =
+                        "Added ✓";
+
+
+                    addButton.disabled =
+                        true;
+
+
+                    setTimeout(
+                        () => {
+
+                            span.textContent =
+                                original;
+
+                            addButton.disabled =
+                                false;
+
+                        },
+                        1200
+                    );
                 }
-            );
-        }
+            }
+        );
 
 
         /* ================================================================
            BUY NOW
-           ================================================================ */
+        ================================================================ */
 
-        if (buyButton) {
+        buyButton.addEventListener(
+            "click",
+            () => {
 
-            buyButton.addEventListener(
-                "click",
-                () => {
+                const quantity =
+                    getQuantity();
 
-                    const quantity =
-                        getQuantity();
 
-                    const success =
-                        addProductToCart(
-                            product,
-                            quantity
-                        );
+                if (
+                    addProductToCart(
+                        product,
+                        quantity
+                    )
+                ) {
 
-                    if (success) {
-
-                        window.location.href =
-                            "cart.html";
-                    }
-
+                    window.location.href =
+                        "cart.html";
                 }
-            );
-        }
+            }
+        );
     }
 
 
@@ -1133,7 +1045,7 @@
 
             renderError(
                 "No Product Selected",
-                "Please return to the shop and select a valid product."
+                "Please return to the shop and select a product."
             );
 
             return;
@@ -1149,33 +1061,41 @@
                 `${API_ENDPOINT}?id=${encodeURIComponent(productId)}`;
 
 
-            const response =
-                await fetch(
-                    url,
-                    {
-                        method: "GET",
+            const controller =
+                new AbortController();
 
-                        headers: {
-                            "Accept":
-                                "application/json"
-                        },
 
-                        cache: "no-store"
-                    }
+            const timeout =
+                setTimeout(
+                    () => controller.abort(),
+                    10000
                 );
 
 
-            let data = null;
+            let response;
+
 
             try {
 
-                data =
-                    await response.json();
+                response =
+                    await fetch(
+                        url,
+                        {
+                            method: "GET",
+                            headers: {
+                                Accept:
+                                    "application/json"
+                            },
+                            cache: "no-store",
+                            signal:
+                                controller.signal
+                        }
+                    );
 
-            } catch (jsonError) {
+            } finally {
 
-                throw new Error(
-                    "The server returned an invalid JSON response."
+                clearTimeout(
+                    timeout
                 );
             }
 
@@ -1183,21 +1103,53 @@
             if (!response.ok) {
 
                 throw new Error(
-                    data?.error ||
                     `HTTP ${response.status}`
                 );
             }
 
 
-            const product =
+            const data =
+                await response.json();
+
+
+            /*
+             * NEW CORRECT FORMAT:
+             *
+             * {
+             *     product: {...}
+             * }
+             */
+
+            let product =
                 data?.product ||
                 data?.data ||
                 null;
 
 
+            /*
+             * Compatibility with an old Worker
+             * that might still return an array.
+             */
+
             if (
-                !product ||
-                !product.id
+                !product &&
+                Array.isArray(data)
+            ) {
+
+                product =
+                    data.find(
+                        item =>
+                            String(
+                                item.id ??
+                                item.pid
+                            ) ===
+                            String(productId)
+                    );
+            }
+
+
+            if (
+                !product
             ) {
 
                 throw new Error(
@@ -1210,6 +1162,7 @@
                 product
             );
 
+
         } catch (error) {
 
             console.error(
@@ -1219,15 +1172,19 @@
 
 
             renderError(
-                "Unable to Load Product",
-                "We could not retrieve this product right now. Please return to the shop and try again."
+                error?.name === "AbortError"
+                    ? "Request Timed Out"
+                    : "Unable to Load Product",
+                error?.name === "AbortError"
+                    ? "The product request took too long. Please try again."
+                    : "We could not retrieve this product right now. Please return to the shop and try again."
             );
         }
     }
 
 
     /* ========================================================================
-       INITIALIZATION
+       INITIALIZE
        ======================================================================== */
 
     updateCartBadge();
