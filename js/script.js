@@ -1,13 +1,10 @@
 /**
  * ============================================================================
- * PRASUN SHOP — PRODUCTS & INTERACTIVITY (FULL 20-PRODUCT CATALOG)
+ * PRASUN SHOP — PRODUCTS & INTERACTIVITY (CLEAN CATALOG)
  * ============================================================================
  */
 "use strict";
 (() => {
-    /* ========================================================================
-       CONFIG
-       ======================================================================== */
     const API_ENDPOINT = "https://prasun-shop-api.prasun301.workers.dev/api/products";
     const CART_KEY = "prasun_cart";
     const CART_EVENT_NAME = "prasunCartUpdated";
@@ -17,9 +14,6 @@
     const MIN_SEARCH_LENGTH = 2;
     const PRODUCT_DETAIL_PAGE = "/product.html";
 
-    /* ========================================================================
-       LOCAL FALLBACK CATALOG (ALL 20 PRODUCTS)
-       ======================================================================== */
     const LOCAL_CATALOG = [
         {
             id: "001",
@@ -74,8 +68,8 @@
             category: "Solar Lighting",
             price: 16.50,
             rating: 4.8,
-            image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800",
-            images: ["https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800"],
+            image: "",
+            images: [],
             description: "High-efficiency solar wall lamp featuring PIR motion sensing and durable weatherproofing.",
             features: ["Motion sensor detection", "Solar charging", "Weatherproof housing"],
             specifications: { "Mounting": "Wall Mount", "Sensor Range": "3-5 meters" },
@@ -89,8 +83,8 @@
             category: "Laptops & Computers",
             price: 499.99,
             rating: 4.9,
-            image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800",
-            images: ["https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800"],
+            image: "",
+            images: [],
             description: "High-performance ultra-thin laptop designed for productivity, office tasks, and multimedia.",
             features: ["15.6 inch FHD screen", "Slim lightweight metallic body", "Fast SSD storage"],
             specifications: { "Screen Size": "15.6 Inch", "OS": "Windows 11 Compatible" },
@@ -104,8 +98,8 @@
             category: "Networking",
             price: 19.99,
             rating: 4.6,
-            image: "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800",
-            images: ["https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800"],
+            image: "",
+            images: [],
             description: "Boost wireless signal coverage and eliminate dead zones across homes and offices.",
             features: ["300Mbps/1200Mbps speeds", "Easy WPS button setup", "Universal compatibility"],
             specifications: { "Coverage": "Up to 1500 sq ft", "Plug Type": "US/EU/UK" },
@@ -119,8 +113,8 @@
             category: "Security Cameras",
             price: 59.99,
             rating: 4.9,
-            image: "https://images.unsplash.com/photo-1557324232-b8917d7c3dcb?w=800",
-            images: ["https://images.unsplash.com/photo-1557324232-b8917d7c3dcb?w=800"],
+            image: "",
+            images: [],
             description: "100% wire-free outdoor camera powered continuously by an integrated solar charging panel.",
             features: ["Solar rechargeable battery", "PIR human detection", "HD night vision"],
             specifications: { "Resolution": "1080P HD", "Power": "Solar Panel + Rechargeable Battery" },
@@ -134,8 +128,8 @@
             category: "Cameras",
             price: 45.00,
             rating: 4.7,
-            image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800",
-            images: ["https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800"],
+            image: "",
+            images: [],
             description: "Compact anti-shake pocket camera ideal for vlogging, travel videos, and sports recording.",
             features: ["4K HD resolution", "Anti-shake stabilization", "Pocket-sized body"],
             specifications: { "Video Resolution": "4K", "Storage": "MicroSD Support" },
@@ -149,8 +143,8 @@
             category: "Security Cameras",
             price: 64.99,
             rating: 4.8,
-            image: "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=800",
-            images: ["https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=800"],
+            image: "",
+            images: [],
             description: "Ultra low-power standby solar security camera with remote app viewing and instant alerts.",
             features: ["Low power consumption mode", "Solar panel operation", "App motion alerts"],
             specifications: { "Connectivity": "WiFi/4G Options", "Waterproof": "IP66" },
@@ -164,8 +158,8 @@
             category: "Cameras",
             price: 38.99,
             rating: 4.8,
-            image: "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=800",
-            images: ["https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=800"],
+            image: "",
+            images: [],
             description: "Rugged waterproof action camera designed for diving, helmet mounting, and extreme outdoor sports.",
             features: ["4K 30FPS video", "Waterproof up to 30m with case", "Helmet mount accessories"],
             specifications: { "Waterproof Depth": "30 meters", "FPS": "30FPS at 4K" },
@@ -179,8 +173,8 @@
             category: "Solar Lighting",
             price: 42.50,
             rating: 4.9,
-            image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800",
-            images: ["https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800"],
+            image: "",
+            images: [],
             description: "Bright wide-area outdoor solar street light suited for driveways, yards, and rural roads.",
             features: ["High lumen brightness", "Remote control included", "Auto day/night sensor"],
             specifications: { "Illumination Area": "Wide Coverage", "Control": "Remote & Auto" },
@@ -194,8 +188,8 @@
             category: "Solar Lighting",
             price: 18.99,
             rating: 4.7,
-            image: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=800",
-            images: ["https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=800"],
+            image: "",
+            images: [],
             description: "Decorative warm-glow tungsten style solar wall lamp designed for gardens and patio fences.",
             features: ["Warm tungsten bulb effect", "Solar auto charging", "Weatherproof outdoor casing"],
             specifications: { "Light Tone": "Warm White", "Mounting": "Wall Mount" },
@@ -209,8 +203,8 @@
             category: "Solar Lighting",
             price: 12.99,
             rating: 4.8,
-            image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800",
-            images: ["https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800"],
+            image: "",
+            images: [],
             description: "Compact 6-LED solar step light for stairways, outdoor steps, and deck corners.",
             features: ["6 high-brightness LEDs", "Automatic night activation", "Compact flush mount design"],
             specifications: { "LED Count": "6 LEDs", "Application": "Stairs / Decks" },
@@ -224,8 +218,8 @@
             category: "Solar Lighting",
             price: 21.99,
             rating: 4.7,
-            image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800",
-            images: ["https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800"],
+            image: "",
+            images: [],
             description: "Reliable outdoor garden sensor light offering multiple brightness levels and energy saving modes.",
             features: ["PIR motion detection", "Multi-mode lighting settings", "Durable IP65 body"],
             specifications: { "Sensor Angle": "120 Degrees", "Power Source": "Solar Panel" },
@@ -239,8 +233,8 @@
             category: "Charging & Power",
             price: 34.99,
             rating: 4.9,
-            image: "https://images.unsplash.com/photo-1622445275574-55bc775fcae2?w=800",
-            images: ["https://images.unsplash.com/photo-1622445275574-55bc775fcae2?w=800"],
+            image: "",
+            images: [],
             description: "All-in-one desk charging dock for iPhone, Apple Watch, AirPods, and built-in ambient lighting.",
             features: ["Simultaneous 4-device charging", "Magnetic snap alignment", "Ambient night lamp"],
             specifications: { "Max Output": "15W", "Compatibility": "Qi-enabled devices" },
@@ -254,8 +248,8 @@
             category: "Charging & Power",
             price: 19.99,
             rating: 4.9,
-            image: "https://images.unsplash.com/photo-1586816879360-004f5b0c51e3?w=800",
-            images: ["https://images.unsplash.com/photo-1586816879360-004f5b0c51e3?w=800"],
+            image: "",
+            images: [],
             description: "Slim magnetic fast charger compatible with iPhone 12 through iPhone 17 series models.",
             features: ["Strong magnetic hold", "15W fast wireless charging", "Ultra-thin aluminum shell"],
             specifications: { "Charging Power": "15W / 10W / 7.5W / 5W", "Connector": "USB-C" },
@@ -269,8 +263,8 @@
             category: "Audio",
             price: 27.99,
             rating: 4.8,
-            image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800",
-            images: ["https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800"],
+            image: "",
+            images: [],
             description: "Ergonomic sports earbud system featuring noise cancellation, deep bass, and sweat protection.",
             features: ["Active Noise Cancellation", "Sweatproof fit for workouts", "HD microphone for calls"],
             specifications: { "Playtime": "5-7 Hours", "Bluetooth": "V5.3" },
@@ -284,8 +278,8 @@
             category: "Solar Lighting",
             price: 22.50,
             rating: 4.9,
-            image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800",
-            images: ["https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800"],
+            image: "",
+            images: [],
             description: "Ultra-bright 118 LED solar flood lamp providing wide-angle illumination for gardens and patios.",
             features: ["118 high-power LEDs", "Wide 270-degree lighting angle", "3 intelligent modes"],
             specifications: { "LED Count": "118 LEDs", "Angle": "270 Degrees" },
@@ -299,8 +293,8 @@
             category: "Solar Lighting",
             price: 39.99,
             rating: 4.8,
-            image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800",
-            images: ["https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800"],
+            image: "",
+            images: [],
             description: "Zero-electricity-cost solar floodlight built for yard, roof, balcony, and garden security.",
             features: ["Zero electric power consumption", "Remote control included", "Heavy-duty waterproof shell"],
             specifications: { "Mounting": "Wall/Pole Mount", "Battery": "High Capacity Lithium" },
@@ -314,8 +308,8 @@
             category: "Portable Power",
             price: 26.99,
             rating: 4.7,
-            image: "https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800",
-            images: ["https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800"],
+            image: "",
+            images: [],
             description: "Foldable and flexible USB solar charging board designed for camping, hiking, and phone emergencies.",
             features: ["13W solar panel efficiency", "Direct USB charging output", "Ultra-lightweight flexible design"],
             specifications: { "Output Voltage": "5V USB", "Power": "13W" },
@@ -323,14 +317,8 @@
         }
     ];
 
-    /* ========================================================================
-       DOM ELEMENTS
-       ======================================================================== */
     const productList = document.getElementById("product-list");
-    if (!productList) {
-        console.error("[PRASUN SHOP] #product-list was not found.");
-        return;
-    }
+    if (!productList) return;
 
     const searchInput = document.getElementById("product-search");
     const sortSelect = document.getElementById("product-sort");
@@ -341,9 +329,6 @@
     const ariaLiveRegion = document.getElementById("aria-live-region");
     const cartCount = document.getElementById("cart-count");
 
-    /* ========================================================================
-       STATE
-       ======================================================================== */
     let masterCatalog = []; 
     let allProducts = [];   
     let filteredProducts = [];
@@ -355,9 +340,6 @@
     let searchRequestSequence = 0;
     let catalogRequestSequence = 0;
 
-    /* ========================================================================
-       FALLBACK IMAGE
-       ======================================================================== */
     const FALLBACK_IMAGE =
         "data:image/svg+xml;charset=UTF-8," +
         encodeURIComponent(`
@@ -371,99 +353,50 @@
             </svg>
         `);
 
-    /* ========================================================================
-       HTML ESCAPING & TEXT HELPERS
-       ======================================================================== */
-    const ESCAPE_MAP = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-    };
-
+    const ESCAPE_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
     function escapeHTML(value) {
         if (value === null || value === undefined) return "";
-        return String(value).replace(/[&<>"']/g, character => ESCAPE_MAP[character]);
+        return String(value).replace(/[&<>"']/g, c => ESCAPE_MAP[c]);
     }
-
     function cleanText(value, fallback = "") {
         if (value === null || value === undefined) return fallback;
         const text = String(value).trim();
         return text || fallback;
     }
 
-    /* ========================================================================
-       PRICE FORMATTING
-       ======================================================================== */
-    const currencyFormatter = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-
+    const currencyFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 });
     function parsePrice(value) {
-        if (typeof value === "number" && Number.isFinite(value)) {
-            return Math.max(0, value);
-        }
+        if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, value);
         const parsed = parseFloat(String(value ?? "").replace(/[^0-9.-]/g, ""));
         return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
     }
-
     function extractPrice(product) {
         if (!product || typeof product !== "object") return 0;
-        const candidates = [
-            product.discountPrice,
-            product.nowPrice,
-            product.sellPrice,
-            product.price,
-            product.startSellPrice,
-            product.salePrice,
-            product.productPrice
-        ];
+        const candidates = [product.discountPrice, product.nowPrice, product.sellPrice, product.price, product.startSellPrice, product.salePrice, product.productPrice];
         for (const candidate of candidates) {
             const parsed = parsePrice(candidate);
             if (parsed > 0) return parsed;
         }
         return 0;
     }
+    function formatPrice(value) { return currencyFormatter.format(parsePrice(value)); }
 
-    function formatPrice(value) {
-        return currencyFormatter.format(parsePrice(value));
-    }
-
-    /* ========================================================================
-       NORMALIZATION UTILS
-       ======================================================================== */
     function normalizeImageURL(value) {
         if (!value) return "";
         let image = String(value).trim();
         if (!image) return "";
         if (image.startsWith("//")) return "https:" + image;
-        if (/^https?:\/\//i.test(image) || image.startsWith("data:") || image.startsWith("/") || image.startsWith("./")) {
-            return image;
-        }
+        if (/^https?:\/\//i.test(image) || image.startsWith("data:") || image.startsWith("/") || image.startsWith("./")) return image;
         return "https://" + image.replace(/^\/+/, "");
     }
-
     function extractImages(product) {
         const candidates = [];
         const addCandidate = value => {
-            if (Array.isArray(value)) {
-                value.forEach(addCandidate);
-                return;
-            }
-            if (value && typeof value === "object") {
-                addCandidate(value.url);
-                addCandidate(value.imageUrl);
-                addCandidate(value.image);
-                return;
-            }
+            if (Array.isArray(value)) { value.forEach(addCandidate); return; }
+            if (value && typeof value === "object") { addCandidate(value.url); addCandidate(value.imageUrl); addCandidate(value.image); return; }
             const normalized = normalizeImageURL(value);
             if (normalized) candidates.push(normalized);
         };
-
         addCandidate(product.image);
         addCandidate(product.bigImage);
         addCandidate(product.imageUrl);
@@ -511,22 +444,14 @@
         if (!data || typeof data !== "object") return [];
         const candidates = [data.products, data.items, data.list, data.results, data.data?.products, data.data?.items];
         for (const candidate of candidates) {
-            if (Array.isArray(candidate)) {
-                return candidate.map(normalizeProduct).filter(Boolean);
-            }
+            if (Array.isArray(candidate)) return candidate.map(normalizeProduct).filter(Boolean);
         }
         return [];
     }
 
-    function getLocalProducts() {
-        return LOCAL_CATALOG.map(normalizeProduct).filter(Boolean);
-    }
-
-    function productKey(product) {
-        if (!product) return "";
-        return String(product.sku || product.id || "").trim().toLowerCase();
-    }
-
+    function getLocalProducts() { return LOCAL_CATALOG.map(normalizeProduct).filter(Boolean); }
+    function productKey(product) { return String(product?.sku || product?.id || "").trim().toLowerCase(); }
+    
     function mergeProducts(baseProducts, incomingProducts) {
         const map = new Map();
         for (const product of baseProducts || []) {
@@ -540,31 +465,17 @@
         return Array.from(map.values());
     }
 
-    /* ========================================================================
-       FETCH JSON
-       ======================================================================== */
     async function fetchJSON(url, timeout = API_TIMEOUT) {
         const controller = new AbortController();
         let timedOut = false;
-        const timeoutId = window.setTimeout(() => {
-            timedOut = true;
-            controller.abort();
-        }, timeout);
-
+        const timeoutId = window.setTimeout(() => { timedOut = true; controller.abort(); }, timeout);
         try {
-            const response = await fetch(url, {
-                method: "GET",
-                headers: { "Accept": "application/json" },
-                cache: "no-store",
-                signal: controller.signal
-            });
+            const response = await fetch(url, { method: "GET", headers: { "Accept": "application/json" }, cache: "no-store", signal: controller.signal });
             const text = await response.text();
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return text.trim() ? JSON.parse(text) : null;
         } catch (error) {
-            if (timedOut || error?.name === "AbortError") {
-                throw new Error(timedOut ? "Request timed out." : "Request cancelled.");
-            }
+            if (timedOut || error?.name === "AbortError") throw new Error(timedOut ? "Request timed out." : "Request cancelled.");
             throw error;
         } finally {
             window.clearTimeout(timeoutId);
@@ -579,27 +490,15 @@
             params.set("keyword", trimmed);
             url += `?${params.toString()}`;
         }
-        const data = await fetchJSON(url, API_TIMEOUT, signal);
+        const data = await fetchJSON(url, API_TIMEOUT);
         const products = extractProducts(data);
         if (!products.length) throw new Error("API returned no usable products.");
         return products;
     }
 
-    /* ========================================================================
-       UI ANNOUNCEMENTS & CLEAR SEARCH
-       ======================================================================== */
-    function announce(message) {
-        if (ariaLiveRegion) ariaLiveRegion.textContent = message;
-    }
+    function announce(message) { if (ariaLiveRegion) ariaLiveRegion.textContent = message; }
+    function updateClearSearchButton() { if (clearSearchButton && searchInput) clearSearchButton.hidden = !searchInput.value.trim(); }
 
-    function updateClearSearchButton() {
-        if (!clearSearchButton || !searchInput) return;
-        clearSearchButton.hidden = !searchInput.value.trim();
-    }
-
-    /* ========================================================================
-       FILTER & SORT
-       ======================================================================== */
     function filterProducts() {
         const search = currentSearch.trim().toLowerCase();
         filteredProducts = allProducts.filter(product => {
@@ -616,26 +515,14 @@
 
     function applySort() {
         switch (currentSort) {
-            case "price-low":
-                filteredProducts.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
-                break;
-            case "price-high":
-                filteredProducts.sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
-                break;
-            case "rating":
-                filteredProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-                break;
-            case "name-az":
-                filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
-                break;
-            default:
-                break;
+            case "price-low": filteredProducts.sort((a, b) => parsePrice(a.price) - parsePrice(b.price)); break;
+            case "price-high": filteredProducts.sort((a, b) => parsePrice(b.price) - parsePrice(a.price)); break;
+            case "rating": filteredProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0)); break;
+            case "name-az": filteredProducts.sort((a, b) => a.name.localeCompare(b.name)); break;
+            default: break;
         }
     }
 
-    /* ========================================================================
-       CATEGORIES
-       ======================================================================== */
     function buildCategories() {
         if (!categoriesContainer) return;
         const categoryMap = new Map();
@@ -644,7 +531,6 @@
             if (category) categoryMap.set(category.toLowerCase(), category);
         });
         const categories = Array.from(categoryMap.values()).sort();
-
         categoriesContainer.innerHTML = `
             <button type="button" class="category-pill" data-category="all" aria-pressed="false">All</button>
             ${categories.map(cat => `<button type="button" class="category-pill" data-category="${escapeHTML(cat)}" aria-pressed="false">${escapeHTML(cat)}</button>`).join("")}
@@ -662,16 +548,8 @@
         });
     }
 
-    /* ========================================================================
-       RENDERERS
-       ======================================================================== */
     function renderLoading(message = "Loading catalog...") {
-        productList.innerHTML = `
-            <div class="product-status-card" role="status">
-                <div class="spinner" aria-hidden="true"></div>
-                <p>${escapeHTML(message)}</p>
-            </div>
-        `;
+        productList.innerHTML = `<div class="product-status-card" role="status"><div class="spinner" aria-hidden="true"></div><p>${escapeHTML(message)}</p></div>`;
         announce(message);
     }
 
@@ -681,9 +559,7 @@
     }
 
     function renderRating(rating) {
-        if (rating === null || rating === undefined || !Number.isFinite(rating)) {
-            return '<span class="rating-badge rating-none">No reviews</span>';
-        }
+        if (rating === null || rating === undefined || !Number.isFinite(rating)) return '<span class="rating-badge rating-none">No reviews</span>';
         const stars = "★".repeat(Math.round(rating)) + "☆".repeat(5 - Math.round(rating));
         return `<span class="rating-badge">${stars} (${rating.toFixed(1)})</span>`;
     }
@@ -729,33 +605,20 @@
     function renderProducts() {
         filterProducts();
         updateProductHeadingAndCount();
-        if (!filteredProducts.length) {
-            renderEmpty();
-            return;
-        }
+        if (!filteredProducts.length) { renderEmpty(); return; }
         productList.innerHTML = filteredProducts.map(renderProductCard).join("");
         announce(`Showing ${filteredProducts.length} products`);
     }
 
-    /* ========================================================================
-       SHOPPING CART ENGINE
-       ======================================================================== */
     function getCart() {
-        try {
-            const raw = localStorage.getItem(CART_KEY);
-            return raw ? JSON.parse(raw) : [];
-        } catch {
-            return [];
-        }
+        try { const raw = localStorage.getItem(CART_KEY); return raw ? JSON.parse(raw) : []; } catch { return []; }
     }
 
     function saveCart(cart) {
         try {
             localStorage.setItem(CART_KEY, JSON.stringify(cart));
             window.dispatchEvent(new CustomEvent(CART_EVENT_NAME, { detail: cart }));
-        } catch (e) {
-            console.error("[PRASUN SHOP] Failed to save cart", e);
-        }
+        } catch (e) { console.error("[PRASUN SHOP] Failed to save cart", e); }
     }
 
     function updateCartBadge() {
@@ -767,48 +630,29 @@
     }
 
     function addToCart(productId) {
-        const product = allProducts.find(p => p.id === productId || p.sku === productId) ||
-                        masterCatalog.find(p => p.id === productId || p.sku === productId);
+        const product = allProducts.find(p => p.id === productId || p.sku === productId) || masterCatalog.find(p => p.id === productId || p.sku === productId);
         if (!product) return;
-
         const cart = getCart();
         const existingIndex = cart.findIndex(item => item.id === product.id || item.sku === product.sku);
-
         if (existingIndex > -1) {
             cart[existingIndex].quantity = Math.min(MAX_CART_QUANTITY, (cart[existingIndex].quantity || 1) + 1);
         } else {
-            cart.push({
-                id: product.id,
-                sku: product.sku,
-                name: product.name,
-                price: product.price,
-                image: product.image,
-                quantity: 1
-            });
+            cart.push({ id: product.id, sku: product.sku, name: product.name, price: product.price, image: product.image || FALLBACK_IMAGE, quantity: 1 });
         }
-
         saveCart(cart);
         updateCartBadge();
         announce(`Added ${product.name} to your cart.`);
     }
 
-    /* ========================================================================
-       SEARCH EXECUTION
-       ======================================================================== */
     async function handleSearchExecution(query) {
         const trimmed = query.trim();
         searchRequestSequence++;
         const currentSeq = searchRequestSequence;
-
-        if (activeSearchController) {
-            activeSearchController.abort();
-            activeSearchController = null;
-        }
+        if (activeSearchController) { activeSearchController.abort(); activeSearchController = null; }
 
         if (trimmed.length >= MIN_SEARCH_LENGTH) {
             renderLoading(`Searching for "${trimmed}"...`);
             activeSearchController = new AbortController();
-
             try {
                 const apiResults = await loadProductsFromAPI(trimmed, activeSearchController.signal);
                 if (currentSeq !== searchRequestSequence) return;
@@ -835,54 +679,32 @@
         searchTimer = window.setTimeout(() => handleSearchExecution(currentSearch), SEARCH_DELAY);
     }
 
-    /* ========================================================================
-       EVENT LISTENERS
-       ======================================================================== */
     function attachEventListeners() {
         searchInput?.addEventListener("input", onSearchInput);
         clearSearchButton?.addEventListener("click", () => {
-            if (searchInput) {
-                searchInput.value = "";
-                currentSearch = "";
-                updateClearSearchButton();
-                handleSearchExecution("");
-                searchInput.focus();
-            }
+            if (searchInput) { searchInput.value = ""; currentSearch = ""; updateClearSearchButton(); handleSearchExecution(""); searchInput.focus(); }
         });
-
-        sortSelect?.addEventListener("change", e => {
-            currentSort = e.target.value;
-            renderProducts();
-        });
-
+        sortSelect?.addEventListener("change", e => { currentSort = e.target.value; renderProducts(); });
         categoriesContainer?.addEventListener("click", e => {
             const button = e.target.closest(".category-pill");
             if (!button) return;
             setActiveCategory(button.dataset.category);
             renderProducts();
         });
-
         productList.addEventListener("click", e => {
             const btn = e.target.closest(".btn-add-to-cart, .add-to-cart-btn");
             if (!btn) return;
             const id = btn.dataset.id;
             if (id) addToCart(id);
         });
-
         window.addEventListener(CART_EVENT_NAME, updateCartBadge);
-        window.addEventListener("storage", e => {
-            if (e.key === CART_KEY) updateCartBadge();
-        });
+        window.addEventListener("storage", e => { if (e.key === CART_KEY) updateCartBadge(); });
     }
 
-    /* ========================================================================
-       INITIALIZATION
-       ======================================================================== */
     async function initCatalog() {
         catalogRequestSequence++;
         const currentSeq = catalogRequestSequence;
         renderLoading("Fetching products...");
-
         try {
             const remoteProducts = await loadProductsFromAPI();
             if (currentSeq !== catalogRequestSequence) return;
@@ -893,21 +715,13 @@
             masterCatalog = getLocalProducts();
             allProducts = [...masterCatalog];
         }
-
         buildCategories();
         renderProducts();
         updateCartBadge();
         updateClearSearchButton();
     }
 
-    function init() {
-        attachEventListeners();
-        initCatalog();
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
-    } else {
-        init();
-    }
+    function init() { attachEventListeners(); initCatalog(); }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+    else init();
 })();
