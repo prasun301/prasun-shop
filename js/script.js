@@ -3,27 +3,30 @@
  * PRASUN SHOP — PRODUCTS & INTERACTIVITY
  * ============================================================================
  *
- * Production-ready storefront controller.
+ * Compatible with:
+ *   - index.html
+ *   - Cloudflare Worker /api/products
+ *   - CJ Dropshipping API 2.0
  *
  * Features:
- * - Cloudflare Worker /api/products integration
- * - CJ Dropshipping-compatible response normalization
- * - Local fallback catalog
- * - Intelligent API/local product merging
- * - Duplicate protection
- * - Search with debounce
- * - Live API search
- * - Category filtering
- * - Sorting
- * - Cart integration
- * - Cart quantity protection
- * - Product detail links
- * - Broken-image protection
- * - Timeout protection
- * - Abort previous search requests
- * - Accessible UI states
- * - Array/wrapped CJ API response support
- * - Persistent product metadata
+ *   - Live CJ catalog loading
+ *   - CJ keyword search
+ *   - Local fallback catalog
+ *   - Safe local/CJ merging
+ *   - SKU/PID-aware deduplication
+ *   - Category filtering
+ *   - Price/name/rating sorting
+ *   - Debounced search
+ *   - Abortable search requests
+ *   - Search request race protection
+ *   - Shopping cart integration
+ *   - Cart quantity protection
+ *   - Product detail links
+ *   - CJ variant preservation
+ *   - Broken-image protection
+ *   - Timeout protection
+ *   - Accessible UI states
+ *   - Accurate handling of missing ratings
  * ============================================================================
  */
 
@@ -35,16 +38,16 @@
        CONFIG
        ======================================================================== */
 
-    const API_ENDPOINT = "./api/products";
+    const API_ENDPOINT = "/api/products";
     const CART_KEY = "prasun_cart";
     const CART_EVENT_NAME = "prasunCartUpdated";
 
-    const API_TIMEOUT = 10000;
+    const API_TIMEOUT = 12000;
     const SEARCH_DELAY = 400;
     const MAX_CART_QUANTITY = 99;
     const MIN_SEARCH_LENGTH = 2;
 
-    const PRODUCT_DETAIL_PAGE = "./product.html";
+    const PRODUCT_DETAIL_PAGE = "/product.html";
 
 
     /* ========================================================================
@@ -58,9 +61,16 @@
             name: "G-Shaped Smart LED Atmosphere Lamp with Bluetooth Speaker & Wireless Charger",
             category: "Smart Lighting",
             price: 29.99,
-            rating: 5,
+            rating: null,
             image: "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/10_57d942b5-c025-425a-a8a4-d87c6a612631.png",
-            description: "Upgrade your living space with this multifunctional G-shaped Smart LED Atmosphere Lamp combining customizable lighting, Bluetooth audio, 15W wireless charging, and alarm clock controls.",
+
+            images: [
+                "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/10_57d942b5-c025-425a-a8a4-d87c6a612631.png"
+            ],
+
+            description:
+                "Upgrade your living space with this multifunctional G-shaped Smart LED Atmosphere Lamp combining customizable lighting, Bluetooth audio, 15W wireless charging, and alarm clock controls.",
+
             features: [
                 "15W fast wireless charging",
                 "Built-in Bluetooth speaker",
@@ -71,6 +81,7 @@
                 "Smart wake-up and sleep mode",
                 "Modern decorative design"
             ],
+
             specifications: {
                 "Material": "Plastic",
                 "Product Type": "Electronic Smart Lamp",
@@ -80,7 +91,9 @@
                 "Wireless Charging": "15W",
                 "Control": "APP / Voice / Remote / Button",
                 "Power Input": "100-240V"
-            }
+            },
+
+            variants: []
         },
 
         {
@@ -89,9 +102,16 @@
             name: "Mini 5000mAh Magnetic Wireless Power Bank Fast Charging Portable Battery",
             category: "Power & Charging",
             price: 39.99,
-            rating: 5,
+            rating: null,
             image: "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg",
-            description: "Compact 5000mAh Magnetic Wireless Power Bank featuring strong magnetic attachment, fast charging, LED power display, and a travel-friendly portable design.",
+
+            images: [
+                "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg"
+            ],
+
+            description:
+                "Compact 5000mAh Magnetic Wireless Power Bank featuring strong magnetic attachment, fast charging, LED power display, and a travel-friendly portable design.",
+
             features: [
                 "5000mAh battery capacity",
                 "Strong magnetic wireless charging",
@@ -102,6 +122,7 @@
                 "Compact travel-friendly design",
                 "Portable rechargeable battery"
             ],
+
             specifications: {
                 "Material": "Plastic",
                 "Product Type": "Portable Power Bank",
@@ -109,9 +130,12 @@
                 "Input / Output": "5V / 2.1A",
                 "Wireless Charging": "5W",
                 "Dimensions": "91 × 64 × 15 mm",
-                "Color Options": "Cool Black, Retro Green, Ivory White, Cherry Blossom Pink",
+                "Color Options":
+                    "Cool Black, Retro Green, Ivory White, Cherry Blossom Pink",
                 "Compatibility": "Apple & Qi-compatible devices"
-            }
+            },
+
+            variants: []
         },
 
         {
@@ -120,9 +144,16 @@
             name: "High-Quality Noise Cancelling Wireless Bluetooth Sports Earbuds",
             category: "Audio",
             price: 49.99,
-            rating: 5,
+            rating: null,
             image: "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg",
-            description: "Immersive sound with Noise Cancelling Wireless Bluetooth Sports Earbuds designed for workouts, travel, calls, and low-latency gaming.",
+
+            images: [
+                "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg"
+            ],
+
+            description:
+                "Immersive sound with Noise Cancelling Wireless Bluetooth Sports Earbuds designed for workouts, travel, calls, and low-latency gaming.",
+
             features: [
                 "Noise cancellation technology",
                 "Bluetooth wireless connection",
@@ -133,6 +164,7 @@
                 "Long battery life",
                 "Comfortable in-ear design"
             ],
+
             specifications: {
                 "Material": "PC + ABS",
                 "Product Type": "Wireless Bluetooth Earbuds",
@@ -141,7 +173,9 @@
                 "Battery Life": "4-8 hours",
                 "Color Options": "White, Skin Tone, Black",
                 "Package Size": "120 × 100 × 60 mm"
-            }
+            },
+
+            variants: []
         }
     ];
 
@@ -154,15 +188,20 @@
         document.getElementById("product-list");
 
     if (!productList) {
-        console.error("[PRASUN SHOP] #product-list was not found.");
+        console.error(
+            "[PRASUN SHOP] #product-list was not found."
+        );
         return;
     }
 
+    /*
+     * These IDs match your current index.html exactly.
+     */
     const searchInput =
-        document.getElementById("products-search");
+        document.getElementById("product-search");
 
     const sortSelect =
-        document.getElementById("products-sort");
+        document.getElementById("product-sort");
 
     const categoriesContainer =
         document.getElementById("products-categories");
@@ -172,7 +211,13 @@
         document.getElementById("page-heading");
 
     const productsCount =
-        document.getElementById("products-count");
+        document.getElementById("results-count");
+
+    const clearSearchButton =
+        document.getElementById("clear-search");
+
+    const ariaLiveRegion =
+        document.getElementById("aria-live-region");
 
     const cartCount =
         document.getElementById("cart-count");
@@ -187,12 +232,22 @@
 
     let activeCategory = "all";
     let currentSearch = "";
-    let currentSort = "featured";
+    let currentSort =
+        sortSelect?.value || "featured";
 
     let searchTimer = null;
+
     let activeSearchController = null;
 
-    let apiRequestInProgress = false;
+    /*
+     * Prevent stale asynchronous search results from replacing newer results.
+     */
+    let searchRequestSequence = 0;
+
+    /*
+     * Separate request sequence for initial catalog loading.
+     */
+    let catalogRequestSequence = 0;
 
 
     /* ========================================================================
@@ -249,13 +304,17 @@
 
     function escapeHTML(value) {
 
-        if (value === null || value === undefined) {
+        if (
+            value === null ||
+            value === undefined
+        ) {
             return "";
         }
 
         return String(value).replace(
             /[&<>"']/g,
-            character => ESCAPE_MAP[character]
+            character =>
+                ESCAPE_MAP[character]
         );
     }
 
@@ -264,7 +323,10 @@
        SAFE TEXT
        ======================================================================== */
 
-    function cleanText(value, fallback = "") {
+    function cleanText(
+        value,
+        fallback = ""
+    ) {
 
         if (
             value === null ||
@@ -273,7 +335,8 @@
             return fallback;
         }
 
-        const text = String(value).trim();
+        const text =
+            String(value).trim();
 
         return text || fallback;
     }
@@ -315,6 +378,7 @@
     }
 
     function formatPrice(value) {
+
         return currencyFormatter.format(
             parsePrice(value)
         );
@@ -325,7 +389,9 @@
        IMAGE URL NORMALIZATION
        ======================================================================== */
 
-    function normalizeImageURL(value) {
+    function normalizeImageURL(
+        value
+    ) {
 
         if (
             value === null ||
@@ -355,6 +421,9 @@
             return image;
         }
 
+        /*
+         * Handle protocol-relative / path-like image values.
+         */
         return "https://" +
             image.replace(/^\/+/, "");
     }
@@ -364,53 +433,130 @@
        IMAGE EXTRACTION
        ======================================================================== */
 
-    function extractImage(product) {
+    function extractImages(
+        product
+    ) {
 
-        const possibleImages = [
-            product.image,
-            product.imageUrl,
-            product.productImage,
-            product.productImageUrl,
-            product.imgUrl,
-            product.thumbnail,
-            product.thumbnailUrl,
-            product.logo,
-            product.cover,
-            product.mainImage,
-            product.productMainImage,
-            product.productImageList?.[0],
-            product.imageList?.[0],
-            product.images?.[0]
-        ];
+        const candidates = [];
 
-        for (const candidate of possibleImages) {
+        const addCandidate =
+            value => {
 
-            if (
-                typeof candidate === "object" &&
-                candidate !== null
-            ) {
+                if (
+                    Array.isArray(value)
+                ) {
 
-                const nested =
-                    candidate.url ||
-                    candidate.imageUrl ||
-                    candidate.image;
+                    value.forEach(
+                        addCandidate
+                    );
 
-                if (nested) {
-                    return normalizeImageURL(nested);
+                    return;
                 }
 
-                continue;
-            }
+                if (
+                    value &&
+                    typeof value === "object"
+                ) {
 
-            const normalized =
-                normalizeImageURL(candidate);
+                    addCandidate(
+                        value.url
+                    );
 
-            if (normalized) {
-                return normalized;
-            }
-        }
+                    addCandidate(
+                        value.imageUrl
+                    );
 
-        return "";
+                    addCandidate(
+                        value.image
+                    );
+
+                    return;
+                }
+
+                const normalized =
+                    normalizeImageURL(
+                        value
+                    );
+
+                if (normalized) {
+                    candidates.push(
+                        normalized
+                    );
+                }
+            };
+
+        addCandidate(
+            product.image
+        );
+
+        addCandidate(
+            product.bigImage
+        );
+
+        addCandidate(
+            product.imageUrl
+        );
+
+        addCandidate(
+            product.productImage
+        );
+
+        addCandidate(
+            product.productImageUrl
+        );
+
+        addCandidate(
+            product.imgUrl
+        );
+
+        addCandidate(
+            product.thumbnail
+        );
+
+        addCandidate(
+            product.thumbnailUrl
+        );
+
+        addCandidate(
+            product.mainImage
+        );
+
+        addCandidate(
+            product.productMainImage
+        );
+
+        addCandidate(
+            product.images
+        );
+
+        addCandidate(
+            product.productImageList
+        );
+
+        addCandidate(
+            product.imageList
+        );
+
+        /*
+         * Remove duplicates while preserving order.
+         */
+        return [
+            ...new Set(
+                candidates
+            )
+        ];
+    }
+
+    function extractImage(
+        product
+    ) {
+
+        const images =
+            extractImages(
+                product
+            );
+
+        return images[0] || "";
     }
 
 
@@ -418,9 +564,13 @@
        ARRAY NORMALIZATION
        ======================================================================== */
 
-    function normalizeArray(value) {
+    function normalizeArray(
+        value
+    ) {
 
-        if (Array.isArray(value)) {
+        if (
+            Array.isArray(value)
+        ) {
             return value;
         }
 
@@ -431,7 +581,10 @@
 
             return value
                 .split(/[,\n|]+/)
-                .map(item => item.trim())
+                .map(
+                    item =>
+                        item.trim()
+                )
                 .filter(Boolean);
         }
 
@@ -443,7 +596,9 @@
        OBJECT NORMALIZATION
        ======================================================================== */
 
-    function normalizeObject(value) {
+    function normalizeObject(
+        value
+    ) {
 
         return (
             value &&
@@ -452,6 +607,130 @@
         )
             ? value
             : {};
+    }
+
+
+    /* ========================================================================
+       RATING NORMALIZATION
+       ======================================================================== */
+
+    function normalizeRating(
+        product
+    ) {
+
+        const value =
+            product?.rating ??
+            product?.score ??
+            product?.productScore ??
+            null;
+
+        if (
+            value === null ||
+            value === undefined ||
+            value === ""
+        ) {
+            return null;
+        }
+
+        const numeric =
+            Number(value);
+
+        if (
+            !Number.isFinite(numeric)
+        ) {
+            return null;
+        }
+
+        return Math.max(
+            0,
+            Math.min(
+                5,
+                numeric
+            )
+        );
+    }
+
+
+    /* ========================================================================
+       VARIANT NORMALIZATION
+       ======================================================================== */
+
+    function normalizeVariants(
+        product
+    ) {
+
+        const source =
+            Array.isArray(
+                product?.variants
+            )
+                ? product.variants
+                : Array.isArray(
+                    product?.variantList
+                )
+                    ? product.variantList
+                    : [];
+
+        return source
+            .filter(
+                variant =>
+                    variant &&
+                    typeof variant === "object"
+            )
+            .map(
+                variant => ({
+                    vid:
+                        cleanText(
+                            variant.vid
+                        ),
+
+                    pid:
+                        cleanText(
+                            variant.pid
+                        ),
+
+                    name:
+                        cleanText(
+                            variant.variantNameEn ??
+                            variant.variantName
+                        ),
+
+                    sku:
+                        cleanText(
+                            variant.variantSku ??
+                            variant.sku
+                        ),
+
+                    barcode:
+                        cleanText(
+                            variant.barcode
+                        ),
+
+                    key:
+                        cleanText(
+                            variant.variantKey
+                        ),
+
+                    image:
+                        normalizeImageURL(
+                            variant.variantImage ??
+                            variant.image
+                        ),
+
+                    price:
+                        parsePrice(
+                            variant.variantSellPrice ??
+                            variant.sellPrice ??
+                            variant.price
+                        ),
+
+                    inventories:
+                        Array.isArray(
+                            variant.inventories
+                        )
+                            ? variant.inventories
+                            : []
+                })
+            );
     }
 
 
@@ -489,16 +768,17 @@
 
         const name =
             product.name ??
+            product.nameEn ??
             product.productNameEn ??
             product.productName ??
             product.title ??
-            product.productName ??
             "CJ Product";
 
         const category =
             product.category ??
             product.categoryName ??
             product.categoryNameEn ??
+            product.threeCategoryName ??
             product.categoryNameCn ??
             "General";
 
@@ -510,38 +790,34 @@
             product.desc ??
             "";
 
+        /*
+         * Match the Worker/CJ priority:
+         * discountPrice -> nowPrice -> sellPrice -> price
+         */
         const price =
             parsePrice(
-                product.price ??
-                product.sellPrice ??
-                product.salePrice ??
-                product.startSellPrice ??
-                product.productPrice ??
-                product.nowPrice ??
                 product.discountPrice ??
+                product.nowPrice ??
+                product.sellPrice ??
+                product.price ??
+                product.startSellPrice ??
+                product.salePrice ??
+                product.productPrice ??
                 0
             );
 
-        let rating =
-            Number(
-                product.rating ??
-                product.score ??
-                product.productScore ??
-                5
+        const rating =
+            normalizeRating(
+                product
             );
 
-        if (!Number.isFinite(rating)) {
-            rating = 5;
-        }
-
-        rating =
-            Math.max(
-                0,
-                Math.min(5, rating)
+        const images =
+            extractImages(
+                product
             );
 
         const image =
-            extractImage(product);
+            images[0] || "";
 
         const features =
             normalizeArray(
@@ -558,11 +834,45 @@
             );
 
         const variants =
-            Array.isArray(product.variants)
-                ? product.variants
-                : Array.isArray(product.variantList)
-                    ? product.variantList
-                    : [];
+            normalizeVariants(
+                product
+            );
+
+        const productId =
+            cleanText(
+                product.productId ??
+                product.pid ??
+                product.id
+            );
+
+        const cjProductId =
+            cleanText(
+                product.cjProductId ??
+                product.pid ??
+                product.id
+            );
+
+        const cjSku =
+            cleanText(
+                product.cjSku ??
+                product.productSku ??
+                product.sku
+            );
+
+        const inventory =
+            product.inventory ??
+            product.stock ??
+            product.warehouseInventoryNum ??
+            null;
+
+        const deliveryCycle =
+            product.deliveryCycle ??
+            product.deliveryTime ??
+            null;
+
+        const freeShipping =
+            product.freeShipping === true ||
+            product.isFreeShipping === true;
 
         return {
 
@@ -575,7 +885,10 @@
             sku:
                 cleanText(
                     sku,
-                    cleanText(id)
+                    cleanText(
+                        id,
+                        `SKU-${index + 1}`
+                    )
                 ),
 
             name:
@@ -596,6 +909,8 @@
 
             image,
 
+            images,
+
             description:
                 cleanText(
                     description,
@@ -608,17 +923,17 @@
 
             variants,
 
-            /*
-             * Preserve additional CJ information.
-             * This makes the product object useful to product.html.
-             */
+            productId,
 
-            productId:
-                cleanText(
-                    product.productId ??
-                    product.pid ??
-                    product.id
-                ),
+            cjProductId,
+
+            cjSku,
+
+            inventory,
+
+            deliveryCycle,
+
+            freeShipping,
 
             warehouse:
                 cleanText(
@@ -637,6 +952,10 @@
                 product.shippingInfo ??
                 null,
 
+            /*
+             * Keep original API product in memory for future
+             * product-page/cart use.
+             */
             raw:
                 product
         };
@@ -644,65 +963,103 @@
 
 
     /* ========================================================================
-       PRODUCT COLLECTION EXTRACTION
+       PRODUCT RESPONSE EXTRACTION
        ======================================================================== */
 
-    function extractProducts(data) {
+    function extractProducts(
+        data
+    ) {
 
-        if (Array.isArray(data)) {
+        /*
+         * Worker list/search endpoints return:
+         *
+         * [
+         *   {...},
+         *   {...}
+         * ]
+         */
+        if (
+            Array.isArray(data)
+        ) {
+
             return data
-                .map(normalizeProduct)
+                .map(
+                    normalizeProduct
+                )
                 .filter(Boolean);
         }
 
-        if (!data || typeof data !== "object") {
+        if (
+            !data ||
+            typeof data !== "object"
+        ) {
             return [];
         }
 
         const candidates = [
 
             data.products,
-
             data.items,
-
             data.list,
-
             data.results,
-
             data.records,
 
-            data.data,
-
             data.data?.products,
-
             data.data?.items,
-
             data.data?.list,
-
             data.data?.results,
-
             data.data?.records,
 
+            /*
+             * Useful if Worker is later changed to return pagination.
+             */
             data.data?.content,
-
             data.data?.data
 
         ];
 
-        for (const candidate of candidates) {
+        for (
+            const candidate
+            of candidates
+        ) {
 
-            if (Array.isArray(candidate)) {
+            if (
+                Array.isArray(candidate)
+            ) {
 
-                return candidate
-                    .map(normalizeProduct)
+                /*
+                 * CJ listV2 raw content may itself contain:
+                 *
+                 * { productList: [...] }
+                 */
+                const flattened =
+                    candidate.flatMap(
+                        item => {
+
+                            if (
+                                item &&
+                                Array.isArray(
+                                    item.productList
+                                )
+                            ) {
+                                return item.productList;
+                            }
+
+                            return [item];
+                        }
+                    );
+
+                return flattened
+                    .map(
+                        normalizeProduct
+                    )
                     .filter(Boolean);
             }
         }
 
         /*
-         * Some APIs wrap the product list under result.
+         * Wrapped result.
          */
-
         if (
             data.result &&
             typeof data.result === "object"
@@ -713,15 +1070,16 @@
                     data.result
                 );
 
-            if (nested.length) {
+            if (
+                nested.length
+            ) {
                 return nested;
             }
         }
 
         /*
-         * Single product response.
+         * Single product object.
          */
-
         if (
             data.id ||
             data.pid ||
@@ -731,7 +1089,9 @@
         ) {
 
             const product =
-                normalizeProduct(data);
+                normalizeProduct(
+                    data
+                );
 
             return product
                 ? [product]
@@ -749,24 +1109,43 @@
     function getLocalProducts() {
 
         return LOCAL_CATALOG
-            .map(normalizeProduct)
+            .map(
+                normalizeProduct
+            )
             .filter(Boolean);
     }
 
 
     /* ========================================================================
-       UNIQUE PRODUCT KEY
+       PRODUCT DEDUPLICATION KEY
        ======================================================================== */
 
-    function productKey(product) {
+    function productKey(
+        product
+    ) {
 
         if (!product) {
             return "";
         }
 
+        /*
+         * SKU is deliberately prioritized.
+         *
+         * This lets:
+         *
+         * local:
+         *   001 / CJSN188416414NM
+         *
+         * and CJ:
+         *   CJ PID / CJSN188416414NM
+         *
+         * be recognized as the same product.
+         */
         return String(
-            product.productId ||
             product.sku ||
+            product.cjSku ||
+            product.productId ||
+            product.cjProductId ||
             product.id ||
             ""
         )
@@ -780,7 +1159,7 @@
        ======================================================================== */
 
     function mergeProducts(
-        existingProducts,
+        baseProducts,
         incomingProducts
     ) {
 
@@ -788,31 +1167,26 @@
             new Map();
 
         /*
-         * Existing products first.
+         * Put base products first.
          */
-
         for (
-            const product of existingProducts || []
+            const product
+            of baseProducts || []
         ) {
 
-            const key =
-                productKey(product);
+            const normalized =
+                normalizeProduct(
+                    product
+                );
 
-            if (key) {
-                map.set(key, product);
+            if (!normalized) {
+                continue;
             }
-        }
-
-        /*
-         * Incoming API products replace existing versions.
-         */
-
-        for (
-            const product of incomingProducts || []
-        ) {
 
             const key =
-                productKey(product);
+                productKey(
+                    normalized
+                );
 
             if (!key) {
                 continue;
@@ -820,7 +1194,40 @@
 
             map.set(
                 key,
-                product
+                normalized
+            );
+        }
+
+        /*
+         * Incoming API products replace matching
+         * local products.
+         */
+        for (
+            const product
+            of incomingProducts || []
+        ) {
+
+            const normalized =
+                normalizeProduct(
+                    product
+                );
+
+            if (!normalized) {
+                continue;
+            }
+
+            const key =
+                productKey(
+                    normalized
+                );
+
+            if (!key) {
+                continue;
+            }
+
+            map.set(
+                key,
+                normalized
             );
         }
 
@@ -831,7 +1238,7 @@
 
 
     /* ========================================================================
-       API FETCH
+       FETCH JSON
        ======================================================================== */
 
     async function fetchJSON(
@@ -857,23 +1264,31 @@
                 timeout
             );
 
-        let removeExternalListener = null;
+        let removeExternalListener =
+            null;
 
         try {
 
-            if (externalSignal) {
+            if (
+                externalSignal
+            ) {
 
-                if (externalSignal.aborted) {
+                if (
+                    externalSignal.aborted
+                ) {
                     controller.abort();
                 } else {
 
                     const abortHandler =
-                        () => controller.abort();
+                        () =>
+                            controller.abort();
 
                     externalSignal.addEventListener(
                         "abort",
                         abortHandler,
-                        { once: true }
+                        {
+                            once: true
+                        }
                     );
 
                     removeExternalListener =
@@ -895,9 +1310,14 @@
                         method: "GET",
 
                         headers: {
-                            "Accept": "application/json"
+                            "Accept":
+                                "application/json"
                         },
 
+                        /*
+                         * Do not let the browser serve
+                         * stale storefront API responses.
+                         */
                         cache: "no-store",
 
                         signal:
@@ -915,13 +1335,17 @@
                 );
             }
 
-            if (!text.trim()) {
+            if (
+                !text.trim()
+            ) {
                 return null;
             }
 
             try {
 
-                return JSON.parse(text);
+                return JSON.parse(
+                    text
+                );
 
             } catch {
 
@@ -937,9 +1361,19 @@
                 error?.name === "AbortError"
             ) {
 
-                throw new Error(
-                    "Request timed out or was cancelled"
-                );
+                const timeoutError =
+                    new Error(
+                        timedOut
+                            ? "Request timed out."
+                            : "Request cancelled."
+                    );
+
+                timeoutError.name =
+                    error?.name === "AbortError"
+                        ? "AbortError"
+                        : "TimeoutError";
+
+                throw timeoutError;
             }
 
             throw error;
@@ -950,7 +1384,9 @@
                 timeoutId
             );
 
-            if (removeExternalListener) {
+            if (
+                removeExternalListener
+            ) {
                 removeExternalListener();
             }
         }
@@ -958,52 +1394,54 @@
 
 
     /* ========================================================================
-       API QUERY
+       LOAD API PRODUCTS
        ======================================================================== */
 
     async function loadProductsFromAPI(
-        keyword = ""
+        keyword = "",
+        signal = null
     ) {
+
+        const trimmed =
+            String(
+                keyword || ""
+            ).trim();
 
         let url =
             API_ENDPOINT;
 
-        const trimmed =
-            String(keyword || "").trim();
+        if (
+            trimmed
+        ) {
 
-        if (trimmed) {
+            const params =
+                new URLSearchParams();
+
+            params.set(
+                "keyword",
+                trimmed
+            );
 
             url +=
-                `?keyword=${encodeURIComponent(
-                    trimmed
-                )}`;
+                `?${params.toString()}`;
         }
-
-        /*
-         * Cancel previous live search.
-         */
-
-        if (activeSearchController) {
-            activeSearchController.abort();
-        }
-
-        activeSearchController =
-            new AbortController();
 
         const data =
             await fetchJSON(
                 url,
                 API_TIMEOUT,
-                activeSearchController.signal
+                signal
             );
 
         const products =
-            extractProducts(data);
+            extractProducts(
+                data
+            );
 
         if (!products.length) {
 
             throw new Error(
-                "API returned no usable products"
+                "API returned no usable products."
             );
         }
 
@@ -1012,7 +1450,43 @@
 
 
     /* ========================================================================
-       FILTER
+       SEARCH STATUS
+       ======================================================================== */
+
+    function announce(
+        message
+    ) {
+
+        if (
+            ariaLiveRegion
+        ) {
+
+            ariaLiveRegion.textContent =
+                message;
+        }
+    }
+
+
+    /* ========================================================================
+       CLEAR SEARCH BUTTON
+       ======================================================================== */
+
+    function updateClearSearchButton() {
+
+        if (
+            !clearSearchButton ||
+            !searchInput
+        ) {
+            return;
+        }
+
+        clearSearchButton.hidden =
+            !searchInput.value.trim();
+    }
+
+
+    /* ========================================================================
+       FILTER PRODUCTS
        ======================================================================== */
 
     function filterProducts() {
@@ -1026,41 +1500,64 @@
             allProducts.filter(
                 product => {
 
+                    /*
+                     * Category filter
+                     */
                     if (
                         activeCategory !== "all"
                     ) {
 
-                        if (
-                            String(product.category)
+                        const productCategory =
+                            String(
+                                product.category ||
+                                ""
+                            )
                                 .trim()
-                                .toLowerCase() !==
-                            String(activeCategory)
+                                .toLowerCase();
+
+                        if (
+                            productCategory !==
+                            activeCategory
                                 .trim()
                                 .toLowerCase()
                         ) {
-
                             return false;
                         }
                     }
 
+                    /*
+                     * Search filter
+                     */
                     if (!search) {
                         return true;
                     }
+
+                    const specifications =
+                        product.specifications ||
+                        {};
 
                     const searchableText =
                         [
                             product.name,
                             product.category,
                             product.sku,
+                            product.cjSku,
+                            product.productId,
+                            product.cjProductId,
                             product.description,
                             ...(product.features || []),
                             ...Object.keys(
-                                product.specifications || {}
+                                specifications
                             ),
                             ...Object.values(
-                                product.specifications || {}
+                                specifications
                             )
                         ]
+                            .filter(
+                                value =>
+                                    value !== null &&
+                                    value !== undefined
+                            )
                             .join(" ")
                             .toLowerCase();
 
@@ -1070,7 +1567,7 @@
                 }
             );
 
-        sortProducts();
+        applySort();
     }
 
 
@@ -1078,15 +1575,18 @@
        SORT
        ======================================================================== */
 
-    function sortProducts() {
+    function applySort() {
 
-        switch (currentSort) {
+        switch (
+            currentSort
+        ) {
 
             case "price-low":
 
                 filteredProducts.sort(
                     (a, b) =>
-                        a.price - b.price
+                        parsePrice(a.price) -
+                        parsePrice(b.price)
                 );
 
                 break;
@@ -1095,7 +1595,43 @@
 
                 filteredProducts.sort(
                     (a, b) =>
-                        b.price - a.price
+                        parsePrice(b.price) -
+                        parsePrice(a.price)
+                );
+
+                break;
+
+            case "rating":
+
+                filteredProducts.sort(
+                    (a, b) => {
+
+                        const ratingA =
+                            a.rating === null ||
+                            a.rating === undefined
+                                ? -1
+                                : Number(a.rating);
+
+                        const ratingB =
+                            b.rating === null ||
+                            b.rating === undefined
+                                ? -1
+                                : Number(b.rating);
+
+                        if (
+                            ratingB !==
+                            ratingA
+                        ) {
+                            return (
+                                ratingB -
+                                ratingA
+                            );
+                        }
+
+                        return a.name.localeCompare(
+                            b.name
+                        );
+                    }
                 );
 
                 break;
@@ -1105,17 +1641,13 @@
                 filteredProducts.sort(
                     (a, b) =>
                         a.name.localeCompare(
-                            b.name
+                            b.name,
+                            undefined,
+                            {
+                                sensitivity:
+                                    "base"
+                            }
                         )
-                );
-
-                break;
-
-            case "rating":
-
-                filteredProducts.sort(
-                    (a, b) =>
-                        b.rating - a.rating
                 );
 
                 break;
@@ -1125,9 +1657,8 @@
             default:
 
                 /*
-                 * Preserve insertion order.
+                 * Preserve API/catalog order.
                  */
-
                 break;
         }
     }
@@ -1139,7 +1670,9 @@
 
     function buildCategories() {
 
-        if (!categoriesContainer) {
+        if (
+            !categoriesContainer
+        ) {
             return;
         }
 
@@ -1161,7 +1694,9 @@
                 const key =
                     category.toLowerCase();
 
-                if (!categoryMap.has(key)) {
+                if (
+                    !categoryMap.has(key)
+                ) {
 
                     categoryMap.set(
                         key,
@@ -1177,16 +1712,18 @@
             )
                 .sort(
                     (a, b) =>
-                        a.localeCompare(b)
+                        a.localeCompare(
+                            b
+                        )
                 );
 
         categoriesContainer.innerHTML = `
 
             <button
                 type="button"
-                class="category-pill active"
+                class="category-pill"
                 data-category="all"
-                aria-pressed="true"
+                aria-pressed="false"
             >
                 All
             </button>
@@ -1214,6 +1751,63 @@
 
 
     /* ========================================================================
+       ACTIVE CATEGORY
+       ======================================================================== */
+
+    function setActiveCategory(
+        category
+    ) {
+
+        activeCategory =
+            String(
+                category || "all"
+            );
+
+        if (
+            !categoriesContainer
+        ) {
+            return;
+        }
+
+        const buttons =
+            categoriesContainer.querySelectorAll(
+                ".category-pill"
+            );
+
+        buttons.forEach(
+            button => {
+
+                const buttonCategory =
+                    String(
+                        button.dataset.category ||
+                        "all"
+                    );
+
+                const active =
+                    buttonCategory
+                        .trim()
+                        .toLowerCase() ===
+                    activeCategory
+                        .trim()
+                        .toLowerCase();
+
+                button.classList.toggle(
+                    "active",
+                    active
+                );
+
+                button.setAttribute(
+                    "aria-pressed",
+                    active
+                        ? "true"
+                        : "false"
+                );
+            }
+        );
+    }
+
+
+    /* ========================================================================
        STAR RATING
        ======================================================================== */
 
@@ -1221,22 +1815,67 @@
         rating
     ) {
 
+        if (
+            rating === null ||
+            rating === undefined ||
+            !Number.isFinite(
+                Number(rating)
+            )
+        ) {
+
+            return `
+                <span class="product-stars-empty">
+                    No rating
+                </span>
+            `;
+        }
+
         const numeric =
             Math.max(
                 0,
                 Math.min(
                     5,
-                    Number(rating) || 0
+                    Number(rating)
                 )
             );
 
         const rounded =
-            Math.round(numeric);
+            Math.round(
+                numeric
+            );
 
         return (
-            "★".repeat(rounded) +
-            "☆".repeat(5 - rounded)
+            "★".repeat(
+                rounded
+            ) +
+            "☆".repeat(
+                5 - rounded
+            )
         );
+    }
+
+
+    /* ========================================================================
+       PRODUCT RATING TEXT
+       ======================================================================== */
+
+    function renderRatingText(
+        rating
+    ) {
+
+        if (
+            rating === null ||
+            rating === undefined ||
+            !Number.isFinite(
+                Number(rating)
+            )
+        ) {
+            return "";
+        }
+
+        return Number(
+            rating
+        ).toFixed(1);
     }
 
 
@@ -1249,13 +1888,19 @@
     ) {
 
         const id =
-            String(product.id);
+            String(
+                product.id
+            );
 
         const encodedId =
-            encodeURIComponent(id);
+            encodeURIComponent(
+                id
+            );
 
         const name =
-            escapeHTML(product.name);
+            escapeHTML(
+                product.name
+            );
 
         const category =
             escapeHTML(
@@ -1276,19 +1921,29 @@
             );
 
         const price =
-            formatPrice(product.price);
+            formatPrice(
+                product.price
+            );
 
-        const rating =
-            Number.isFinite(
-                Number(product.rating)
-            )
-                ? Number(product.rating).toFixed(1)
-                : "5.0";
+        const ratingText =
+            renderRatingText(
+                product.rating
+            );
+
+        const stars =
+            renderStars(
+                product.rating
+            );
 
         const sku =
             escapeHTML(
                 product.sku || ""
             );
+
+        const ratingLabel =
+            ratingText
+                ? `Rated ${ratingText} out of 5`
+                : "No rating available";
 
         return `
 
@@ -1308,12 +1963,14 @@
 
                         <div class="product-card-image">
 
-                            <span class="product-category">
+                            <span
+                                class="product-category"
+                            >
                                 ${category}
                             </span>
 
                             <img
-                                src="${image || FALLBACK_IMAGE}"
+                                src="${image}"
                                 alt="${name}"
                                 loading="lazy"
                                 decoding="async"
@@ -1324,39 +1981,69 @@
 
                         </div>
 
+
                         <div class="product-card-body">
 
-                            <div class="product-rating"
-                                 aria-label="Rated ${escapeHTML(rating)} out of 5">
+                            <div
+                                class="product-rating"
+                                aria-label="${escapeHTML(
+                                    ratingLabel
+                                )}"
+                            >
 
                                 <span
                                     class="product-stars"
                                     aria-hidden="true"
                                 >
-                                    ${renderStars(product.rating)}
+                                    ${stars}
                                 </span>
 
-                                <span class="product-rating-number">
-                                    ${escapeHTML(rating)}
-                                </span>
+                                ${
+                                    ratingText
+                                        ? `
+                                            <span
+                                                class="product-rating-number"
+                                            >
+                                                ${escapeHTML(
+                                                    ratingText
+                                                )}
+                                            </span>
+                                          `
+                                        : ""
+                                }
 
                             </div>
 
-                            <h3 class="product-title">
+
+                            <h3
+                                class="product-title"
+                            >
                                 ${name}
                             </h3>
 
-                            <p class="product-description">
+
+                            <p
+                                class="product-description"
+                            >
                                 ${description}
                             </p>
 
-                            <div class="product-bottom">
 
-                                <span class="product-price">
-                                    ${price}
+                            <div
+                                class="product-bottom"
+                            >
+
+                                <span
+                                    class="product-price"
+                                >
+                                    ${escapeHTML(
+                                        price
+                                    )}
                                 </span>
 
-                                <span class="product-view-button">
+                                <span
+                                    class="product-view-button"
+                                >
                                     View Product →
                                 </span>
 
@@ -1366,7 +2053,10 @@
 
                     </a>
 
-                    <div class="product-card-actions">
+
+                    <div
+                        class="product-card-actions"
+                    >
 
                         <button
                             type="button"
@@ -1375,12 +2065,20 @@
                             data-product-id="${escapeHTML(id)}"
                             aria-label="Add ${name} to cart"
                         >
-                            <span class="cart-button-icon" aria-hidden="true">
+
+                            <span
+                                class="cart-button-icon"
+                                aria-hidden="true"
+                            >
                                 +
                             </span>
-                            <span class="cart-button-text">
+
+                            <span
+                                class="cart-button-text"
+                            >
                                 Add to Cart
                             </span>
+
                         </button>
 
                     </div>
@@ -1393,10 +2091,12 @@
 
 
     /* ========================================================================
-       LOADING
+       LOADING STATE
        ======================================================================== */
 
-    function renderLoading() {
+    function renderLoading(
+        message = "Loading products..."
+    ) {
 
         productList.setAttribute(
             "aria-busy",
@@ -1405,7 +2105,10 @@
 
         productList.innerHTML = `
 
-            <div class="products-loading">
+            <div
+                class="products-loading"
+                role="status"
+            >
 
                 <div
                     class="products-loading-spinner"
@@ -1413,7 +2116,7 @@
                 ></div>
 
                 <h2>
-                    Loading products...
+                    ${escapeHTML(message)}
                 </h2>
 
                 <p>
@@ -1426,7 +2129,7 @@
 
 
     /* ========================================================================
-       EMPTY
+       EMPTY STATE
        ======================================================================== */
 
     function renderEmpty() {
@@ -1438,7 +2141,10 @@
 
         productList.innerHTML = `
 
-            <div class="products-empty">
+            <div
+                class="products-empty"
+                role="status"
+            >
 
                 <div
                     class="products-empty-icon"
@@ -1469,45 +2175,18 @@
 
 
     /* ========================================================================
-       RENDER
-       ======================================================================== */
-
-    function renderProducts() {
-
-        filterProducts();
-
-        if (!filteredProducts.length) {
-
-            renderEmpty();
-            updateResultBar();
-
-            return;
-        }
-
-        productList.innerHTML =
-            filteredProducts
-                .map(createProductCard)
-                .join("");
-
-        productList.setAttribute(
-            "aria-busy",
-            "false"
-        );
-
-        updateResultBar();
-        attachImageFallbacks();
-    }
-
-
-    /* ========================================================================
        RESULT BAR
        ======================================================================== */
 
     function updateResultBar() {
 
-        if (productsHeading) {
+        if (
+            productsHeading
+        ) {
 
-            if (currentSearch) {
+            if (
+                currentSearch
+            ) {
 
                 productsHeading.textContent =
                     `Search results for "${currentSearch}"`;
@@ -1526,7 +2205,9 @@
             }
         }
 
-        if (productsCount) {
+        if (
+            productsCount
+        ) {
 
             const count =
                 filteredProducts.length;
@@ -1538,6 +2219,51 @@
                         : "products"
                 }`;
         }
+    }
+
+
+    /* ========================================================================
+       RENDER PRODUCTS
+       ======================================================================== */
+
+    function renderProducts() {
+
+        filterProducts();
+
+        updateClearSearchButton();
+
+        if (
+            !filteredProducts.length
+        ) {
+
+            renderEmpty();
+            updateResultBar();
+
+            return;
+        }
+
+        productList.innerHTML =
+            filteredProducts
+                .map(
+                    createProductCard
+                )
+                .join("");
+
+        productList.setAttribute(
+            "aria-busy",
+            "false"
+        );
+
+        updateResultBar();
+        attachImageFallbacks();
+
+        announce(
+            `${filteredProducts.length} ${
+                filteredProducts.length === 1
+                    ? "product"
+                    : "products"
+            } displayed.`
+        );
     }
 
 
@@ -1600,9 +2326,15 @@
             }
 
             const parsed =
-                JSON.parse(stored);
+                JSON.parse(
+                    stored
+                );
 
-            if (!Array.isArray(parsed)) {
+            if (
+                !Array.isArray(
+                    parsed
+                )
+            ) {
                 return [];
             }
 
@@ -1615,24 +2347,35 @@
                 .map(
                     item => ({
                         ...item,
-                        id: String(item.id ?? ""),
+
+                        id:
+                            String(
+                                item.id ??
+                                ""
+                            ),
+
                         quantity:
                             Math.max(
                                 1,
                                 Math.min(
                                     MAX_CART_QUANTITY,
                                     Math.floor(
-                                        Number(item.quantity) || 1
+                                        Number(
+                                            item.quantity
+                                        ) || 1
                                     )
                                 )
                             )
                     })
                 )
                 .filter(
-                    item => item.id
+                    item =>
+                        item.id
                 );
 
-        } catch (error) {
+        } catch (
+            error
+        ) {
 
             console.error(
                 "[PRASUN SHOP] Cart read error:",
@@ -1648,13 +2391,17 @@
        CART SAVE
        ======================================================================== */
 
-    function saveCart(cart) {
+    function saveCart(
+        cart
+    ) {
 
         try {
 
             localStorage.setItem(
                 CART_KEY,
-                JSON.stringify(cart)
+                JSON.stringify(
+                    cart
+                )
             );
 
             window.dispatchEvent(
@@ -1662,17 +2409,23 @@
                     CART_EVENT_NAME,
                     {
                         detail: {
-                            cart: [...cart]
+                            cart: [
+                                ...cart
+                            ]
                         }
                     }
                 )
             );
 
-            updateCartCount(cart);
+            updateCartCount(
+                cart
+            );
 
             return true;
 
-        } catch (error) {
+        } catch (
+            error
+        ) {
 
             console.error(
                 "[PRASUN SHOP] Cart save error:",
@@ -1692,7 +2445,9 @@
         suppliedCart = null
     ) {
 
-        if (!cartCount) {
+        if (
+            !cartCount
+        ) {
             return;
         }
 
@@ -1702,42 +2457,51 @@
 
         const total =
             cart.reduce(
-                (sum, item) => {
+                (
+                    sum,
+                    item
+                ) => {
 
                     const quantity =
-                        Math.floor(
-                            Number(
-                                item?.quantity
-                            ) || 1
-                        );
-
-                    return sum +
                         Math.max(
                             1,
                             Math.min(
                                 MAX_CART_QUANTITY,
-                                quantity
+                                Math.floor(
+                                    Number(
+                                        item?.quantity
+                                    ) || 1
+                                )
                             )
                         );
 
+                    return (
+                        sum +
+                        quantity
+                    );
                 },
                 0
             );
 
         cartCount.textContent =
-            String(total);
+            String(
+                total
+            );
 
         cartCount.hidden =
             total <= 0;
 
         const cartLink =
-            cartCount.closest("a");
+            cartCount.closest(
+                "a"
+            );
 
-        if (cartLink) {
+        if (
+            cartLink
+        ) {
 
             cartLink.setAttribute(
                 "aria-label",
-
                 total > 0
                     ? `View Shopping Cart, ${total} ${
                         total === 1
@@ -1754,29 +2518,42 @@
        ADD TO CART
        ======================================================================== */
 
-    function addToCart(product) {
+    function addToCart(
+        product
+    ) {
+
+        if (!product) {
+            return false;
+        }
 
         const cart =
             readCart();
 
         const productId =
-            String(product.id);
+            String(
+                product.id
+            );
 
         const existing =
             cart.find(
                 item =>
-                    String(item.id) ===
-                    productId
+                    String(
+                        item.id
+                    ) === productId
             );
 
-        if (existing) {
+        if (
+            existing
+        ) {
 
             existing.quantity =
                 Math.min(
                     MAX_CART_QUANTITY,
                     Math.max(
                         1,
-                        Number(existing.quantity) || 1
+                        Number(
+                            existing.quantity
+                        ) || 1
                     ) + 1
                 );
 
@@ -1795,11 +2572,22 @@
                     product.name,
 
                 price:
-                    parsePrice(product.price),
+                    parsePrice(
+                        product.price
+                    ),
 
                 image:
                     product.image ||
                     "",
+
+                images:
+                    Array.isArray(
+                        product.images
+                    )
+                        ? [
+                            ...product.images
+                        ]
+                        : [],
 
                 category:
                     product.category ||
@@ -1810,11 +2598,16 @@
                     "",
 
                 rating:
-                    Number(product.rating) || 5,
+                    product.rating ??
+                    null,
 
                 features:
-                    Array.isArray(product.features)
-                        ? [...product.features]
+                    Array.isArray(
+                        product.features
+                    )
+                        ? [
+                            ...product.features
+                        ]
                         : [],
 
                 specifications:
@@ -1823,16 +2616,41 @@
                     ),
 
                 variants:
-                    Array.isArray(product.variants)
-                        ? [...product.variants]
+                    Array.isArray(
+                        product.variants
+                    )
+                        ? [
+                            ...product.variants
+                        ]
                         : [],
+
+                productId:
+                    product.productId ||
+                    product.cjProductId ||
+                    product.id,
+
+                cjProductId:
+                    product.cjProductId ||
+                    product.productId ||
+                    product.id,
+
+                cjSku:
+                    product.cjSku ||
+                    product.sku ||
+                    "",
+
+                inventory:
+                    product.inventory ??
+                    null,
 
                 quantity:
                     1
             });
         }
 
-        return saveCart(cart);
+        return saveCart(
+            cart
+        );
     }
 
 
@@ -1840,13 +2658,12 @@
        BUTTON FEEDBACK
        ======================================================================== */
 
-    function showAddedFeedback(button) {
-
-        if (!button) {
-            return;
-        }
+    function showAddedFeedback(
+        button
+    ) {
 
         if (
+            !button ||
             button.dataset.busy === "true"
         ) {
             return;
@@ -1865,10 +2682,15 @@
                 ? textElement.textContent
                 : button.textContent;
 
-        if (textElement) {
+        if (
+            textElement
+        ) {
+
             textElement.textContent =
                 "Added ✓";
+
         } else {
+
             button.textContent =
                 "Added ✓";
         }
@@ -1883,10 +2705,15 @@
         window.setTimeout(
             () => {
 
-                if (textElement) {
+                if (
+                    textElement
+                ) {
+
                     textElement.textContent =
                         originalText;
+
                 } else {
+
                     button.textContent =
                         originalText;
                 }
@@ -1927,25 +2754,58 @@
             const action =
                 button.dataset.action;
 
+            /*
+             * Reset filters
+             */
             if (
-                action === "reset-filters"
+                action ===
+                "reset-filters"
             ) {
 
-                currentSearch = "";
-                activeCategory = "all";
+                if (
+                    activeSearchController
+                ) {
 
-                if (searchInput) {
-                    searchInput.value = "";
+                    activeSearchController.abort();
+
+                    activeSearchController =
+                        null;
                 }
 
-                setActiveCategory("all");
+                searchRequestSequence++;
+
+                currentSearch =
+                    "";
+
+                activeCategory =
+                    "all";
+
+                if (
+                    searchInput
+                ) {
+                    searchInput.value =
+                        "";
+                }
+
+                setActiveCategory(
+                    "all"
+                );
+
                 renderProducts();
+
+                announce(
+                    "Search and category filters cleared."
+                );
 
                 return;
             }
 
+            /*
+             * Add to cart
+             */
             if (
-                action !== "add-to-cart"
+                action !==
+                "add-to-cart"
             ) {
                 return;
             }
@@ -1955,14 +2815,16 @@
 
             const productId =
                 String(
-                    button.dataset.productId || ""
+                    button.dataset.productId ||
+                    ""
                 );
 
             const product =
                 allProducts.find(
                     item =>
-                        String(item.id) ===
-                        productId
+                        String(
+                            item.id
+                        ) === productId
                 );
 
             if (!product) {
@@ -1976,11 +2838,17 @@
             }
 
             if (
-                addToCart(product)
+                addToCart(
+                    product
+                )
             ) {
 
                 showAddedFeedback(
                     button
+                );
+
+                announce(
+                    `${product.name} added to cart.`
                 );
             }
         }
@@ -1988,10 +2856,236 @@
 
 
     /* ========================================================================
-       SEARCH
+       SEARCH REQUEST
        ======================================================================== */
 
-    if (searchInput) {
+    async function performSearch(
+        keyword
+    ) {
+
+        const trimmed =
+            String(
+                keyword || ""
+            ).trim();
+
+        /*
+         * Cancel previous request.
+         */
+        if (
+            activeSearchController
+        ) {
+
+            activeSearchController.abort();
+        }
+
+        /*
+         * Generate a new request ID.
+         */
+        const requestId =
+            ++searchRequestSequence;
+
+        /*
+         * Local filtering can happen even without an API call.
+         */
+        currentSearch =
+            trimmed;
+
+        renderProducts();
+
+        /*
+         * For empty / one-character queries,
+         * local results are sufficient.
+         */
+        if (
+            trimmed.length <
+            MIN_SEARCH_LENGTH
+        ) {
+            return;
+        }
+
+        const controller =
+            new AbortController();
+
+        activeSearchController =
+            controller;
+
+        try {
+
+            const apiProducts =
+                await loadProductsFromAPI(
+                    trimmed,
+                    controller.signal
+                );
+
+            /*
+             * Ignore stale result.
+             */
+            if (
+                requestId !==
+                searchRequestSequence
+            ) {
+                return;
+            }
+
+            if (
+                controller.signal.aborted
+            ) {
+                return;
+            }
+
+            /*
+             * Important:
+             *
+             * Do not permanently merge search results into
+             * allProducts.
+             *
+             * For a search, use local matches + CJ matches
+             * as the displayed dataset.
+             */
+
+            const localMatches =
+                getLocalProducts()
+                    .filter(
+                        product =>
+                            matchesSearch(
+                                product,
+                                trimmed
+                            )
+                    );
+
+            allProducts =
+                mergeProducts(
+                    localMatches,
+                    apiProducts
+                );
+
+            buildCategories();
+            renderProducts();
+
+            announce(
+                `${filteredProducts.length} search results found for ${trimmed}.`
+            );
+
+        } catch (
+            error
+        ) {
+
+            /*
+             * Abort is expected when a new search is started.
+             */
+            if (
+                error?.name ===
+                "AbortError"
+            ) {
+                return;
+            }
+
+            /*
+             * If this isn't the current request, ignore it.
+             */
+            if (
+                requestId !==
+                searchRequestSequence
+            ) {
+                return;
+            }
+
+            console.warn(
+                "[PRASUN SHOP] Live search unavailable. Local search remains active.",
+                error
+            );
+
+            /*
+             * Return to the complete currently loaded catalog
+             * for local filtering rather than leaving stale search
+             * API results around.
+             */
+            allProducts =
+                getLocalProducts();
+
+            buildCategories();
+            renderProducts();
+
+            announce(
+                "Live search is temporarily unavailable. Showing local results."
+            );
+
+        } finally {
+
+            if (
+                requestId ===
+                searchRequestSequence
+            ) {
+
+                activeSearchController =
+                    null;
+            }
+        }
+    }
+
+
+    /* ========================================================================
+       MATCH SEARCH
+       ======================================================================== */
+
+    function matchesSearch(
+        product,
+        search
+    ) {
+
+        const normalizedSearch =
+            String(
+                search || ""
+            )
+                .trim()
+                .toLowerCase();
+
+        if (!normalizedSearch) {
+            return true;
+        }
+
+        const specifications =
+            product.specifications ||
+            {};
+
+        const searchableText =
+            [
+                product.name,
+                product.category,
+                product.sku,
+                product.cjSku,
+                product.productId,
+                product.cjProductId,
+                product.description,
+                ...(product.features || []),
+                ...Object.keys(
+                    specifications
+                ),
+                ...Object.values(
+                    specifications
+                )
+            ]
+                .filter(
+                    value =>
+                        value !== null &&
+                        value !== undefined
+                )
+                .join(" ")
+                .toLowerCase();
+
+        return searchableText.includes(
+            normalizedSearch
+        );
+    }
+
+
+    /* ========================================================================
+       SEARCH INPUT EVENTS
+       ======================================================================== */
+
+    if (
+        searchInput
+    ) {
 
         searchInput.addEventListener(
             "input",
@@ -2001,76 +3095,65 @@
                     searchTimer
                 );
 
+                updateClearSearchButton();
+
+                currentSearch =
+                    searchInput.value.trim();
+
+                /*
+                 * Immediate local filtering.
+                 */
+                renderProducts();
+
+                /*
+                 * Empty search restores full local catalog.
+                 */
+                if (
+                    currentSearch.length === 0
+                ) {
+
+                    searchRequestSequence++;
+
+                    if (
+                        activeSearchController
+                    ) {
+
+                        activeSearchController.abort();
+
+                        activeSearchController =
+                            null;
+                    }
+
+                    allProducts =
+                        getLocalProducts();
+
+                    buildCategories();
+                    renderProducts();
+
+                    return;
+                }
+
+                /*
+                 * One-character search:
+                 * local only.
+                 */
+                if (
+                    currentSearch.length <
+                    MIN_SEARCH_LENGTH
+                ) {
+                    return;
+                }
+
+                /*
+                 * Debounced CJ search.
+                 */
                 searchTimer =
                     window.setTimeout(
-                        async () => {
+                        () => {
 
-                            currentSearch =
-                                searchInput.value.trim();
-
-                            /*
-                             * Local filtering happens immediately.
-                             */
-
-                            renderProducts();
-
-                            /*
-                             * Don't call CJ for one-character queries.
-                             */
-
-                            if (
-                                currentSearch.length <
-                                MIN_SEARCH_LENGTH
-                            ) {
-                                return;
-                            }
-
-                            /*
-                             * Avoid multiple simultaneous API searches.
-                             */
-
-                            if (
-                                apiRequestInProgress
-                            ) {
-                                return;
-                            }
-
-                            apiRequestInProgress =
-                                true;
-
-                            try {
-
-                                const apiProducts =
-                                    await loadProductsFromAPI(
-                                        currentSearch
-                                    );
-
-                                if (
-                                    apiProducts.length
-                                ) {
-
-                                    allProducts =
-                                        mergeProducts(
-                                            allProducts,
-                                            apiProducts
-                                        );
-
-                                    buildCategories();
-                                    renderProducts();
-                                }
-
-                            } catch (error) {
-
-                                console.warn(
-                                    "[PRASUN SHOP] Live search unavailable. Local search remains active.",
-                                    error
-                                );
-
-                            } finally {
-
-                                apiRequestInProgress =
-                                    false;
-                            }
+                            performSearch(
+                                currentSearch
+                            );
 
                         },
                         SEARCH_DELAY
@@ -2078,9 +3161,6 @@
             }
         );
 
-        /*
-         * Enter key performs immediate search.
-         */
 
         searchInput.addEventListener(
             "keydown",
@@ -2090,14 +3170,15 @@
                     event.key === "Enter"
                 ) {
 
+                    event.preventDefault();
+
                     window.clearTimeout(
                         searchTimer
                     );
 
-                    currentSearch =
-                        searchInput.value.trim();
-
-                    renderProducts();
+                    performSearch(
+                        searchInput.value
+                    );
                 }
             }
         );
@@ -2105,14 +3186,67 @@
 
 
     /* ========================================================================
-       SORT
+       CLEAR SEARCH
        ======================================================================== */
 
-    if (sortSelect) {
+    if (
+        clearSearchButton &&
+        searchInput
+    ) {
 
-        currentSort =
-            sortSelect.value ||
-            "featured";
+        clearSearchButton.addEventListener(
+            "click",
+            () => {
+
+                window.clearTimeout(
+                    searchTimer
+                );
+
+                searchRequestSequence++;
+
+                if (
+                    activeSearchController
+                ) {
+
+                    activeSearchController.abort();
+
+                    activeSearchController =
+                        null;
+                }
+
+                searchInput.value =
+                    "";
+
+                currentSearch =
+                    "";
+
+                allProducts =
+                    getLocalProducts();
+
+                buildCategories();
+                setActiveCategory(
+                    "all"
+                );
+
+                renderProducts();
+
+                searchInput.focus();
+
+                announce(
+                    "Search cleared."
+                );
+            }
+        );
+    }
+
+
+    /* ========================================================================
+       SORT EVENTS
+       ======================================================================== */
+
+    if (
+        sortSelect
+    ) {
 
         sortSelect.addEventListener(
             "change",
@@ -2123,61 +3257,27 @@
                     "featured";
 
                 renderProducts();
+
+                announce(
+                    `Products sorted by ${
+                        sortSelect.options[
+                            sortSelect.selectedIndex
+                        ]?.text ||
+                        "Featured"
+                    }.`
+                );
             }
         );
     }
 
 
     /* ========================================================================
-       CATEGORY
+       CATEGORY EVENTS
        ======================================================================== */
 
-    function setActiveCategory(
-        category
+    if (
+        categoriesContainer
     ) {
-
-        activeCategory =
-            category || "all";
-
-        if (!categoriesContainer) {
-            return;
-        }
-
-        const buttons =
-            categoriesContainer.querySelectorAll(
-                ".category-pill"
-            );
-
-        buttons.forEach(
-            button => {
-
-                const buttonCategory =
-                    String(
-                        button.dataset.category ||
-                        "all"
-                    );
-
-                const active =
-                    buttonCategory.toLowerCase() ===
-                    activeCategory.toLowerCase();
-
-                button.classList.toggle(
-                    "active",
-                    active
-                );
-
-                button.setAttribute(
-                    "aria-pressed",
-                    active
-                        ? "true"
-                        : "false"
-                );
-            }
-        );
-    }
-
-
-    if (categoriesContainer) {
 
         categoriesContainer.addEventListener(
             "click",
@@ -2201,6 +3301,10 @@
                 );
 
                 renderProducts();
+
+                announce(
+                    `Category ${activeCategory} selected.`
+                );
             }
         );
     }
@@ -2244,45 +3348,79 @@
 
 
     /* ========================================================================
-       INITIALIZATION
+       INITIAL CATALOG LOADING
        ======================================================================== */
 
     async function initializeProducts() {
 
         /*
-         * Local products are rendered immediately.
+         * 1. Render fallback catalog immediately.
          */
-
         allProducts =
             getLocalProducts();
 
         buildCategories();
+        setActiveCategory(
+            "all"
+        );
+
         renderProducts();
 
         /*
-         * Then try Worker/CJ.
+         * 2. Load live CJ catalog.
          */
+        const requestId =
+            ++catalogRequestSequence;
 
         try {
 
             const apiProducts =
                 await loadProductsFromAPI();
 
+            /*
+             * Ignore obsolete initialization result.
+             */
+            if (
+                requestId !==
+                catalogRequestSequence
+            ) {
+                return;
+            }
+
             if (
                 apiProducts.length
             ) {
 
+                /*
+                 * CJ API is primary.
+                 * Local products are retained as fallback/additional
+                 * products only when they don't duplicate by SKU.
+                 */
                 allProducts =
                     mergeProducts(
-                        allProducts,
+                        getLocalProducts(),
                         apiProducts
                     );
 
                 buildCategories();
+
+                /*
+                 * Preserve current UI state.
+                 */
+                setActiveCategory(
+                    activeCategory
+                );
+
                 renderProducts();
+
+                announce(
+                    `${allProducts.length} products loaded.`
+                );
             }
 
-        } catch (error) {
+        } catch (
+            error
+        ) {
 
             console.warn(
                 "[PRASUN SHOP] API unavailable. Local catalog remains active.",
@@ -2290,14 +3428,46 @@
             );
 
             /*
-             * No loading lock remains.
+             * Keep local catalog visible.
              */
+            allProducts =
+                getLocalProducts();
+
+            buildCategories();
+
+            setActiveCategory(
+                activeCategory
+            );
+
             renderProducts();
+
+            announce(
+                "Products loaded from the local catalog."
+            );
         }
     }
 
 
+    /* ========================================================================
+       INITIAL STATE
+       ======================================================================== */
+
     updateCartCount();
+
+    updateClearSearchButton();
+
+    /*
+     * Render initial local state.
+     * This prevents a blank page while CJ is loading.
+     */
+    allProducts =
+        getLocalProducts();
+
+    buildCategories();
+
+    setActiveCategory(
+        "all"
+    );
 
     renderLoading();
 
