@@ -1382,10 +1382,7 @@
                             <p
                                 class="product-price">
 
-                                ${formatPrice(
-                                    product.price
-                                )}
-
+                                ${formatPrice(product.price)}
                                 ${comparePriceHTML}
 
                             </p>
@@ -1395,13 +1392,10 @@
                                 availabilityText
                                     ? `
                                         <p
-                                            style="
-                                                color:#b91c1c;
-                                                font-size:12px;
-                                                margin-top:5px;
-                                            ">
+                                            class="product-availability"
+                                            style="color:#e11d48;font-size:12px;margin-top:4px;">
 
-                                            ${availabilityText}
+                                            ${escapeHTML(availabilityText)}
 
                                         </p>
                                     `
@@ -1414,7 +1408,8 @@
 
 
                     <div
-                        class="product-card-actions">
+                        class="product-card-actions"
+                        style="padding:0 16px 16px 16px;">
 
                         ${cartButtonHTML}
 
@@ -1429,239 +1424,7 @@
 
 
     /* =========================================================================
-       CART
-       ========================================================================= */
-
-    function getCart() {
-
-        try {
-
-            const raw =
-                localStorage.getItem(
-                    CONFIG.CART_KEY
-                );
-
-
-            const cart =
-                raw
-                    ? JSON.parse(raw)
-                    : [];
-
-
-            return Array.isArray(cart)
-                ? cart
-                : [];
-
-        } catch {
-
-            return [];
-        }
-    }
-
-
-    function updateCartBadge() {
-
-        if (!DOM.cartBadge) {
-            return;
-        }
-
-
-        const cart =
-            getCart();
-
-
-        const total =
-            cart.reduce(
-                (
-                    count,
-                    item
-                ) =>
-                    count +
-                    Number(
-                        item.quantity || 1
-                    ),
-                0
-            );
-
-
-        DOM.cartBadge.textContent =
-            String(total);
-
-
-        DOM.cartBadge.hidden =
-            total === 0;
-    }
-
-
-    function addToCart(productId) {
-
-        const product =
-            state.allProducts.find(
-                item =>
-                    item.id ===
-                    productId
-            );
-
-
-        if (!product) {
-            return;
-        }
-
-
-        if (!product.available) {
-            return;
-        }
-
-
-        try {
-
-            const cart =
-                getCart();
-
-
-            const existingIndex =
-                cart.findIndex(
-                    item =>
-                        item.id ===
-                        productId
-                );
-
-
-            if (
-                existingIndex !== -1
-            ) {
-
-                cart[
-                    existingIndex
-                ].quantity =
-                    Number(
-                        cart[
-                            existingIndex
-                        ].quantity || 1
-                    ) + 1;
-
-            } else {
-
-                cart.push({
-
-                    id:
-                        product.id,
-
-                    cjProductId:
-                        product.cjProductId,
-
-                    sku:
-                        product.sku,
-
-                    name:
-                        product.name,
-
-                    price:
-                        product.price,
-
-                    image:
-                        product.image,
-
-                    quantity:
-                        1
-
-                });
-            }
-
-
-            localStorage.setItem(
-                CONFIG.CART_KEY,
-                JSON.stringify(cart)
-            );
-
-
-            updateCartBadge();
-
-
-            if (
-                DOM.liveRegion
-            ) {
-
-                DOM.liveRegion.textContent =
-                    `${product.name} added to cart.`;
-            }
-
-
-        } catch (error) {
-
-            console.error(
-                "[Prasun Shop] Cart error:",
-                error
-            );
-        }
-    }
-
-
-    /* =========================================================================
-       SEARCH
-       ========================================================================= */
-
-    function toggleClearButtonVisibility(
-        show
-    ) {
-
-        if (!DOM.searchClearBtn) {
-            return;
-        }
-
-
-        DOM.searchClearBtn.hidden =
-            !show;
-
-
-        DOM.searchClearBtn.setAttribute(
-            "aria-hidden",
-            show
-                ? "false"
-                : "true"
-        );
-    }
-
-
-    /* =========================================================================
-       RESULT COUNT
-       ========================================================================= */
-
-    function updateResultsCount(
-        count
-    ) {
-
-        const text =
-            count === 0
-                ? "No products found"
-                : `${count} ${
-                    count === 1
-                        ? "product"
-                        : "products"
-                } available`;
-
-
-        if (
-            DOM.resultsCount
-        ) {
-
-            DOM.resultsCount.textContent =
-                text;
-        }
-
-
-        if (
-            DOM.liveRegion
-        ) {
-
-            DOM.liveRegion.textContent =
-                text;
-        }
-    }
-
-
-    /* =========================================================================
-       EMPTY STATE
+       STATES & UI FEEDBACK
        ========================================================================= */
 
     function renderEmptyState() {
@@ -1671,72 +1434,39 @@
         }
 
 
-        const hasFilters =
-            Boolean(
-                state.currentCategory ||
-                state.currentKeyword
-            );
-
-
         DOM.productList.innerHTML = `
 
-            <div
-                class="products-empty"
-                role="status">
+            <div class="products-empty-state" style="text-align:center;padding:48px 16px;">
 
-                <h2>
+                <p style="font-size:18px;color:#64748b;margin-bottom:16px;">
 
-                    ${
-                        hasFilters
-                            ? "No products found"
-                            : "No products available"
-                    }
-
-                </h2>
-
-
-                <p>
-
-                    ${
-                        hasFilters
-                            ? "Try adjusting your search or category filter."
-                            : "Products will appear here when available."
-                    }
+                    No products found matching your criteria.
 
                 </p>
 
+                <button
+                    type="button"
+                    class="btn-reset-filters"
+                    id="reset-filters-btn"
+                    style="padding:8px 16px;cursor:pointer;">
 
-                ${
-                    hasFilters
-                        ? `
-                            <button
-                                type="button"
-                                class="products-empty-button"
-                                id="clear-product-filters">
+                    Clear Filters
 
-                                Clear Filters
-
-                            </button>
-                        `
-                        : ""
-                }
+                </button>
 
             </div>
 
         `;
 
 
-        $("#clear-product-filters")
-            ?.addEventListener(
-                "click",
-                clearFilters
-            );
+        const resetBtn = $("#reset-filters-btn");
+
+        if (resetBtn) {
+
+            resetBtn.addEventListener("click", resetAllFilters);
+        }
     }
 
-
-    /* =========================================================================
-       ERROR STATE
-       ========================================================================= */
 
     function renderErrorState() {
 
@@ -1747,24 +1477,19 @@
 
         DOM.productList.innerHTML = `
 
-            <div
-                class="products-error"
-                role="alert">
+            <div class="products-error-state" style="text-align:center;padding:48px 16px;">
 
-                <h2>
-                    Unable to load products
-                </h2>
+                <p style="font-size:18px;color:#e11d48;margin-bottom:16px;">
 
+                    Unable to load products at this time.
 
-                <p>
-                    Please try again in a moment.
                 </p>
-
 
                 <button
                     type="button"
-                    class="products-empty-button"
-                    id="retry-products">
+                    class="btn-retry"
+                    id="retry-fetch-btn"
+                    style="padding:8px 16px;cursor:pointer;">
 
                     Try Again
 
@@ -1775,459 +1500,381 @@
         `;
 
 
-        $("#retry-products")
-            ?.addEventListener(
-                "click",
-                loadProducts
-            );
+        const retryBtn = $("#retry-fetch-btn");
+
+        if (retryBtn) {
+
+            retryBtn.addEventListener("click", () => loadProducts());
+        }
     }
 
 
-    /* =========================================================================
-       CLEAR FILTERS
-       ========================================================================= */
+    function updateResultsCount(count) {
 
-    function clearFilters() {
+        if (DOM.resultsCount) {
 
-        state.currentCategory =
-            "";
-
-        state.currentKeyword =
-            "";
-
-        state.currentSort =
-            "featured";
-
-
-        if (
-            DOM.searchInput
-        ) {
-
-            DOM.searchInput.value =
-                "";
+            DOM.resultsCount.textContent =
+                `${count} ${count === 1 ? "product" : "products"}`;
         }
 
 
-        if (
-            DOM.sortSelect
-        ) {
+        announceToLiveRegion(`${count} products found`);
+    }
 
-            DOM.sortSelect.value =
-                "featured";
+
+    function announceToLiveRegion(message) {
+
+        if (DOM.liveRegion) {
+
+            DOM.liveRegion.textContent = message;
+        }
+    }
+
+
+    function toggleClearButtonVisibility(visible) {
+
+        if (DOM.searchClearBtn) {
+
+            DOM.searchClearBtn.style.display =
+                visible ? "inline-flex" : "none";
+        }
+    }
+
+
+    function resetAllFilters() {
+
+        state.currentCategory = "";
+
+        state.currentKeyword = "";
+
+        state.currentSort = "featured";
+
+
+        if (DOM.searchInput) {
+
+            DOM.searchInput.value = "";
         }
 
 
-        toggleClearButtonVisibility(
-            false
-        );
+        toggleClearButtonVisibility(false);
 
 
-        syncStateToURL();
+        if (DOM.sortSelect) {
+
+            DOM.sortSelect.value = "featured";
+        }
+
 
         updateCategoryNavigation();
 
         updatePageHeading();
+
+        syncStateToURL();
 
         applyFilters();
     }
 
 
     /* =========================================================================
-       EVENT HANDLERS
+       CART INTEGRATION
        ========================================================================= */
 
-    function initializeControls() {
+    function getCart() {
 
-        /* Search */
+        try {
 
-        if (
-            DOM.searchInput
-        ) {
+            const raw = localStorage.getItem(CONFIG.CART_KEY);
 
-            DOM.searchInput.addEventListener(
-                "input",
-                () => {
+            return raw ? JSON.parse(raw) : [];
 
-                    const value =
-                        DOM.searchInput.value.trim();
+        } catch {
 
-
-                    toggleClearButtonVisibility(
-                        Boolean(value)
-                    );
+            return [];
+        }
+    }
 
 
-                    clearTimeout(
-                        state.searchTimer
-                    );
+    function saveCart(cart) {
 
+        try {
 
-                    state.searchTimer =
-                        setTimeout(
-                            () => {
-
-                                state.currentKeyword =
-                                    value;
-
-                                syncStateToURL();
-
-                                applyFilters();
-
-                            },
-                            CONFIG.DEBOUNCE_MS
-                        );
-                }
+            localStorage.setItem(
+                CONFIG.CART_KEY,
+                JSON.stringify(cart)
             );
+
+            updateCartBadge();
+
+        } catch (error) {
+
+            console.warn(
+                "[Prasun Shop] Unable to save cart:",
+                error
+            );
+        }
+    }
+
+
+    function addToCart(productId) {
+
+        const product =
+            state.allProducts.find(
+                item => item.id === productId
+            );
+
+
+        if (!product || !product.available) {
+            return;
         }
 
 
-        /* Clear search */
+        const cart = getCart();
 
-        if (
-            DOM.searchClearBtn
-        ) {
-
-            DOM.searchClearBtn.addEventListener(
-                "click",
-                () => {
-
-                    if (
-                        DOM.searchInput
-                    ) {
-
-                        DOM.searchInput.value =
-                            "";
-
-                        DOM.searchInput.focus();
-                    }
-
-
-                    toggleClearButtonVisibility(
-                        false
-                    );
-
-
-                    state.currentKeyword =
-                        "";
-
-
-                    syncStateToURL();
-
-                    applyFilters();
-                }
+        const existingIndex =
+            cart.findIndex(
+                item => item.id === productId
             );
+
+
+        if (existingIndex > -1) {
+
+            cart[existingIndex].quantity =
+                (cart[existingIndex].quantity || 1) + 1;
+
+        } else {
+
+            cart.push({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                image: product.image,
+                quantity: 1
+            });
         }
 
 
-        /* Sorting */
+        saveCart(cart);
 
-        if (
-            DOM.sortSelect
-        ) {
-
-            DOM.sortSelect.addEventListener(
-                "change",
-                () => {
-
-                    state.currentSort =
-                        DOM.sortSelect.value;
-
-                    syncStateToURL();
-
-                    applyFilters();
-                }
-            );
-        }
-
-
-        /* Categories */
-
-        if (
-            DOM.categoryContainer
-        ) {
-
-            DOM.categoryContainer.addEventListener(
-                "click",
-                event => {
-
-                    const button =
-                        event.target.closest(
-                            ".category-pill"
-                        );
-
-
-                    if (!button) {
-                        return;
-                    }
-
-
-                    const category =
-                        button.dataset.category ===
-                        "all"
-                            ? ""
-                            : button.dataset.category;
-
-
-                    state.currentCategory =
-                        category || "";
-
-
-                    syncStateToURL();
-
-                    updateCategoryNavigation();
-
-                    updatePageHeading();
-
-                    applyFilters();
-                }
-            );
-        }
-
-
-        /* Product actions */
-
-        if (
-            DOM.productList
-        ) {
-
-            DOM.productList.addEventListener(
-                "click",
-                event => {
-
-                    const button =
-                        event.target.closest(
-                            '[data-action="add-cart"]'
-                        );
-
-
-                    if (!button) {
-                        return;
-                    }
-
-
-                    event.preventDefault();
-
-
-                    addToCart(
-                        button.dataset.id
-                    );
-                }
-            );
-
-
-            DOM.productList.addEventListener(
-                "error",
-                event => {
-
-                    if (
-                        event.target &&
-                        event.target.tagName ===
-                        "IMG"
-                    ) {
-
-                        const image =
-                            event.target;
-
-
-                        if (
-                            image.dataset.fallbackApplied
-                        ) {
-                            return;
-                        }
-
-
-                        image.dataset.fallbackApplied =
-                            "true";
-
-
-                        image.src =
-                            CONFIG.FALLBACK_IMAGE;
-                    }
-
-                },
-                true
-            );
-        }
-
-
-        /* Keyboard shortcut */
-
-        document.addEventListener(
-            "keydown",
-            event => {
-
-                if (
-                    (
-                        event.ctrlKey ||
-                        event.metaKey
-                    ) &&
-                    event.key.toLowerCase() ===
-                    "k"
-                ) {
-
-                    if (
-                        DOM.searchInput
-                    ) {
-
-                        event.preventDefault();
-
-                        DOM.searchInput.focus();
-
-                        DOM.searchInput.select();
-                    }
-                }
-            }
-        );
-
-
-        /* Browser history */
-
-        window.addEventListener(
-            "popstate",
-            () => {
-
-                readStateFromURL();
-
-                applyFilters();
-            }
-        );
-
-
-        /* Cart synchronization */
-
-        window.addEventListener(
-            "storage",
-            event => {
-
-                if (
-                    event.key ===
-                    CONFIG.CART_KEY
-                ) {
-
-                    updateCartBadge();
-                }
-            }
+        announceToLiveRegion(
+            `Added ${product.name} to cart.`
         );
     }
 
 
+    function updateCartBadge() {
+
+        if (!DOM.cartBadge) {
+            return;
+        }
+
+
+        const cart = getCart();
+
+        const totalCount =
+            cart.reduce(
+                (sum, item) => sum + (item.quantity || 1),
+                0
+            );
+
+
+        DOM.cartBadge.textContent =
+            String(totalCount);
+
+
+        DOM.cartBadge.style.display =
+            totalCount > 0 ? "inline-flex" : "none";
+    }
+
+
     /* =========================================================================
-       DOM CACHE
+       DOM INITIALIZATION & LISTENERS
        ========================================================================= */
 
     function cacheDOM() {
 
         DOM.productList =
-            $("#product-list");
-
+            $("#product-list") || $(".products-grid");
 
         DOM.searchInput =
-            $("#product-search");
-
+            $("#search-input") || $("input[type='search']");
 
         DOM.searchClearBtn =
-            $("#search-clear");
-
+            $("#search-clear-btn");
 
         DOM.sortSelect =
-            $("#product-sort");
-
+            $("#sort-select");
 
         DOM.resultsCount =
-            $("#products-count");
-
+            $("#results-count");
 
         DOM.heading =
-            $("#products-heading");
-
-
-        DOM.categoryContainer =
-            $(".products-categories");
-
-
-        DOM.categoryPills =
-            $$(".category-pill");
-
-
-        DOM.cartBadge =
-            $("#cart-count");
-
-
-        let liveRegion =
-            $("#a11y-status-region");
-
-
-        if (!liveRegion) {
-
-            liveRegion =
-                document.createElement(
-                    "div"
-                );
-
-
-            liveRegion.id =
-                "a11y-status-region";
-
-
-            liveRegion.className =
-                "visually-hidden";
-
-
-            liveRegion.setAttribute(
-                "aria-live",
-                "polite"
-            );
-
-
-            liveRegion.setAttribute(
-                "aria-atomic",
-                "true"
-            );
-
-
-            document.body.appendChild(
-                liveRegion
-            );
-        }
-
+            $("#category-heading");
 
         DOM.liveRegion =
-            liveRegion;
+            $("#aria-live-region");
+
+        DOM.cartBadge =
+            $("#cart-badge");
+
+        DOM.categoryContainer =
+            $("#category-pills");
     }
 
 
-    /* =========================================================================
-       INITIALIZATION
-       ========================================================================= */
+    function setupEventListeners() {
 
-    function initialize() {
+        // Category Pills Event Delegation
+        if (DOM.categoryContainer) {
+
+            DOM.categoryContainer.addEventListener("click", (e) => {
+
+                const pill = e.target.closest(".category-pill");
+
+                if (!pill) {
+                    return;
+                }
+
+
+                const category =
+                    pill.dataset.category === "all"
+                        ? ""
+                        : (pill.dataset.category || "");
+
+
+                if (state.currentCategory === category) {
+                    return;
+                }
+
+
+                state.currentCategory = category;
+
+                updateCategoryNavigation();
+
+                updatePageHeading();
+
+                syncStateToURL();
+
+                applyFilters();
+            });
+        }
+
+
+        // Search Input (Debounced)
+        if (DOM.searchInput) {
+
+            DOM.searchInput.addEventListener("input", (e) => {
+
+                const value = e.target.value;
+
+                toggleClearButtonVisibility(Boolean(value));
+
+
+                clearTimeout(state.searchTimer);
+
+                state.searchTimer = setTimeout(() => {
+
+                    state.currentKeyword = value.trim();
+
+                    syncStateToURL();
+
+                    applyFilters();
+
+                }, CONFIG.DEBOUNCE_MS);
+            });
+        }
+
+
+        // Search Clear Button
+        if (DOM.searchClearBtn) {
+
+            DOM.searchClearBtn.addEventListener("click", () => {
+
+                if (DOM.searchInput) {
+
+                    DOM.searchInput.value = "";
+
+                    DOM.searchInput.focus();
+                }
+
+
+                toggleClearButtonVisibility(false);
+
+                state.currentKeyword = "";
+
+                syncStateToURL();
+
+                applyFilters();
+            });
+        }
+
+
+        // Sort Selection
+        if (DOM.sortSelect) {
+
+            DOM.sortSelect.addEventListener("change", (e) => {
+
+                state.currentSort = e.target.value;
+
+                syncStateToURL();
+
+                applyFilters();
+            });
+        }
+
+
+        // Add to Cart Delegation
+        if (DOM.productList) {
+
+            DOM.productList.addEventListener("click", (e) => {
+
+                const cartBtn = e.target.closest("[data-action='add-cart']");
+
+                if (!cartBtn) {
+                    return;
+                }
+
+
+                e.preventDefault();
+
+                const productId = cartBtn.dataset.id;
+
+                if (productId) {
+
+                    addToCart(productId);
+                }
+            });
+        }
+
+
+        // Handle Browser Forward/Back Buttons
+        window.addEventListener("popstate", () => {
+
+            readStateFromURL();
+
+            applyFilters();
+        });
+    }
+
+
+    function init() {
 
         cacheDOM();
 
         updateCartBadge();
 
-        initializeControls();
+        setupEventListeners();
 
         loadProducts();
     }
 
 
-    if (
-        document.readyState ===
-        "loading"
-    ) {
+    if (document.readyState === "loading") {
 
-        document.addEventListener(
-            "DOMContentLoaded",
-            initialize,
-            {
-                once: true
-            }
-        );
+        document.addEventListener("DOMContentLoaded", init);
 
     } else {
 
-        initialize();
+        init();
     }
 
 })();
