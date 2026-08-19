@@ -201,7 +201,6 @@ img {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
   gap: 1.75rem;
-  min-height: 300px;
 }
 
 .product-card {
@@ -212,8 +211,7 @@ img {
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
+  height: 100%; /* Ensures uniform vertical stretch across grid rows */
   transition: var(--transition-fast);
 }
 
@@ -224,10 +222,11 @@ img {
 
 .product-image-wrapper {
   width: 100%;
-  height: 200px; /* Fixed uniform height for all product cards */
+  height: 200px; /* Locked fixed image block height */
   background-color: #f1f5f9;
   overflow: hidden;
   position: relative;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -236,7 +235,7 @@ img {
 .product-image {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Ensures images neatly fill the box without distorting */
+  object-fit: cover; /* Forces uniform crop without distortion */
   object-position: center;
 }
 
@@ -253,7 +252,7 @@ img {
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
+  flex-grow: 1; /* Pushes bottom action toolbar cleanly to the base */
 }
 
 .product-title {
@@ -276,7 +275,7 @@ img {
 }
 
 .product-bottom {
-  margin-top: auto;
+  margin-top: auto; /* Pins price and button neatly to the bottom of every card */
   display: flex;
   align-items: center;
   justify-content: space-between;
