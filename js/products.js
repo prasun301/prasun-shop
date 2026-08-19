@@ -20,7 +20,7 @@
         cartBadge: null
     };
 
-    // Expanded mock catalog with 10 products and reliable image links
+    // Full 10-product catalog with reliable image URLs
     const mockProductsCatalog = [
         { pid: "1", productNameEn: "Wireless Bluetooth Headphones", sellPrice: 29.99, description: "High-quality wireless headphones with active noise cancellation.", productImage: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80" },
         { pid: "2", productNameEn: "Ergonomic Desk Chair", sellPrice: 189.00, description: "Comfortable ergonomic office chair designed for long hours.", productImage: "https://images.unsplash.com/photo-1580481077494-e3299acae58d?auto=format&fit=crop&w=600&q=80" },
@@ -150,7 +150,7 @@
 
         saveCart(cart);
 
-        // Visual feedback
+        // Visual confirmation feedback
         const originalText = btnElement.textContent;
         btnElement.textContent = "Added ✓";
         btnElement.style.backgroundColor = "#16a34a";
@@ -174,7 +174,7 @@
             });
         }
 
-        // Global event delegation for "Add to Cart" clicks
+        // Global event delegation for "Add to Cart" button clicks
         if (DOM.productList) {
             DOM.productList.addEventListener("click", (e) => {
                 const btn = e.target.closest("button[data-action='add-cart']");
