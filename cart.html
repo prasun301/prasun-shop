@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -8,9 +10,11 @@
         content="width=device-width, initial-scale=1.0"
     >
 
+    <title>Shopping Cart — PRASUN SHOP</title>
+
     <meta
         name="description"
-        content="Review your shopping cart, update quantities, and securely proceed to checkout at Prasun Shop."
+        content="Review your PRASUN SHOP cart, update quantities, remove products, and proceed to checkout."
     >
 
     <meta
@@ -18,66 +22,44 @@
         content="index, follow"
     >
 
-    <title>Shopping Cart — Prasun Shop</title>
-
-    <!-- =====================================================================
-         STYLESHEET
-         ===================================================================== -->
-
-    <link
-        rel="stylesheet"
-        href="style.css"
+    <meta
+        name="theme-color"
+        content="#ffffff"
     >
 
-    <!-- =====================================================================
-         CART PAGE FALLBACK STYLES
-         These ensure the cart remains usable even if style.css is incomplete.
-         ===================================================================== -->
+    <link
+        rel="canonical"
+        href="https://shop.prasunbarua.com/cart.html"
+    >
+
+    <!-- ================================================================
+         FONTS — SAME AS INDEX.HTML
+         ================================================================ -->
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400&family=Fira+Sans:ital,wght@0,400..800;1,400..800&family=Noto+Sans:ital,wght@0,400..800;1,400..800&display=swap');
 
-        /* =================================================================
-           RESET / BASE
-           ================================================================= */
-
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
+        html,
         body {
-            margin: 0;
-            min-height: 100vh;
+            max-width: 100%;
+            overflow-x: hidden;
             font-family:
-                Inter,
-                ui-sans-serif,
+                'Noto Sans',
+                'Fira Sans',
                 system-ui,
                 -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
                 sans-serif;
-
-            background: #f8fafc;
-            color: #0f172a;
         }
 
+        input,
+        select,
         button,
-        input {
-            font: inherit;
+        code {
+            font-family:
+                'Fira Mono',
+                monospace,
+                sans-serif;
         }
-
-        a {
-            color: inherit;
-        }
-
-        /* =================================================================
-           ACCESSIBILITY
-           ================================================================= */
 
         .visually-hidden {
             position: absolute !important;
@@ -87,157 +69,36 @@
             margin: -1px !important;
             overflow: hidden !important;
             clip: rect(0, 0, 0, 0) !important;
+            clip-path: inset(50%) !important;
             white-space: nowrap !important;
             border: 0 !important;
         }
 
-        :focus-visible {
-            outline: 3px solid rgba(37, 99, 235, 0.35);
-            outline-offset: 3px;
+        .cart-count[hidden] {
+            display: none !important;
         }
 
-        /* =================================================================
-           HEADER
-           ================================================================= */
+        /* ==============================================================
+           CART PAGE
+           ============================================================== */
 
-        .cart-page-header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-
-            width: 100%;
-
-            background: rgba(255, 255, 255, 0.96);
-
-            border-bottom:
-                1px solid #e2e8f0;
-
-            backdrop-filter:
-                blur(12px);
-
-            -webkit-backdrop-filter:
-                blur(12px);
-        }
-
-        .cart-header-inner {
+        .cart-page {
             width: min(
                 1200px,
                 calc(100% - 32px)
             );
-
-            min-height: 72px;
 
             margin: 0 auto;
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            gap: 24px;
-        }
-
-        .cart-logo {
-            display: inline-flex;
-            align-items: center;
-
-            text-decoration: none;
-
-            color: #0f172a;
-
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-
-            white-space: nowrap;
-        }
-
-        .cart-logo:hover {
-            color: #2563eb;
-        }
-
-        .cart-nav {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .cart-nav-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-
-            min-height: 42px;
-
-            padding:
-                8px 14px;
-
-            border-radius: 10px;
-
-            text-decoration: none;
-
-            color: #475569;
-
-            font-size: 0.95rem;
-            font-weight: 600;
-
-            transition:
-                background-color 0.2s ease,
-                color 0.2s ease;
-        }
-
-        .cart-nav-link:hover {
-            background: #eff6ff;
-            color: #2563eb;
-        }
-
-        .cart-nav-link.active {
-            background: #eff6ff;
-            color: #2563eb;
-        }
-
-        .cart-nav-count {
-            display: inline-flex;
-
-            align-items: center;
-            justify-content: center;
-
-            min-width: 22px;
-            height: 22px;
-
-            margin-left: 6px;
-
-            padding:
-                0 6px;
-
-            border-radius: 999px;
-
-            background: #2563eb;
-            color: #fff;
-
-            font-size: 0.75rem;
-            font-weight: 700;
-
-            line-height: 1;
-        }
-
-        /* =================================================================
-           MAIN
-           ================================================================= */
-
-        .cart-container {
-            width: min(
-                1200px,
-                calc(100% - 32px)
-            );
-
-            margin:
-                0 auto;
 
             padding:
                 42px 0 72px;
         }
 
-        .cart-page-heading {
+        .cart-page-header {
+            margin-bottom: 30px;
+        }
+
+        .cart-page-title {
             margin: 0 0 8px;
 
             color: #0f172a;
@@ -255,18 +116,14 @@
         }
 
         .cart-page-subtitle {
-            margin:
-                0 0 30px;
+            margin: 0;
 
             color: #64748b;
 
             font-size: 0.98rem;
+
             line-height: 1.6;
         }
-
-        /* =================================================================
-           CART LAYOUT
-           ================================================================= */
 
         .cart-layout {
             display: grid;
@@ -282,7 +139,7 @@
 
         .cart-items-section,
         .cart-summary-section {
-            background: #fff;
+            background: #ffffff;
 
             border:
                 1px solid #e2e8f0;
@@ -294,15 +151,8 @@
                 rgba(15, 23, 42, 0.05);
         }
 
-        /* =================================================================
-           ITEMS SECTION
-           ================================================================= */
-
         .cart-items-section {
-            min-width: 0;
-
-            padding:
-                22px;
+            padding: 22px;
         }
 
         .cart-items-header {
@@ -313,11 +163,7 @@
 
             gap: 16px;
 
-            padding-bottom:
-                18px;
-
-            margin-bottom:
-                2px;
+            padding-bottom: 18px;
 
             border-bottom:
                 1px solid #e2e8f0;
@@ -329,25 +175,25 @@
             color: #0f172a;
 
             font-size: 1.15rem;
-            font-weight: 750;
+
+            font-weight: 800;
         }
 
         .cart-items-count {
             color: #64748b;
 
             font-size: 0.9rem;
+
             font-weight: 600;
-
-            white-space: nowrap;
         }
-
-        /* =================================================================
-           CART ITEMS
-           ================================================================= */
 
         #cart-items {
             min-height: 80px;
         }
+
+        /* ==============================================================
+           CART ITEM
+           ============================================================== */
 
         .cart-item {
             display: grid;
@@ -360,15 +206,14 @@
 
             gap: 24px;
 
-            padding:
-                20px 0;
+            padding: 20px 0;
 
             border-bottom:
                 1px solid #e2e8f0;
         }
 
         .cart-item:last-child {
-            border-bottom: none;
+            border-bottom: 0;
         }
 
         .cart-item-product {
@@ -391,14 +236,12 @@
 
             overflow: hidden;
 
-            border-radius: 12px;
-
-            background: #f1f5f9;
-
             border:
                 1px solid #e2e8f0;
 
-            text-decoration: none;
+            border-radius: 12px;
+
+            background: #f8fafc;
         }
 
         .cart-item-image {
@@ -408,17 +251,6 @@
             height: 100%;
 
             object-fit: cover;
-
-            background: #f1f5f9;
-
-            transition:
-                transform 0.25s ease;
-        }
-
-        .cart-item-image-link:hover
-        .cart-item-image {
-            transform:
-                scale(1.04);
         }
 
         .cart-item-info {
@@ -433,6 +265,7 @@
             color: #2563eb;
 
             font-size: 0.76rem;
+
             font-weight: 700;
 
             text-transform: uppercase;
@@ -444,7 +277,9 @@
             margin: 0;
 
             font-size: 1rem;
+
             line-height: 1.4;
+
             font-weight: 700;
         }
 
@@ -459,17 +294,16 @@
         }
 
         .cart-item-price {
-            margin:
-                7px 0 0;
+            margin: 7px 0 0;
 
             color: #64748b;
 
             font-size: 0.9rem;
         }
 
-        /* =================================================================
+        /* ==============================================================
            CONTROLS
-           ================================================================= */
+           ============================================================== */
 
         .cart-item-controls {
             display: flex;
@@ -495,7 +329,7 @@
 
             border-radius: 10px;
 
-            background: #fff;
+            background: #ffffff;
         }
 
         .quantity-control button {
@@ -515,24 +349,15 @@
 
             color: #334155;
 
-            font-size: 1.1rem;
-            font-weight: 700;
+            font-size: 1rem;
 
             cursor: pointer;
-
-            transition:
-                background-color 0.2s ease,
-                color 0.2s ease;
         }
 
         .quantity-control button:hover {
             background: #eff6ff;
-            color: #2563eb;
-        }
 
-        .quantity-control button[aria-disabled="true"] {
-            opacity: 0.45;
-            cursor: not-allowed;
+            color: #2563eb;
         }
 
         .quantity-input {
@@ -549,13 +374,10 @@
             border-right:
                 1px solid #e2e8f0;
 
-            background: #fff;
-
             color: #0f172a;
 
             text-align: center;
 
-            font-size: 0.92rem;
             font-weight: 700;
 
             outline: none;
@@ -565,9 +387,9 @@
 
         .quantity-input::-webkit-inner-spin-button,
         .quantity-input::-webkit-outer-spin-button {
-            margin: 0;
-
             -webkit-appearance: none;
+
+            margin: 0;
         }
 
         .cart-item-subtotal {
@@ -584,6 +406,7 @@
             color: #0f172a;
 
             font-size: 1rem;
+
             font-weight: 800;
         }
 
@@ -599,21 +422,21 @@
             color: #dc2626;
 
             font-size: 0.82rem;
+
             font-weight: 600;
 
             cursor: pointer;
-
-            text-decoration: none;
         }
 
         .cart-remove-button:hover {
             color: #991b1b;
+
             text-decoration: underline;
         }
 
-        /* =================================================================
+        /* ==============================================================
            EMPTY CART
-           ================================================================= */
+           ============================================================== */
 
         .cart-empty {
             display: flex;
@@ -626,8 +449,7 @@
 
             min-height: 340px;
 
-            padding:
-                40px 20px;
+            padding: 40px 20px;
 
             text-align: center;
         }
@@ -656,12 +478,12 @@
         }
 
         .cart-empty h2 {
-            margin:
-                0 0 8px;
+            margin: 0 0 8px;
 
             color: #0f172a;
 
             font-size: 1.35rem;
+
             font-weight: 800;
         }
 
@@ -673,11 +495,10 @@
 
             color: #64748b;
 
-            font-size: 0.95rem;
             line-height: 1.6;
         }
 
-        .continue-button {
+        .continue-shopping {
             display: inline-flex;
 
             align-items: center;
@@ -685,52 +506,44 @@
 
             min-height: 44px;
 
-            padding:
-                0 20px;
+            padding: 0 20px;
 
             border-radius: 10px;
 
             background: #2563eb;
 
-            color: #fff;
+            color: #ffffff;
 
             font-size: 0.92rem;
+
             font-weight: 700;
 
             text-decoration: none;
-
-            transition:
-                background-color 0.2s ease,
-                transform 0.2s ease;
         }
 
-        .continue-button:hover {
+        .continue-shopping:hover {
             background: #1d4ed8;
-
-            transform:
-                translateY(-1px);
         }
 
-        /* =================================================================
+        /* ==============================================================
            SUMMARY
-           ================================================================= */
+           ============================================================== */
 
         .cart-summary-section {
             position: sticky;
 
             top: 96px;
 
-            padding:
-                24px;
+            padding: 24px;
         }
 
         .cart-summary-section h2 {
-            margin:
-                0 0 22px;
+            margin: 0 0 22px;
 
             color: #0f172a;
 
             font-size: 1.2rem;
+
             font-weight: 800;
         }
 
@@ -742,8 +555,7 @@
 
             gap: 20px;
 
-            margin-bottom:
-                14px;
+            margin-bottom: 14px;
 
             color: #475569;
 
@@ -754,12 +566,10 @@
             color: #0f172a;
         }
 
-        .summary-row.total {
-            margin-top:
-                20px;
+        .summary-total {
+            margin-top: 20px;
 
-            padding-top:
-                18px;
+            padding-top: 18px;
 
             border-top:
                 1px solid #e2e8f0;
@@ -767,6 +577,7 @@
             color: #0f172a;
 
             font-size: 1.05rem;
+
             font-weight: 800;
         }
 
@@ -774,104 +585,62 @@
             color: #0f172a;
 
             font-size: 1.25rem;
+
             font-weight: 800;
         }
 
-        /* =================================================================
-           CHECKOUT
-           ================================================================= */
-
-        #checkout-button {
-            display: flex;
-
-            align-items: center;
-            justify-content: center;
-
+        #checkout-button,
+        #clear-cart-button {
             width: 100%;
 
-            min-height: 48px;
-
-            margin-top:
-                22px;
-
-            padding:
-                0 18px;
-
-            border: 0;
+            min-height: 46px;
 
             border-radius: 10px;
 
-            background: #2563eb;
+            font-size: 0.92rem;
 
-            color: #fff;
-
-            font-size: 0.95rem;
-            font-weight: 750;
+            font-weight: 700;
 
             cursor: pointer;
+        }
 
-            transition:
-                background-color 0.2s ease,
-                transform 0.2s ease;
+        #checkout-button {
+            margin-top: 22px;
+
+            border: 0;
+
+            background: #2563eb;
+
+            color: #ffffff;
         }
 
         #checkout-button:hover:not(:disabled) {
             background: #1d4ed8;
-
-            transform:
-                translateY(-1px);
         }
 
-        #checkout-button:disabled,
-        #checkout-button.disabled {
+        #checkout-button:disabled {
             background: #cbd5e1;
 
             color: #64748b;
 
             cursor: not-allowed;
-
-            transform: none;
         }
 
-        /* =================================================================
-           CLEAR CART
-           ================================================================= */
-
         #clear-cart-button {
-            width: 100%;
-
-            min-height: 42px;
-
-            margin-top:
-                10px;
-
-            padding:
-                0 14px;
+            margin-top: 10px;
 
             border:
                 1px solid #fecaca;
 
-            border-radius: 10px;
-
             background: #fff7f7;
 
             color: #dc2626;
-
-            font-size: 0.88rem;
-            font-weight: 650;
-
-            cursor: pointer;
-
-            transition:
-                background-color 0.2s ease,
-                border-color 0.2s ease;
         }
 
         #clear-cart-button:hover:not(:disabled) {
             background: #fef2f2;
 
-            border-color:
-                #fca5a5;
+            border-color: #fca5a5;
         }
 
         #clear-cart-button:disabled {
@@ -880,43 +649,26 @@
             cursor: not-allowed;
         }
 
-        /* =================================================================
-           SECURITY / NO-JS MESSAGE
-           ================================================================= */
+        /* ==============================================================
+           STATUS
+           ============================================================== */
 
-        .cart-noscript {
-            margin:
-                20px auto;
+        .cart-status {
+            padding: 40px 20px;
 
-            width: min(
-                700px,
-                calc(100% - 32px)
-            );
+            text-align: center;
 
-            padding:
-                16px 18px;
-
-            border:
-                1px solid #fed7aa;
-
-            border-radius: 10px;
-
-            background: #fff7ed;
-
-            color: #9a3412;
-
-            line-height: 1.5;
+            color: #64748b;
         }
 
-        /* =================================================================
-           RESPONSIVE TABLET
-           ================================================================= */
+        /* ==============================================================
+           RESPONSIVE
+           ============================================================== */
 
         @media (max-width: 900px) {
 
             .cart-layout {
-                grid-template-columns:
-                    1fr;
+                grid-template-columns: 1fr;
             }
 
             .cart-summary-section {
@@ -925,73 +677,26 @@
 
         }
 
-        /* =================================================================
-           RESPONSIVE MOBILE
-           ================================================================= */
-
         @media (max-width: 640px) {
 
-            .cart-header-inner {
-                width:
-                    calc(100% - 24px);
-
-                min-height: 64px;
-
-                gap: 10px;
-            }
-
-            .cart-logo {
-                font-size: 1.05rem;
-            }
-
-            .cart-nav-link {
-                padding:
-                    7px 9px;
-
-                font-size: 0.84rem;
-            }
-
-            .cart-container {
-                width:
-                    calc(100% - 24px);
+            .cart-page {
+                width: calc(100% - 24px);
 
                 padding:
                     28px 0 50px;
             }
 
-            .cart-page-subtitle {
-                margin-bottom:
-                    22px;
-            }
-
             .cart-items-section,
             .cart-summary-section {
-                padding:
-                    16px;
+                padding: 16px;
 
-                border-radius:
-                    14px;
-            }
-
-            .cart-items-header {
-                padding-bottom:
-                    14px;
+                border-radius: 14px;
             }
 
             .cart-item {
-                grid-template-columns:
-                    1fr;
+                grid-template-columns: 1fr;
 
-                gap:
-                    16px;
-
-                padding:
-                    18px 0;
-            }
-
-            .cart-item-product {
-                align-items:
-                    flex-start;
+                gap: 16px;
             }
 
             .cart-item-image-link {
@@ -1002,155 +707,120 @@
             .cart-item-controls {
                 width: 100%;
 
-                justify-content:
-                    space-between;
+                justify-content: space-between;
 
-                gap:
-                    12px;
+                gap: 12px;
             }
 
             .cart-item-subtotal {
-                min-width:
-                    auto;
-
-                align-items:
-                    flex-end;
-            }
-
-            .quantity-control {
-                flex-shrink:
-                    0;
+                min-width: auto;
             }
 
         }
-
-        /* =================================================================
-           VERY SMALL DEVICES
-           ================================================================= */
-
-        @media (max-width: 400px) {
-
-            .cart-nav-link:first-child {
-                display: none;
-            }
-
-            .cart-item-product {
-                gap:
-                    12px;
-            }
-
-            .cart-item-image-link {
-                width: 68px;
-                height: 68px;
-            }
-
-            .cart-item-title {
-                font-size:
-                    0.92rem;
-            }
-
-            .cart-item-price {
-                font-size:
-                    0.82rem;
-            }
-
-            .cart-item-controls {
-                align-items:
-                    flex-start;
-
-                flex-direction:
-                    column;
-            }
-
-            .cart-item-subtotal {
-                align-items:
-                    flex-start;
-            }
-
-        }
-
-        /* =================================================================
-           REDUCED MOTION
-           ================================================================= */
 
         @media (prefers-reduced-motion: reduce) {
 
             *,
             *::before,
             *::after {
-                scroll-behavior: auto !important;
+                transition: none !important;
 
-                transition:
-                    none !important;
-
-                animation:
-                    none !important;
+                animation: none !important;
             }
 
         }
 
     </style>
+
+    <!-- ================================================================
+         MAIN CSS — SAME AS HOME
+         ================================================================ -->
+
+    <link
+        rel="stylesheet"
+        href="/css/style.css?v=20260819-04"
+    >
+
 </head>
+
 
 <body>
 
-    <!-- =====================================================================
-         ACCESSIBILITY LIVE REGION
-         ===================================================================== -->
+    <!-- ================================================================
+         HEADER — SAME DESIGN LANGUAGE AS INDEX
+         ================================================================ -->
 
-    <div
-        id="cart-live-region"
-        class="visually-hidden"
-        aria-live="polite"
-        aria-atomic="true"
-    ></div>
+    <header class="header">
 
-
-    <!-- =====================================================================
-         HEADER
-         ===================================================================== -->
-
-    <header
-        class="cart-page-header"
-        role="banner"
-    >
-
-        <div class="cart-header-inner">
+        <div class="header-container">
 
             <a
-                href="index.html"
-                class="cart-logo"
-                aria-label="Prasun Shop home"
+                href="/"
+                class="logo"
+                aria-label="PRASUN SHOP Homepage"
             >
-                Prasun Shop
+
+                <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+
+                    <path d="M3 9l9-6 9 6"></path>
+
+                    <path d="M5 10v10h14V10"></path>
+
+                    <path d="M9 20v-6h6v6"></path>
+
+                </svg>
+
+                <span>PRASUN SHOP</span>
+
             </a>
 
+
             <nav
-                class="cart-nav"
+                class="nav-links"
                 aria-label="Main navigation"
             >
 
                 <a
-                    href="products.html"
-                    class="cart-nav-link"
+                    href="/"
                 >
                     Shop
                 </a>
 
                 <a
-                    href="cart.html"
-                    class="cart-nav-link active"
+                    href="/cart.html"
+                    class="cart-link active"
                     aria-current="page"
+                    aria-label="View Shopping Cart"
                 >
+
                     Cart
 
                     <span
                         id="cart-count"
-                        class="cart-nav-count"
+                        class="cart-count"
                         aria-label="0 items in cart"
                     >
                         0
                     </span>
+
+                </a>
+
+                <a href="/about.html">
+                    About
+                </a>
+
+                <a href="/contact.html">
+                    Contact
                 </a>
 
             </nav>
@@ -1160,29 +830,33 @@
     </header>
 
 
-    <!-- =====================================================================
-         MAIN CONTENT
-         ===================================================================== -->
+    <!-- ================================================================
+         MAIN
+         ================================================================ -->
 
     <main
-        class="cart-container"
+        class="cart-page"
         id="main-content"
     >
 
-        <h1 class="cart-page-heading">
-            Shopping Cart
-        </h1>
+        <header class="cart-page-header">
 
-        <p class="cart-page-subtitle">
-            Review your items, update quantities, and proceed to checkout.
-        </p>
+            <h1 class="cart-page-title">
+                Shopping Cart
+            </h1>
+
+            <p class="cart-page-subtitle">
+                Review your items, update quantities, and proceed to checkout.
+            </p>
+
+        </header>
 
 
         <div class="cart-layout">
 
-            <!-- =============================================================
-                 CART ITEMS
-                 ============================================================= -->
+            <!-- =========================================================
+                 ITEMS
+                 ========================================================= -->
 
             <section
                 class="cart-items-section"
@@ -1208,61 +882,24 @@
                 </div>
 
 
-                <!--
-                    IMPORTANT:
-                    Do NOT put "Loading..." here.
-
-                    cart.js controls this container and will render:
-                    - cart products
-                    - or the empty-cart interface
-                -->
-
                 <div
                     id="cart-items"
                     aria-live="polite"
                     aria-busy="false"
                 >
-                    <div class="cart-empty">
-                        <div
-                            class="cart-empty-icon"
-                            aria-hidden="true"
-                        >
-                            <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path d="M6 8h12l1 13H5L6 8Z"></path>
-                                <path d="M9 8V6a3 3 0 0 1 6 0v2"></path>
-                            </svg>
-                        </div>
 
-                        <h2>
-                            Your cart is empty
-                        </h2>
-
-                        <p>
-                            Add products from our shop to see them here.
-                        </p>
-
-                        <a
-                            href="products.html"
-                            class="continue-button"
-                        >
-                            Continue Shopping
-                        </a>
+                    <div class="cart-status">
+                        Loading cart...
                     </div>
+
                 </div>
 
             </section>
 
 
-            <!-- =============================================================
-                 ORDER SUMMARY
-                 ============================================================= -->
+            <!-- =========================================================
+                 SUMMARY
+                 ========================================================= -->
 
             <aside
                 class="cart-summary-section"
@@ -1300,7 +937,7 @@
                 </div>
 
 
-                <div class="summary-row total">
+                <div class="summary-row summary-total">
 
                     <span>
                         Total
@@ -1338,81 +975,70 @@
     </main>
 
 
-    <!-- =====================================================================
-         NO JAVASCRIPT MESSAGE
-         ===================================================================== -->
+    <!-- ================================================================
+         FOOTER
+         ================================================================ -->
 
-    <noscript>
+    <footer class="footer">
 
-        <div class="cart-noscript">
-            JavaScript is required to manage your shopping cart.
-            Please enable JavaScript in your browser and reload this page.
+        <div class="footer-links">
+
+            <a href="/privacy.html">
+                Privacy Policy
+            </a>
+
+            <a href="/terms.html">
+                Terms of Service
+            </a>
+
+            <a href="/refund.html">
+                Refund Policy
+            </a>
+
+            <a href="/contact.html">
+                Contact
+            </a>
+
         </div>
 
-    </noscript>
+        <p>
+            &copy; 2026 PRASUN SHOP by
+
+            <a
+                href="https://prasunbarua.com"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                Prasun Barua
+            </a>.
+
+            All rights reserved.
+        </p>
+
+    </footer>
 
 
-    <!-- =====================================================================
+    <!-- ================================================================
+         ACCESSIBILITY
+         ================================================================ -->
+
+    <div
+        id="cart-live-region"
+        class="visually-hidden"
+        aria-live="polite"
+        aria-atomic="true"
+    ></div>
+
+
+    <!-- ================================================================
          CART JAVASCRIPT
-         ===================================================================== -->
+         ================================================================ -->
 
     <script
-        src="cart.js"
+        src="/js/cart.js?v=20260819-04"
         defer
     ></script>
 
-
-    <!-- =====================================================================
-         SMALL COMPATIBILITY SCRIPT
-         Keeps the summary item count synchronized with the cart.
-         ===================================================================== -->
-
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-
-            function syncSummaryCount() {
-
-                const count =
-                    document.getElementById(
-                        "cart-items-count"
-                    );
-
-                const summary =
-                    document.getElementById(
-                        "summary-item-count"
-                    );
-
-                if (!count || !summary) {
-                    return;
-                }
-
-                const text =
-                    count.textContent
-                        .trim();
-
-                const match =
-                    text.match(/\d+/);
-
-                summary.textContent =
-                    match
-                        ? match[0]
-                        : "0";
-            }
-
-            syncSummaryCount();
-
-            window.addEventListener(
-                "prasunCartUpdated",
-                syncSummaryCount
-            );
-
-            window.addEventListener(
-                "cartUpdated",
-                syncSummaryCount
-            );
-
-        });
-    </script>
-
 </body>
+
 </html>
