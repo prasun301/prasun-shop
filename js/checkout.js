@@ -3,44 +3,20 @@
  * PRASUN SHOP — CHECKOUT SYSTEM
  * ============================================================================
  *
- * Production checkout frontend.
- *
  * Canonical cart:
  *     prasun_cart
  *
- * Product source:
- *     Cloudflare Worker
- *     GET /api/products
+ * Checkout API:
+ *     POST https://prasun-shop-api.prasun301.workers.dev/api/order
  *
- * Order endpoint:
- *     Cloudflare Worker
- *     POST /api/orders
- *
- * Features:
- * - Uses the same canonical cart as cart.js
- * - Supports legacy cart migration
- * - Loads products from Cloudflare Worker
- * - Supports CJ Dropshipping product IDs / SKUs
- * - Handles Worker response format:
- *      { success: true, products: [...] }
- * - Request timeout
- * - Input validation
- * - Accessible error/status messages
- * - Double-submit protection
- * - Cross-tab cart synchronization
- * - Does NOT trust prices supplied by localStorage
  * ============================================================================
  */
 
 "use strict";
 
 (() => {
-
-    /* ========================================================================
-       1. CONFIGURATION
-       ======================================================================== */
-
-    const CART_KEY = "prasun_cart";
+    const CART_KEY =
+        "prasun_cart";
 
     const LEGACY_KEYS = [
         "prasunShopCart",
@@ -48,603 +24,450 @@
         "prasun_cart_items"
     ];
 
-    /*
-     * IMPORTANT:
-     * Products are loaded from the Cloudflare Worker.
-     */
-    const PRODUCTS_ENDPOINT =
+    const API_ORDER_ENDPOINT =
+        "https://prasun-shop-api.prasun301.workers.dev/api/order";
+
+    const API_PRODUCT_ENDPOINT =
         "https://prasun-shop-api.prasun301.workers.dev/api/products";
 
-    /*
-     * Order submission endpoint.
-     */
-    const ORDER_ENDPOINT =
-        "https://prasun-shop-api.prasun301.workers.dev/api/orders";
-
     const MAX_QUANTITY = 99;
-
     const REQUEST_TIMEOUT_MS = 15000;
 
-
-    /* ========================================================================
-       2. CURRENCY
-       ======================================================================== */
-
-    const currencyFormatter = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-
-
-    function formatPrice(value) {
-
-        const number = Number(value);
-
-        if (!Number.isFinite(number)) {
-            return "$0.00";
-        }
-
-        return currencyFormatter.format(number);
-    }
-
-
-    /* ========================================================================
-       3. HTML ESCAPING
-       ======================================================================== */
-
-    const ESCAPE_MAP = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-    };
-
-
-    function escapeHTML(value) {
-
-        if (
-            value === null ||
-            value === undefined
-        ) {
-            return "";
-        }
-
-        return String(value).replace(
-            /[&<>"']/g,
-            character => ESCAPE_MAP[character]
+    const currencyFormatter =
+        new Intl.NumberFormat(
+            "en-US",
+            {
+                style: "currency",
+                currency: "USD",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
         );
-    }
-
-
-    /* ========================================================================
-       4. DOM
-       ======================================================================== */
 
     const orderSummary =
-        document.getElementById("order-summary");
-
-    const checkoutForm =
-        document.getElementById("checkout-form");
-
-
-    if (orderSummary) {
-
-        orderSummary.setAttribute(
-            "aria-live",
-            "polite"
+        document.getElementById(
+            "order-summary"
         );
 
+    const checkoutForm =
+        document.getElementById(
+            "checkout-form"
+        );
+
+    let cart = [];
+
+    let submitting = false;
+
+    /* =========================================================================
+       HELPERS
+       ========================================================================= */
+
+    function escapeHTML(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
+    function formatPrice(value) {
+        const number =
+            Number(value);
 
-    /* ========================================================================
-       5. CART NORMALIZATION
-       ======================================================================== */
+        return Number.isFinite(number)
+            ? currencyFormatter.format(
+                number
+            )
+            : "$0.00";
+    }
 
-    function normalizeCartItem(item) {
+    function cleanString(value) {
+        return String(value ?? "").trim();
+    }
+
+    function firstNonEmpty(...values) {
+        for (const value of values) {
+            const result =
+                cleanString(value);
+
+            if (result) {
+                return result;
+            }
+        }
+
+        return "";
+    }
+
+    function normalizeQuantity(value) {
+        const number =
+            Number(value);
 
         if (
-            !item ||
-            item.id === undefined ||
-            item.id === null
+            !Number.isFinite(number) ||
+            number <= 0
         ) {
-            return null;
+            return 1;
         }
 
-        const quantity =
-            Number(item.quantity);
-
-        return {
-
-            id: String(item.id),
-
-            quantity:
-                Number.isFinite(quantity) &&
-                quantity > 0
-
-                    ? Math.min(
-                        MAX_QUANTITY,
-                        Math.floor(quantity)
-                    )
-
-                    : 1
-
-        };
+        return Math.min(
+            MAX_QUANTITY,
+            Math.max(
+                1,
+                Math.floor(number)
+            )
+        );
     }
 
-
-    function parseCart(raw) {
-
-        if (!raw) {
-            return [];
-        }
-
-        try {
-
-            const parsed =
-                JSON.parse(raw);
-
-            if (!Array.isArray(parsed)) {
-                return [];
-            }
-
-            return parsed
-                .map(normalizeCartItem)
-                .filter(Boolean);
-
-        } catch (error) {
-
-            console.error(
-                "[PRASUN SHOP] Cart JSON parse error:",
-                error
-            );
-
-            return [];
-
-        }
-    }
-
-
-    /* ========================================================================
-       6. READ CART
-       ======================================================================== */
+    /* =========================================================================
+       STORAGE
+       ========================================================================= */
 
     function getCart() {
-
         try {
-
             const primary =
-                localStorage.getItem(CART_KEY);
+                localStorage.getItem(
+                    CART_KEY
+                );
 
             if (primary) {
+                const parsed =
+                    JSON.parse(primary);
 
-                const cart =
-                    parseCart(primary);
-
-                if (cart.length) {
-                    return cart;
+                if (
+                    Array.isArray(parsed)
+                ) {
+                    return parsed;
                 }
-
             }
 
-
-            /*
-             * Legacy migration
-             */
-
-            for (const legacyKey of LEGACY_KEYS) {
-
+            for (
+                const key
+                of LEGACY_KEYS
+            ) {
                 const legacy =
-                    localStorage.getItem(legacyKey);
+                    localStorage.getItem(
+                        key
+                    );
 
                 if (!legacy) {
                     continue;
                 }
 
-                const legacyCart =
-                    parseCart(legacy);
+                try {
+                    const parsed =
+                        JSON.parse(
+                            legacy
+                        );
 
-                if (legacyCart.length) {
+                    if (
+                        Array.isArray(
+                            parsed
+                        ) &&
+                        parsed.length
+                    ) {
+                        localStorage.setItem(
+                            CART_KEY,
+                            JSON.stringify(
+                                parsed
+                            )
+                        );
 
-                    localStorage.setItem(
-                        CART_KEY,
-                        JSON.stringify(legacyCart)
-                    );
-
-                    return legacyCart;
-
+                        return parsed;
+                    }
+                } catch (_) {
+                    // Ignore malformed legacy carts.
                 }
-
             }
 
             return [];
-
         } catch (error) {
-
             console.error(
-                "[PRASUN SHOP] Cart read error:",
+                "[PRASUN SHOP] Checkout cart error:",
                 error
             );
 
             return [];
-
         }
-
     }
 
-
-    let cart = getCart();
-
-
-    /* ========================================================================
-       7. CLEAR CART
-       ======================================================================== */
-
-    function clearAllCartKeys() {
-
+    function clearCart() {
         try {
-
             localStorage.removeItem(
                 CART_KEY
             );
 
-            for (const key of LEGACY_KEYS) {
-
-                localStorage.removeItem(key);
-
+            for (
+                const key
+                of LEGACY_KEYS
+            ) {
+                localStorage.removeItem(
+                    key
+                );
             }
-
         } catch (error) {
-
             console.error(
-                "[PRASUN SHOP] Cart clearing error:",
+                "[PRASUN SHOP] Cart clear error:",
                 error
             );
-
         }
 
+        window.dispatchEvent(
+            new CustomEvent(
+                "prasunCartUpdated",
+                {
+                    detail: {
+                        cart: []
+                    }
+                }
+            )
+        );
     }
 
+    /* =========================================================================
+       CART NORMALIZATION
+       ========================================================================= */
 
-    /* ========================================================================
-       8. FETCH WITH TIMEOUT
-       ======================================================================== */
+    function normalizeCartItem(item) {
+        if (
+            !item ||
+            typeof item !== "object"
+        ) {
+            return null;
+        }
+
+        const name =
+            firstNonEmpty(
+                item.name,
+                item.productName,
+                item.title
+            );
+
+        const id =
+            firstNonEmpty(
+                item.cjProductId,
+                item.cjPid,
+                item.pid,
+                item.id
+            );
+
+        const sku =
+            firstNonEmpty(
+                item.cjSku,
+                item.cjSKU,
+                item.productSku,
+                item.sku
+            );
+
+        const variantId =
+            firstNonEmpty(
+                item.variantId,
+                item.variantID,
+                item.vid,
+                item.cjVariantId
+            );
+
+        const variantSku =
+            firstNonEmpty(
+                item.variantSku,
+                item.cjVariantSku,
+                item.variantSKU
+            );
+
+        if (!name && !id && !sku) {
+            return null;
+        }
+
+        const price =
+            Number(item.price);
+
+        return {
+            id,
+            sku,
+
+            cjProductId:
+                firstNonEmpty(
+                    item.cjProductId,
+                    item.cjPid,
+                    item.pid,
+                    item.id
+                ),
+
+            cjSku:
+                firstNonEmpty(
+                    item.cjSku,
+                    item.cjSKU,
+                    item.productSku,
+                    item.sku
+                ),
+
+            variantId,
+
+            variantSku,
+
+            name:
+                name ||
+                "Product",
+
+            category:
+                firstNonEmpty(
+                    item.category,
+                    item.categoryName
+                ),
+
+            price:
+                Number.isFinite(price) &&
+                price >= 0
+                    ? Number(
+                        price.toFixed(2)
+                    )
+                    : 0,
+
+            image:
+                firstNonEmpty(
+                    item.image,
+                    item.imageUrl,
+                    item.thumbnail
+                ),
+
+            quantity:
+                normalizeQuantity(
+                    item.quantity
+                )
+        };
+    }
+
+    function normalizeCart(items) {
+        if (
+            !Array.isArray(items)
+        ) {
+            return [];
+        }
+
+        return items
+            .map(normalizeCartItem)
+            .filter(Boolean);
+    }
+
+    /* =========================================================================
+       FETCH
+       ========================================================================= */
 
     async function fetchWithTimeout(
         resource,
         options = {},
         timeout = REQUEST_TIMEOUT_MS
     ) {
-
         const controller =
             new AbortController();
 
         const timer =
             setTimeout(
-                () => controller.abort(),
+                () =>
+                    controller.abort(),
                 timeout
             );
 
         try {
-
-            const response =
-                await fetch(resource, {
-
+            return await fetch(
+                resource,
+                {
                     ...options,
-
                     signal:
                         controller.signal
-
-                });
-
-            return response;
-
+                }
+            );
         } catch (error) {
-
             if (
-                error &&
-                error.name === "AbortError"
+                error?.name ===
+                "AbortError"
             ) {
-
                 throw new Error(
                     "The server request timed out. Please try again."
                 );
-
             }
 
             throw error;
-
         } finally {
-
             clearTimeout(timer);
-
         }
-
     }
 
+    /* =========================================================================
+       ERROR UI
+       ========================================================================= */
 
-    /* ========================================================================
-       9. PRODUCT CACHE
-       ======================================================================== */
+    function showFormError(message) {
+        let banner =
+            document.getElementById(
+                "checkout-error-banner"
+            );
 
-    let productMap = new Map();
+        if (
+            !banner &&
+            checkoutForm
+        ) {
+            banner =
+                document.createElement(
+                    "div"
+                );
 
-    let productsFetchPromise = null;
+            banner.id =
+                "checkout-error-banner";
 
+            banner.className =
+                "mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm font-medium border border-red-200";
 
-    /* ========================================================================
-       10. LOAD PRODUCTS FROM CLOUDFLARE WORKER
-       ======================================================================== */
+            banner.setAttribute(
+                "role",
+                "alert"
+            );
 
-    async function fetchProducts() {
-
-        if (productMap.size > 0) {
-
-            return productMap;
-
+            checkoutForm.prepend(
+                banner
+            );
         }
 
-        if (productsFetchPromise) {
+        if (banner) {
+            banner.textContent =
+                message;
 
-            return productsFetchPromise;
-
+            banner.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest"
+            });
+        } else {
+            alert(message);
         }
-
-
-        productsFetchPromise =
-            (async () => {
-
-                try {
-
-                    console.log(
-                        "[PRASUN SHOP] Loading products from:",
-                        PRODUCTS_ENDPOINT
-                    );
-
-
-                    const response =
-                        await fetchWithTimeout(
-                            PRODUCTS_ENDPOINT,
-                            {
-                                method: "GET",
-
-                                cache: "no-store",
-
-                                headers: {
-                                    "Accept":
-                                        "application/json"
-                                }
-                            }
-                        );
-
-
-                    const responseText =
-                        await response.text();
-
-
-                    if (!response.ok) {
-
-                        throw new Error(
-                            `Product API returned HTTP ${response.status}`
-                        );
-
-                    }
-
-
-                    let data;
-
-                    try {
-
-                        data =
-                            JSON.parse(
-                                responseText
-                            );
-
-                    } catch (error) {
-
-                        console.error(
-                            "[PRASUN SHOP] Invalid product API JSON:",
-                            responseText
-                        );
-
-                        throw new Error(
-                            "The product server returned invalid JSON."
-                        );
-
-                    }
-
-
-                    /*
-                     * Worker returns:
-                     *
-                     * {
-                     *     success: true,
-                     *     products: [...]
-                     * }
-                     */
-
-                    let products = [];
-
-
-                    if (
-                        data &&
-                        Array.isArray(
-                            data.products
-                        )
-                    ) {
-
-                        products =
-                            data.products;
-
-                    }
-
-                    /*
-                     * Also support a raw array for compatibility.
-                     */
-
-                    else if (
-                        Array.isArray(data)
-                    ) {
-
-                        products = data;
-
-                    }
-
-
-                    if (!products.length) {
-
-                        throw new Error(
-                            "The product API returned no products."
-                        );
-
-                    }
-
-
-                    productMap =
-                        new Map();
-
-
-                    for (const product of products) {
-
-                        if (
-                            !product ||
-                            product.id === undefined ||
-                            product.id === null
-                        ) {
-                            continue;
-                        }
-
-
-                        const normalizedId =
-                            String(product.id);
-
-
-                        productMap.set(
-                            normalizedId,
-                            product
-                        );
-
-
-                        /*
-                         * Also index CJ Product ID.
-                         */
-
-                        if (
-                            product.cjProductId
-                        ) {
-
-                            productMap.set(
-                                String(
-                                    product.cjProductId
-                                ),
-                                product
-                            );
-
-                        }
-
-
-                        /*
-                         * Also index SKU.
-                         */
-
-                        if (
-                            product.sku
-                        ) {
-
-                            productMap.set(
-                                String(
-                                    product.sku
-                                ),
-                                product
-                            );
-
-                        }
-
-
-                        if (
-                            product.cjSku
-                        ) {
-
-                            productMap.set(
-                                String(
-                                    product.cjSku
-                                ),
-                                product
-                            );
-
-                        }
-
-                    }
-
-
-                    console.log(
-                        "[PRASUN SHOP] Product cache loaded:",
-                        productMap.size
-                    );
-
-
-                    return productMap;
-
-                } catch (error) {
-
-                    productsFetchPromise =
-                        null;
-
-                    throw error;
-
-                }
-
-            })();
-
-
-        return productsFetchPromise;
-
     }
 
+    function hideFormError() {
+        const banner =
+            document.getElementById(
+                "checkout-error-banner"
+            );
 
-    /* ========================================================================
-       11. FIND PRODUCT
-       ======================================================================== */
-
-    function findProduct(id) {
-
-        const key =
-            String(id);
-
-        return (
-            productMap.get(key) ||
-            productMap.get(key.trim()) ||
-            null
-        );
-
+        if (banner) {
+            banner.remove();
+        }
     }
 
-
-    /* ========================================================================
-       12. EMPTY SUMMARY
-       ======================================================================== */
+    /* =========================================================================
+       EMPTY SUMMARY
+       ========================================================================= */
 
     function renderEmptySummary() {
-
         if (!orderSummary) {
             return;
         }
 
-
         orderSummary.innerHTML = `
-
-            <div
-                class="py-8 text-center"
-            >
+            <div class="py-8 text-center">
 
                 <div
-                    class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100"
+                    class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100 text-zinc-500"
                     aria-hidden="true"
                 >
-
                     <svg
                         width="28"
                         height="28"
@@ -655,7 +478,6 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                     >
-
                         <circle
                             cx="9"
                             cy="20"
@@ -669,279 +491,70 @@
                         ></circle>
 
                         <path
-                            d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 1.9-1.4L21 8H6"
+                            d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"
                         ></path>
-
                     </svg>
-
                 </div>
 
-
-                <p
-                    class="text-zinc-500 text-sm font-medium mb-4"
-                >
+                <p class="text-zinc-700 text-sm font-semibold mb-4">
                     Your cart is empty.
                 </p>
 
-
                 <a
                     href="/products.html"
-                    class="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-all"
+                    class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-all"
                 >
                     Continue Shopping
                 </a>
 
             </div>
-
         `;
-
     }
 
+    /* =========================================================================
+       SUMMARY
+       ========================================================================= */
 
-    /* ========================================================================
-       13. ERROR BANNER
-       ======================================================================== */
-
-    function showFormError(message) {
-
-        let errorBanner =
-            document.getElementById(
-                "checkout-error-banner"
-            );
-
-
-        if (
-            !errorBanner &&
-            checkoutForm
-        ) {
-
-            errorBanner =
-                document.createElement("div");
-
-            errorBanner.id =
-                "checkout-error-banner";
-
-            errorBanner.className =
-                "mb-4 p-3 rounded-xl bg-red-50 text-red-600 text-xs font-medium border border-red-200";
-
-
-            errorBanner.setAttribute(
-                "role",
-                "alert"
-            );
-
-
-            checkoutForm.prepend(
-                errorBanner
-            );
-
-        }
-
-
-        if (errorBanner) {
-
-            errorBanner.textContent =
-                message;
-
-            errorBanner.classList.remove(
-                "hidden"
-            );
-
-            errorBanner.scrollIntoView({
-                behavior: "smooth",
-                block: "nearest"
-            });
-
-        } else {
-
-            alert(message);
-
-        }
-
-    }
-
-
-    function hideFormError() {
-
-        const errorBanner =
-            document.getElementById(
-                "checkout-error-banner"
-            );
-
-        if (errorBanner) {
-
-            errorBanner.classList.add(
-                "hidden"
-            );
-
-            errorBanner.textContent =
-                "";
-
-        }
-
-    }
-
-
-    /* ========================================================================
-       14. RENDER ORDER SUMMARY
-       ======================================================================== */
-
-    async function loadCheckoutSummary() {
-
+    function renderSummary() {
         if (!orderSummary) {
             return;
         }
 
+        if (!cart.length) {
+            renderEmptySummary();
+            return;
+        }
 
-        try {
+        let total = 0;
 
-            cart = getCart();
-
-
-            console.log(
-                "[PRASUN SHOP] Checkout cart:",
-                cart
-            );
-
-
-            if (!cart.length) {
-
-                renderEmptySummary();
-
-                return;
-
-            }
-
-
-            /*
-             * Load live products from Worker.
-             */
-
-            await fetchProducts();
-
-
-            let total = 0;
-
-            const validItems = [];
-
-
-            let itemsHTML = `
-
-                <div
-                    class="max-h-72 overflow-y-auto space-y-1 pr-1"
-                >
-
-            `;
-
-
-            for (const item of cart) {
-
-                const product =
-                    findProduct(item.id);
-
-
-                if (!product) {
-
-                    console.warn(
-                        "[PRASUN SHOP] Product not found for cart item:",
-                        item.id
+        const itemsHTML =
+            cart.map(item => {
+                const quantity =
+                    normalizeQuantity(
+                        item.quantity
                     );
-
-                    continue;
-
-                }
-
 
                 const price =
-                    Number(product.price);
-
-
-                if (
-                    !Number.isFinite(price) ||
-                    price < 0
-                ) {
-
-                    console.warn(
-                        "[PRASUN SHOP] Invalid product price:",
-                        product
-                    );
-
-                    continue;
-
-                }
-
-
-                const quantity =
-                    Math.min(
-                        MAX_QUANTITY,
-                        Math.max(
-                            1,
-                            Math.floor(
-                                Number(
-                                    item.quantity
-                                ) || 1
-                            )
-                        )
-                    );
-
+                    Number(item.price) || 0;
 
                 const subtotal =
                     price * quantity;
 
-
                 total += subtotal;
-
-
-                validItems.push({
-
-                    id:
-                        String(
-                            product.id
-                        ),
-
-                    sku:
-                        String(
-                            product.sku ||
-                            product.cjSku ||
-                            product.id
-                        ),
-
-                    name:
-                        String(
-                            product.name ||
-                            "Product"
-                        ),
-
-                    price,
-
-                    quantity
-
-                });
-
-
-                const image =
-                    escapeHTML(
-                        product.image ||
-                        (
-                            Array.isArray(
-                                product.images
-                            )
-                                ? product.images[0]
-                                : ""
-                        ) ||
-                        ""
-                    );
-
 
                 const name =
                     escapeHTML(
-                        product.name ||
+                        item.name ||
                         "Product"
                     );
 
+                const image =
+                    escapeHTML(
+                        item.image ||
+                        ""
+                    );
 
-                itemsHTML += `
-
+                return `
                     <div
                         class="flex items-center gap-4 py-4 border-b border-zinc-100"
                     >
@@ -952,781 +565,770 @@
                                     <img
                                         src="${image}"
                                         alt="${name}"
-                                        class="w-16 h-16 object-contain rounded-xl border border-zinc-200/60 bg-zinc-100 shrink-0"
+                                        class="w-16 h-16 object-contain rounded-xl border border-zinc-200 bg-zinc-50 shrink-0"
                                         loading="lazy"
                                         decoding="async"
                                     >
-                                `
+                                  `
                                 : `
                                     <div
-                                        class="w-16 h-16 rounded-xl border border-zinc-200 bg-zinc-100 flex items-center justify-center shrink-0 text-zinc-400"
+                                        class="w-16 h-16 rounded-xl border border-zinc-200 bg-zinc-50 shrink-0"
                                         aria-hidden="true"
-                                    >
-                                        <span class="text-xl">🛒</span>
-                                    </div>
-                                `
+                                    ></div>
+                                  `
                         }
-
 
                         <div
                             class="flex-grow min-w-0"
                         >
-
                             <h3
                                 class="text-sm font-semibold text-zinc-900"
                             >
                                 ${name}
                             </h3>
 
-
                             <p
-                                class="text-xs text-zinc-500"
+                                class="text-xs text-zinc-500 mt-1"
                             >
                                 Qty: ${quantity}
                             </p>
-
                         </div>
-
 
                         <div
                             class="text-right shrink-0"
                         >
-
                             <p
                                 class="text-sm font-bold text-zinc-900"
                             >
-                                ${formatPrice(subtotal)}
+                                ${formatPrice(
+                                    subtotal
+                                )}
                             </p>
-
 
                             <p
                                 class="text-[11px] text-zinc-400"
                             >
-                                ${formatPrice(price)} each
+                                ${formatPrice(
+                                    price
+                                )} each
                             </p>
-
                         </div>
 
                     </div>
-
                 `;
+            }).join("");
 
-            }
+        orderSummary.innerHTML = `
+            <div
+                class="max-h-80 overflow-y-auto pr-1"
+            >
+                ${itemsHTML}
+            </div>
 
-
-            itemsHTML += `
-                </div>
-            `;
-
-
-            if (!validItems.length) {
-
-                orderSummary.innerHTML = `
-
-                    <div
-                        class="py-8 text-center"
-                    >
-
-                        <p
-                            class="text-sm text-red-500 font-medium mb-2"
-                        >
-                            The products in your cart could not be found.
-                        </p>
-
-                        <p
-                            class="text-xs text-zinc-500 mb-4"
-                        >
-                            Please return to the shop and add the product again.
-                        </p>
-
-                        <a
-                            href="/products.html"
-                            class="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl"
-                        >
-                            Continue Shopping
-                        </a>
-
-                    </div>
-
-                `;
-
-                return;
-
-            }
-
-
-            itemsHTML += `
+            <div
+                class="pt-4 space-y-2"
+            >
 
                 <div
-                    class="pt-4 space-y-2"
+                    class="flex justify-between text-xs text-zinc-500"
                 >
+                    <span>
+                        Subtotal
+                    </span>
 
-                    <div
-                        class="flex justify-between text-xs text-zinc-500"
+                    <span
+                        class="font-medium text-zinc-900"
                     >
-
-                        <span>
-                            Subtotal
-                        </span>
-
-                        <span
-                            class="font-medium text-zinc-900"
-                        >
-                            ${formatPrice(total)}
-                        </span>
-
-                    </div>
-
-
-                    <div
-                        class="flex justify-between text-xs text-zinc-500"
-                    >
-
-                        <span>
-                            Shipping
-                        </span>
-
-                        <span
-                            class="text-emerald-600 font-semibold"
-                        >
-                            Free
-                        </span>
-
-                    </div>
-
-
-                    <div
-                        class="flex justify-between text-base font-bold text-zinc-900 pt-3 border-t border-zinc-100"
-                    >
-
-                        <span>
-                            Total
-                        </span>
-
-                        <span>
-                            ${formatPrice(total)}
-                        </span>
-
-                    </div>
-
+                        ${formatPrice(
+                            total
+                        )}
+                    </span>
                 </div>
 
-            `;
+                <div
+                    class="flex justify-between text-xs text-zinc-500"
+                >
+                    <span>
+                        Shipping
+                    </span>
 
+                    <span
+                        class="text-emerald-600 font-semibold"
+                    >
+                        Free
+                    </span>
+                </div>
 
-            orderSummary.innerHTML =
-                itemsHTML;
+                <div
+                    class="flex justify-between text-base font-bold text-zinc-900 pt-3 border-t border-zinc-100"
+                >
+                    <span>
+                        Total
+                    </span>
 
+                    <span>
+                        ${formatPrice(
+                            total
+                        )}
+                    </span>
+                </div>
 
-            /*
-             * Store validated checkout items in memory.
-             */
-            window.__PRASUN_CHECKOUT_ITEMS =
-                validItems;
+            </div>
+        `;
+    }
 
+    /* =========================================================================
+       PRODUCT RESOLUTION
+       ========================================================================= */
 
-            window.__PRASUN_CHECKOUT_TOTAL =
-                Number(
-                    total.toFixed(2)
+    async function resolveCartItem(item) {
+        /*
+         * Prefer stable CJ identifiers already stored in the cart.
+         */
+        const attempts = [];
+
+        if (item.cjProductId) {
+            attempts.push(
+                `id=${encodeURIComponent(
+                    item.cjProductId
+                )}`
+            );
+        }
+
+        if (item.cjSku) {
+            attempts.push(
+                `sku=${encodeURIComponent(
+                    item.cjSku
+                )}`
+            );
+        }
+
+        if (item.variantSku) {
+            attempts.push(
+                `variantSku=${encodeURIComponent(
+                    item.variantSku
+                )}`
+            );
+        }
+
+        /*
+         * Last resort: use the internal ID.
+         */
+        if (
+            item.id &&
+            !attempts.some(
+                value =>
+                    value.includes(
+                        encodeURIComponent(
+                            item.id
+                        )
+                    )
+            )
+        ) {
+            attempts.push(
+                `id=${encodeURIComponent(
+                    item.id
+                )}`
+            );
+        }
+
+        for (
+            const query
+            of attempts
+        ) {
+            try {
+                const response =
+                    await fetchWithTimeout(
+                        `${API_PRODUCT_ENDPOINT}?${query}`,
+                        {
+                            method: "GET",
+                            headers: {
+                                Accept:
+                                    "application/json"
+                            },
+                            cache: "no-store"
+                        }
+                    );
+
+                if (
+                    response.ok
+                ) {
+                    const data =
+                        await response.json();
+
+                    if (
+                        data?.product
+                    ) {
+                        return data.product;
+                    }
+                }
+            } catch (error) {
+                console.warn(
+                    "[PRASUN SHOP] Product lookup failed:",
+                    error?.message || error
+                );
+            }
+        }
+
+        /*
+         * If the Worker cannot resolve by ID/SKU, do one final
+         * name lookup.
+         */
+        if (item.name) {
+            try {
+                const response =
+                    await fetchWithTimeout(
+                        `${API_PRODUCT_ENDPOINT}?q=${encodeURIComponent(
+                            item.name
+                        )}`,
+                        {
+                            method: "GET",
+                            headers: {
+                                Accept:
+                                    "application/json"
+                            },
+                            cache: "no-store"
+                        }
+                    );
+
+                if (
+                    response.ok
+                ) {
+                    const data =
+                        await response.json();
+
+                    const products =
+                        Array.isArray(
+                            data?.products
+                        )
+                            ? data.products
+                            : [];
+
+                    const wanted =
+                        item.name
+                            .trim()
+                            .toLowerCase();
+
+                    const exact =
+                        products.find(
+                            product =>
+                                String(
+                                    product.name ||
+                                    ""
+                                )
+                                    .trim()
+                                    .toLowerCase() ===
+                                wanted
+                        );
+
+                    if (exact) {
+                        return exact;
+                    }
+
+                    if (
+                        products.length
+                    ) {
+                        return products[0];
+                    }
+                }
+            } catch (error) {
+                console.warn(
+                    "[PRASUN SHOP] Name lookup failed:",
+                    error?.message || error
+                );
+            }
+        }
+
+        return null;
+    }
+
+    async function buildOrderItems() {
+        const result = [];
+
+        for (
+            const item
+            of cart
+        ) {
+            const product =
+                await resolveCartItem(
+                    item
                 );
 
+            /*
+             * We allow an already-populated cart item
+             * to proceed even if the product endpoint is
+             * temporarily unavailable.
+             */
+            const resolved =
+                product || item;
 
+            const productId =
+                firstNonEmpty(
+                    resolved.cjProductId,
+                    resolved.pid,
+                    resolved.id,
+                    item.cjProductId,
+                    item.id
+                );
+
+            const sku =
+                firstNonEmpty(
+                    resolved.cjSku,
+                    resolved.productSku,
+                    resolved.sku,
+                    item.cjSku,
+                    item.sku
+                );
+
+            const variantId =
+                firstNonEmpty(
+                    item.variantId,
+                    resolved.variantId,
+                    resolved.vid
+                );
+
+            const variantSku =
+                firstNonEmpty(
+                    item.variantSku,
+                    resolved.variantSku
+                );
+
+            const name =
+                firstNonEmpty(
+                    item.name,
+                    resolved.name
+                );
+
+            if (
+                !productId &&
+                !sku &&
+                !name
+            ) {
+                throw new Error(
+                    "One of the products in your cart has no valid product identifier."
+                );
+            }
+
+            const price =
+                Number(
+                    resolved.price ??
+                    item.price ??
+                    0
+                );
+
+            const quantity =
+                normalizeQuantity(
+                    item.quantity
+                );
+
+            result.push({
+                id:
+                    firstNonEmpty(
+                        resolved.id,
+                        productId
+                    ),
+
+                sku,
+
+                cjProductId:
+                    productId,
+
+                cjSku:
+                    sku,
+
+                variantId,
+
+                variantSku,
+
+                name:
+                    name ||
+                    "Product",
+
+                price:
+                    Number.isFinite(
+                        price
+                    )
+                        ? Number(
+                            price.toFixed(2)
+                        )
+                        : 0,
+
+                quantity
+            });
+        }
+
+        return result;
+    }
+
+    /* =========================================================================
+       VALIDATION
+       ========================================================================= */
+
+    function validateCustomer(formData) {
+        const customerName =
+            String(
+                formData.get(
+                    "name"
+                ) || ""
+            ).trim();
+
+        const email =
+            String(
+                formData.get(
+                    "email"
+                ) || ""
+            ).trim();
+
+        const phone =
+            String(
+                formData.get(
+                    "phone"
+                ) || ""
+            ).trim();
+
+        const address =
+            String(
+                formData.get(
+                    "address"
+                ) || ""
+            ).trim();
+
+        if (!customerName) {
+            throw new Error(
+                "Please enter your full name."
+            );
+        }
+
+        if (
+            customerName.length <
+            2
+        ) {
+            throw new Error(
+                "Please enter a valid full name."
+            );
+        }
+
+        const emailRegex =
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (
+            !email ||
+            !emailRegex.test(
+                email
+            )
+        ) {
+            throw new Error(
+                "Please enter a valid email address."
+            );
+        }
+
+        if (!phone) {
+            throw new Error(
+                "Please enter your phone number."
+            );
+        }
+
+        if (!address) {
+            throw new Error(
+                "Please enter your shipping address."
+            );
+        }
+
+        return {
+            customerName,
+            email,
+            phone,
+            address
+        };
+    }
+
+    /* =========================================================================
+       SUBMIT
+       ========================================================================= */
+
+    async function submitOrder(event) {
+        event.preventDefault();
+
+        if (submitting) {
+            return;
+        }
+
+        hideFormError();
+
+        cart =
+            normalizeCart(
+                getCart()
+            );
+
+        if (!cart.length) {
+            showFormError(
+                "Your cart is empty. Please return to the shop and add a product."
+            );
+
+            return;
+        }
+
+        const submitButton =
+            checkoutForm?.querySelector(
+                'button[type="submit"]'
+            );
+
+        if (!submitButton) {
+            showFormError(
+                "Checkout button could not be found."
+            );
+
+            return;
+        }
+
+        submitting = true;
+
+        const originalText =
+            submitButton.textContent;
+
+        submitButton.disabled =
+            true;
+
+        submitButton.dataset.processing =
+            "true";
+
+        submitButton.textContent =
+            "Processing Order...";
+
+        submitButton.classList.add(
+            "opacity-75",
+            "cursor-not-allowed"
+        );
+
+        try {
+            const formData =
+                new FormData(
+                    checkoutForm
+                );
+
+            const customer =
+                validateCustomer(
+                    formData
+                );
+
+            const orderItems =
+                await buildOrderItems();
+
+            if (
+                !orderItems.length
+            ) {
+                throw new Error(
+                    "No valid products were found in your cart."
+                );
+            }
+
+            const total =
+                orderItems.reduce(
+                    (
+                        sum,
+                        item
+                    ) =>
+                        sum +
+                        (
+                            Number(
+                                item.price
+                            ) || 0
+                        ) *
+                        item.quantity,
+                    0
+                );
+
+            const payload = {
+                customerName:
+                    customer.customerName,
+
+                email:
+                    customer.email,
+
+                phone:
+                    customer.phone,
+
+                address:
+                    customer.address,
+
+                cart:
+                    orderItems,
+
+                total:
+                    Number(
+                        total.toFixed(2)
+                    )
+            };
+
+            console.log(
+                "[PRASUN SHOP] Submitting order:",
+                {
+                    ...payload,
+                    /*
+                     * Do not log unnecessary customer details.
+                     */
+                    cart:
+                        orderItems
+                }
+            );
+
+            const response =
+                await fetchWithTimeout(
+                    API_ORDER_ENDPOINT,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+
+                            Accept:
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(
+                                payload
+                            )
+                    }
+                );
+
+            const responseText =
+                await response.text();
+
+            let data = null;
+
+            try {
+                data =
+                    responseText
+                        ? JSON.parse(
+                            responseText
+                        )
+                        : null;
+            } catch (_) {
+                data = null;
+            }
+
+            if (
+                !response.ok
+            ) {
+                throw new Error(
+                    data?.error ||
+                    data?.message ||
+                    `Order server returned HTTP ${response.status}`
+                );
+            }
+
+            if (
+                data &&
+                data.success === false
+            ) {
+                throw new Error(
+                    data.error ||
+                    data.message ||
+                    "The order could not be placed."
+                );
+            }
+
+            console.log(
+                "[PRASUN SHOP] Order successfully submitted."
+            );
+
+            clearCart();
+
+            window.location.href =
+                data?.redirectUrl ||
+                "/order-success.html";
         } catch (error) {
-
             console.error(
-                "[PRASUN SHOP] Checkout summary error:",
+                "[PRASUN SHOP] Order submission error:",
                 error
             );
 
+            showFormError(
+                error?.message ||
+                "Something went wrong while placing your order. Please try again."
+            );
 
-            orderSummary.innerHTML = `
+            submitButton.disabled =
+                false;
 
-                <div
-                    class="py-6 text-center"
-                >
+            submitButton.textContent =
+                originalText;
 
-                    <p
-                        class="text-xs text-red-500 font-medium mb-3"
-                    >
-                        Failed to load order summary.
-                    </p>
+            submitButton.classList.remove(
+                "opacity-75",
+                "cursor-not-allowed"
+            );
 
+            submitButton.dataset.processing =
+                "false";
 
-                    <p
-                        class="text-xs text-zinc-500 mb-4"
-                    >
-                        ${escapeHTML(
-                            error?.message ||
-                            "Unable to connect to the product server."
-                        )}
-                    </p>
+            submitting = false;
 
-
-                    <button
-                        type="button"
-                        id="retry-summary-btn"
-                        class="px-3 py-1.5 text-xs font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors"
-                    >
-                        Retry
-                    </button>
-
-                </div>
-
-            `;
-
-
-            const retryButton =
-                document.getElementById(
-                    "retry-summary-btn"
-                );
-
-
-            if (retryButton) {
-
-                retryButton.addEventListener(
-                    "click",
-                    () => {
-
-                        productMap =
-                            new Map();
-
-                        productsFetchPromise =
-                            null;
-
-                        loadCheckoutSummary();
-
-                    }
-                );
-
-            }
-
+            return;
         }
-
     }
 
-
-    /* ========================================================================
-       15. SUBMIT ORDER
-       ======================================================================== */
+    /* =========================================================================
+       EVENTS
+       ========================================================================= */
 
     if (checkoutForm) {
-
         checkoutForm.addEventListener(
             "submit",
-            async event => {
-
-                event.preventDefault();
-
-                hideFormError();
-
-
-                cart = getCart();
-
-
-                if (!cart.length) {
-
-                    showFormError(
-                        "Your cart is empty. Please return to the shop and add a product."
-                    );
-
-                    return;
-
-                }
-
-
-                const submitButton =
-                    checkoutForm.querySelector(
-                        'button[type="submit"]'
-                    );
-
-
-                if (
-                    !submitButton ||
-                    submitButton.dataset.processing === "true"
-                ) {
-
-                    return;
-
-                }
-
-
-                submitButton.dataset.processing =
-                    "true";
-
-                const originalText =
-                    submitButton.textContent;
-
-
-                submitButton.disabled =
-                    true;
-
-                submitButton.textContent =
-                    "Processing Order...";
-
-
-                submitButton.classList.add(
-                    "opacity-75",
-                    "cursor-not-allowed"
-                );
-
-
-                try {
-
-                    const formData =
-                        new FormData(
-                            checkoutForm
-                        );
-
-
-                    const customerName =
-                        String(
-                            formData.get("name") ||
-                            ""
-                        ).trim();
-
-
-                    const email =
-                        String(
-                            formData.get("email") ||
-                            ""
-                        ).trim();
-
-
-                    const phone =
-                        String(
-                            formData.get("phone") ||
-                            ""
-                        ).trim();
-
-
-                    const address =
-                        String(
-                            formData.get("address") ||
-                            ""
-                        ).trim();
-
-
-                    /* ----------------------------------------------------
-                       VALIDATION
-                       ---------------------------------------------------- */
-
-                    if (!customerName) {
-
-                        throw new Error(
-                            "Please enter your full name."
-                        );
-
-                    }
-
-
-                    const emailRegex =
-                        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-
-                    if (
-                        !email ||
-                        !emailRegex.test(email)
-                    ) {
-
-                        throw new Error(
-                            "Please enter a valid email address."
-                        );
-
-                    }
-
-
-                    if (!phone) {
-
-                        throw new Error(
-                            "Please enter your phone number."
-                        );
-
-                    }
-
-
-                    if (!address) {
-
-                        throw new Error(
-                            "Please enter your shipping address."
-                        );
-
-                    }
-
-
-                    /* ----------------------------------------------------
-                       REFRESH PRODUCT DATA
-                       ---------------------------------------------------- */
-
-                    productMap =
-                        new Map();
-
-                    productsFetchPromise =
-                        null;
-
-
-                    await fetchProducts();
-
-
-                    const enrichedCart =
-                        [];
-
-
-                    for (const item of cart) {
-
-                        const product =
-                            findProduct(item.id);
-
-
-                        if (!product) {
-
-                            console.warn(
-                                "[PRASUN SHOP] Skipping missing product:",
-                                item.id
-                            );
-
-                            continue;
-
-                        }
-
-
-                        const price =
-                            Number(
-                                product.price
-                            );
-
-
-                        if (
-                            !Number.isFinite(price) ||
-                            price < 0
-                        ) {
-
-                            continue;
-
-                        }
-
-
-                        const quantity =
-                            Math.min(
-                                MAX_QUANTITY,
-                                Math.max(
-                                    1,
-                                    Math.floor(
-                                        Number(
-                                            item.quantity
-                                        ) || 1
-                                    )
-                                )
-                            );
-
-
-                        enrichedCart.push({
-
-                            id:
-                                String(
-                                    product.id
-                                ),
-
-                            cjProductId:
-                                String(
-                                    product.cjProductId ||
-                                    product.id
-                                ),
-
-                            sku:
-                                String(
-                                    product.sku ||
-                                    product.cjSku ||
-                                    product.id
-                                ),
-
-                            cjSku:
-                                String(
-                                    product.cjSku ||
-                                    product.sku ||
-                                    product.id
-                                ),
-
-                            name:
-                                String(
-                                    product.name ||
-                                    "Product"
-                                ),
-
-                            price,
-
-                            quantity
-
-                        });
-
-                    }
-
-
-                    if (!enrichedCart.length) {
-
-                        throw new Error(
-                            "No valid products were found in your cart. Please return to the shop and add the product again."
-                        );
-
-                    }
-
-
-                    const calculatedTotal =
-                        enrichedCart.reduce(
-                            (
-                                sum,
-                                item
-                            ) =>
-                                sum +
-                                (
-                                    item.price *
-                                    item.quantity
-                                ),
-                            0
-                        );
-
-
-                    const orderPayload = {
-
-                        customerName,
-
-                        email,
-
-                        phone,
-
-                        address,
-
-                        cart:
-                            enrichedCart,
-
-                        total:
-                            Number(
-                                calculatedTotal.toFixed(2)
-                            ),
-
-                        currency:
-                            "USD",
-
-                        source:
-                            "PRASUN SHOP",
-
-                        createdAt:
-                            new Date().toISOString()
-
-                    };
-
-
-                    console.log(
-                        "[PRASUN SHOP] Sending order:",
-                        orderPayload
-                    );
-
-
-                    /* ----------------------------------------------------
-                       SEND ORDER TO CLOUDFLARE WORKER
-                       ---------------------------------------------------- */
-
-                    const response =
-                        await fetchWithTimeout(
-                            ORDER_ENDPOINT,
-                            {
-
-                                method:
-                                    "POST",
-
-                                headers: {
-
-                                    "Content-Type":
-                                        "application/json",
-
-                                    "Accept":
-                                        "application/json"
-
-                                },
-
-                                body:
-                                    JSON.stringify(
-                                        orderPayload
-                                    )
-
-                            }
-                        );
-
-
-                    const responseText =
-                        await response.text();
-
-
-                    let responseData =
-                        null;
-
-
-                    try {
-
-                        responseData =
-                            responseText
-                                ? JSON.parse(
-                                    responseText
-                                )
-                                : null;
-
-                    } catch {
-
-                        responseData =
-                            null;
-
-                    }
-
-
-                    if (!response.ok) {
-
-                        throw new Error(
-                            responseData?.error ||
-                            responseData?.message ||
-                            `Order server returned HTTP ${response.status}`
-                        );
-
-                    }
-
-
-                    if (
-                        responseData &&
-                        responseData.success === false
-                    ) {
-
-                        throw new Error(
-                            responseData.error ||
-                            responseData.message ||
-                            "The order was not accepted."
-                        );
-
-                    }
-
-
-                    console.log(
-                        "[PRASUN SHOP] Order successfully submitted:",
-                        responseData
-                    );
-
-
-                    /* ----------------------------------------------------
-                       CLEAR CART ONLY AFTER SUCCESS
-                       ---------------------------------------------------- */
-
-                    clearAllCartKeys();
-
-
-                    window.dispatchEvent(
-                        new CustomEvent(
-                            "prasunCartUpdated",
-                            {
-                                detail: {
-                                    cart: []
-                                }
-                            }
-                        )
-                    );
-
-
-                    /*
-                     * Redirect after successful order.
-                     */
-
-                    window.location.href =
-                        "/order-success.html";
-
-
-                } catch (error) {
-
-                    console.error(
-                        "[PRASUN SHOP] Order submission error:",
-                        error
-                    );
-
-
-                    showFormError(
-                        error?.message ||
-                        "Something went wrong while placing your order. Please try again."
-                    );
-
-
-                    submitButton.disabled =
-                        false;
-
-
-                    submitButton.textContent =
-                        originalText;
-
-
-                    submitButton.classList.remove(
-                        "opacity-75",
-                        "cursor-not-allowed"
-                    );
-
-
-                    submitButton.dataset.processing =
-                        "false";
-
-                }
-
-            }
+            submitOrder
         );
-
     }
-
-
-    /* ========================================================================
-       16. CROSS-TAB CART SYNCHRONIZATION
-       ======================================================================== */
 
     window.addEventListener(
         "storage",
         event => {
-
             if (
-                event.key === CART_KEY ||
+                event.key ===
+                    CART_KEY ||
                 LEGACY_KEYS.includes(
                     event.key
                 )
             ) {
+                cart =
+                    normalizeCart(
+                        getCart()
+                    );
 
-                productMap =
-                    new Map();
-
-                productsFetchPromise =
-                    null;
-
-                loadCheckoutSummary();
-
+                renderSummary();
             }
-
         }
     );
-
-
-    /* ========================================================================
-       17. CUSTOM CART EVENT
-       ======================================================================== */
 
     window.addEventListener(
         "prasunCartUpdated",
         () => {
+            cart =
+                normalizeCart(
+                    getCart()
+                );
 
-            productMap =
-                new Map();
-
-            productsFetchPromise =
-                null;
-
-            loadCheckoutSummary();
-
+            renderSummary();
         }
     );
 
+    /* =========================================================================
+       INITIALIZE
+       ========================================================================= */
 
-    /* ========================================================================
-       18. INITIAL LOAD
-       ======================================================================== */
+    if (orderSummary) {
+        orderSummary.setAttribute(
+            "aria-live",
+            "polite"
+        );
+    }
 
-    loadCheckoutSummary();
+    cart =
+        normalizeCart(
+            getCart()
+        );
+
+    renderSummary();
 
 })();
