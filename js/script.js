@@ -1,4 +1,113 @@
 /**
+ * Frontend Shop Handling (script.js)
+ * Manages loading initial 10 products and live CJ search integration.
+ */
+
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. Load initial 10 products on page load
+  loadProducts(10);
+
+  // 2. Bind search box input to your HTML ID: product-search
+  const searchInput = document.getElementById("product-search");
+  const clearBtn = document.getElementById("clear-search");
+
+  if (searchInput) {
+    let debounceTimer;
+    searchInput.addEventListener("input", (e) => {
+      clearTimeout(debounceTimer);
+      const keyword = e.target.value.trim();
+
+      // Show or hide clear button
+      if (clearBtn) clearBtn.hidden = keyword.length === 0;
+
+      // Debounce search requests to prevent API spam while typing
+      debounceTimer = setTimeout(async () => {
+        if (keyword.length > 1) {
+          await searchLiveCJProducts(keyword);
+        } else if (keyword.length === 0) {
+          loadProducts(10); // Reset back to default 10 products
+        }
+      }, 400);
+    });
+
+    if (clearBtn) {
+      clearBtn.addEventListener("click", () => {
+        searchInput.value = "";
+        clearBtn.hidden = true;
+        loadProducts(10);
+      });
+    }
+  }
+});
+
+async function loadProducts(size = 10) {
+  const container = document.getElementById("product-list");
+  const countEl = document.getElementById("results-count");
+  
+  if (countEl) countEl.innerText = "Loading products...";
+
+  try {
+    const response = await fetch(`/api/products?size=${size}`);
+    const products = await response.json();
+    
+    renderProducts(products);
+    if (countEl) countEl.innerText = `${products.length} products found`;
+  } catch (error) {
+    console.error("Failed to load products:", error);
+    if (countEl) countEl.innerText = "Failed to load products.";
+    if (container) {
+      container.innerHTML = `
+        <div class="products-empty" role="status">
+          <h2>Connection Error</h2>
+          <p>Could not fetch items from the backend server.</p>
+        </div>
+      `;
+    }
+  }
+}
+
+async function searchLiveCJProducts(keyword) {
+  const countEl = document.getElementById("results-count");
+  
+  if (countEl) countEl.innerText = `Searching CJ Dropshipping for "${keyword}"...`;
+
+  try {
+    const response = await fetch(`/api/products?keyword=${encodeURIComponent(keyword)}&size=20`);
+    const products = await response.json();
+    
+    renderProducts(products);
+    if (countEl) countEl.innerText = `${products.length} results for "${keyword}"`;
+  } catch (error) {
+    console.error("Search error:", error);
+    if (countEl) countEl.innerText = "Error searching products.";
+  }
+}
+
+function renderProducts(products) {
+  const container = document.getElementById("product-list");
+  if (!container) return;
+
+  if (!Array.isArray(products) || products.length === 0) {
+    container.innerHTML = `
+      <div class="products-empty" role="status">
+        <h2>No products found</h2>
+        <p>Try searching for a different keyword.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = products.map(product => `
+    <div class="product-card" style="border: 1px solid #e1e1e1; padding: 15px; border-radius: 8px; background: #fff; display: flex; flex-direction: column; justify-content: space-between;">
+      <img src="${product.image}" alt="${product.name}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px;">
+      <div>
+        <h3 style="font-size: 15px; margin: 10px 0 5px; line-height: 1.3;">${product.name}</h3>
+        <p style="font-weight: bold; color: #111; font-size: 16px; margin: 5px 0;">$${product.price.toFixed(2)}</p>
+      </div>
+      <a href="product.html?sku=${product.sku}" style="display: block; text-align: center; background: #111; color: #fff; padding: 10px; text-decoration: none; border-radius: 4px; margin-top: 10px; font-size: 14px;">View Product</a>
+    </div>
+  `).join('');
+}/**
  * ============================================================================
  * PRASUN SHOP — MAIN SCRIPT (script.js)
  * Aligned with index.html IDs and elements
