@@ -6,8 +6,8 @@
  * Physical products only.
  *
  * This file intentionally does NOT load products from:
- *   - /api/products.json
- *   - localStorage product caches
+ *    - /api/products.json
+ *    - localStorage product caches
  *
  * This prevents deleted digital/ebook products from reappearing.
  *
@@ -1353,201 +1353,6 @@
                 }
             );
         }
-
-
-        /* Browser Back / Forward */
-
-        window.addEventListener(
-            "popstate",
-            () => {
-
-                readStateFromURL();
-
-                applyFilters();
-            }
-        );
-
-
-        /* Cross-tab cart synchronization */
-
-        window.addEventListener(
-            "storage",
-            event => {
-
-                if (
-                    event.key ===
-                    CONFIG.CART_KEY
-                ) {
-
-                    updateCartBadge();
-                }
-            }
-        );
-    }
-
-
-    /* ========================================================================
-       MOBILE MENU
-       ======================================================================== */
-
-    function initializeMobileMenu() {
-
-        const toggle =
-            $("#mobile-menu-toggle");
-
-        const menu =
-            $("#mobile-navigation");
-
-
-        if (!toggle || !menu) {
-            return;
-        }
-
-
-        toggle.addEventListener(
-            "click",
-            () => {
-
-                const isOpen =
-                    toggle.getAttribute(
-                        "aria-expanded"
-                    ) === "true";
-
-
-                toggle.setAttribute(
-                    "aria-expanded",
-                    isOpen ? "false" : "true"
-                );
-
-
-                menu.hidden =
-                    isOpen;
-            }
-        );
-
-
-        /* Close menu when a link is selected */
-
-        menu.addEventListener(
-            "click",
-            event => {
-
-                if (
-                    event.target.matches("a")
-                ) {
-
-                    toggle.setAttribute(
-                        "aria-expanded",
-                        "false"
-                    );
-
-                    menu.hidden = true;
-                }
-            }
-        );
-    }
-
-
-    /* ========================================================================
-       KEYBOARD SHORTCUT
-       ======================================================================== */
-
-    function initializeKeyboardShortcuts() {
-
-        document.addEventListener(
-            "keydown",
-            event => {
-
-                if (
-                    (event.ctrlKey ||
-                        event.metaKey) &&
-                    event.key.toLowerCase() ===
-                        "k"
-                ) {
-
-                    if (DOM.searchInput) {
-
-                        event.preventDefault();
-
-                        DOM.searchInput.focus();
-
-                        DOM.searchInput.select();
-                    }
-                }
-            }
-        );
-    }
-
-
-    /* ========================================================================
-       DOM CACHE
-       ======================================================================== */
-
-    function cacheDOM() {
-
-        DOM.productList =
-            $("#product-list");
-
-        DOM.searchInput =
-            $("#product-search");
-
-        DOM.searchClearBtn =
-            $("#search-clear");
-
-        DOM.sortSelect =
-            $("#product-sort");
-
-        DOM.resultsCount =
-            $("#products-count");
-
-        DOM.heading =
-            $("#products-heading");
-
-        DOM.categoryPills =
-            $$(".category-pill");
-
-        DOM.cartBadge =
-            $("#cart-count") ||
-            $(".cart-badge");
-
-
-        /* Live region */
-
-        let liveRegion =
-            $("#a11y-status-region");
-
-
-        if (!liveRegion) {
-
-            liveRegion =
-                document.createElement(
-                    "div"
-                );
-
-            liveRegion.id =
-                "a11y-status-region";
-
-            liveRegion.className =
-                "visually-hidden";
-
-            liveRegion.setAttribute(
-                "aria-live",
-                "polite"
-            );
-
-            liveRegion.setAttribute(
-                "aria-atomic",
-                "true"
-            );
-
-            document.body.appendChild(
-                liveRegion
-            );
-        }
-
-
-        DOM.liveRegion =
-            liveRegion;
     }
 
 
@@ -1555,44 +1360,37 @@
        INITIALIZATION
        ======================================================================== */
 
-    function initialize() {
-
-        cacheDOM();
-
-        updateCartBadge();
-
-        initializeControls();
-
-        initializeMobileMenu();
-
-        initializeKeyboardShortcuts();
-
-        setupProductListDelegation();
-
-        readStateFromURL();
-
-        applyFilters();
+    function populateDOMCache() {
+        DOM.productList = $("#products-grid") || $(".products-grid");
+        DOM.searchInput = $("#product-search");
+        DOM.searchClearBtn = $("#clear-search");
+        DOM.sortSelect = $("#product-sort");
+        DOM.resultsCount = $("#results-count");
+        DOM.heading = $("#page-heading");
+        DOM.liveRegion = $("#aria-live-region");
+        DOM.cartBadge = $("#cart-count");
+        DOM.categoryPills = $$(".category-pill");
     }
 
 
-    /* ========================================================================
-       START
-       ======================================================================== */
+    function init() {
+        populateDOMCache();
+        readStateFromURL();
+        updateCartBadge();
+        setupProductListDelegation();
+        initializeControls();
+        applyFilters();
 
-    if (
-        document.readyState ===
-        "loading"
-    ) {
+        window.addEventListener("popstate", () => {
+            readStateFromURL();
+            applyFilters();
+        });
+    }
 
-        document.addEventListener(
-            "DOMContentLoaded",
-            initialize,
-            { once: true }
-        );
-
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
     } else {
-
-        initialize();
+        init();
     }
 
 })();
