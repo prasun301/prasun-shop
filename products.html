@@ -1,905 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Products — PRASUN SHOP</title>
-
-    <meta
-        name="description"
-        content="Browse products at PRASUN SHOP."
-    >
-
-    <style>
-        :root {
-            --bg: #f5f5f7;
-            --card: #ffffff;
-            --text: #1d1d1f;
-            --muted: #86868b;
-            --border: #d2d2d7;
-            --dark: #1d1d1f;
-            --dark-hover: #333336;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            margin: 0;
-            background: var(--bg);
-            color: var(--text);
-            font-family:
-                -apple-system,
-                BlinkMacSystemFont,
-                "SF Pro Display",
-                "SF Pro Text",
-                "Helvetica Neue",
-                Helvetica,
-                Arial,
-                sans-serif;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        a {
-            color: inherit;
-        }
-
-        button,
-        input {
-            font: inherit;
-        }
-
-        /* ================================================================
-           HEADER
-        ================================================================ */
-
-        .header {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.88);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(210, 210, 215, 0.75);
-        }
-
-        .header-container {
-            max-width: 1200px;
-            min-height: 64px;
-            margin: 0 auto;
-            padding: 0 24px;
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 24px;
-        }
-
-        .logo {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-
-            text-decoration: none;
-            color: var(--text);
-
-            font-size: 15px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 28px;
-        }
-
-        .nav-links a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 14px;
-            transition: color 0.2s ease;
-        }
-
-        .nav-links a:hover,
-        .nav-links a[aria-current="page"] {
-            color: var(--text);
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-        }
-
-        .cart-icon-wrap {
-            position: relative;
-
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-
-            width: 40px;
-            height: 40px;
-
-            color: var(--text);
-            text-decoration: none;
-        }
-
-        .cart-badge {
-            position: absolute;
-            top: 1px;
-            right: -2px;
-
-            min-width: 18px;
-            height: 18px;
-            padding: 0 4px;
-
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-
-            border-radius: 999px;
-
-            background: var(--dark);
-            color: #fff;
-
-            font-size: 10px;
-            font-weight: 700;
-            line-height: 1;
-        }
-
-        .cart-badge[hidden] {
-            display: none;
-        }
-
-        /* ================================================================
-           MAIN
-        ================================================================ */
-
-        .products-main {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 48px 24px 80px;
-        }
-
-        .products-header {
-            margin-bottom: 30px;
-        }
-
-        .eyebrow {
-            margin: 0 0 8px;
-
-            color: var(--muted);
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        .products-title {
-            margin: 0;
-
-            font-size: clamp(32px, 5vw, 48px);
-            line-height: 1.05;
-            letter-spacing: -0.035em;
-            font-weight: 700;
-        }
-
-        .products-subtitle {
-            max-width: 620px;
-            margin: 12px 0 0;
-
-            color: var(--muted);
-            font-size: 15px;
-            line-height: 1.6;
-        }
-
-        /* ================================================================
-           SEARCH
-        ================================================================ */
-
-        .search-section {
-            margin-bottom: 32px;
-        }
-
-        .search-form {
-            display: flex;
-            gap: 10px;
-            max-width: 720px;
-        }
-
-        .search-input-wrap {
-            position: relative;
-            flex: 1;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-
-            width: 18px;
-            height: 18px;
-
-            color: var(--muted);
-
-            transform: translateY(-50%);
-            pointer-events: none;
-        }
-
-        .search-input {
-            width: 100%;
-            height: 48px;
-
-            padding: 0 16px 0 46px;
-
-            border: 1px solid var(--border);
-            border-radius: 14px;
-
-            background: #fff;
-            color: var(--text);
-
-            outline: none;
-
-            font-size: 14px;
-
-            transition:
-                border-color 0.2s ease,
-                box-shadow 0.2s ease;
-        }
-
-        .search-input:focus {
-            border-color: #99999f;
-            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .search-button {
-            height: 48px;
-            padding: 0 22px;
-
-            border: 0;
-            border-radius: 14px;
-
-            background: var(--dark);
-            color: #fff;
-
-            font-size: 14px;
-            font-weight: 600;
-
-            cursor: pointer;
-
-            transition:
-                background-color 0.2s ease,
-                transform 0.1s ease;
-        }
-
-        .search-button:hover {
-            background: var(--dark-hover);
-        }
-
-        .search-button:active {
-            transform: scale(0.98);
-        }
-
-        /* ================================================================
-           TOOLBAR
-        ================================================================ */
-
-        .products-toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-
-            margin-bottom: 18px;
-        }
-
-        .results-count {
-            margin: 0;
-
-            color: var(--muted);
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .clear-search {
-            border: 0;
-            background: transparent;
-
-            color: var(--text);
-
-            font-size: 13px;
-            font-weight: 600;
-
-            cursor: pointer;
-        }
-
-        .clear-search:hover {
-            text-decoration: underline;
-        }
-
-        .clear-search[hidden] {
-            display: none;
-        }
-
-        /* ================================================================
-           PRODUCT GRID
-        ================================================================ */
-
-        .product-grid {
-            display: grid;
-
-            grid-template-columns:
-                repeat(4, minmax(0, 1fr));
-
-            gap: 20px;
-        }
-
-        .product-card {
-            min-width: 0;
-
-            display: flex;
-            flex-direction: column;
-
-            background: var(--card);
-
-            border: 1px solid rgba(210, 210, 215, 0.8);
-            border-radius: 20px;
-
-            overflow: hidden;
-
-            transition:
-                transform 0.2s ease,
-                box-shadow 0.2s ease,
-                border-color 0.2s ease;
-        }
-
-        .product-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(180, 180, 185, 0.9);
-            box-shadow:
-                0 12px 30px rgba(0, 0, 0, 0.07);
-        }
-
-        .product-image-link {
-            display: block;
-
-            aspect-ratio: 1 / 1;
-
-            background: #f5f5f7;
-
-            overflow: hidden;
-
-            text-decoration: none;
-        }
-
-        .product-image {
-            width: 100%;
-            height: 100%;
-
-            display: block;
-
-            object-fit: contain;
-
-            transition: transform 0.3s ease;
-        }
-
-        .product-card:hover .product-image {
-            transform: scale(1.035);
-        }
-
-        .product-card-body {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-
-            padding: 18px;
-        }
-
-        .product-category {
-            margin-bottom: 8px;
-
-            color: var(--muted);
-
-            font-size: 11px;
-            font-weight: 700;
-
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-        }
-
-        .product-name {
-            margin: 0 0 10px;
-
-            font-size: 15px;
-            line-height: 1.4;
-            font-weight: 600;
-            letter-spacing: -0.01em;
-        }
-
-        .product-name a {
-            text-decoration: none;
-        }
-
-        .product-name a:hover {
-            text-decoration: underline;
-        }
-
-        .product-description {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-
-            margin: 0 0 16px;
-
-            color: var(--muted);
-
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        .product-bottom {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-
-            margin-top: auto;
-        }
-
-        .product-price {
-            color: var(--text);
-
-            font-size: 17px;
-            font-weight: 700;
-        }
-
-        .product-rating {
-            color: #6b6b70;
-
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .product-action {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-
-            min-height: 38px;
-            padding: 0 14px;
-
-            border-radius: 999px;
-
-            background: var(--dark);
-            color: #fff;
-
-            text-decoration: none;
-
-            font-size: 12px;
-            font-weight: 600;
-
-            white-space: nowrap;
-
-            transition: background-color 0.2s ease;
-        }
-
-        .product-action:hover {
-            background: var(--dark-hover);
-        }
-
-        /* ================================================================
-           STATES
-        ================================================================ */
-
-        .products-state {
-            grid-column: 1 / -1;
-
-            min-height: 280px;
-
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-
-            padding: 40px 20px;
-
-            text-align: center;
-
-            background: #fff;
-
-            border: 1px solid var(--border);
-            border-radius: 20px;
-        }
-
-        .products-state h2 {
-            margin: 0 0 8px;
-
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .products-state p {
-            max-width: 500px;
-            margin: 0;
-
-            color: var(--muted);
-
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .spinner {
-            width: 28px;
-            height: 28px;
-
-            margin-bottom: 16px;
-
-            border: 3px solid #e5e5e7;
-            border-top-color: var(--dark);
-
-            border-radius: 50%;
-
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .retry-button {
-            margin-top: 18px;
-
-            padding: 10px 18px;
-
-            border: 0;
-            border-radius: 999px;
-
-            background: var(--dark);
-            color: #fff;
-
-            font-size: 13px;
-            font-weight: 600;
-
-            cursor: pointer;
-        }
-
-        .retry-button:hover {
-            background: var(--dark-hover);
-        }
-
-        /* ================================================================
-           FOOTER
-        ================================================================ */
-
-        .footer {
-            border-top: 1px solid var(--border);
-
-            background: #fff;
-
-            padding: 28px 24px;
-
-            text-align: center;
-
-            color: var(--muted);
-
-            font-size: 12px;
-        }
-
-        /* ================================================================
-           RESPONSIVE
-        ================================================================ */
-
-        @media (max-width: 1000px) {
-            .product-grid {
-                grid-template-columns:
-                    repeat(3, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 760px) {
-            .header-container {
-                min-height: 60px;
-                padding: 0 16px;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .products-main {
-                padding: 36px 16px 60px;
-            }
-
-            .search-form {
-                flex-direction: column;
-            }
-
-            .search-button {
-                width: 100%;
-            }
-
-            .product-grid {
-                grid-template-columns:
-                    repeat(2, minmax(0, 1fr));
-
-                gap: 14px;
-            }
-
-            .product-card-body {
-                padding: 14px;
-            }
-
-            .product-action {
-                padding: 0 11px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .product-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .product-image-link {
-                aspect-ratio: 1.15 / 1;
-            }
-
-            .products-toolbar {
-                align-items: flex-start;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Products — PRASUN SHOP</title>
+
+  <meta
+    name="description"
+    content="Browse products at PRASUN SHOP."
+  >
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 </head>
 
 <body>
 
 <header class="header">
 
-    <div class="header-container">
+  <div class="header-container">
 
-        <a
-            href="index.html"
-            class="logo"
-            aria-label="PRASUN SHOP Homepage"
+    <a
+      href="index.html"
+      class="logo"
+      aria-label="PRASUN SHOP"
+    >
+
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <path d="M16 10a4 4 0 0 1-8 0"></path>
+      </svg>
+
+      <span>PRASUN SHOP</span>
+
+    </a>
+
+
+    <nav
+      class="nav-links"
+      aria-label="Main Navigation"
+    >
+
+      <a href="products.html">
+        Shop
+      </a>
+
+      <a href="about.html">
+        About
+      </a>
+
+      <a href="contact.html">
+        Contact
+      </a>
+
+      <a href="checkout.html">
+        Checkout
+      </a>
+
+      <a
+        href="cart.html"
+        aria-label="Shopping Cart"
+      >
+        Cart
+        <span
+          id="cart-count"
+          class="cart-count"
+          hidden
         >
+          0
+        </span>
+      </a>
 
-            <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-            >
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <path d="M16 10a4 4 0 0 1-8 0"></path>
-            </svg>
+    </nav>
 
-            <span>PRASUN SHOP</span>
-
-        </a>
-
-
-        <nav
-            class="nav-links"
-            aria-label="Main Navigation"
-        >
-
-            <a href="index.html">
-                Shop
-            </a>
-
-            <a
-                href="products.html"
-                aria-current="page"
-            >
-                Products
-            </a>
-
-            <a href="about.html">
-                About
-            </a>
-
-            <a href="contact.html">
-                Contact
-            </a>
-
-            <a href="checkout.html">
-                Checkout
-            </a>
-
-        </nav>
-
-
-        <div class="header-actions">
-
-            <a
-                href="cart.html"
-                class="cart-icon-wrap"
-                aria-label="View Shopping Cart"
-            >
-
-                <svg
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                >
-                    <circle cx="9" cy="21" r="1"></circle>
-                    <circle cx="20" cy="21" r="1"></circle>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                </svg>
-
-                <span
-                    id="cart-count"
-                    class="cart-badge"
-                    hidden
-                >
-                    0
-                </span>
-
-            </a>
-
-        </div>
-
-    </div>
+  </div>
 
 </header>
 
 
-<main class="products-main">
+<main class="shop-container">
 
-    <section class="products-header">
+  <h1 class="shop-title">
+    Shop
+  </h1>
 
-        <p class="eyebrow">
-            PRASUN SHOP
-        </p>
-
-        <h1 class="products-title">
-            Products
-        </h1>
-
-        <p class="products-subtitle">
-            Explore our latest products and discover useful technology,
-            electronics, accessories and everyday essentials.
-        </p>
-
-    </section>
+  <p class="shop-subtitle">
+    Discover our latest products.
+  </p>
 
 
-    <section
-        class="search-section"
-        aria-label="Product Search"
-    >
+  <!-- SEARCH + SORT -->
 
-        <form
-            id="product-search-form"
-            class="search-form"
-            role="search"
-        >
+  <section
+    class="products-toolbar"
+    aria-label="Product search and sorting"
+  >
 
-            <div class="search-input-wrap">
+    <div class="search-wrapper">
 
-                <svg
-                    class="search-icon"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                >
-                    <circle cx="11" cy="11" r="7"></circle>
-                    <path d="m20 20-3.5-3.5"></path>
-                </svg>
+      <label
+        for="products-search"
+        class="sr-only"
+      >
+        Search products
+      </label>
 
-                <input
-                    id="product-search"
-                    class="search-input"
-                    type="search"
-                    name="keyword"
-                    placeholder="Search products..."
-                    autocomplete="off"
-                    aria-label="Search products"
-                >
-
-            </div>
-
-            <button
-                type="submit"
-                class="search-button"
-            >
-                Search
-            </button>
-
-        </form>
-
-    </section>
-
-
-    <div class="products-toolbar">
-
-        <p
-            id="results-count"
-            class="results-count"
-        >
-            Loading products...
-        </p>
-
-        <button
-            type="button"
-            id="clear-search"
-            class="clear-search"
-            hidden
-        >
-            Clear search
-        </button>
+      <input
+        id="products-search"
+        class="products-search-input"
+        type="search"
+        placeholder="Search products..."
+        autocomplete="off"
+      >
 
     </div>
 
 
-    <section
-        id="product-grid"
-        class="product-grid"
-        aria-live="polite"
-        aria-busy="true"
+    <select
+      id="products-sort"
+      class="products-sort"
+      aria-label="Sort products"
     >
 
-        <div class="products-state">
+      <option value="default">
+        Featured
+      </option>
 
-            <div
-                class="spinner"
-                aria-hidden="true"
-            ></div>
+      <option value="price-low">
+        Price: Low to High
+      </option>
 
-            <h2>
-                Loading products
-            </h2>
+      <option value="price-high">
+        Price: High to Low
+      </option>
 
-            <p>
-                Fetching the latest product catalog...
-            </p>
+      <option value="name">
+        Name: A–Z
+      </option>
 
-        </div>
+    </select>
 
-    </section>
+  </section>
+
+
+  <!-- CATEGORIES -->
+
+  <div
+    id="products-categories"
+    class="products-categories"
+    aria-label="Product categories"
+  >
+  </div>
+
+
+  <!-- RESULT COUNT -->
+
+  <div
+    class="products-result-bar"
+  >
+
+    <span id="products-result-count">
+      Loading products...
+    </span>
+
+  </div>
+
+
+  <!-- PRODUCTS -->
+
+  <section
+    id="products-container"
+    aria-live="polite"
+    aria-label="Products"
+  >
+
+    <div
+      class="products-loading"
+    >
+      <div class="loading-spinner"></div>
+
+      <p>
+        Loading products...
+      </p>
+
+    </div>
+
+  </section>
 
 </main>
 
 
 <footer class="footer">
 
-    <p>
-        &copy; 2026 PRASUN SHOP. All rights reserved.
-    </p>
+  <p>
+    &copy; 2026 PRASUN SHOP. All rights reserved.
+  </p>
 
 </footer>
 
 
-<script src="script.js" defer></script>
+<script
+  src="script.js"
+  defer
+></script>
 
 </body>
 </html>
