@@ -1,814 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Shopping Cart — PRASUN SHOP</title>
-
-  <meta
-    name="description"
-    content="Review your shopping cart and securely proceed with your PRASUN SHOP order."
-  >
-
-  <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#ffffff">
-
-  <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
-
-  <link rel="stylesheet" href="style.css?v=20260819-02">
-
-  <style>
-    :root {
-      --cart-bg: #f5f5f7;
-      --cart-card: #ffffff;
-      --cart-text: #1d1d1f;
-      --cart-muted: #6e6e73;
-      --cart-border: #d2d2d7;
-      --cart-dark: #1d1d1f;
-      --cart-dark-hover: #333336;
-      --cart-danger: #ff3b30;
-      --cart-danger-hover: #d70015;
-      --cart-success: #188038;
-      --cart-focus-ring: #0066cc;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      max-width: 100%;
-      overflow-x: hidden;
-    }
-
-    body {
-      background: #ffffff;
-      color: var(--cart-text);
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "SF Pro Display",
-        "SF Pro Text",
-        "Helvetica Neue",
-        Arial,
-        sans-serif;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* Accessibility Utility */
-    .visually-hidden {
-      position: absolute !important;
-      width: 1px !important;
-      height: 1px !important;
-      padding: 0 !important;
-      margin: -1px !important;
-      overflow: hidden !important;
-      clip: rect(0, 0, 0, 0) !important;
-      white-space: nowrap !important;
-      border: 0 !important;
-    }
-
-    /* Keyboard Focus Indicator */
-    a:focus-visible,
-    button:focus-visible,
-    input:focus-visible {
-      outline: 2px solid var(--cart-focus-ring);
-      outline-offset: 2px;
-    }
-
-    /* Header & Navigation */
-    .cart-page-header {
-      border-bottom: 1px solid var(--cart-border);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(255, 255, 255, 0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-    }
-
-    .cart-header-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-    }
-
-    .cart-logo {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      text-decoration: none;
-      color: var(--cart-text);
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .cart-logo svg {
-      flex: 0 0 auto;
-    }
-
-    .cart-nav {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-    }
-
-    .cart-nav a {
-      color: var(--cart-muted);
-      text-decoration: none;
-      font-size: 14px;
-      transition: color 0.2s ease;
-    }
-
-    .cart-nav a:hover,
-    .cart-nav a[aria-current="page"] {
-      color: var(--cart-text);
-    }
-
-    .cart-nav-link {
-      position: relative;
-    }
-
-    #cart-count {
-      min-width: 18px;
-      height: 18px;
-      padding: 0 5px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-left: 4px;
-      border-radius: 999px;
-      background: var(--cart-dark);
-      color: #ffffff;
-      font-size: 10px;
-      line-height: 1;
-      font-weight: 700;
-      vertical-align: middle;
-      transition: transform 0.15s ease;
-    }
-
-    #cart-count[hidden] {
-      display: none !important;
-    }
-
-    /* Header Badge Animation */
-    @keyframes cartBump {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.3); }
-      100% { transform: scale(1); }
-    }
-
-    .cart-count-bump {
-      animation: cartBump 300ms ease-in-out;
-    }
-
-    /* Hero Section */
-    .cart-hero {
-      text-align: center;
-      padding: 54px 20px 26px;
-    }
-
-    .cart-hero h1 {
-      margin: 0;
-      font-size: clamp(32px, 5vw, 46px);
-      line-height: 1.08;
-      letter-spacing: -0.035em;
-      font-weight: 700;
-    }
-
-    .cart-hero p {
-      margin: 12px auto 0;
-      max-width: 650px;
-      color: var(--cart-muted);
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    /* Main Cart Layout */
-    .cart-main {
-      width: min(1100px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 20px 0 70px;
-    }
-
-    .cart-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 340px;
-      gap: 24px;
-      align-items: start;
-    }
-
-    .cart-items-panel,
-    .cart-summary {
-      background: var(--cart-card);
-      border: 1px solid var(--cart-border);
-      border-radius: 20px;
-    }
-
-    .cart-items-panel {
-      overflow: hidden;
-    }
-
-    .cart-items-header {
-      padding: 20px 22px;
-      border-bottom: 1px solid var(--cart-border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .cart-items-header-title {
-      display: flex;
-      align-items: baseline;
-      gap: 10px;
-    }
-
-    .cart-items-header h2 {
-      margin: 0;
-      font-size: 18px;
-    }
-
-    .cart-items-header span {
-      color: var(--cart-muted);
-      font-size: 13px;
-    }
-
-    .clear-cart-button {
-      border: 0;
-      background: transparent;
-      color: var(--cart-muted);
-      font-size: 13px;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 6px;
-      transition: color 0.2s ease, background-color 0.2s ease;
-    }
-
-    .clear-cart-button:hover:not(:disabled) {
-      color: var(--cart-danger);
-      background: rgba(255, 59, 48, 0.08);
-    }
-
-    .clear-cart-button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    #cart-items {
-      padding: 0;
-    }
-
-    /* Cart Item Card */
-    .cart-item {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 24px;
-      padding: 22px;
-      border-bottom: 1px solid #e8e8ed;
-      transition: background-color 0.2s ease;
-    }
-
-    .cart-item:last-child {
-      border-bottom: 0;
-    }
-
-    .cart-item-product {
-      display: flex;
-      gap: 18px;
-      min-width: 0;
-    }
-
-    .cart-item-image-link {
-      width: 104px;
-      height: 104px;
-      flex: 0 0 104px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f7f7f8;
-      border: 1px solid #e1e1e6;
-      border-radius: 14px;
-      overflow: hidden;
-    }
-
-    .cart-item-image {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      padding: 7px;
-    }
-
-    .cart-item-info {
-      min-width: 0;
-      padding-top: 2px;
-    }
-
-    .cart-item-category {
-      display: inline-block;
-      margin-bottom: 7px;
-      color: var(--cart-muted);
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-
-    .cart-item-title {
-      margin: 0 0 7px;
-      font-size: 17px;
-      line-height: 1.35;
-    }
-
-    .cart-item-title a {
-      color: var(--cart-text);
-      text-decoration: none;
-    }
-
-    .cart-item-title a:hover {
-      text-decoration: underline;
-    }
-
-    .cart-item-price {
-      margin: 0;
-      color: var(--cart-muted);
-      font-size: 13px;
-    }
-
-    .cart-item-controls {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 24px;
-    }
-
-    /* Quantity Controls & Direct Input */
-    .quantity-control {
-      display: inline-flex;
-      align-items: center;
-      border: 1px solid var(--cart-border);
-      border-radius: 999px;
-      overflow: hidden;
-      background: #ffffff;
-    }
-
-    .quantity-control button {
-      width: 34px;
-      height: 34px;
-      border: 0;
-      background: transparent;
-      color: var(--cart-text);
-      cursor: pointer;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 0.15s ease;
-    }
-
-    .quantity-control button:hover:not([aria-disabled="true"]) {
-      background: #f2f2f4;
-    }
-
-    .quantity-control button[aria-disabled="true"] {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
-    .quantity-input {
-      width: 40px;
-      height: 34px;
-      border: 0;
-      padding: 0;
-      margin: 0;
-      text-align: center;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--cart-text);
-      background: transparent;
-      -moz-appearance: textfield;
-    }
-
-    .quantity-input::-webkit-outer-spin-button,
-    .quantity-input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
-    .quantity-input:focus {
-      outline: none;
-      background: #f2f2f4;
-    }
-
-    .cart-item-subtotal {
-      min-width: 95px;
-      text-align: right;
-    }
-
-    .cart-item-subtotal strong {
-      display: block;
-      font-size: 16px;
-    }
-
-    .cart-remove-button {
-      margin-top: 7px;
-      border: 0;
-      background: none;
-      color: var(--cart-danger);
-      cursor: pointer;
-      padding: 0;
-      font-size: 12px;
-      font-weight: 600;
-      transition: color 0.15s ease;
-    }
-
-    .cart-remove-button:hover {
-      color: var(--cart-danger-hover);
-      text-decoration: underline;
-    }
-
-    /* Summary Panel */
-    .cart-summary {
-      padding: 24px;
-      position: sticky;
-      top: 92px;
-    }
-
-    .cart-summary h2 {
-      margin: 0 0 20px;
-      font-size: 20px;
-    }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      padding: 9px 0;
-      color: var(--cart-muted);
-      font-size: 14px;
-    }
-
-    .summary-row strong {
-      color: var(--cart-text);
-    }
-
-    .summary-total {
-      margin-top: 10px;
-      padding-top: 16px;
-      border-top: 1px solid var(--cart-border);
-      display: flex;
-      justify-content: space-between;
-      font-size: 20px;
-      font-weight: 700;
-    }
-
-    .free-shipping {
-      color: var(--cart-success);
-      font-weight: 600;
-    }
-
-    .checkout-button,
-    .continue-button {
-      width: 100%;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 48px;
-      border-radius: 999px;
-      text-decoration: none;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.2s ease, opacity 0.2s ease;
-    }
-
-    .checkout-button {
-      margin-top: 22px;
-      border: 0;
-      background: var(--cart-dark);
-      color: #ffffff;
-    }
-
-    .checkout-button:hover:not([aria-disabled="true"]):not(.disabled) {
-      background: var(--cart-dark-hover);
-    }
-
-    .checkout-button[aria-disabled="true"],
-    .checkout-button.disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    .continue-button {
-      margin-top: 10px;
-      border: 1px solid var(--cart-border);
-      background: #ffffff;
-      color: var(--cart-text);
-    }
-
-    .continue-button:hover {
-      background: #f7f7f8;
-    }
-
-    /* Security Badges Notice */
-    .cart-trust-badges {
-      margin-top: 20px;
-      padding-top: 18px;
-      border-top: 1px dashed var(--cart-border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      color: var(--cart-muted);
-      font-size: 12px;
-    }
-
-    .cart-trust-badges svg {
-      flex-shrink: 0;
-      color: var(--cart-success);
-    }
-
-    /* Empty Cart State */
-    .cart-empty {
-      padding: 70px 25px;
-      text-align: center;
-    }
-
-    .cart-empty-icon {
-      width: 68px;
-      height: 68px;
-      margin: 0 auto 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      background: var(--cart-bg);
-      color: var(--cart-muted);
-    }
-
-    .cart-empty-icon svg {
-      width: 32px;
-      height: 32px;
-    }
-
-    .cart-empty h2 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    .cart-empty p {
-      max-width: 500px;
-      margin: 10px auto 22px;
-      color: var(--cart-muted);
-      line-height: 1.6;
-    }
-
-    .cart-empty .continue-button {
-      width: auto;
-      padding: 0 26px;
-      display: inline-flex;
-    }
-
-    /* Footer */
-    .cart-footer {
-      border-top: 1px solid var(--cart-border);
-      background: var(--cart-bg);
-      padding: 28px 20px;
-      text-align: center;
-      color: var(--cart-muted);
-      font-size: 13px;
-    }
-
-    .cart-footer-links {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 22px;
-      margin-bottom: 12px;
-    }
-
-    .cart-footer a {
-      color: var(--cart-muted);
-      text-decoration: none;
-    }
-
-    .cart-footer a:hover {
-      color: var(--cart-text);
-    }
-
-    /* Responsive Breakpoints */
-    @media (max-width: 850px) {
-      .cart-layout {
-        grid-template-columns: 1fr;
-      }
-
-      .cart-summary {
-        position: static;
-      }
-    }
-
-    @media (max-width: 650px) {
-      .cart-header-container {
-        padding: 14px 16px;
-      }
-
-      .cart-nav {
-        gap: 13px;
-      }
-
-      .cart-nav a:not(.cart-nav-link) {
-        display: none;
-      }
-
-      .cart-main {
-        width: min(100% - 20px, 1100px);
-      }
-
-      .cart-item {
-        grid-template-columns: 1fr;
-        gap: 18px;
-      }
-
-      .cart-item-controls {
-        justify-content: space-between;
-      }
-
-      .cart-item-image-link {
-        width: 82px;
-        height: 82px;
-        flex-basis: 82px;
-      }
-    }
-
-    @media (max-width: 430px) {
-      .cart-item-product {
-        gap: 12px;
-      }
-
-      .cart-item-title {
-        font-size: 15px;
-      }
-
-      .cart-item-controls {
-        gap: 12px;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart — Prasun Shop</title>
+    
+    <!-- Optional: Link your main CSS stylesheet here -->
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* Basic utility styling to ensure structure is visible if style.css is missing */
+        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; background: #f9f9fb; color: #111; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #fff; border-bottom: 1px solid #e5e5e5; }
+        .nav-links a { margin-left: 1.5rem; text-decoration: none; color: #333; font-weight: 500; }
+        .cart-container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        .cart-layout { display: grid; grid-template-columns: 1fr 350px; gap: 2rem; }
+        @media (max-width: 768px) { .cart-layout { grid-template-columns: 1fr; } }
+        .cart-items-section { background: #fff; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .cart-summary-section { background: #fff; border-radius: 8px; padding: 1.5rem; height: fit-content; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid #eee; }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item-product { display: flex; align-items: center; gap: 1rem; }
+        .cart-item-image { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; background: #f0f0f0; }
+        .cart-item-title a { text-decoration: none; color: #111; font-weight: 600; }
+        .quantity-control { display: flex; align-items: center; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; }
+        .quantity-control button { background: #f7f7f7; border: none; padding: 0.4rem 0.8rem; cursor: pointer; font-weight: bold; }
+        .quantity-control button:hover { background: #eaeaea; }
+        .quantity-input { width: 40px; text-align: center; border: none; font-size: 0.9rem; }
+        .cart-empty { text-align: center; padding: 3rem 1rem; }
+        .cart-empty-icon svg { width: 64px; height: 64px; stroke: #a1a1aa; margin-bottom: 1rem; }
+        .continue-button, #checkout-button { display: block; width: 100%; text-align: center; background: #000; color: #fff; padding: 0.75rem; border-radius: 4px; text-decoration: none; font-weight: 600; border: none; cursor: pointer; margin-top: 1rem; box-sizing: border-box; }
+        #checkout-button.disabled { background: #ccc; cursor: not-allowed; }
+        .cart-remove-button { background: none; border: none; color: #e11d48; cursor: pointer; font-size: 0.85rem; padding: 0; margin-top: 0.5rem; text-align: left; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 1rem; font-size: 0.95rem; }
+        .summary-row.total { font-weight: bold; font-size: 1.1rem; border-top: 1px solid #eee; padding-top: 1rem; }
+        #clear-cart-button { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; width: 100%; padding: 0.5rem; border-radius: 4px; cursor: pointer; margin-top: 0.5rem; }
+        .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+    </style>
 </head>
-
 <body>
 
-<!-- Header & Global Navigation -->
-<header class="cart-page-header">
-  <div class="cart-header-container">
-
-    <a href="index.html" class="cart-logo" aria-label="PRASUN SHOP Homepage">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="2"
-           stroke-linecap="round" stroke-linejoin="round"
-           aria-hidden="true">
-        <path d="M3 9l9-6 9 6"></path>
-        <path d="M5 10v10h14V10"></path>
-        <path d="M9 20v-6h6v6"></path>
-      </svg>
-      <span>PRASUN SHOP</span>
-    </a>
-
-    <nav class="cart-nav" aria-label="Main navigation">
-      <a href="index.html">Shop</a>
-
-      <a
-        href="cart.html"
-        class="cart-nav-link"
-        aria-current="page"
-        aria-label="View Shopping Cart"
-      >
-        Cart
-        <span id="cart-count" hidden>0</span>
-      </a>
-
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-    </nav>
-
-  </div>
-</header>
-
-<!-- Hero Banner -->
-<section class="cart-hero">
-  <h1>Your Shopping Cart</h1>
-  <p>Review your selected products before proceeding to secure checkout.</p>
-</section>
-
-<!-- Main Shopping Layout -->
-<main class="cart-main">
-
-  <div id="cart-layout" class="cart-layout">
-
-    <!-- Left Panel: Cart Item List -->
-    <section class="cart-items-panel" aria-labelledby="cart-items-heading">
-
-      <div class="cart-items-header">
-        <div class="cart-items-header-title">
-          <h2 id="cart-items-heading">Your Items</h2>
-          <span id="cart-items-count" aria-live="polite">0 items</span>
+    <!-- Header Navigation -->
+    <header>
+        <div class="logo">
+            <a href="index.html" style="text-decoration: none; font-weight: bold; font-size: 1.2rem; color: #000;">Prasun Shop</a>
         </div>
-        <button type="button" id="clear-cart-button" class="clear-cart-button" disabled>
-          Clear Cart
-        </button>
-      </div>
+        <nav class="nav-links">
+            <a href="products.html">Shop</a>
+            <a href="cart.html">Cart (<span id="cart-count">0</span>)</a>
+        </nav>
+    </header>
 
-      <div id="cart-items" aria-live="polite">
-        <div class="cart-empty">
-          <p>Loading your cart...</p>
+    <!-- Main Cart Content Area -->
+    <main class="cart-container">
+        <h1>Shopping Cart</h1>
+        
+        <div class="cart-layout">
+            <!-- Items Section -->
+            <section class="cart-items-section">
+                <div id="cart-items-count" style="font-weight: 600; margin-bottom: 1rem;">0 items</div>
+                
+                <!-- The script will populate this container automatically -->
+                <div id="cart-items">
+                    Loading your cart...
+                </div>
+            </section>
+
+            <!-- Summary Section -->
+            <section class="cart-summary-section">
+                <h2>Order Summary</h2>
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="cart-subtotal">$0.00</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span id="cart-total">$0.00</span>
+                </div>
+
+                <button type="button" id="checkout-button">Proceed to Checkout</button>
+                <button type="button" id="clear-cart-button">Clear Cart</button>
+            </section>
         </div>
-      </div>
+    </main>
 
-    </section>
-
-    <!-- Right Panel: Order Summary -->
-    <aside class="cart-summary" aria-labelledby="cart-summary-heading">
-
-      <h2 id="cart-summary-heading">Order Summary</h2>
-
-      <div class="summary-row">
-        <span>Subtotal</span>
-        <strong id="cart-subtotal">$0.00</strong>
-      </div>
-
-      <div class="summary-row">
-        <span>Shipping</span>
-        <strong class="free-shipping">Free</strong>
-      </div>
-
-      <div class="summary-total">
-        <span>Total</span>
-        <span id="cart-total">$0.00</span>
-      </div>
-
-      <a
-        href="checkout.html"
-        id="checkout-button"
-        class="checkout-button"
-        aria-disabled="false"
-      >
-        Proceed to Checkout
-      </a>
-
-      <a href="products.html" class="continue-button">
-        Continue Shopping
-      </a>
-
-      <div class="cart-trust-badges">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
-        <span>Encrypted &amp; Secure Checkout</span>
-      </div>
-
-    </aside>
-
-  </div>
-
-</main>
-
-<!-- Footer -->
-<footer class="cart-footer">
-
-  <div class="cart-footer-links">
-    <a href="privacy.html">Privacy Policy</a>
-    <a href="terms.html">Terms of Service</a>
-    <a href="refund.html">Refund Policy</a>
-    <a href="contact.html">Contact</a>
-  </div>
-
-  <div>
-    &copy; 2026 PRASUN SHOP by
-    <a href="https://prasunbarua.com"
-       target="_blank"
-       rel="noopener noreferrer">
-      Prasun Barua
-    </a>.
-    All rights reserved.
-  </div>
-
-</footer>
-
-<!-- Application Scripts -->
-<script src="cart-count.js?v=20260819-02" defer></script>
-<script src="cart.js?v=20260819-02" defer></script>
-
+    <!-- Link the corrected cart script with defer -->
+    <script src="cart.js" defer></script>
 </body>
 </html>
