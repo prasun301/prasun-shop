@@ -1,5 +1,5 @@
 /**
- * Prasun Shop — Product Details Module
+ * Prasun Shop — Product Details Module (Live CJ Dropshipping API Integration)
  * Performance & Memory Optimized Implementation
  */
 "use strict";
@@ -9,6 +9,7 @@
     if (!container) return;
 
     const CART_KEY = "prasunShopCart";
+    const API_ENDPOINT = "/api/products";
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get("id");
 
@@ -157,7 +158,7 @@
         `;
     }
 
-    // Main Fetch & Render Logic
+    // Main Fetch & Render Logic via CJ API Backend Proxy
     async function loadProduct() {
         if (!productId) {
             renderNotFound("No Product Specified", "Please select a valid product from the catalog.");
@@ -165,28 +166,36 @@
         }
 
         try {
-            const response = await fetch("data/products.json");
+            const response = await fetch(API_ENDPOINT);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             const data = await response.json();
-            if (!Array.isArray(data)) throw new Error("Invalid format");
+            const rawList = data.data?.list || data.list || data.data || data;
 
-            const productRaw = data.find((item) => item && String(item.id) === String(productId));
+            if (!Array.isArray(rawList)) throw new Error("Invalid format received from API proxy");
 
-            if (!productRaw || !productRaw.name || productRaw.price === undefined) {
-                renderNotFound("Product Not Found", "The product you're looking for doesn't exist or has been removed.");
+            const productRaw = rawList.find((item) => item && String(item.pid || item.id) === String(productId));
+
+            if (!productRaw) {
+                renderNotFound("Product Not Found", "The live product you're looking for doesn't exist or has been removed.");
                 return;
             }
 
+            const productName = productRaw.productNameEn || productRaw.productName || productRaw.title || "Untitled Product";
+            const productPrice = Number(productRaw.sellPrice || productRaw.price || 0);
+            const productImage = productRaw.productImage || productRaw.image || "";
+            const productCategory = productRaw.categoryName || productRaw.category || "Smart Product";
+            const productDesc = productRaw.description || productRaw.productDescription || "No detailed product description provided.";
+
             const product = {
-                id: productRaw.id,
-                name: String(productRaw.name),
-                price: Number(productRaw.price) || 0,
-                image: String(productRaw.image || ""),
-                category: String(productRaw.category || "Smart Product"),
+                id: productRaw.pid || productRaw.id,
+                name: String(productName),
+                price: Number.isFinite(productPrice) ? productPrice : 0,
+                image: String(productImage),
+                category: String(productCategory),
                 rating: productRaw.rating !== undefined && productRaw.rating !== null ? productRaw.rating : "5.0",
-                sku: productRaw.sku || "N/A",
-                description: String(productRaw.description || ""),
+                sku: productRaw.sku || productRaw.pid || "N/A",
+                description: String(productDesc),
                 features: Array.isArray(productRaw.features) ? productRaw.features : [],
                 specifications: productRaw.specifications && typeof productRaw.specifications === "object" ? productRaw.specifications : {}
             };
@@ -314,8 +323,8 @@
             setupEventDelegation(product);
 
         } catch (error) {
-            console.error("Error loading product:", error);
-            renderNotFound("Failed to load details", "Please refresh the page to try again.");
+            console.error("Error loading product details:", error);
+            renderNotFound("Failed to load details", "Please check your network or server proxy and refresh to try again.");
         }
     }
 
