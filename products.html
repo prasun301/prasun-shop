@@ -75,12 +75,6 @@
         href="css/style.css"
     >
 
-    <!-- Main Shop Script -->
-    <script
-        src="js/script.js"
-        defer
-    ></script>
-
     <!-- Cart Counter -->
     <script
         src="js/cart-count.js"
@@ -343,8 +337,7 @@
             <form
                 class="products-search"
                 role="search"
-                action="products.html"
-                method="GET"
+                onsubmit="return false;"
             >
 
                 <label
@@ -389,7 +382,7 @@
                     id="product-search"
                     name="q"
                     class="products-search-input"
-                    placeholder="Search products"
+                    placeholder="Search live products..."
                     autocomplete="off"
                     spellcheck="false"
                 >
@@ -416,7 +409,7 @@
                     class="products-result-count"
                     aria-live="polite"
                 >
-                    Loading products...
+                    Loading live products...
                 </span>
 
 
@@ -444,10 +437,6 @@
 
                         <option value="price-high">
                             Price: High to Low
-                        </option>
-
-                        <option value="rating">
-                            Highest Rated
                         </option>
 
                         <option value="name">
@@ -515,7 +504,7 @@
         <!-- ============================================================
              PRODUCT GRID
 
-             Products are loaded dynamically from /api/products.
+             Products are loaded dynamically via live CJ Dropshipping API proxy.
              ============================================================ -->
 
         <section
@@ -524,7 +513,9 @@
             aria-label="Product listings"
             aria-live="polite"
             aria-busy="true"
-        ></section>
+        >
+            <!-- Dynamic items render here -->
+        </section>
 
     </main>
 
@@ -673,10 +664,11 @@
 
 
     <!-- ================================================================
-         MOBILE MENU
+         MOBILE MENU & LIVE CJ API SCRIPT LOGIC
          ================================================================ -->
 
     <script>
+        // Mobile Navigation Toggle
         (() => {
             const toggle = document.getElementById("mobile-menu-toggle");
             const menu = document.getElementById("mobile-navigation");
@@ -701,6 +693,156 @@
                 }
             });
         })();
+
+        // Dynamic Live CJ Product Fetcher & Filtering Logic
+        let allLiveProducts = [];
+
+        async function fetchLiveCJProducts() {
+            const gridContainer = document.getElementById("product-list");
+            const resultsCount = document.getElementById("results-count");
+
+            try {
+                // Request live inventory catalog from your secure backend proxying CJ Dropshipping API
+                const response = await fetch('/api/products');
+                if (!response.ok) throw new Error('Failed to communicate with API proxy endpoint.');
+                
+                const data = await response.json();
+                
+                // Parse standard CJ product list payloads safely
+                const rawItems = data.data?.list || data.list || data.data || data;
+                
+                if (!Array.isArray(rawItems)) {
+                    throw new Error('Invalid catalog format returned from provider.');
+                }
+
+                // Map live attributes precisely to avoid fake fallback data
+                allLiveProducts = rawItems.map(item => ({
+                    id: item.pid || item.id,
+                    name: item.productName || item.title || "Untitled Product",
+                    price: Number(item.sellPrice || item.price || 0),
+                    image: item.productImage || item.image || "images/placeholder.png",
+                    category: item.categoryName || item.category || "General",
+                    rating: Number(item.rating || 5.0)
+                }));
+
+                gridContainer.setAttribute("aria-busy", "false");
+                filterAndRenderProducts();
+
+            } catch (error) {
+                console.error("Live Catalog Fetch Error:", error);
+                gridContainer.setAttribute("aria-busy", "false");
+                gridContainer.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #86868b;">
+                        <h3>Catalog Temporarily Unavailable</h3>
+                        <p>Could not fetch live items from CJ Dropshipping. Please verify server connection.</p>
+                    </div>
+                `;
+                resultsCount.textContent = "0 products found";
+            }
+        }
+
+        function filterAndRenderProducts() {
+            const searchInput = document.getElementById("product-search");
+            const sortSelect = document.getElementById("product-sort");
+            const activeCategoryBtn = document.querySelector(".category-pill.active");
+            const gridContainer = document.getElementById("product-list");
+            const resultsCount = document.getElementById("results-count");
+            const clearBtn = document.getElementById("search-clear");
+
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+            const selectedCategory = activeCategoryBtn ? activeCategoryBtn.getAttribute("data-category") : "all";
+            const sortBy = sortSelect ? sortSelect.value : "featured";
+
+            if (clearBtn) {
+                clearBtn.hidden = query.length === 0;
+            }
+
+            // Filter items based on active text queries and categories
+            let filtered = allLiveProducts.filter(item => {
+                const matchesQuery = item.name.toLowerCase().includes(query);
+                const matchesCategory = selectedCategory === "all" || item.category.toLowerCase() === selectedCategory.toLowerCase();
+                return matchesQuery && matchesCategory;
+            });
+
+            // Sort operations
+            filtered.sort((a, b) => {
+                if (sortBy === "price-low") return a.price - b.price;
+                if (sortBy === "price-high") return b.price - a.price;
+                if (sortBy === "name") return a.name.localeCompare(b.name);
+                if (sortBy === "rating") return b.rating - a.rating;
+                return 0; // "featured" keeps original live order
+            });
+
+            resultsCount.textContent = `${filtered.length} product${filtered.length === 1 ? '' : 's'} found`;
+
+            if (filtered.length === 0) {
+                gridContainer.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: #86868b;">
+                        <h3>No matching live items found</h3>
+                        <p>Try modifying your search or selecting a different category filter.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Render live item cards linking dynamically to product detail views
+            gridContainer.innerHTML = filtered.map(item => `
+                <article class="product-card">
+                    <a href="product.html?id=${encodeURIComponent(item.id)}" class="product-link">
+                        <div class="product-card-img-wrap">
+                            <img src="${item.image}" alt="${item.name}" loading="lazy">
+                        </div>
+                        <div class="product-card-info">
+                            <span class="product-category">${item.category}</span>
+                            <h2 class="product-card-title">${item.name}</h2>
+                            <div class="product-card-footer">
+                                <span class="product-card-price">$${item.price.toFixed(2)}</span>
+                                <span class="product-view-btn">View Live Item</span>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+            `).join('');
+        }
+
+        // Attach Event Listeners for search, category pills, and sorting widgets
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchLiveCJProducts();
+
+            const searchInput = document.getElementById("product-search");
+            const clearBtn = document.getElementById("search-clear");
+            const sortSelect = document.getElementById("product-sort");
+            const categoryPills = document.querySelectorAll(".category-pill");
+
+            if (searchInput) {
+                searchInput.addEventListener("input", filterAndRenderProducts);
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener("click", () => {
+                    if (searchInput) {
+                        searchInput.value = "";
+                        filterAndRenderProducts();
+                    }
+                });
+            }
+
+            if (sortSelect) {
+                sortSelect.addEventListener("change", filterAndRenderProducts);
+            }
+
+            categoryPills.forEach(pill => {
+                pill.addEventListener("click", () => {
+                    categoryPills.forEach(p => {
+                        p.classList.remove("active");
+                        p.setAttribute("aria-pressed", "false");
+                    });
+                    pill.classList.add("active");
+                    pill.setAttribute("aria-pressed", "true");
+                    filterAndRenderProducts();
+                });
+            });
+        });
     </script>
 
 </body>
