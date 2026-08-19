@@ -32,17 +32,17 @@
         href="https://shop.prasunbarua.com/cart.html"
     >
 
-    <!-- ================================================================
-         FONTS — SAME AS INDEX.HTML
-         ================================================================ -->
-
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400&family=Fira+Sans:ital,wght@0,400..800;1,400..800&family=Noto+Sans:ital,wght@0,400..800;1,400..800&display=swap');
+
+        @import url(
+            'https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400&family=Fira+Sans:ital,wght@0,400..800;1,400..800&family=Noto+Sans:ital,wght@0,400..800;1,400..800&display=swap'
+        );
 
         html,
         body {
             max-width: 100%;
             overflow-x: hidden;
+
             font-family:
                 'Noto Sans',
                 'Fira Sans',
@@ -79,7 +79,7 @@
         }
 
         /* ==============================================================
-           CART PAGE
+           PAGE
            ============================================================== */
 
         .cart-page {
@@ -148,7 +148,12 @@
 
             box-shadow:
                 0 8px 30px
-                rgba(15, 23, 42, 0.05);
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.05
+                );
         }
 
         .cart-items-section {
@@ -159,6 +164,7 @@
             display: flex;
 
             align-items: center;
+
             justify-content: space-between;
 
             gap: 16px;
@@ -192,7 +198,7 @@
         }
 
         /* ==============================================================
-           CART ITEM
+           ITEM
            ============================================================== */
 
         .cart-item {
@@ -229,9 +235,11 @@
         .cart-item-image-link {
             display: block;
 
-            flex: 0 0 auto;
+            flex:
+                0 0 auto;
 
             width: 92px;
+
             height: 92px;
 
             overflow: hidden;
@@ -248,6 +256,7 @@
             display: block;
 
             width: 100%;
+
             height: 100%;
 
             object-fit: cover;
@@ -336,9 +345,11 @@
             display: inline-flex;
 
             align-items: center;
+
             justify-content: center;
 
             width: 38px;
+
             height: 40px;
 
             padding: 0;
@@ -362,6 +373,7 @@
 
         .quantity-input {
             width: 48px;
+
             height: 40px;
 
             padding: 0 4px;
@@ -382,7 +394,8 @@
 
             outline: none;
 
-            -moz-appearance: textfield;
+            -moz-appearance:
+                textfield;
         }
 
         .quantity-input::-webkit-inner-spin-button,
@@ -435,7 +448,7 @@
         }
 
         /* ==============================================================
-           EMPTY CART
+           EMPTY
            ============================================================== */
 
         .cart-empty {
@@ -458,9 +471,11 @@
             display: flex;
 
             align-items: center;
+
             justify-content: center;
 
             width: 76px;
+
             height: 76px;
 
             margin-bottom: 18px;
@@ -474,6 +489,7 @@
 
         .cart-empty-icon svg {
             width: 40px;
+
             height: 40px;
         }
 
@@ -502,6 +518,7 @@
             display: inline-flex;
 
             align-items: center;
+
             justify-content: center;
 
             min-height: 44px;
@@ -551,6 +568,7 @@
             display: flex;
 
             align-items: center;
+
             justify-content: space-between;
 
             gap: 20px;
@@ -668,19 +686,20 @@
         @media (max-width: 900px) {
 
             .cart-layout {
-                grid-template-columns: 1fr;
+                grid-template-columns:
+                    1fr;
             }
 
             .cart-summary-section {
                 position: static;
             }
-
         }
 
         @media (max-width: 640px) {
 
             .cart-page {
-                width: calc(100% - 24px);
+                width:
+                    calc(100% - 24px);
 
                 padding:
                     28px 0 50px;
@@ -694,20 +713,23 @@
             }
 
             .cart-item {
-                grid-template-columns: 1fr;
+                grid-template-columns:
+                    1fr;
 
                 gap: 16px;
             }
 
             .cart-item-image-link {
                 width: 78px;
+
                 height: 78px;
             }
 
             .cart-item-controls {
                 width: 100%;
 
-                justify-content: space-between;
+                justify-content:
+                    space-between;
 
                 gap: 12px;
             }
@@ -715,39 +737,36 @@
             .cart-item-subtotal {
                 min-width: auto;
             }
-
         }
 
-        @media (prefers-reduced-motion: reduce) {
+        @media (
+            prefers-reduced-motion: reduce
+        ) {
 
             *,
             *::before,
             *::after {
-                transition: none !important;
+                transition:
+                    none !important;
 
-                animation: none !important;
+                animation:
+                    none !important;
             }
-
         }
 
     </style>
 
-    <!-- ================================================================
-         MAIN CSS — SAME AS HOME
-         ================================================================ -->
-
     <link
         rel="stylesheet"
-        href="/css/style.css?v=20260819-04"
+        href="/css/style.css?v=20260819-05"
     >
 
 </head>
 
-
 <body>
 
     <!-- ================================================================
-         HEADER — SAME DESIGN LANGUAGE AS INDEX
+         HEADER
          ================================================================ -->
 
     <header class="header">
@@ -780,19 +799,18 @@
 
                 </svg>
 
-                <span>PRASUN SHOP</span>
+                <span>
+                    PRASUN SHOP
+                </span>
 
             </a>
-
 
             <nav
                 class="nav-links"
                 aria-label="Main navigation"
             >
 
-                <a
-                    href="/"
-                >
+                <a href="/">
                     Shop
                 </a>
 
@@ -829,7 +847,6 @@
 
     </header>
 
-
     <!-- ================================================================
          MAIN
          ================================================================ -->
@@ -850,7 +867,6 @@
             </p>
 
         </header>
-
 
         <div class="cart-layout">
 
@@ -881,7 +897,6 @@
 
                 </div>
 
-
                 <div
                     id="cart-items"
                     aria-live="polite"
@@ -896,7 +911,6 @@
 
             </section>
 
-
             <!-- =========================================================
                  SUMMARY
                  ========================================================= -->
@@ -910,7 +924,6 @@
                     Order Summary
                 </h2>
 
-
                 <div class="summary-row">
 
                     <span>
@@ -922,7 +935,6 @@
                     </strong>
 
                 </div>
-
 
                 <div class="summary-row">
 
@@ -936,7 +948,6 @@
 
                 </div>
 
-
                 <div class="summary-row summary-total">
 
                     <span>
@@ -949,7 +960,6 @@
 
                 </div>
 
-
                 <button
                     type="button"
                     id="checkout-button"
@@ -958,7 +968,6 @@
                 >
                     Proceed to Checkout
                 </button>
-
 
                 <button
                     type="button"
@@ -973,7 +982,6 @@
         </div>
 
     </main>
-
 
     <!-- ================================================================
          FOOTER
@@ -1002,6 +1010,7 @@
         </div>
 
         <p>
+
             &copy; 2026 PRASUN SHOP by
 
             <a
@@ -1013,14 +1022,10 @@
             </a>.
 
             All rights reserved.
+
         </p>
 
     </footer>
-
-
-    <!-- ================================================================
-         ACCESSIBILITY
-         ================================================================ -->
 
     <div
         id="cart-live-region"
@@ -1029,13 +1034,12 @@
         aria-atomic="true"
     ></div>
 
-
     <!-- ================================================================
-         CART JAVASCRIPT
+         CART JS
          ================================================================ -->
 
     <script
-        src="/js/cart.js?v=20260819-04"
+        src="/js/cart.js?v=20260819-05"
         defer
     ></script>
 
