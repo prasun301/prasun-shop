@@ -7,7 +7,8 @@
 "use strict";
 
 (() => {
-    const API_ENDPOINT = "/api/products";
+    // Change this line in product.js
+    const API_ENDPOINT = "https://prasun-shop-api.prasun301.workers.dev/api/products";
     const CART_KEY = "prasun_cart";
     const CART_EVENT_NAME = "prasunCartUpdated";
     const MAX_QUANTITY = 10;
