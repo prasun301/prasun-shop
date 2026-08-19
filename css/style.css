@@ -1,5 +1,6 @@
 /* ==========================================================================
    PRASUN SHOP - STYLESHEET (style.css)
+   Enhanced with Improved Grid Layouts, Responsive Fixes & Clean Polish
    ========================================================================== */
 
 :root {
@@ -66,6 +67,11 @@ body {
   color: var(--text-muted);
   font-size: 0.95rem;
   font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.nav-links a:hover {
+  color: var(--primary-color);
 }
 
 .cart-count {
@@ -123,6 +129,12 @@ body {
   background: #ffffff;
   font-size: 14px;
   outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.products-search-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .products-sort {
@@ -133,12 +145,15 @@ body {
   background: #ffffff;
   color: #334155;
   font-size: 14px;
+  outline: none;
 }
 
 .products-categories {
   display: flex;
   gap: 8px;
   margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 
 .category-pill {
@@ -150,6 +165,13 @@ body {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.category-pill:hover {
+  border-color: var(--text-dark);
+  color: var(--text-dark);
 }
 
 .category-pill.active {
@@ -169,28 +191,31 @@ body {
 /* Product Grid Layout Fix */
 .product-grid,
 #product-list,
-#products-grid {
+#products-grid,
+#products-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
   align-items: stretch;
 }
 
 /* Product Card Fixes */
 .product-card {
-  background: #ffffff;
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   height: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .product-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
 }
 
 .product-card-inner {
@@ -208,21 +233,30 @@ body {
 }
 
 /* Image Dimension Lock - Prevents Vertically Stretched Images */
-.product-card-image {
+.product-card-image,
+.product-card div > div:first-child {
   position: relative;
   width: 100%;
-  height: 220px; /* Fixed height container */
+  height: 180px; /* Standardized uniform height container */
   background: #f8fafc;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 6px;
+  margin-bottom: 12px;
 }
 
-.product-card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Fits image cleanly without stretching */
+.product-card-image img,
+.product-card img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* Safely scales images without stretching or distortion */
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover img {
+  transform: scale(1.03);
 }
 
 /* Absolute Position Category Tag Badge */
@@ -256,12 +290,18 @@ body {
   display: block;
 }
 
-.product-title {
+.product-title,
+.product-card h3 {
   color: var(--text-dark);
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.3;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 40px;
 }
 
 .product-description {
@@ -282,10 +322,12 @@ body {
   justify-content: space-between;
 }
 
-.product-price {
-  color: #b12704;
+.product-price,
+.product-card div > div:nth-last-child(2) {
+  color: #2563eb;
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
+  margin-bottom: 12px;
 }
 
 .product-view-button {
@@ -299,19 +341,26 @@ body {
   padding: 0 14px 14px;
 }
 
-.btn-add-to-cart {
+.btn-add-to-cart,
+.product-card button {
   width: 100%;
-  border: 1px solid #f2c200;
-  border-radius: 999px;
-  background: #ffd814;
-  color: #0f172a;
-  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #111827;
+  color: #ffffff;
+  padding: 10px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.2s ease, transform 0.1s ease;
 }
 
-.btn-add-to-cart:hover {
-  background: #f7ca00;
+.btn-add-to-cart:hover,
+.product-card button:hover {
+  background: #1f2937;
+}
+
+.btn-add-to-cart:active,
+.product-card button:active {
+  transform: scale(0.98);
 }
