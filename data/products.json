@@ -4,24 +4,19 @@
     "sku": "CJSN188416414NM",
     "name": "G-Shaped Smart LED Atmosphere Lamp with Bluetooth Speaker & Wireless Charger",
     "category": "Smart Lighting",
-    "brand": "PRASUN SHOP",
     "price": 29.99,
-    "currency": "USD",
-    "rating": 5.0,
+    "rating": 5,
     "image": "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/10_57d942b5-c025-425a-a8a4-d87c6a612631.png",
-    "description": "Upgrade your room with a multifunctional G-shaped smart LED atmosphere lamp featuring RGB lighting, Bluetooth audio, 15W wireless charging, adjustable brightness, and convenient smart controls. Its modern design makes it suitable for bedrooms, offices, gaming setups, desks, and living spaces.",
-    "shortDescription": "Multifunctional smart LED lamp with RGB lighting, Bluetooth speaker, 15W wireless charging, and modern decorative design.",
+    "description": "Upgrade your living space with this multifunctional G-shaped Smart LED Atmosphere Lamp combining customizable lighting, Bluetooth audio, 15W wireless charging, and alarm clock controls.",
     "features": [
       "15W fast wireless charging",
       "Built-in Bluetooth speaker",
       "RGB atmosphere lighting",
       "APP, voice, remote and button control",
       "Adjustable brightness from 1% to 100%",
-      "Multiple light color and lighting modes",
-      "Smart wake-up and sleep functions",
-      "Modern decorative G-shaped design",
-      "Suitable for bedrooms, offices and gaming setups",
-      "Multi-function desk and bedside accessory"
+      "Multiple light color modes",
+      "Smart wake-up and sleep mode",
+      "Modern decorative design"
     ],
     "specifications": {
       "Material": "Plastic",
@@ -31,57 +26,27 @@
       "Package Size": "227 × 86 × 240 mm",
       "Wireless Charging": "15W",
       "Control": "APP / Voice / Remote / Button",
-      "Brightness": "1% - 100%",
-      "Lighting": "RGB / Multiple Light Modes",
-      "Connectivity": "Bluetooth",
       "Power Input": "100-240V"
-    },
-    "stockStatus": "In Stock",
-    "availability": "available",
-    "shipping": {
-      "fulfillment": "CJ Dropshipping",
-      "destination": "International",
-      "shippingTime": "Varies by destination",
-      "shippingCost": "Calculated at checkout"
-    },
-    "tags": [
-      "smart lamp",
-      "LED lamp",
-      "RGB lamp",
-      "desk lamp",
-      "bedside lamp",
-      "Bluetooth speaker",
-      "wireless charger",
-      "15W wireless charging",
-      "smart lighting",
-      "gaming room lighting",
-      "home lighting"
-    ],
-    "source": "CJ Dropshipping"
+    }
   },
   {
     "id": "002",
     "sku": "CJCD135893009IR",
     "name": "Mini 5000mAh Magnetic Wireless Power Bank Fast Charging Portable Battery",
     "category": "Power & Charging",
-    "brand": "PRASUN SHOP",
     "price": 39.99,
-    "currency": "USD",
-    "rating": 5.0,
+    "rating": 5,
     "image": "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg",
-    "description": "Stay powered on the go with this compact 5000mAh magnetic wireless power bank. It features magnetic attachment, wireless and wired charging, fast charging support, an LED battery display, and a lightweight travel-friendly design.",
-    "shortDescription": "Compact 5000mAh magnetic wireless power bank with LED display, wireless charging, and portable design.",
+    "description": "Compact 5000mAh Magnetic Wireless Power Bank featuring strong magnetic attachment, fast charging, LED power display, and a travel-friendly portable design.",
     "features": [
       "5000mAh battery capacity",
-      "Magnetic wireless charging",
-      "Strong magnetic attachment",
+      "Strong magnetic wireless charging",
       "Six-level magnetic adsorption system",
       "Fast charging technology",
-      "LED battery level display",
-      "Supports wireless charging",
-      "Supports wired charging",
-      "Compact and lightweight design",
-      "Travel-friendly portable construction"
+      "LED battery display",
+      "Supports wireless and wired charging",
+      "Compact travel-friendly design",
+      "Portable rechargeable battery"
     ],
     "specifications": {
       "Material": "Plastic",
@@ -91,45 +56,18 @@
       "Wireless Charging": "5W",
       "Dimensions": "91 × 64 × 15 mm",
       "Color Options": "Cool Black, Retro Green, Ivory White, Cherry Blossom Pink",
-      "Compatibility": "Apple & Qi-compatible devices",
-      "Charging Type": "Wireless / Wired",
-      "Battery Display": "LED"
-    },
-    "stockStatus": "In Stock",
-    "availability": "available",
-    "shipping": {
-      "fulfillment": "CJ Dropshipping",
-      "destination": "International",
-      "shippingTime": "Varies by destination",
-      "shippingCost": "Calculated at checkout"
-    },
-    "tags": [
-      "power bank",
-      "5000mAh power bank",
-      "magnetic power bank",
-      "wireless power bank",
-      "portable charger",
-      "wireless charger",
-      "fast charging",
-      "phone charger",
-      "travel charger",
-      "battery pack",
-      "mobile accessories"
-    ],
-    "source": "CJ Dropshipping"
+      "Compatibility": "Apple & Qi-compatible devices"
+    }
   },
   {
     "id": "003",
     "sku": "CJYP270967903CX",
     "name": "High-Quality Noise Cancelling Wireless Bluetooth Sports Earbuds",
     "category": "Audio",
-    "brand": "PRASUN SHOP",
     "price": 49.99,
-    "currency": "USD",
-    "rating": 5.0,
+    "rating": 5,
     "image": "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg",
-    "description": "Enjoy immersive wireless audio with these Bluetooth sports earbuds featuring noise cancellation, low-latency gaming mode, water-resistant construction, hands-free calling, voice control, and extended battery performance for workouts, travel, entertainment, and everyday use.",
-    "shortDescription": "Wireless Bluetooth sports earbuds with noise cancellation, low-latency gaming mode, water resistance, and long battery life.",
+    "description": "Immersive sound with Noise Cancelling Wireless Bluetooth Sports Earbuds designed for workouts, travel, calls, and low-latency gaming.",
     "features": [
       "Noise cancellation technology",
       "Bluetooth wireless connection",
@@ -137,46 +75,17 @@
       "Low-latency gaming mode",
       "Voice control support",
       "Hands-free calling",
-      "Extended battery performance",
-      "Comfortable in-ear design",
-      "Portable charging case",
-      "Suitable for sports, travel and everyday use"
+      "Long battery life",
+      "Comfortable in-ear design"
     ],
     "specifications": {
       "Material": "PC + ABS",
       "Product Type": "Wireless Bluetooth Earbuds",
       "Wearing Style": "In-ear",
-      "Connectivity": "Bluetooth",
-      "Transmission Distance": "Up to 10 meters",
+      "Transmission Distance": "10 meters",
       "Battery Life": "4-8 hours",
-      "Noise Cancellation": "Supported",
-      "Gaming Mode": "Low Latency",
-      "Water Resistance": "Supported",
       "Color Options": "White, Skin Tone, Black",
       "Package Size": "120 × 100 × 60 mm"
-    },
-    "stockStatus": "In Stock",
-    "availability": "available",
-    "shipping": {
-      "fulfillment": "CJ Dropshipping",
-      "destination": "International",
-      "shippingTime": "Varies by destination",
-      "shippingCost": "Calculated at checkout"
-    },
-    "tags": [
-      "wireless earbuds",
-      "Bluetooth earbuds",
-      "sports earbuds",
-      "noise cancelling earbuds",
-      "gaming earbuds",
-      "low latency earbuds",
-      "wireless headphones",
-      "Bluetooth headphones",
-      "in-ear earbuds",
-      "workout earbuds",
-      "travel earbuds",
-      "audio accessories"
-    ],
-    "source": "CJ Dropshipping"
+    }
   }
 ]
