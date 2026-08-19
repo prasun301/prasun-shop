@@ -2,11 +2,15 @@
    PRASUN SHOP
    style.css
    Production storefront stylesheet
+   Compatible with:
+   - index.html
+   - corrected script.js
+   - Cloudflare Worker /api/products
    ========================================================================== */
 
 
 /* ==========================================================================
-   1. DESIGN TOKENS / RESET
+   1. DESIGN TOKENS
    ========================================================================== */
 
 :root {
@@ -49,8 +53,7 @@
   --radius-md: 14px;
   --radius-lg: 18px;
 
-  --container:
-    1180px;
+  --container: 1180px;
 
   --font-family:
     Inter,
@@ -67,7 +70,7 @@
 
 
 /* ==========================================================================
-   RESET
+   2. RESET
    ========================================================================== */
 
 *,
@@ -80,6 +83,7 @@
 html {
   margin: 0;
   padding: 0;
+
   scroll-behavior: smooth;
 }
 
@@ -105,10 +109,13 @@ body {
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  overflow-x: hidden;
 }
 
 
 img {
+  display: block;
   max-width: 100%;
 }
 
@@ -137,7 +144,7 @@ a {
 
 
 /* ==========================================================================
-   ACCESSIBILITY
+   3. ACCESSIBILITY
    ========================================================================== */
 
 .visually-hidden,
@@ -171,7 +178,7 @@ a {
 
 
 /* ==========================================================================
-   HEADER
+   4. HEADER
    ========================================================================== */
 
 .header {
@@ -238,6 +245,11 @@ a {
 
 .logo:hover {
   color: var(--primary-color);
+}
+
+
+.logo:active {
+  transform: scale(0.98);
 }
 
 
@@ -340,7 +352,7 @@ a {
 
 
 /* ==========================================================================
-   MAIN
+   5. MAIN
    ========================================================================== */
 
 .shop-container {
@@ -354,6 +366,11 @@ a {
 
   padding:
     54px 0 76px;
+}
+
+
+.shop-header {
+  margin: 0;
 }
 
 
@@ -393,7 +410,7 @@ a {
 
 
 /* ==========================================================================
-   TOOLBAR
+   6. PRODUCTS TOOLBAR
    ========================================================================== */
 
 .products-toolbar {
@@ -411,8 +428,7 @@ a {
 .search-wrapper {
   position: relative;
 
-  flex:
-    1 1 auto;
+  flex: 1 1 auto;
 
   min-width: 0;
 }
@@ -583,7 +599,7 @@ a {
 
 
 /* ==========================================================================
-   CATEGORIES
+   7. CATEGORIES
    ========================================================================== */
 
 .products-categories {
@@ -611,6 +627,11 @@ a {
 
 .products-categories::-webkit-scrollbar {
   height: 5px;
+}
+
+
+.products-categories::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 
@@ -695,7 +716,7 @@ a {
 
 
 /* ==========================================================================
-   RESULT BAR
+   8. RESULT BAR
    ========================================================================== */
 
 .products-result-bar {
@@ -718,8 +739,8 @@ a {
 }
 
 
-#products-heading,
-#page-heading {
+#page-heading,
+#products-heading {
   color:
     var(--text-dark);
 
@@ -735,14 +756,10 @@ a {
 
 
 /* ==========================================================================
-   PRODUCT GRID
+   9. PRODUCT GRID
    ========================================================================== */
 
-#product-list,
-.product-grid,
-#products-grid,
-#products-container {
-
+#product-list {
   width: 100%;
 
   display: grid;
@@ -760,7 +777,7 @@ a {
 
 
 /* ==========================================================================
-   PRODUCT CARD
+   10. PRODUCT CARD
    ========================================================================== */
 
 .product-card {
@@ -795,18 +812,6 @@ a {
 }
 
 
-.product-card:hover {
-  transform:
-    translateY(-5px);
-
-  border-color:
-    #d4dce6;
-
-  box-shadow:
-    var(--shadow-md);
-}
-
-
 .product-card-inner {
   width: 100%;
 
@@ -820,7 +825,7 @@ a {
 
 
 /* ==========================================================================
-   PRODUCT LINK
+   11. PRODUCT CARD LINK
    ========================================================================== */
 
 .product-card-link {
@@ -839,7 +844,7 @@ a {
 
 
 /* ==========================================================================
-   PRODUCT IMAGE
+   12. PRODUCT IMAGE
    ========================================================================== */
 
 .product-card-image {
@@ -881,12 +886,14 @@ a {
 
   inset: 0;
 
+  z-index: 2;
+
   pointer-events: none;
 
   background:
     linear-gradient(
       135deg,
-      rgba(255,255,255,0.30),
+      rgba(255, 255, 255, 0.30),
       transparent 45%
     );
 }
@@ -914,15 +921,8 @@ a {
 }
 
 
-.product-card:hover
-.product-card-image img {
-  transform:
-    scale(1.045);
-}
-
-
 /* ==========================================================================
-   CATEGORY BADGE
+   13. PRODUCT CATEGORY BADGE
    ========================================================================== */
 
 .product-card-image .product-category {
@@ -956,7 +956,8 @@ a {
   font-weight:
     800;
 
-  line-height: 1.2;
+  line-height:
+    1.2;
 
   letter-spacing:
     0.055em;
@@ -977,7 +978,7 @@ a {
 
 
 /* ==========================================================================
-   PRODUCT BODY
+   14. PRODUCT BODY
    ========================================================================== */
 
 .product-card-body {
@@ -1019,6 +1020,23 @@ a {
 .product-stars {
   letter-spacing:
     0.5px;
+
+  line-height: 1;
+}
+
+
+.product-stars-empty {
+  color:
+    var(--text-light);
+
+  font-size:
+    10px;
+
+  font-weight:
+    600;
+
+  line-height:
+    1.2;
 }
 
 
@@ -1101,7 +1119,7 @@ a {
 
 
 /* ==========================================================================
-   PRICE / VIEW
+   15. PRICE / VIEW
    ========================================================================== */
 
 .product-bottom {
@@ -1169,7 +1187,7 @@ a {
 
 
 /* ==========================================================================
-   CARD ACTIONS
+   16. CARD ACTIONS
    ========================================================================== */
 
 .product-card-actions {
@@ -1272,19 +1290,18 @@ a {
   display:
     inline-flex;
 
-  align-items:
-    center;
-  justify-content:
-    center;
+  align-items: center;
+  justify-content: center;
 
   width:
     17px;
+
   height:
     17px;
 
   border:
     1px solid
-    rgba(255,255,255,0.55);
+    rgba(255, 255, 255, 0.55);
 
   border-radius:
     50%;
@@ -1298,7 +1315,7 @@ a {
 
 
 /* ==========================================================================
-   LOADING
+   17. LOADING
    ========================================================================== */
 
 .products-loading {
@@ -1404,7 +1421,7 @@ a {
 
 
 /* ==========================================================================
-   EMPTY / ERROR
+   18. EMPTY / ERROR
    ========================================================================== */
 
 .products-empty,
@@ -1572,7 +1589,7 @@ a {
 
 
 /* ==========================================================================
-   STORE INFORMATION
+   19. STORE INFORMATION
    ========================================================================== */
 
 .store-info {
@@ -1631,7 +1648,7 @@ a {
 
 
 /* ==========================================================================
-   FOOTER
+   20. FOOTER
    ========================================================================== */
 
 .footer {
@@ -1732,16 +1749,39 @@ a {
 
 
 /* ==========================================================================
-   TABLET
+   21. DESKTOP HOVER-ONLY EFFECTS
+   ========================================================================== */
+
+@media (hover: hover) and (pointer: fine) {
+
+  .product-card:hover {
+    transform:
+      translateY(-5px);
+
+    border-color:
+      #d4dce6;
+
+    box-shadow:
+      var(--shadow-md);
+  }
+
+
+  .product-card:hover
+  .product-card-image img {
+    transform:
+      scale(1.045);
+  }
+
+}
+
+
+/* ==========================================================================
+   22. LARGE TABLET
    ========================================================================== */
 
 @media (max-width: 1050px) {
 
-  #product-list,
-  .product-grid,
-  #products-grid,
-  #products-container {
-
+  #product-list {
     grid-template-columns:
       repeat(
         3,
@@ -1765,7 +1805,7 @@ a {
 
 
 /* ==========================================================================
-   TABLET / MOBILE
+   23. TABLET / MOBILE
    ========================================================================== */
 
 @media (max-width: 760px) {
@@ -1857,11 +1897,7 @@ a {
   }
 
 
-  #product-list,
-  .product-grid,
-  #products-grid,
-  #products-container {
-
+  #product-list {
     grid-template-columns:
       repeat(
         2,
@@ -1964,7 +2000,7 @@ a {
 
 
 /* ==========================================================================
-   SMALL MOBILE
+   24. SMALL MOBILE
    ========================================================================== */
 
 @media (max-width: 500px) {
@@ -2014,11 +2050,7 @@ a {
   }
 
 
-  #product-list,
-  .product-grid,
-  #products-grid,
-  #products-container {
-
+  #product-list {
     grid-template-columns:
       1fr;
 
@@ -2097,7 +2129,7 @@ a {
 
 
 /* ==========================================================================
-   VERY SMALL SCREENS
+   25. VERY SMALL SCREENS
    ========================================================================== */
 
 @media (max-width: 360px) {
@@ -2138,7 +2170,7 @@ a {
 
 
 /* ==========================================================================
-   REDUCED MOTION
+   26. REDUCED MOTION
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
