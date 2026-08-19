@@ -2,293 +2,43 @@
  * ============================================================================
  * PRASUN SHOP — CHECKOUT SYSTEM
  * ============================================================================
- *
- * Production-oriented checkout controller.
- *
- * Responsibilities:
- * - Canonical cart: prasun_cart
- * - Legacy cart migration
- * - Cross-tab cart synchronization
- * - Product/catalog loading
- * - Secure rendering / HTML escaping
- * - Checkout form validation
- * - Country selector
- * - Payment-method UI
- * - Order summary calculation
- * - Cloudflare Worker order submission
- * - Double-submit protection
- * - Accessible status/error messages
- *
- * IMPORTANT:
- * This file intentionally does NOT send raw card numbers, CVV/CVC,
- * or other payment credentials to the PRASUN SHOP Worker.
- *
- * A real payment processor should tokenize/process card information.
- * ============================================================================
  */
 
 "use strict";
 
 (() => {
+
     /* =========================================================================
-       CONFIGURATION
+       CONFIG
        ========================================================================= */
 
     const CART_KEY = "prasun_cart";
 
-    const LEGACY_CART_KEYS = [
+    const LEGACY_KEYS = [
         "prasunShopCart",
         "cart",
         "prasun_cart_items"
     ];
 
-    /*
-     * Your Cloudflare Worker.
-     *
-     * GET  -> product/catalog data
-     * POST -> order submission
-     */
-    const API_ENDPOINT =
-        "https://prasun-shop-api.prasun301.workers.dev/";
+    const API_ORDER_ENDPOINT =
+        "https://prasun-shop-api.prasun301.workers.dev/order";
 
-    /*
-     * Local fallback.
-     *
-     * Used only when the Worker catalog cannot be loaded.
-     */
-    const LOCAL_PRODUCTS_ENDPOINT =
-        "data/products.json";
+    const PRODUCTS_ENDPOINT =
+        "https://prasun-shop-api.prasun301.workers.dev/products";
 
     const MAX_QUANTITY = 99;
 
-    const REQUEST_TIMEOUT_MS = 10000;
-
-    /*
-     * Do NOT hard-code an 8% tax into the checkout unless this is actually
-     * your business/tax rule for every customer.
-     *
-     * The current checkout therefore displays tax as "Calculated at checkout"
-     * unless your backend returns a tax amount.
-     */
-    const DEFAULT_TAX_RATE = 0;
-
-    const SHIPPING_COST = 0;
+    const REQUEST_TIMEOUT_MS = 15000;
 
     /* =========================================================================
-       COUNTRY DATA
+       ELEMENTS
        ========================================================================= */
-
-    const COUNTRIES = [
-        "Afghanistan",
-        "Albania",
-        "Algeria",
-        "Andorra",
-        "Angola",
-        "Argentina",
-        "Armenia",
-        "Australia",
-        "Austria",
-        "Azerbaijan",
-        "Bahamas",
-        "Bahrain",
-        "Bangladesh",
-        "Barbados",
-        "Belarus",
-        "Belgium",
-        "Belize",
-        "Benin",
-        "Bhutan",
-        "Bolivia",
-        "Bosnia and Herzegovina",
-        "Botswana",
-        "Brazil",
-        "Brunei",
-        "Bulgaria",
-        "Cambodia",
-        "Cameroon",
-        "Canada",
-        "Chile",
-        "China",
-        "Colombia",
-        "Costa Rica",
-        "Croatia",
-        "Cyprus",
-        "Czech Republic",
-        "Denmark",
-        "Dominican Republic",
-        "Ecuador",
-        "Egypt",
-        "El Salvador",
-        "Estonia",
-        "Ethiopia",
-        "Fiji",
-        "Finland",
-        "France",
-        "Georgia",
-        "Germany",
-        "Ghana",
-        "Greece",
-        "Guatemala",
-        "Honduras",
-        "Hong Kong",
-        "Hungary",
-        "Iceland",
-        "India",
-        "Indonesia",
-        "Ireland",
-        "Israel",
-        "Italy",
-        "Jamaica",
-        "Japan",
-        "Jordan",
-        "Kazakhstan",
-        "Kenya",
-        "Kuwait",
-        "Latvia",
-        "Lebanon",
-        "Lithuania",
-        "Luxembourg",
-        "Malaysia",
-        "Maldives",
-        "Malta",
-        "Mauritius",
-        "Mexico",
-        "Moldova",
-        "Monaco",
-        "Mongolia",
-        "Montenegro",
-        "Morocco",
-        "Myanmar",
-        "Namibia",
-        "Nepal",
-        "Netherlands",
-        "New Zealand",
-        "Nicaragua",
-        "Nigeria",
-        "North Macedonia",
-        "Norway",
-        "Oman",
-        "Pakistan",
-        "Panama",
-        "Paraguay",
-        "Peru",
-        "Philippines",
-        "Poland",
-        "Portugal",
-        "Qatar",
-        "Romania",
-        "Rwanda",
-        "Saudi Arabia",
-        "Senegal",
-        "Serbia",
-        "Singapore",
-        "Slovakia",
-        "Slovenia",
-        "South Africa",
-        "South Korea",
-        "Spain",
-        "Sri Lanka",
-        "Sweden",
-        "Switzerland",
-        "Taiwan",
-        "Thailand",
-        "Tunisia",
-        "Turkey",
-        "Ukraine",
-        "United Arab Emirates",
-        "United Kingdom",
-        "United States",
-        "Uruguay",
-        "Uzbekistan",
-        "Venezuela",
-        "Vietnam",
-        "Zambia",
-        "Zimbabwe"
-    ];
-
-    /* =========================================================================
-       DOM
-       ========================================================================= */
-
-    const checkoutMain =
-        document.getElementById("checkout-main");
-
-    const emptyCart =
-        document.getElementById("empty-cart");
 
     const checkoutForm =
         document.getElementById("checkout-form");
 
-    const cartCount =
-        document.getElementById("cart-count");
-
-    const summaryItems =
-        document.getElementById("summary-items");
-
-    const summaryCount =
-        document.getElementById("summary-count");
-
-    const summarySubtotal =
-        document.getElementById("summary-subtotal");
-
-    const summaryShipping =
-        document.getElementById("summary-shipping");
-
-    const summaryTax =
-        document.getElementById("summary-tax");
-
-    const summaryTotal =
-        document.getElementById("summary-total-price");
-
-    const placeOrderButton =
-        document.getElementById("btn-place-order");
-
-    const buttonText =
-        document.getElementById("btn-text");
-
-    const buttonSpinner =
-        document.getElementById("btn-spinner");
-
-    const cardFields =
-        document.getElementById("card-fields");
-
-    const paymentRadios =
-        document.querySelectorAll(
-            'input[name="paymentMethod"]'
-        );
-
-    const countryDropdown =
-        document.getElementById("country-dropdown");
-
-    const countryTrigger =
-        document.getElementById("country-trigger");
-
-    const countryMenu =
-        document.getElementById("country-menu");
-
-    const countrySearch =
-        document.getElementById("country-search");
-
-    const countryOptions =
-        document.getElementById("country-options");
-
-    const countrySelected =
-        document.getElementById("country-selected");
-
-    const countryInput =
-        document.getElementById("country");
-
-    /* =========================================================================
-       STATE
-       ========================================================================= */
-
-    let cart = [];
-
-    let productMap = new Map();
-
-    let productsPromise = null;
-
-    let isSubmitting = false;
+    const orderSummary =
+        document.getElementById("order-summary");
 
     /* =========================================================================
        CURRENCY
@@ -303,17 +53,17 @@
         });
 
     function formatPrice(value) {
-        const amount = Number(value);
 
-        if (!Number.isFinite(amount)) {
-            return "$0.00";
-        }
+        const number =
+            Number(value);
 
-        return currencyFormatter.format(amount);
+        return Number.isFinite(number)
+            ? currencyFormatter.format(number)
+            : "$0.00";
     }
 
     /* =========================================================================
-       SECURITY / HTML ESCAPING
+       HTML ESCAPE
        ========================================================================= */
 
     const ESCAPE_MAP = {
@@ -325,6 +75,7 @@
     };
 
     function escapeHTML(value) {
+
         if (
             value === null ||
             value === undefined
@@ -332,10 +83,11 @@
             return "";
         }
 
-        return String(value).replace(
-            /[&<>"']/g,
-            character => ESCAPE_MAP[character]
-        );
+        return String(value)
+            .replace(
+                /[&<>"']/g,
+                char => ESCAPE_MAP[char]
+            );
     }
 
     /* =========================================================================
@@ -343,6 +95,7 @@
        ========================================================================= */
 
     function normalizeCartItem(item) {
+
         if (
             !item ||
             item.id === undefined ||
@@ -369,11 +122,13 @@
     }
 
     function parseCart(raw) {
+
         if (!raw) {
             return [];
         }
 
         try {
+
             const parsed =
                 JSON.parse(raw);
 
@@ -397,42 +152,37 @@
     }
 
     function getCart() {
+
         try {
 
             const primary =
-                localStorage.getItem(
-                    CART_KEY
-                );
+                localStorage.getItem(CART_KEY);
 
             if (primary) {
                 return parseCart(primary);
             }
 
-            for (
-                const legacyKey
-                of LEGACY_CART_KEYS
-            ) {
+            for (const legacyKey of LEGACY_KEYS) {
 
                 const legacy =
                     localStorage.getItem(
                         legacyKey
                     );
 
-                if (!legacy) {
-                    continue;
-                }
+                if (legacy) {
 
-                const migrated =
-                    parseCart(legacy);
+                    const cart =
+                        parseCart(legacy);
 
-                if (migrated.length) {
+                    if (cart.length) {
 
-                    localStorage.setItem(
-                        CART_KEY,
-                        JSON.stringify(migrated)
-                    );
+                        localStorage.setItem(
+                            CART_KEY,
+                            JSON.stringify(cart)
+                        );
 
-                    return migrated;
+                        return cart;
+                    }
                 }
             }
 
@@ -449,14 +199,15 @@
         }
     }
 
-    function clearCart() {
+    function clearAllCartKeys() {
+
         try {
 
             localStorage.removeItem(
                 CART_KEY
             );
 
-            LEGACY_CART_KEYS.forEach(key => {
+            LEGACY_KEYS.forEach(key => {
                 localStorage.removeItem(key);
             });
 
@@ -470,7 +221,7 @@
     }
 
     /* =========================================================================
-       REQUEST TIMEOUT
+       FETCH WITH TIMEOUT
        ========================================================================= */
 
     async function fetchWithTimeout(
@@ -478,9 +229,9 @@
         options = {}
     ) {
 
-        const timeout =
-            options.timeout ||
-            REQUEST_TIMEOUT_MS;
+        const {
+            timeout = REQUEST_TIMEOUT_MS
+        } = options;
 
         const controller =
             new AbortController();
@@ -503,103 +254,36 @@
                     }
                 );
 
-            clearTimeout(timer);
-
             return response;
 
         } catch (error) {
 
-            clearTimeout(timer);
-
             if (
                 error &&
-                error.name === "AbortError"
+                error.name ===
+                    "AbortError"
             ) {
+
                 throw new Error(
-                    "The request timed out. Please check your internet connection and try again."
+                    "The server request timed out. Please try again."
                 );
             }
 
             throw error;
+
+        } finally {
+
+            clearTimeout(timer);
         }
-    }
-
-    /* =========================================================================
-       PRODUCT RESPONSE NORMALIZATION
-       ========================================================================= */
-
-    function extractProducts(data) {
-
-        if (Array.isArray(data)) {
-            return data;
-        }
-
-        if (
-            data &&
-            Array.isArray(data.products)
-        ) {
-            return data.products;
-        }
-
-        if (
-            data &&
-            Array.isArray(data.data)
-        ) {
-            return data.data;
-        }
-
-        if (
-            data &&
-            data.data &&
-            Array.isArray(data.data.products)
-        ) {
-            return data.data.products;
-        }
-
-        return [];
     }
 
     /* =========================================================================
        PRODUCT LOADING
        ========================================================================= */
 
-    async function requestProducts(
-        endpoint
-    ) {
+    let productMap = new Map();
 
-        const response =
-            await fetchWithTimeout(
-                endpoint,
-                {
-                    method: "GET",
-                    cache: "no-cache",
-                    headers: {
-                        "Accept":
-                            "application/json"
-                    }
-                }
-            );
-
-        if (!response.ok) {
-            throw new Error(
-                `Product server returned HTTP ${response.status}.`
-            );
-        }
-
-        const data =
-            await response.json();
-
-        const products =
-            extractProducts(data);
-
-        if (!products.length) {
-            throw new Error(
-                "No products were returned by the catalog."
-            );
-        }
-
-        return products;
-    }
+    let productsFetchPromise = null;
 
     async function fetchProducts() {
 
@@ -607,1691 +291,804 @@
             return productMap;
         }
 
-        if (productsPromise) {
-            return productsPromise;
+        if (productsFetchPromise) {
+            return productsFetchPromise;
         }
 
-        productsPromise =
+        productsFetchPromise =
             (async () => {
 
                 try {
 
-                    let products = [];
-
-                    /*
-                     * First attempt:
-                     * Cloudflare Worker / live catalog.
-                     */
-                    try {
-
-                        products =
-                            await requestProducts(
-                                API_ENDPOINT
-                            );
-
-                    } catch (workerError) {
-
-                        console.warn(
-                            "[PRASUN SHOP] Worker catalog unavailable. Trying local catalog.",
-                            workerError
+                    const response =
+                        await fetchWithTimeout(
+                            PRODUCTS_ENDPOINT,
+                            {
+                                method: "GET",
+                                cache: "no-store",
+                                headers: {
+                                    "Accept":
+                                        "application/json"
+                                }
+                            }
                         );
 
-                        /*
-                         * Fallback:
-                         * local products.json
-                         */
-                        products =
-                            await requestProducts(
-                                LOCAL_PRODUCTS_ENDPOINT
-                            );
+                    if (!response.ok) {
+
+                        throw new Error(
+                            `Product server returned HTTP ${response.status}.`
+                        );
+                    }
+
+                    const data =
+                        await response.json();
+
+                    if (
+                        !data ||
+                        !Array.isArray(
+                            data.products
+                        )
+                    ) {
+
+                        throw new Error(
+                            "Invalid product API response."
+                        );
                     }
 
                     productMap =
-                        new Map();
-
-                    products.forEach(
-                        product => {
-
-                            if (
-                                !product ||
-                                product.id ===
-                                    undefined ||
-                                product.id ===
-                                    null
-                            ) {
-                                return;
-                            }
-
-                            productMap.set(
-                                String(product.id),
-                                product
-                            );
-                        }
-                    );
+                        new Map(
+                            data.products
+                                .filter(Boolean)
+                                .map(
+                                    product => [
+                                        String(product.id),
+                                        product
+                                    ]
+                                )
+                        );
 
                     return productMap;
 
                 } catch (error) {
 
-                    productsPromise = null;
+                    productsFetchPromise =
+                        null;
 
                     throw error;
                 }
             })();
 
-        return productsPromise;
+        return productsFetchPromise;
     }
 
     /* =========================================================================
-       PRODUCT DATA HELPERS
+       ERROR BANNER
        ========================================================================= */
 
-    function getProductPrice(product) {
+    function showFormError(message) {
 
-        if (!product) {
-            return 0;
-        }
-
-        const possiblePrices = [
-            product.price,
-            product.salePrice,
-            product.sellingPrice,
-            product.minPrice
-        ];
-
-        for (
-            const candidate
-            of possiblePrices
-        ) {
-
-            const value =
-                Number(candidate);
-
-            if (
-                Number.isFinite(value) &&
-                value >= 0
-            ) {
-                return value;
-            }
-        }
-
-        return 0;
-    }
-
-    function getProductName(product) {
-
-        if (!product) {
-            return "Product";
-        }
-
-        return (
-            product.name ||
-            product.title ||
-            product.productName ||
-            "Product"
-        );
-    }
-
-    function getProductImage(product) {
-
-        if (!product) {
-            return "";
-        }
-
-        if (
-            typeof product.image ===
-                "string" &&
-            product.image
-        ) {
-            return product.image;
-        }
-
-        if (
-            typeof product.imageUrl ===
-                "string" &&
-            product.imageUrl
-        ) {
-            return product.imageUrl;
-        }
-
-        if (
-            Array.isArray(product.images) &&
-            product.images.length
-        ) {
-
-            const first =
-                product.images[0];
-
-            if (
-                typeof first === "string"
-            ) {
-                return first;
-            }
-
-            if (
-                first &&
-                typeof first.url ===
-                    "string"
-            ) {
-                return first.url;
-            }
-        }
-
-        return "";
-    }
-
-    /* =========================================================================
-       CART TOTALS
-       ========================================================================= */
-
-    function calculateTotals() {
-
-        let subtotal = 0;
-
-        const validItems = [];
-
-        cart.forEach(item => {
-
-            const product =
-                productMap.get(
-                    String(item.id)
-                );
-
-            if (!product) {
-                return;
-            }
-
-            const price =
-                getProductPrice(product);
-
-            const quantity =
-                Math.min(
-                    MAX_QUANTITY,
-                    Math.max(
-                        1,
-                        Math.floor(
-                            Number(
-                                item.quantity
-                            ) || 1
-                        )
-                    )
-                );
-
-            const lineTotal =
-                price * quantity;
-
-            subtotal += lineTotal;
-
-            validItems.push({
-                id: String(item.id),
-                sku: String(
-                    product.sku ||
-                    product.id ||
-                    item.id
-                ),
-                name: getProductName(
-                    product
-                ),
-                image: getProductImage(
-                    product
-                ),
-                price,
-                quantity,
-                subtotal: lineTotal
-            });
-        });
-
-        const tax =
-            subtotal * DEFAULT_TAX_RATE;
-
-        const total =
-            subtotal +
-            SHIPPING_COST +
-            tax;
-
-        return {
-            items: validItems,
-            subtotal,
-            shipping: SHIPPING_COST,
-            tax,
-            total
-        };
-    }
-
-    /* =========================================================================
-       CART COUNT
-       ========================================================================= */
-
-    function updateCartCount() {
-
-        if (!cartCount) {
-            return;
-        }
-
-        const count =
-            cart.reduce(
-                (total, item) =>
-                    total +
-                    Number(
-                        item.quantity
-                    ),
-                0
-            );
-
-        if (count > 0) {
-
-            cartCount.textContent =
-                String(count);
-
-            cartCount.hidden = false;
-
-        } else {
-
-            cartCount.hidden = true;
-        }
-    }
-
-    /* =========================================================================
-       EMPTY CART
-       ========================================================================= */
-
-    function showEmptyCart() {
-
-        if (checkoutMain) {
-            checkoutMain.style.display =
-                "none";
-        }
-
-        if (emptyCart) {
-            emptyCart.hidden = false;
-        }
-
-        updateCartCount();
-    }
-
-    function showCheckout() {
-
-        if (emptyCart) {
-            emptyCart.hidden = true;
-        }
-
-        if (checkoutMain) {
-            checkoutMain.style.display =
-                "grid";
-        }
-    }
-
-    /* =========================================================================
-       ORDER SUMMARY
-       ========================================================================= */
-
-    function renderSummary() {
-
-        updateCartCount();
-
-        if (!cart.length) {
-            showEmptyCart();
-            return;
-        }
-
-        showCheckout();
-
-        if (!summaryItems) {
-            return;
-        }
-
-        const totals =
-            calculateTotals();
-
-        if (!totals.items.length) {
-
-            summaryItems.innerHTML = `
-                <div style="
-                    padding:24px 0;
-                    text-align:center;
-                    color:#64748b;
-                    font-size:13px;
-                ">
-                    Your cart items could not be found.
-                </div>
-            `;
-
-            if (summaryCount) {
-                summaryCount.textContent =
-                    "0 Items";
-            }
-
-            if (summarySubtotal) {
-                summarySubtotal.textContent =
-                    "$0.00";
-            }
-
-            if (summaryShipping) {
-                summaryShipping.textContent =
-                    "Free";
-            }
-
-            if (summaryTax) {
-                summaryTax.textContent =
-                    "$0.00";
-            }
-
-            if (summaryTotal) {
-                summaryTotal.textContent =
-                    "$0.00";
-            }
-
-            return;
-        }
-
-        summaryItems.innerHTML =
-            totals.items.map(item => {
-
-                const image =
-                    escapeHTML(
-                        item.image
-                    );
-
-                const name =
-                    escapeHTML(
-                        item.name
-                    );
-
-                return `
-                    <div class="summary-item">
-
-                        <div class="summary-image">
-
-                            ${
-                                image
-                                    ? `
-                                        <img
-                                            src="${image}"
-                                            alt="${name}"
-                                            loading="lazy"
-                                            decoding="async"
-                                        >
-                                      `
-                                    : `
-                                        <div
-                                            aria-hidden="true"
-                                            style="
-                                                color:#94a3b8;
-                                                font-size:11px;
-                                                text-align:center;
-                                            "
-                                        >
-                                            No image
-                                        </div>
-                                      `
-                            }
-
-                        </div>
-
-                        <div>
-
-                            <p class="summary-product-title">
-                                ${name}
-                            </p>
-
-                            <p class="summary-product-meta">
-                                Qty: ${item.quantity}
-                                · ${formatPrice(item.price)} each
-                            </p>
-
-                        </div>
-
-                        <div class="summary-item-price">
-                            ${formatPrice(item.subtotal)}
-                        </div>
-
-                    </div>
-                `;
-            }).join("");
-
-        if (summaryCount) {
-
-            const count =
-                totals.items.reduce(
-                    (sum, item) =>
-                        sum + item.quantity,
-                    0
-                );
-
-            summaryCount.textContent =
-                `${count} ${count === 1 ? "Item" : "Items"}`;
-        }
-
-        if (summarySubtotal) {
-            summarySubtotal.textContent =
-                formatPrice(
-                    totals.subtotal
-                );
-        }
-
-        if (summaryShipping) {
-            summaryShipping.textContent =
-                SHIPPING_COST === 0
-                    ? "Free"
-                    : formatPrice(
-                        SHIPPING_COST
-                    );
-        }
-
-        if (summaryTax) {
-
-            if (DEFAULT_TAX_RATE > 0) {
-
-                summaryTax.textContent =
-                    formatPrice(
-                        totals.tax
-                    );
-
-            } else {
-
-                summaryTax.textContent =
-                    "Calculated at checkout";
-            }
-        }
-
-        if (summaryTotal) {
-            summaryTotal.textContent =
-                formatPrice(
-                    totals.total
-                );
-        }
-    }
-
-    /* =========================================================================
-       COUNTRY DROPDOWN
-       ========================================================================= */
-
-    function populateCountries(
-        filter = ""
-    ) {
-
-        if (!countryOptions) {
-            return;
-        }
-
-        const search =
-            String(filter)
-                .trim()
-                .toLowerCase();
-
-        const filtered =
-            COUNTRIES.filter(
-                country =>
-                    country
-                        .toLowerCase()
-                        .includes(search)
-            );
-
-        if (!filtered.length) {
-
-            countryOptions.innerHTML = `
-                <div class="country-no-results">
-                    No countries found
-                </div>
-            `;
-
-            return;
-        }
-
-        countryOptions.innerHTML =
-            filtered.map(country => {
-
-                const selected =
-                    country ===
-                    countryInput?.value;
-
-                return `
-                    <button
-                        type="button"
-                        class="country-option ${
-                            selected
-                                ? "selected"
-                                : ""
-                        }"
-                        data-value="${escapeHTML(country)}"
-                        role="option"
-                        aria-selected="${
-                            selected
-                                ? "true"
-                                : "false"
-                        }"
-                    >
-                        ${escapeHTML(country)}
-                    </button>
-                `;
-            }).join("");
-
-        countryOptions
-            .querySelectorAll(
-                ".country-option"
-            )
-            .forEach(button => {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        const value =
-                            button.dataset.value;
-
-                        if (countryInput) {
-                            countryInput.value =
-                                value;
-                        }
-
-                        if (countrySelected) {
-                            countrySelected.textContent =
-                                value;
-                        }
-
-                        closeCountryDropdown();
-                    }
-                );
-            });
-    }
-
-    function openCountryDropdown() {
-
-        if (
-            !countryMenu ||
-            !countryTrigger
-        ) {
-            return;
-        }
-
-        countryMenu.classList.add("open");
-
-        countryTrigger.classList.add(
-            "open"
-        );
-
-        countryTrigger.setAttribute(
-            "aria-expanded",
-            "true"
-        );
-
-        if (countrySearch) {
-            countrySearch.value = "";
-            populateCountries();
-            countrySearch.focus();
-        }
-    }
-
-    function closeCountryDropdown() {
-
-        if (
-            !countryMenu ||
-            !countryTrigger
-        ) {
-            return;
-        }
-
-        countryMenu.classList.remove(
-            "open"
-        );
-
-        countryTrigger.classList.remove(
-            "open"
-        );
-
-        countryTrigger.setAttribute(
-            "aria-expanded",
-            "false"
-        );
-    }
-
-    function setupCountryDropdown() {
-
-        if (!countryTrigger) {
-            return;
-        }
-
-        populateCountries();
-
-        countryTrigger.addEventListener(
-            "click",
-            event => {
-
-                event.preventDefault();
-
-                const open =
-                    countryMenu &&
-                    countryMenu.classList.contains(
-                        "open"
-                    );
-
-                if (open) {
-                    closeCountryDropdown();
-                } else {
-                    openCountryDropdown();
-                }
-            }
-        );
-
-        if (countrySearch) {
-
-            countrySearch.addEventListener(
-                "input",
-                event => {
-                    populateCountries(
-                        event.target.value
-                    );
-                }
-            );
-        }
-
-        document.addEventListener(
-            "click",
-            event => {
-
-                if (
-                    countryDropdown &&
-                    !countryDropdown.contains(
-                        event.target
-                    )
-                ) {
-                    closeCountryDropdown();
-                }
-            }
-        );
-
-        document.addEventListener(
-            "keydown",
-            event => {
-
-                if (
-                    event.key ===
-                    "Escape"
-                ) {
-                    closeCountryDropdown();
-                }
-            }
-        );
-    }
-
-    /* =========================================================================
-       PAYMENT METHOD UI
-       ========================================================================= */
-
-    function updatePaymentUI() {
-
-        const selected =
-            document.querySelector(
-                'input[name="paymentMethod"]:checked'
-            );
-
-        if (!selected) {
-            return;
-        }
-
-        /*
-         * Card fields remain visible for now because the visual checkout
-         * contains them.
-         *
-         * IMPORTANT:
-         * They are NOT read or transmitted by this script.
-         *
-         * A production payment integration should replace these fields with
-         * the payment processor's secure hosted/tokenized UI.
-         */
-        if (cardFields) {
-
-            if (
-                selected.value ===
-                "card"
-            ) {
-
-                cardFields.style.display =
-                    "grid";
-
-            } else {
-
-                cardFields.style.display =
-                    "none";
-            }
-        }
-    }
-
-    function setupPaymentMethods() {
-
-        paymentRadios.forEach(
-            radio => {
-
-                radio.addEventListener(
-                    "change",
-                    updatePaymentUI
-                );
-            }
-        );
-
-        updatePaymentUI();
-    }
-
-    /* =========================================================================
-       INPUT FORMATTING
-       ========================================================================= */
-
-    function setupCardFormatting() {
-
-        const cardNumber =
-            document.getElementById(
-                "card-number"
-            );
-
-        const cardExpiry =
-            document.getElementById(
-                "card-exp"
-            );
-
-        const cardCVC =
-            document.getElementById(
-                "card-cvc"
-            );
-
-        /*
-         * Formatting only.
-         *
-         * These values are intentionally never submitted to the Worker.
-         */
-
-        if (cardNumber) {
-
-            cardNumber.addEventListener(
-                "input",
-                event => {
-
-                    let value =
-                        event.target.value
-                            .replace(/\D/g, "")
-                            .slice(0, 16);
-
-                    event.target.value =
-                        value.replace(
-                            /(.{4})/g,
-                            "$1 "
-                        ).trim();
-                }
-            );
-        }
-
-        if (cardExpiry) {
-
-            cardExpiry.addEventListener(
-                "input",
-                event => {
-
-                    let value =
-                        event.target.value
-                            .replace(/\D/g, "")
-                            .slice(0, 4);
-
-                    if (
-                        value.length > 2
-                    ) {
-
-                        value =
-                            `${value.slice(0, 2)} / ${value.slice(2)}`;
-                    }
-
-                    event.target.value =
-                        value;
-                }
-            );
-        }
-
-        if (cardCVC) {
-
-            cardCVC.addEventListener(
-                "input",
-                event => {
-
-                    event.target.value =
-                        event.target.value
-                            .replace(/\D/g, "")
-                            .slice(0, 4);
-                }
-            );
-        }
-    }
-
-    /* =========================================================================
-       ERROR HANDLING
-       ========================================================================= */
-
-    function showFormError(
-        message
-    ) {
-
-        let banner =
+        let errorBanner =
             document.getElementById(
                 "checkout-error-banner"
             );
 
-        if (!banner && checkoutForm) {
+        if (
+            !errorBanner &&
+            checkoutForm
+        ) {
 
-            banner =
+            errorBanner =
                 document.createElement(
                     "div"
                 );
 
-            banner.id =
+            errorBanner.id =
                 "checkout-error-banner";
 
-            banner.setAttribute(
+            errorBanner.className =
+                "mb-4 p-4 rounded-xl bg-red-50 text-red-700 text-sm font-medium border border-red-200";
+
+            errorBanner.setAttribute(
                 "role",
                 "alert"
             );
 
-            banner.setAttribute(
-                "aria-live",
-                "assertive"
-            );
-
-            banner.style.cssText = `
-                margin-bottom:20px;
-                padding:13px 14px;
-                border:1px solid #fecaca;
-                border-radius:10px;
-                background:#fef2f2;
-                color:#b91c1c;
-                font-size:13px;
-                font-weight:600;
-            `;
-
             checkoutForm.prepend(
-                banner
+                errorBanner
             );
         }
 
-        if (banner) {
+        if (errorBanner) {
 
-            banner.textContent =
+            errorBanner.textContent =
                 message;
 
-            banner.scrollIntoView({
+            errorBanner.scrollIntoView({
                 behavior: "smooth",
                 block: "nearest"
             });
+
+        } else {
+
+            alert(message);
         }
     }
 
     function hideFormError() {
 
-        const banner =
+        const errorBanner =
             document.getElementById(
                 "checkout-error-banner"
             );
 
-        if (banner) {
-            banner.remove();
+        if (errorBanner) {
+
+            errorBanner.textContent =
+                "";
+
+            errorBanner.classList.add(
+                "hidden"
+            );
         }
     }
 
     /* =========================================================================
-       FIELD VALIDATION
+       EMPTY SUMMARY
        ========================================================================= */
 
-    function clearFieldError(
-        input
-    ) {
+    function renderEmptySummary() {
 
-        if (!input) {
+        if (!orderSummary) {
             return;
         }
 
-        input.classList.remove(
-            "invalid"
-        );
+        orderSummary.innerHTML = `
+            <div class="py-8 text-center">
 
-        const error =
-            document.getElementById(
-                `${input.id}-error`
-            );
+                <p class="text-zinc-500 text-sm font-medium mb-4">
+                    Your cart is empty.
+                </p>
 
-        if (error) {
-            error.classList.remove(
-                "show"
-            );
-        }
-    }
+                <a
+                    href="products.html"
+                    class="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-all"
+                >
+                    Continue Shopping
+                </a>
 
-    function markFieldInvalid(
-        input
-    ) {
-
-        if (!input) {
-            return;
-        }
-
-        input.classList.add(
-            "invalid"
-        );
-
-        const error =
-            document.getElementById(
-                `${input.id}-error`
-            );
-
-        if (error) {
-            error.classList.add(
-                "show"
-            );
-        }
-    }
-
-    function validateRequiredField(
-        id,
-        message
-    ) {
-
-        const input =
-            document.getElementById(id);
-
-        if (!input) {
-            return true;
-        }
-
-        const valid =
-            input.value.trim().length > 0;
-
-        if (!valid) {
-
-            markFieldInvalid(
-                input
-            );
-
-            if (
-                message
-            ) {
-                const error =
-                    document.getElementById(
-                        `${id}-error`
-                    );
-
-                if (error) {
-                    error.textContent =
-                        message;
-                }
-            }
-
-        } else {
-
-            clearFieldError(
-                input
-            );
-        }
-
-        return valid;
-    }
-
-    function validateEmail() {
-
-        const input =
-            document.getElementById(
-                "email"
-            );
-
-        if (!input) {
-            return true;
-        }
-
-        const value =
-            input.value.trim();
-
-        const valid =
-            /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-                .test(value);
-
-        if (!valid) {
-            markFieldInvalid(
-                input
-            );
-        } else {
-            clearFieldError(
-                input
-            );
-        }
-
-        return valid;
-    }
-
-    function validatePhone() {
-
-        const input =
-            document.getElementById(
-                "phone"
-            );
-
-        if (!input) {
-            return true;
-        }
-
-        const digits =
-            input.value.replace(
-                /\D/g,
-                ""
-            );
-
-        const valid =
-            digits.length >= 7 &&
-            digits.length <= 15;
-
-        if (!valid) {
-            markFieldInvalid(
-                input
-            );
-        } else {
-            clearFieldError(
-                input
-            );
-        }
-
-        return valid;
-    }
-
-    function validateCountry() {
-
-        if (!countryInput) {
-            return true;
-        }
-
-        const valid =
-            countryInput.value.trim()
-                .length > 0;
-
-        if (
-            !valid &&
-            countryTrigger
-        ) {
-
-            countryTrigger.classList.add(
-                "invalid"
-            );
-
-        } else if (
-            countryTrigger
-        ) {
-
-            countryTrigger.classList.remove(
-                "invalid"
-            );
-        }
-
-        return valid;
-    }
-
-    function validateForm() {
-
-        let valid = true;
-
-        hideFormError();
-
-        if (
-            !validateEmail()
-        ) {
-            valid = false;
-        }
-
-        if (
-            !validatePhone()
-        ) {
-            valid = false;
-        }
-
-        const requiredFields = [
-            [
-                "first-name",
-                "Please enter your first name."
-            ],
-            [
-                "last-name",
-                "Please enter your last name."
-            ],
-            [
-                "address",
-                "Please enter your street address."
-            ],
-            [
-                "city",
-                "Please enter your city."
-            ],
-            [
-                "postal-code",
-                "Please enter your postal or ZIP code."
-            ]
-        ];
-
-        requiredFields.forEach(
-            ([id, message]) => {
-
-                if (
-                    !validateRequiredField(
-                        id,
-                        message
-                    )
-                ) {
-                    valid = false;
-                }
-            }
-        );
-
-        if (
-            !validateCountry()
-        ) {
-            valid = false;
-        }
-
-        /*
-         * We intentionally do NOT validate or transmit raw card details here.
-         *
-         * Payment processor integration must be implemented separately.
-         */
-
-        return valid;
+            </div>
+        `;
     }
 
     /* =========================================================================
-       FIELD ERROR CLEARING
+       CHECKOUT SUMMARY
        ========================================================================= */
 
-    function setupFieldListeners() {
+    async function loadCheckoutSummary() {
 
-        if (!checkoutForm) {
+        if (!orderSummary) {
             return;
         }
-
-        checkoutForm
-            .querySelectorAll(
-                ".form-input"
-            )
-            .forEach(input => {
-
-                input.addEventListener(
-                    "input",
-                    () => {
-                        clearFieldError(
-                            input
-                        );
-                        hideFormError();
-                    }
-                );
-            });
-    }
-
-    /* =========================================================================
-       SUBMIT BUTTON STATE
-       ========================================================================= */
-
-    function setSubmitting(
-        submitting
-    ) {
-
-        isSubmitting =
-            submitting;
-
-        if (!placeOrderButton) {
-            return;
-        }
-
-        placeOrderButton.disabled =
-            submitting;
-
-        if (submitting) {
-
-            if (buttonText) {
-                buttonText.textContent =
-                    "Processing Order...";
-            }
-
-            if (buttonSpinner) {
-                buttonSpinner.hidden =
-                    false;
-            }
-
-        } else {
-
-            if (buttonText) {
-                buttonText.textContent =
-                    "Place Order";
-            }
-
-            if (buttonSpinner) {
-                buttonSpinner.hidden =
-                    true;
-            }
-        }
-    }
-
-    /* =========================================================================
-       ORDER PAYLOAD
-       ========================================================================= */
-
-    function buildOrderPayload(
-        totals
-    ) {
-
-        const firstName =
-            String(
-                document.getElementById(
-                    "first-name"
-                )?.value || ""
-            ).trim();
-
-        const lastName =
-            String(
-                document.getElementById(
-                    "last-name"
-                )?.value || ""
-            ).trim();
-
-        const email =
-            String(
-                document.getElementById(
-                    "email"
-                )?.value || ""
-            ).trim();
-
-        const phone =
-            String(
-                document.getElementById(
-                    "phone"
-                )?.value || ""
-            ).trim();
-
-        const address =
-            String(
-                document.getElementById(
-                    "address"
-                )?.value || ""
-            ).trim();
-
-        const city =
-            String(
-                document.getElementById(
-                    "city"
-                )?.value || ""
-            ).trim();
-
-        const postalCode =
-            String(
-                document.getElementById(
-                    "postal-code"
-                )?.value || ""
-            ).trim();
-
-        const country =
-            String(
-                countryInput?.value || ""
-            ).trim();
-
-        const paymentMethod =
-            String(
-                document.querySelector(
-                    'input[name="paymentMethod"]:checked'
-                )?.value || ""
-            );
-
-        const customerName =
-            `${firstName} ${lastName}`
-                .replace(/\s+/g, " ")
-                .trim();
-
-        /*
-         * This is the safe order payload.
-         *
-         * No card number.
-         * No CVC.
-         * No CVV.
-         */
-
-        return {
-            customerName,
-
-            firstName,
-            lastName,
-
-            email,
-            phone,
-
-            shippingAddress: {
-                address,
-                city,
-                postalCode,
-                country
-            },
-
-            /*
-             * Keep "address" at top level as well for compatibility with
-             * an existing Worker that expects the older structure.
-             */
-            address,
-            city,
-            postalCode,
-            country,
-
-            paymentMethod,
-
-            cart: totals.items.map(
-                item => ({
-                    id: item.id,
-                    sku: item.sku,
-                    name: item.name,
-                    price: Number(
-                        item.price.toFixed(2)
-                    ),
-                    quantity: item.quantity
-                })
-            ),
-
-            subtotal: Number(
-                totals.subtotal.toFixed(2)
-            ),
-
-            shipping: Number(
-                totals.shipping.toFixed(2)
-            ),
-
-            tax: Number(
-                totals.tax.toFixed(2)
-            ),
-
-            total: Number(
-                totals.total.toFixed(2)
-            ),
-
-            currency: "USD"
-        };
-    }
-
-    /* =========================================================================
-       ORDER SUBMISSION
-       ========================================================================= */
-
-    async function submitOrder() {
-
-        if (isSubmitting) {
-            return;
-        }
-
-        cart = getCart();
-
-        if (!cart.length) {
-
-            showFormError(
-                "Your cart is empty."
-            );
-
-            setTimeout(() => {
-                window.location.href =
-                    "cart.html";
-            }, 1200);
-
-            return;
-        }
-
-        if (!validateForm()) {
-
-            const firstInvalid =
-                document.querySelector(
-                    ".form-input.invalid"
-                );
-
-            if (firstInvalid) {
-
-                firstInvalid.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center"
-                });
-
-                firstInvalid.focus();
-            }
-
-            return;
-        }
-
-        setSubmitting(true);
 
         try {
 
-            await fetchProducts();
-
-            /*
-             * Re-read cart immediately before submission.
-             * This prevents submitting stale cart data.
-             */
             cart = getCart();
 
             if (!cart.length) {
-                throw new Error(
-                    "Your cart is empty."
-                );
+
+                renderEmptySummary();
+
+                return;
             }
 
-            const totals =
-                calculateTotals();
+            await fetchProducts();
 
-            if (!totals.items.length) {
+            let total = 0;
 
-                throw new Error(
-                    "No valid products were found in your cart."
-                );
-            }
+            const validItems = [];
 
-            const payload =
-                buildOrderPayload(
-                    totals
-                );
+            let itemsHTML = `
+                <div class="max-h-72 overflow-y-auto space-y-4 pr-1">
+            `;
 
-            console.log(
-                "[PRASUN SHOP] Submitting order:",
-                {
-                    ...payload,
-                    /*
-                     * Nothing sensitive should be here.
-                     */
-                }
-            );
+            cart.forEach(item => {
 
-            const response =
-                await fetchWithTimeout(
-                    API_ENDPOINT,
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json",
-
-                            "Accept":
-                                "application/json"
-                        },
-
-                        body:
-                            JSON.stringify(
-                                payload
-                            )
-                    }
-                );
-
-            const responseText =
-                await response.text();
-
-            let responseData = null;
-
-            try {
-
-                responseData =
-                    responseText
-                        ? JSON.parse(
-                            responseText
-                        )
-                        : null;
-
-            } catch (_) {
-
-                responseData = null;
-            }
-
-            if (!response.ok) {
-
-                const serverMessage =
-                    responseData &&
-                    (
-                        responseData.error ||
-                        responseData.message
+                const product =
+                    productMap.get(
+                        String(item.id)
                     );
 
-                throw new Error(
-                    serverMessage ||
-                    `Order server returned HTTP ${response.status}.`
-                );
+                if (!product) {
+                    return;
+                }
+
+                const price =
+                    Number(product.price) || 0;
+
+                const quantity =
+                    Number(item.quantity) || 1;
+
+                const subtotal =
+                    price * quantity;
+
+                total += subtotal;
+
+                validItems.push({
+                    id:
+                        String(product.id),
+
+                    name:
+                        String(
+                            product.name ||
+                            "Product"
+                        ),
+
+                    price,
+
+                    quantity
+                });
+
+                const image =
+                    escapeHTML(
+                        product.image || ""
+                    );
+
+                const name =
+                    escapeHTML(
+                        product.name ||
+                        "Product"
+                    );
+
+                itemsHTML += `
+                    <div class="flex items-center gap-4 py-4 border-b border-zinc-100">
+
+                        <img
+                            src="${image}"
+                            alt="${name}"
+                            class="w-16 h-16 object-contain rounded-xl border border-zinc-200/60 bg-zinc-100 shrink-0"
+                            loading="lazy"
+                            decoding="async"
+                        >
+
+                        <div class="flex-grow min-w-0">
+
+                            <h3 class="text-sm font-semibold text-zinc-900 truncate">
+                                ${name}
+                            </h3>
+
+                            <p class="text-xs text-zinc-500">
+                                Qty: ${quantity}
+                            </p>
+
+                        </div>
+
+                        <div class="text-right shrink-0">
+
+                            <p class="text-sm font-bold text-zinc-900">
+                                ${formatPrice(subtotal)}
+                            </p>
+
+                            <p class="text-[11px] text-zinc-400">
+                                ${formatPrice(price)} each
+                            </p>
+
+                        </div>
+
+                    </div>
+                `;
+            });
+
+            itemsHTML += `
+                </div>
+            `;
+
+            if (!validItems.length) {
+
+                renderEmptySummary();
+
+                return;
             }
 
-            /*
-             * If your Worker explicitly returns:
-             *
-             * { success: false, ... }
-             *
-             * do not clear the cart.
-             */
-            if (
-                responseData &&
-                responseData.success === false
-            ) {
+            itemsHTML += `
+                <div class="pt-4 space-y-2">
 
-                throw new Error(
-                    responseData.message ||
-                    responseData.error ||
-                    "The order could not be completed."
-                );
-            }
+                    <div class="flex justify-between text-xs text-zinc-500">
 
-            console.log(
-                "[PRASUN SHOP] Order submitted successfully:",
-                responseData
-            );
+                        <span>
+                            Subtotal
+                        </span>
 
-            /*
-             * Store order information for the success page.
-             *
-             * Do not store payment credentials.
-             */
-            try {
+                        <span class="font-medium text-zinc-900">
+                            ${formatPrice(total)}
+                        </span>
 
-                sessionStorage.setItem(
-                    "prasun_last_order",
-                    JSON.stringify({
-                        orderId:
-                            responseData?.orderId ||
-                            responseData?.id ||
-                            "",
+                    </div>
 
-                        customerName:
-                            payload.customerName,
+                    <div class="flex justify-between text-xs text-zinc-500">
 
-                        email:
-                            payload.email,
+                        <span>
+                            Shipping
+                        </span>
 
-                        total:
-                            payload.total,
+                        <span class="text-emerald-600 font-semibold">
+                            Free
+                        </span>
 
-                        currency:
-                            payload.currency
-                    })
-                );
+                    </div>
 
-            } catch (storageError) {
+                    <div class="flex justify-between text-base font-bold text-zinc-900 pt-3 border-t border-zinc-100">
 
-                console.warn(
-                    "[PRASUN SHOP] Could not save order session:",
-                    storageError
-                );
-            }
+                        <span>
+                            Total
+                        </span>
 
-            /*
-             * Clear cart only after the Worker confirms success.
-             */
-            clearCart();
+                        <span>
+                            ${formatPrice(total)}
+                        </span>
 
-            window.dispatchEvent(
-                new CustomEvent(
-                    "prasunCartUpdated",
-                    {
-                        detail: {
-                            cart: []
-                        }
-                    }
-                )
-            );
+                    </div>
 
-            window.location.href =
-                "order-success.html";
+                </div>
+            `;
+
+            orderSummary.innerHTML =
+                itemsHTML;
 
         } catch (error) {
 
             console.error(
-                "[PRASUN SHOP] Order submission failed:",
+                "[PRASUN SHOP] Summary error:",
                 error
             );
 
-            showFormError(
-                error?.message ||
-                "Something went wrong while placing your order. Please try again."
-            );
+            orderSummary.innerHTML = `
+                <div class="py-6 text-center">
 
-            setSubmitting(false);
-        }
-    }
+                    <p class="text-xs text-red-500 font-medium mb-3">
+                        Failed to load order summary.
+                    </p>
 
-    /* =========================================================================
-       PLACE ORDER BUTTON
-       ========================================================================= */
+                    <button
+                        type="button"
+                        id="retry-summary-btn"
+                        class="px-3 py-1.5 text-xs font-semibold text-white bg-zinc-900 rounded-lg hover:bg-zinc-800"
+                    >
+                        Retry
+                    </button>
 
-    function setupPlaceOrderButton() {
+                </div>
+            `;
 
-        if (!placeOrderButton) {
-            return;
-        }
+            const retryButton =
+                document.getElementById(
+                    "retry-summary-btn"
+                );
 
-        placeOrderButton.addEventListener(
-            "click",
-            event => {
+            if (retryButton) {
 
-                event.preventDefault();
-
-                submitOrder();
+                retryButton.addEventListener(
+                    "click",
+                    loadCheckoutSummary
+                );
             }
-        );
+        }
     }
 
     /* =========================================================================
-       FORM SUBMIT FALLBACK
+       PARSE SERVER RESPONSE
        ========================================================================= */
 
-    function setupFormSubmit() {
+    async function parseServerResponse(
+        response
+    ) {
 
-        if (!checkoutForm) {
-            return;
+        const text =
+            await response.text();
+
+        let data = null;
+
+        try {
+
+            data =
+                text
+                    ? JSON.parse(text)
+                    : null;
+
+        } catch {
+
+            data = null;
         }
+
+        if (!response.ok) {
+
+            const message =
+                data?.error ||
+                data?.message ||
+                `Order server returned HTTP ${response.status}.`;
+
+            throw new Error(message);
+        }
+
+        if (
+            data &&
+            data.success === false
+        ) {
+
+            throw new Error(
+                data.error ||
+                "The order could not be created."
+            );
+        }
+
+        return data;
+    }
+
+    /* =========================================================================
+       SUBMIT ORDER
+       ========================================================================= */
+
+    if (checkoutForm) {
 
         checkoutForm.addEventListener(
             "submit",
-            event => {
+            async event => {
 
                 event.preventDefault();
 
-                submitOrder();
+                hideFormError();
+
+                let submitButton =
+                    checkoutForm.querySelector(
+                        'button[type="submit"]'
+                    );
+
+                if (!submitButton) {
+                    return;
+                }
+
+                if (
+                    submitButton.dataset.processing ===
+                    "true"
+                ) {
+                    return;
+                }
+
+                cart = getCart();
+
+                if (!cart.length) {
+
+                    showFormError(
+                        "Your cart is empty. Please add a product before checking out."
+                    );
+
+                    return;
+                }
+
+                submitButton.dataset.processing =
+                    "true";
+
+                const originalText =
+                    submitButton.textContent;
+
+                submitButton.disabled =
+                    true;
+
+                submitButton.textContent =
+                    "Processing Order...";
+
+                submitButton.classList.add(
+                    "opacity-75",
+                    "cursor-not-allowed"
+                );
+
+                try {
+
+                    const formData =
+                        new FormData(
+                            checkoutForm
+                        );
+
+                    const customerName =
+                        String(
+                            formData.get("name") ||
+                            formData.get("customerName") ||
+                            ""
+                        ).trim();
+
+                    const email =
+                        String(
+                            formData.get("email") ||
+                            ""
+                        ).trim();
+
+                    const phone =
+                        String(
+                            formData.get("phone") ||
+                            ""
+                        ).trim();
+
+                    const address =
+                        String(
+                            formData.get("address") ||
+                            ""
+                        ).trim();
+
+                    const city =
+                        String(
+                            formData.get("city") ||
+                            ""
+                        ).trim();
+
+                    const province =
+                        String(
+                            formData.get("province") ||
+                            formData.get("state") ||
+                            ""
+                        ).trim();
+
+                    const country =
+                        String(
+                            formData.get("country") ||
+                            ""
+                        ).trim();
+
+                    const countryCode =
+                        String(
+                            formData.get(
+                                "countryCode"
+                            ) ||
+                            "US"
+                        ).trim()
+                            .toUpperCase();
+
+                    const postalCode =
+                        String(
+                            formData.get(
+                                "postalCode"
+                            ) ||
+                            formData.get(
+                                "zip"
+                            ) ||
+                            ""
+                        ).trim();
+
+                    const remark =
+                        String(
+                            formData.get(
+                                "remark"
+                            ) ||
+                            ""
+                        ).trim();
+
+                    /* ---------------------------------------------------------
+                       VALIDATION
+                       --------------------------------------------------------- */
+
+                    if (!customerName) {
+
+                        throw new Error(
+                            "Please enter your full name."
+                        );
+                    }
+
+                    if (
+                        !email ||
+                        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+                            .test(email)
+                    ) {
+
+                        throw new Error(
+                            "Please enter a valid email address."
+                        );
+                    }
+
+                    if (!address) {
+
+                        throw new Error(
+                            "Please enter your shipping address."
+                        );
+                    }
+
+                    if (!city) {
+
+                        throw new Error(
+                            "Please enter your city."
+                        );
+                    }
+
+                    if (!province) {
+
+                        throw new Error(
+                            "Please enter your state/province."
+                        );
+                    }
+
+                    if (
+                        !countryCode ||
+                        countryCode.length !== 2
+                    ) {
+
+                        throw new Error(
+                            "Please select a valid country."
+                        );
+                    }
+
+                    /* ---------------------------------------------------------
+                       CONFIRM PRODUCTS
+                       --------------------------------------------------------- */
+
+                    await fetchProducts();
+
+                    const enrichedCart =
+                        cart
+                            .map(item => {
+
+                                const product =
+                                    productMap.get(
+                                        String(item.id)
+                                    );
+
+                                if (!product) {
+                                    return null;
+                                }
+
+                                return {
+                                    id:
+                                        String(
+                                            product.id
+                                        ),
+
+                                    quantity:
+                                        Math.min(
+                                            MAX_QUANTITY,
+                                            Math.max(
+                                                1,
+                                                Math.floor(
+                                                    Number(
+                                                        item.quantity
+                                                    ) || 1
+                                                )
+                                            )
+                                        )
+                                };
+
+                            })
+                            .filter(Boolean);
+
+                    if (
+                        !enrichedCart.length
+                    ) {
+
+                        throw new Error(
+                            "No valid products were found in your cart."
+                        );
+                    }
+
+                    /* ---------------------------------------------------------
+                       SEND TO CLOUDFLARE WORKER
+                       --------------------------------------------------------- */
+
+                    const response =
+                        await fetchWithTimeout(
+                            API_ORDER_ENDPOINT,
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+
+                                    "Accept":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify({
+                                        customerName,
+                                        email,
+                                        phone,
+                                        address,
+                                        city,
+                                        province,
+                                        country,
+                                        countryCode,
+                                        postalCode,
+                                        remark,
+                                        cart:
+                                            enrichedCart
+                                    })
+                            }
+                        );
+
+                    const responseData =
+                        await parseServerResponse(
+                            response
+                        );
+
+                    console.log(
+                        "[PRASUN SHOP] Order created:",
+                        responseData
+                    );
+
+                    /* ---------------------------------------------------------
+                       ONLY CLEAR CART AFTER SUCCESS
+                       --------------------------------------------------------- */
+
+                    clearAllCartKeys();
+
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            "prasunCartUpdated",
+                            {
+                                detail: {
+                                    cart: []
+                                }
+                            }
+                        )
+                    );
+
+                    /* ---------------------------------------------------------
+                       SAVE ORDER RESULT FOR SUCCESS PAGE
+                       --------------------------------------------------------- */
+
+                    try {
+
+                        sessionStorage.setItem(
+                            "prasun_last_order",
+                            JSON.stringify({
+                                orderNumber:
+                                    responseData.orderNumber ||
+                                    "",
+
+                                customerName,
+
+                                email
+                            })
+                        );
+
+                    } catch (_) {
+                        /* Ignore storage failure */
+                    }
+
+                    /* ---------------------------------------------------------
+                       SUCCESS
+                       --------------------------------------------------------- */
+
+                    window.location.href =
+                        "order-success.html";
+
+                } catch (error) {
+
+                    console.error(
+                        "[PRASUN SHOP] Order submission error:",
+                        error
+                    );
+
+                    showFormError(
+                        error?.message ||
+                        "Something went wrong while placing your order."
+                    );
+
+                    submitButton.disabled =
+                        false;
+
+                    submitButton.textContent =
+                        originalText;
+
+                    submitButton.classList.remove(
+                        "opacity-75",
+                        "cursor-not-allowed"
+                    );
+
+                    submitButton.dataset.processing =
+                        "false";
+                }
             }
         );
     }
 
     /* =========================================================================
-       CROSS-TAB SYNCHRONIZATION
+       CROSS-TAB CART SYNC
        ========================================================================= */
 
     window.addEventListener(
@@ -2300,122 +1097,33 @@
 
             if (
                 event.key === CART_KEY ||
-                LEGACY_CART_KEYS.includes(
+                LEGACY_KEYS.includes(
                     event.key
                 )
             ) {
 
-                cart = getCart();
-
-                /*
-                 * Re-render using the existing product map if possible.
-                 */
-                if (
-                    productMap.size > 0
-                ) {
-
-                    renderSummary();
-
-                } else {
-
-                    loadCheckout();
-                }
+                loadCheckoutSummary();
             }
         }
     );
 
     /* =========================================================================
-       CUSTOM CART EVENT
+       CART EVENT SYNC
        ========================================================================= */
 
     window.addEventListener(
         "prasunCartUpdated",
         () => {
-
-            cart = getCart();
-
-            loadCheckout();
+            loadCheckoutSummary();
         }
     );
 
     /* =========================================================================
-       INITIALIZATION
+       INITIAL LOAD
        ========================================================================= */
 
-    async function loadCheckout() {
+    let cart = getCart();
 
-        cart = getCart();
-
-        updateCartCount();
-
-        if (!cart.length) {
-
-            showEmptyCart();
-
-            return;
-        }
-
-        try {
-
-            await fetchProducts();
-
-            renderSummary();
-
-        } catch (error) {
-
-            console.error(
-                "[PRASUN SHOP] Checkout initialization error:",
-                error
-            );
-
-            showFormError(
-                "We could not load your cart products. Please refresh the page and try again."
-            );
-
-            /*
-             * Keep checkout visible so the user can retry.
-             */
-            showCheckout();
-        }
-    }
-
-    function initialize() {
-
-        setupCountryDropdown();
-
-        setupPaymentMethods();
-
-        setupCardFormatting();
-
-        setupFieldListeners();
-
-        setupPlaceOrderButton();
-
-        setupFormSubmit();
-
-        loadCheckout();
-    }
-
-    /* =========================================================================
-       START
-       ========================================================================= */
-
-    if (
-        document.readyState ===
-        "loading"
-    ) {
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            initialize,
-            {
-                once: true
-            }
-        );
-
-    } else {
-
-        initialize();
-    }
+    loadCheckoutSummary();
 
 })();
