@@ -468,7 +468,7 @@ img {
   border-color: var(--text-dark);
 }
 
-/* 6. PRODUCT GRID & CARDS (Aligned with JS output)
+/* 6. PRODUCT GRID & CARDS (Corrected Layout Alignment)
    -------------------------------------------------------------------------- */
 .products-grid,
 #product-list {
@@ -487,7 +487,9 @@ img {
   transition: var(--transition-normal);
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   position: relative;
+  height: 100%;
 }
 
 .product-card:hover {
@@ -500,7 +502,7 @@ img {
   opacity: 0.75;
 }
 
-/* Supports both .product-card-image and .product-image-wrapper */
+/* Image Wrapper */
 .product-card-image,
 .product-image-wrapper {
   width: 100%;
@@ -508,6 +510,9 @@ img {
   background-color: var(--neutral-100);
   overflow: hidden;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .product-card-image img,
@@ -521,8 +526,12 @@ img {
 .product-card-image img.is-fallback,
 .product-image.is-fallback {
   object-fit: contain;
-  padding: 2rem;
-  opacity: 0.6;
+  padding: 1rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  background-color: var(--neutral-100);
 }
 
 .product-card:hover .product-card-image img:not(.is-fallback),
@@ -539,37 +548,6 @@ img {
   flex-grow: 1;
 }
 
-/* Brand & Rating Meta Row */
-.product-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.35rem;
-  font-size: 0.75rem;
-}
-
-.product-brand {
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-}
-
-.product-rating {
-  font-weight: 700;
-  color: var(--accent-amber);
-}
-
-.product-category {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--primary-color);
-  letter-spacing: 0.05em;
-  margin-bottom: 0.35rem;
-  display: block;
-}
-
 .product-title,
 .product-name {
   font-size: 1.05rem;
@@ -579,16 +557,6 @@ img {
   margin-bottom: 0.5rem;
 }
 
-.product-title-link {
-  color: inherit;
-  transition: var(--transition-fast);
-}
-
-.product-title-link:hover {
-  color: var(--primary-color);
-}
-
-/* Description handling with 2-line clamp */
 .product-description {
   font-size: 0.875rem;
   color: var(--text-muted);
@@ -601,7 +569,7 @@ img {
   line-height: 1.45;
 }
 
-/* Footer row inside cards */
+/* Bottom Price & Button Bar */
 .product-bottom {
   margin-top: auto;
   display: flex;
