@@ -4,7 +4,7 @@
 
   <!-- =====================================================
        GOOGLE ANALYTICS
-       ===================================================== -->
+       ===================================================================== -->
 
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"></script>
 
@@ -22,7 +22,7 @@
 
   <!-- =====================================================
        BASIC META
-       ===================================================== -->
+       ===================================================================== -->
 
   <meta charset="UTF-8">
 
@@ -41,7 +41,7 @@
 
   <!-- =====================================================
        FAVICON
-       ===================================================== -->
+       ===================================================================== -->
 
   <link
     rel="icon"
@@ -59,1046 +59,19 @@
     rel="apple-touch-icon"
     href="apple-touch-icon.png"
   >
-<link rel="stylesheet" href="style.css">
+
+  <link rel="stylesheet" href="style.css">
+
 
   <!-- =====================================================
        GOOGLE ADSENSE
-       ===================================================== -->
+       ===================================================================== -->
 
   <script
     async
     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168"
     crossorigin="anonymous">
   </script>
-
-
-  <!-- =====================================================
-       STYLES
-       ===================================================== -->
-
-  <style>
-
-    /* =====================================================
-       VARIABLES
-       ===================================================== */
-
-    :root {
-
-      --shop-text: #334155;
-      --shop-heading: #0f172a;
-      --shop-subtext: #64748b;
-
-      --shop-divider: #e2e8f0;
-
-      --shop-card-bg: #ffffff;
-      --shop-card-border: #e2e8f0;
-
-      --shop-page-bg: #f8fafc;
-
-      --shop-price: #b12704;
-
-      --shop-primary: #ffd814;
-      --shop-primary-hover: #f7ca00;
-      --shop-primary-active: #f0b800;
-
-      --shop-focus: #2563eb;
-
-      --shop-shadow:
-        0 4px 6px -1px rgba(0,0,0,.05),
-        0 2px 4px -2px rgba(0,0,0,.05);
-
-      --shop-hover-shadow:
-        0 20px 25px -5px rgba(0,0,0,.08),
-        0 8px 10px -6px rgba(0,0,0,.04);
-    }
-
-
-    /* =====================================================
-       RESET
-       ===================================================== */
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-
-    /* =====================================================
-       BODY
-       ===================================================== */
-
-    body {
-
-      background: var(--shop-page-bg);
-
-      color: var(--shop-text);
-
-      font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        Helvetica,
-        Arial,
-        sans-serif;
-
-      line-height: 1.5;
-
-      -webkit-font-smoothing: antialiased;
-    }
-
-
-    /* =====================================================
-       HEADER
-       ===================================================== */
-
-    .header {
-
-      border-bottom: 1px solid #e2e8f0;
-
-      position: sticky;
-
-      top: 0;
-
-      background: rgba(255,255,255,.95);
-
-      backdrop-filter: blur(12px);
-
-      -webkit-backdrop-filter: blur(12px);
-
-      z-index: 100;
-    }
-
-
-    .header-container {
-
-      max-width: 1080px;
-
-      margin: 0 auto;
-
-      display: flex;
-
-      justify-content: space-between;
-
-      align-items: center;
-
-      padding: 1rem 1.5rem;
-    }
-
-
-    .logo {
-
-      display: flex;
-
-      align-items: center;
-
-      gap: 10px;
-
-      text-decoration: none;
-
-      color: #0f172a;
-
-      font-weight: 700;
-
-      font-size: 1.15rem;
-
-      letter-spacing: -.01em;
-    }
-
-
-    .nav-links {
-
-      display: flex;
-
-      align-items: center;
-
-      gap: 1.5rem;
-    }
-
-
-    .nav-links a {
-
-      text-decoration: none;
-
-      color: #64748b;
-
-      font-size: .95rem;
-
-      font-weight: 500;
-
-      transition: color .2s ease;
-    }
-
-
-    .nav-links a:hover,
-    .nav-links a.active {
-
-      color: #0f172a;
-
-      font-weight: 600;
-    }
-
-
-    /* =====================================================
-       CART LINK
-       ===================================================== */
-
-    .cart-link {
-
-      position: relative;
-
-      display: inline-flex;
-
-      align-items: center;
-
-      gap: 6px;
-    }
-
-
-    .cart-count {
-
-      min-width: 20px;
-
-      height: 20px;
-
-      padding: 0 5px;
-
-      display: inline-flex;
-
-      align-items: center;
-
-      justify-content: center;
-
-      border-radius: 999px;
-
-      background: #0f172a;
-
-      color: #ffffff;
-
-      font-size: 11px;
-
-      font-weight: 700;
-    }
-
-
-    /* =====================================================
-       MAIN STORE
-       ===================================================== */
-
-    .shop-container {
-
-      max-width: 1080px;
-
-      margin: 0 auto;
-
-      padding: 32px 24px 48px;
-    }
-
-
-    .shop-title {
-
-      color: var(--shop-heading);
-
-      font-size: 2rem;
-
-      font-weight: 800;
-
-      letter-spacing: -.02em;
-
-      margin-bottom: 8px;
-    }
-
-
-    .shop-subtitle {
-
-      color: var(--shop-subtext);
-
-      font-size: 1.05rem;
-
-      margin-bottom: 28px;
-    }
-
-
-    /* =====================================================
-       PRODUCT CONTROLS
-       ===================================================== */
-
-    .products-toolbar {
-
-      display: grid;
-
-      grid-template-columns:
-        minmax(0, 1fr)
-        auto;
-
-      gap: 12px;
-
-      margin-bottom: 20px;
-    }
-
-
-    .search-wrapper {
-
-      position: relative;
-    }
-
-
-    .products-search-input {
-
-      width: 100%;
-
-      height: 44px;
-
-      padding:
-        0 44px
-        0 14px;
-
-      border:
-        1px solid #cbd5e1;
-
-      border-radius: 8px;
-
-      background: #ffffff;
-
-      color: #0f172a;
-
-      font-size: 14px;
-
-      outline: none;
-
-      transition:
-        border-color .2s ease,
-        box-shadow .2s ease;
-    }
-
-
-    .products-search-input:focus {
-
-      border-color: var(--shop-focus);
-
-      box-shadow:
-        0 0 0 3px rgba(37,99,235,.12);
-    }
-
-
-    .search-clear {
-
-      position: absolute;
-
-      right: 10px;
-
-      top: 50%;
-
-      transform: translateY(-50%);
-
-      border: 0;
-
-      background: transparent;
-
-      color: #64748b;
-
-      cursor: pointer;
-
-      font-size: 20px;
-
-      line-height: 1;
-    }
-
-
-    .products-sort {
-
-      height: 44px;
-
-      padding: 0 12px;
-
-      border:
-        1px solid #cbd5e1;
-
-      border-radius: 8px;
-
-      background: #ffffff;
-
-      color: #334155;
-
-      font-size: 14px;
-
-      cursor: pointer;
-    }
-
-
-    /* =====================================================
-       CATEGORIES
-       ===================================================== */
-
-    .products-categories {
-
-      display: flex;
-
-      flex-wrap: wrap;
-
-      gap: 8px;
-
-      margin-bottom: 20px;
-    }
-
-
-    .category-pill {
-
-      border:
-        1px solid #cbd5e1;
-
-      border-radius: 999px;
-
-      background: #ffffff;
-
-      color: #475569;
-
-      padding: 7px 14px;
-
-      font-size: 13px;
-
-      font-weight: 600;
-
-      cursor: pointer;
-
-      transition:
-        background .2s ease,
-        color .2s ease,
-        border-color .2s ease;
-    }
-
-
-    .category-pill:hover {
-
-      border-color: #94a3b8;
-
-      color: #0f172a;
-    }
-
-
-    .category-pill.active {
-
-      background: #0f172a;
-
-      border-color: #0f172a;
-
-      color: #ffffff;
-    }
-
-
-    /* =====================================================
-       RESULTS INFO
-       ===================================================== */
-
-    .products-result-bar {
-
-      display: flex;
-
-      justify-content: space-between;
-
-      align-items: center;
-
-      gap: 12px;
-
-      margin-bottom: 18px;
-
-      color: var(--shop-subtext);
-
-      font-size: 13px;
-    }
-
-
-    /* =====================================================
-       PRODUCT GRID
-       ===================================================== */
-
-    .product-grid {
-
-      display: grid;
-
-      grid-template-columns:
-        repeat(auto-fill, minmax(220px, 1fr));
-
-      gap: 24px;
-    }
-
-
-    /* =====================================================
-       PRODUCT CARD
-       ===================================================== */
-
-    .product-card {
-
-      background: var(--shop-card-bg);
-
-      border:
-        1px solid var(--shop-card-border);
-
-      border-radius: 12px;
-
-      overflow: hidden;
-
-      box-shadow: var(--shop-shadow);
-
-      transition:
-        transform .2s ease,
-        box-shadow .2s ease;
-    }
-
-
-    .product-card:hover {
-
-      transform: translateY(-4px);
-
-      box-shadow: var(--shop-hover-shadow);
-    }
-
-
-    .product-card-inner {
-
-      height: 100%;
-
-      display: flex;
-
-      flex-direction: column;
-    }
-
-
-    .product-card-link {
-
-      color: inherit;
-
-      text-decoration: none;
-
-      display: flex;
-
-      flex-direction: column;
-
-      flex-grow: 1;
-    }
-
-
-    /* =====================================================
-       PRODUCT IMAGE
-       ===================================================== */
-
-    .product-card-image {
-
-      position: relative;
-
-      width: 100%;
-
-      aspect-ratio: 1 / 1;
-
-      background: #f8fafc;
-
-      overflow: hidden;
-    }
-
-
-    .product-card-image img {
-
-      width: 100%;
-
-      height: 100%;
-
-      object-fit: contain;
-
-      padding: 12px;
-
-      transition:
-        transform .3s ease;
-    }
-
-
-    .product-card:hover
-    .product-card-image img {
-
-      transform: scale(1.04);
-    }
-
-
-    .product-category {
-
-      position: absolute;
-
-      top: 10px;
-
-      left: 10px;
-
-      background: rgba(15,23,42,.9);
-
-      color: #ffffff;
-
-      padding: 4px 8px;
-
-      border-radius: 999px;
-
-      font-size: 10px;
-
-      font-weight: 700;
-
-      text-transform: uppercase;
-
-      letter-spacing: .04em;
-    }
-
-
-    /* =====================================================
-       PRODUCT BODY
-       ===================================================== */
-
-    .product-card-body {
-
-      padding: 15px 16px 12px;
-    }
-
-
-    .product-meta {
-
-      margin-bottom: 5px;
-    }
-
-
-    .product-rating {
-
-      color: #b45309;
-
-      font-size: 12px;
-
-      font-weight: 700;
-    }
-
-
-    .product-title {
-
-      color: var(--shop-heading);
-
-      font-size: 16px;
-
-      font-weight: 700;
-
-      line-height: 1.35;
-
-      margin-bottom: 6px;
-
-      display: -webkit-box;
-
-      -webkit-line-clamp: 2;
-
-      -webkit-box-orient: vertical;
-
-      overflow: hidden;
-    }
-
-
-    .product-description {
-
-      color: var(--shop-subtext);
-
-      font-size: 13px;
-
-      line-height: 1.45;
-
-      margin-bottom: 10px;
-
-      display: -webkit-box;
-
-      -webkit-line-clamp: 2;
-
-      -webkit-box-orient: vertical;
-
-      overflow: hidden;
-    }
-
-
-    .product-price {
-
-      color: var(--shop-price);
-
-      font-size: 20px;
-
-      font-weight: 800;
-
-      line-height: 1.2;
-    }
-
-
-    /* =====================================================
-       PRODUCT ACTIONS
-       ===================================================== */
-
-    .product-card-actions {
-
-      padding: 0 16px 16px;
-    }
-
-
-    .btn-add-to-cart {
-
-      width: 100%;
-
-      border:
-        1px solid #f2c200;
-
-      border-radius: 999px;
-
-      background: var(--shop-primary);
-
-      color: #0f172a;
-
-      padding: 10px 14px;
-
-      font-size: 14px;
-
-      font-weight: 700;
-
-      cursor: pointer;
-
-      transition:
-        background .15s ease,
-        transform .08s ease;
-    }
-
-
-    .btn-add-to-cart:hover {
-
-      background: var(--shop-primary-hover);
-    }
-
-
-    .btn-add-to-cart:active {
-
-      background: var(--shop-primary-active);
-
-      transform: scale(.98);
-    }
-
-
-    .btn-add-to-cart:focus-visible {
-
-      outline:
-        3px solid var(--shop-focus);
-
-      outline-offset: 3px;
-    }
-
-
-    /* =====================================================
-       LOAD MORE
-       ===================================================== */
-
-    .products-pagination-container {
-
-      grid-column: 1 / -1;
-
-      text-align: center;
-
-      padding: 16px 0 4px;
-    }
-
-
-    .btn-load-more {
-
-      border:
-        1px solid #cbd5e1;
-
-      border-radius: 999px;
-
-      background: #ffffff;
-
-      color: #0f172a;
-
-      padding: 10px 24px;
-
-      font-size: 14px;
-
-      font-weight: 700;
-
-      cursor: pointer;
-    }
-
-
-    .btn-load-more:hover {
-
-      background: #f1f5f9;
-    }
-
-
-    /* =====================================================
-       EMPTY / ERROR
-       ===================================================== */
-
-    .products-empty,
-    .products-error {
-
-      grid-column: 1 / -1;
-
-      text-align: center;
-
-      padding: 60px 20px;
-
-      background: #ffffff;
-
-      border:
-        1px solid var(--shop-card-border);
-
-      border-radius: 12px;
-    }
-
-
-    .products-empty h2,
-    .products-error h2 {
-
-      color: var(--shop-heading);
-
-      font-size: 1.2rem;
-
-      margin-bottom: 6px;
-    }
-
-
-    .products-empty p,
-    .products-error p {
-
-      color: var(--shop-subtext);
-
-      font-size: 14px;
-
-      margin-bottom: 16px;
-    }
-
-
-    .products-empty-button {
-
-      border: 0;
-
-      border-radius: 999px;
-
-      background: #0f172a;
-
-      color: #ffffff;
-
-      padding: 9px 18px;
-
-      font-size: 13px;
-
-      font-weight: 700;
-
-      cursor: pointer;
-    }
-
-
-    /* =====================================================
-       STORE INFORMATION
-       ===================================================== */
-
-    .store-info {
-
-      border-top:
-        1px solid var(--shop-divider);
-
-      margin-top: 42px;
-
-      padding-top: 24px;
-    }
-
-
-    .store-info h2 {
-
-      color: var(--shop-heading);
-
-      font-size: 1rem;
-
-      margin-bottom: 8px;
-    }
-
-
-    .store-info p {
-
-      color: var(--shop-subtext);
-
-      font-size: .875rem;
-    }
-
-
-    /* =====================================================
-       ACCESSIBILITY
-       ===================================================== */
-
-    .visually-hidden {
-
-      position: absolute !important;
-
-      width: 1px !important;
-
-      height: 1px !important;
-
-      padding: 0 !important;
-
-      margin: -1px !important;
-
-      overflow: hidden !important;
-
-      clip: rect(0, 0, 0, 0) !important;
-
-      white-space: nowrap !important;
-
-      border: 0 !important;
-    }
-
-
-    /* =====================================================
-       FOOTER
-       ===================================================== */
-
-    .footer {
-
-      border-top:
-        1px solid #e2e8f0;
-
-      background: #ffffff;
-
-      padding: 2.5rem 1.5rem;
-
-      text-align: center;
-
-      color: #64748b;
-
-      font-size: .875rem;
-
-      margin-top: 3rem;
-    }
-
-
-    .footer-links {
-
-      display: flex;
-
-      flex-wrap: wrap;
-
-      justify-content: center;
-
-      gap: 1.5rem;
-
-      margin-bottom: 1rem;
-    }
-
-
-    .footer-links a {
-
-      color: #64748b;
-
-      text-decoration: none;
-
-      font-weight: 500;
-    }
-
-
-    .footer-links a:hover {
-
-      color: #0f172a;
-
-      text-decoration: underline;
-    }
-
-
-    .footer p a {
-
-      color: #334155;
-
-      text-decoration: underline;
-
-      font-weight: 500;
-    }
-
-
-    /* =====================================================
-       MOBILE
-       ===================================================== */
-
-    @media (max-width: 640px) {
-
-      .header-container {
-
-        padding: .9rem 1rem;
-      }
-
-
-      .nav-links {
-
-        gap: .9rem;
-      }
-
-
-      .nav-links a {
-
-        font-size: .85rem;
-      }
-
-
-      .shop-container {
-
-        padding: 24px 16px 40px;
-      }
-
-
-      .shop-title {
-
-        font-size: 1.65rem;
-      }
-
-
-      .products-toolbar {
-
-        grid-template-columns: 1fr;
-      }
-
-
-      .product-grid {
-
-        grid-template-columns:
-          repeat(2, minmax(0, 1fr));
-
-        gap: 14px;
-      }
-
-
-      .product-card-body {
-
-        padding: 12px;
-      }
-
-
-      .product-card-actions {
-
-        padding:
-          0 12px 12px;
-      }
-
-
-      .product-title {
-
-        font-size: 14px;
-      }
-
-
-      .product-description {
-
-        font-size: 12px;
-      }
-
-
-      .product-price {
-
-        font-size: 18px;
-      }
-
-    }
-
-  </style>
 
 </head>
 
@@ -1108,7 +81,7 @@
 
   <!-- =====================================================
        HEADER
-       ===================================================== -->
+       ===================================================================== -->
 
   <header class="header">
 
@@ -1181,7 +154,7 @@
 
   <!-- =====================================================
        MAIN SHOP
-       ===================================================== -->
+       ===================================================================== -->
 
   <main class="shop-container">
 
@@ -1219,7 +192,7 @@
         >
 
         <button
-          id="search-clear"
+          id="clear-search"
           class="search-clear"
           type="button"
           aria-label="Clear search"
@@ -1282,6 +255,30 @@
         All
       </button>
 
+      <button
+        type="button"
+        class="category-pill"
+        data-category="Electronics"
+        aria-pressed="false">
+        Electronics
+      </button>
+
+      <button
+        type="button"
+        class="category-pill"
+        data-category="Home & Living"
+        aria-pressed="false">
+        Home & Living
+      </button>
+
+      <button
+        type="button"
+        class="category-pill"
+        data-category="Fitness"
+        aria-pressed="false">
+        Fitness
+      </button>
+
     </div>
 
 
@@ -1291,12 +288,12 @@
 
     <div class="products-result-bar">
 
-      <span id="products-heading">
+      <span id="page-heading">
         All Products
       </span>
 
       <span
-        id="products-count"
+        id="results-count"
         class="products-result-count">
         Loading products...
       </span>
@@ -1324,12 +321,15 @@
         </h2>
 
         <p>
-          Please wait while products are loaded.
+          Please wait while products are loaded from CJ Dropshipping.
         </p>
 
       </div>
 
     </section>
+
+    <!-- Hidden Live Region for Screen Readers -->
+    <div id="aria-live-region" class="visually-hidden" aria-live="polite"></div>
 
 
     <!-- ===================================================
@@ -1400,11 +400,10 @@
 
 
   <!-- =====================================================
-       PRODUCTS JAVASCRIPT
+       JAVASCRIPT
        ===================================================== -->
 
-  <script src="js/cart-count.js" defer></script>
-  <script src="js/products.js" defer></script>
+  <script src="script.js" defer></script>
 
 
 </body>
