@@ -66,23 +66,26 @@
         DOM.resultsCount.textContent = "Loading products...";
     }
 
-    try {
-        const endpoint = `${CONFIG.API_URL}?productName=${encodeURIComponent(keyword)}&pageNum=${page}&pageSize=${state.pageSize}`;
-        const response = await fetch(endpoint);
-        
-        if (!response.ok) {
-            throw new Error(`Server returned status ${response.status}`);
-        }
+    // Local mock products catalog for frontend-only testing
+    const mockProducts = [
+        { pid: "1", productNameEn: "Wireless Bluetooth Headphones", sellPrice: 29.99, description: "High-quality wireless headphones from CJ.", productImage: "" },
+        { pid: "2", productNameEn: "Ergonomic Desk Chair", sellPrice: 189.00, description: "Comfortable ergonomic office chair.", productImage: "" },
+        { pid: "3", productNameEn: "Smart Fitness Watch", sellPrice: 45.50, description: "Track your health, steps, and heart rate seamlessly.", productImage: "" }
+    ];
 
-        const data = await response.json();
-        const productsList = data?.data?.list || data?.list || (Array.isArray(data) ? data : []);
-        const totalCount = data?.data?.total || productsList.length;
+    // Simulate a brief network delay (0.3s) for realistic UX, then render mock items
+    setTimeout(() => {
+        const filtered = keyword 
+            ? mockProducts.filter(p => p.productNameEn.toLowerCase().includes(keyword.toLowerCase()))
+            : mockProducts;
 
-        renderProducts(productsList);
+        renderProducts(filtered);
 
         if (DOM.resultsCount) {
-            DOM.resultsCount.textContent = `Showing ${productsList.length} of ${totalCount} products`;
+            DOM.resultsCount.textContent = `Showing ${filtered.length} products (Local Demo Mode)`;
         }
+    }, 300);
+}
     } catch (error) {
         console.warn("API request failed, switching to local mock products catalog:", error);
         
