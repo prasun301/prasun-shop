@@ -2,123 +2,743 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Products — PRASUN SHOP</title>
 
     <meta
         name="description"
-        content="Browse quality electronics, smart accessories, power products, and audio products available from PRASUN SHOP."
+        content="Browse products at PRASUN SHOP."
     >
 
-    <meta name="theme-color" content="#ffffff">
+    <style>
+        :root {
+            --bg: #f5f5f7;
+            --card: #ffffff;
+            --text: #1d1d1f;
+            --muted: #86868b;
+            --border: #d2d2d7;
+            --dark: #1d1d1f;
+            --dark-hover: #333336;
+        }
 
-    <link
-        rel="canonical"
-        href="https://prasunshop.com/products.html"
-    >
+        * {
+            box-sizing: border-box;
+        }
 
-    <!-- Open Graph -->
-    <meta property="og:type" content="website">
-    <meta
-        property="og:url"
-        content="https://prasunshop.com/products.html"
-    >
-    <meta
-        property="og:title"
-        content="Products — PRASUN SHOP"
-    >
-    <meta
-        property="og:description"
-        content="Browse quality electronics, smart accessories, power products, and audio products from PRASUN SHOP."
-    >
-    <meta
-        property="og:image"
-        content="https://prasunshop.com/assets/og-image.jpg"
-    >
+        html {
+            scroll-behavior: smooth;
+        }
 
-    <!-- Twitter -->
-    <meta
-        name="twitter:card"
-        content="summary_large_image"
-    >
-    <meta
-        name="twitter:title"
-        content="Products — PRASUN SHOP"
-    >
-    <meta
-        name="twitter:description"
-        content="Browse quality electronics, smart accessories, power products, and audio products from PRASUN SHOP."
-    >
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "SF Pro Display",
+                "SF Pro Text",
+                "Helvetica Neue",
+                Helvetica,
+                Arial,
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
 
-    <!-- Favicon -->
-    <link
-        rel="icon"
-        href="favicon.ico"
-        sizes="any"
-    >
+        a {
+            color: inherit;
+        }
 
-    <link
-        rel="icon"
-        href="icon.svg"
-        type="image/svg+xml"
-    >
+        button,
+        input {
+            font: inherit;
+        }
 
-    <link
-        rel="apple-touch-icon"
-        href="apple-touch-icon.png"
-    >
+        /* ================================================================
+           HEADER
+        ================================================================ */
 
-    <!-- Main Stylesheet -->
-    <link
-        rel="stylesheet"
-        href="css/style.css"
-    >
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(210, 210, 215, 0.75);
+        }
 
-    <!-- Cart Counter -->
-    <script
-        src="js/cart-count.js"
-        defer
-    ></script>
+        .header-container {
+            max-width: 1200px;
+            min-height: 64px;
+            margin: 0 auto;
+            padding: 0 24px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            text-decoration: none;
+            color: var(--text);
+
+            font-size: 15px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a[aria-current="page"] {
+            color: var(--text);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .cart-icon-wrap {
+            position: relative;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            width: 40px;
+            height: 40px;
+
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: 1px;
+            right: -2px;
+
+            min-width: 18px;
+            height: 18px;
+            padding: 0 4px;
+
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 999px;
+
+            background: var(--dark);
+            color: #fff;
+
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .cart-badge[hidden] {
+            display: none;
+        }
+
+        /* ================================================================
+           MAIN
+        ================================================================ */
+
+        .products-main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        .products-header {
+            margin-bottom: 30px;
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .products-title {
+            margin: 0;
+
+            font-size: clamp(32px, 5vw, 48px);
+            line-height: 1.05;
+            letter-spacing: -0.035em;
+            font-weight: 700;
+        }
+
+        .products-subtitle {
+            max-width: 620px;
+            margin: 12px 0 0;
+
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* ================================================================
+           SEARCH
+        ================================================================ */
+
+        .search-section {
+            margin-bottom: 32px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            max-width: 720px;
+        }
+
+        .search-input-wrap {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+
+            width: 18px;
+            height: 18px;
+
+            color: var(--muted);
+
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 48px;
+
+            padding: 0 16px 0 46px;
+
+            border: 1px solid var(--border);
+            border-radius: 14px;
+
+            background: #fff;
+            color: var(--text);
+
+            outline: none;
+
+            font-size: 14px;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: #99999f;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-button {
+            height: 48px;
+            padding: 0 22px;
+
+            border: 0;
+            border-radius: 14px;
+
+            background: var(--dark);
+            color: #fff;
+
+            font-size: 14px;
+            font-weight: 600;
+
+            cursor: pointer;
+
+            transition:
+                background-color 0.2s ease,
+                transform 0.1s ease;
+        }
+
+        .search-button:hover {
+            background: var(--dark-hover);
+        }
+
+        .search-button:active {
+            transform: scale(0.98);
+        }
+
+        /* ================================================================
+           TOOLBAR
+        ================================================================ */
+
+        .products-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+
+            margin-bottom: 18px;
+        }
+
+        .results-count {
+            margin: 0;
+
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .clear-search {
+            border: 0;
+            background: transparent;
+
+            color: var(--text);
+
+            font-size: 13px;
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+        .clear-search:hover {
+            text-decoration: underline;
+        }
+
+        .clear-search[hidden] {
+            display: none;
+        }
+
+        /* ================================================================
+           PRODUCT GRID
+        ================================================================ */
+
+        .product-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+
+            gap: 20px;
+        }
+
+        .product-card {
+            min-width: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            background: var(--card);
+
+            border: 1px solid rgba(210, 210, 215, 0.8);
+            border-radius: 20px;
+
+            overflow: hidden;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                border-color 0.2s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(180, 180, 185, 0.9);
+            box-shadow:
+                0 12px 30px rgba(0, 0, 0, 0.07);
+        }
+
+        .product-image-link {
+            display: block;
+
+            aspect-ratio: 1 / 1;
+
+            background: #f5f5f7;
+
+            overflow: hidden;
+
+            text-decoration: none;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 100%;
+
+            display: block;
+
+            object-fit: contain;
+
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover .product-image {
+            transform: scale(1.035);
+        }
+
+        .product-card-body {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+
+            padding: 18px;
+        }
+
+        .product-category {
+            margin-bottom: 8px;
+
+            color: var(--muted);
+
+            font-size: 11px;
+            font-weight: 700;
+
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .product-name {
+            margin: 0 0 10px;
+
+            font-size: 15px;
+            line-height: 1.4;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .product-name a {
+            text-decoration: none;
+        }
+
+        .product-name a:hover {
+            text-decoration: underline;
+        }
+
+        .product-description {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+
+            margin: 0 0 16px;
+
+            color: var(--muted);
+
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .product-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+
+            margin-top: auto;
+        }
+
+        .product-price {
+            color: var(--text);
+
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .product-rating {
+            color: #6b6b70;
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .product-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            min-height: 38px;
+            padding: 0 14px;
+
+            border-radius: 999px;
+
+            background: var(--dark);
+            color: #fff;
+
+            text-decoration: none;
+
+            font-size: 12px;
+            font-weight: 600;
+
+            white-space: nowrap;
+
+            transition: background-color 0.2s ease;
+        }
+
+        .product-action:hover {
+            background: var(--dark-hover);
+        }
+
+        /* ================================================================
+           STATES
+        ================================================================ */
+
+        .products-state {
+            grid-column: 1 / -1;
+
+            min-height: 280px;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            padding: 40px 20px;
+
+            text-align: center;
+
+            background: #fff;
+
+            border: 1px solid var(--border);
+            border-radius: 20px;
+        }
+
+        .products-state h2 {
+            margin: 0 0 8px;
+
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .products-state p {
+            max-width: 500px;
+            margin: 0;
+
+            color: var(--muted);
+
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .spinner {
+            width: 28px;
+            height: 28px;
+
+            margin-bottom: 16px;
+
+            border: 3px solid #e5e5e7;
+            border-top-color: var(--dark);
+
+            border-radius: 50%;
+
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .retry-button {
+            margin-top: 18px;
+
+            padding: 10px 18px;
+
+            border: 0;
+            border-radius: 999px;
+
+            background: var(--dark);
+            color: #fff;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+        .retry-button:hover {
+            background: var(--dark-hover);
+        }
+
+        /* ================================================================
+           FOOTER
+        ================================================================ */
+
+        .footer {
+            border-top: 1px solid var(--border);
+
+            background: #fff;
+
+            padding: 28px 24px;
+
+            text-align: center;
+
+            color: var(--muted);
+
+            font-size: 12px;
+        }
+
+        /* ================================================================
+           RESPONSIVE
+        ================================================================ */
+
+        @media (max-width: 1000px) {
+            .product-grid {
+                grid-template-columns:
+                    repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
+            .header-container {
+                min-height: 60px;
+                padding: 0 16px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .products-main {
+                padding: 36px 16px 60px;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-button {
+                width: 100%;
+            }
+
+            .product-grid {
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+
+                gap: 14px;
+            }
+
+            .product-card-body {
+                padding: 14px;
+            }
+
+            .product-action {
+                padding: 0 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-image-link {
+                aspect-ratio: 1.15 / 1;
+            }
+
+            .products-toolbar {
+                align-items: flex-start;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-    <!-- Skip Link -->
-    <a
-        href="#main-content"
-        class="skip-link"
-    >
-        Skip to content
-    </a>
+<header class="header">
 
-    <!-- Accessibility Live Region -->
-    <div
-        id="a11y-status-region"
-        class="visually-hidden"
-        aria-live="polite"
-        aria-atomic="true"
-    ></div>
+    <div class="header-container">
+
+        <a
+            href="index.html"
+            class="logo"
+            aria-label="PRASUN SHOP Homepage"
+        >
+
+            <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+
+            <span>PRASUN SHOP</span>
+
+        </a>
 
 
-    <!-- ================================================================
-         HEADER
-         ================================================================ -->
+        <nav
+            class="nav-links"
+            aria-label="Main Navigation"
+        >
 
-    <header class="header">
+            <a href="index.html">
+                Shop
+            </a>
 
-        <div class="header-container">
-
-            <!-- Logo -->
             <a
-                href="index.html"
-                class="logo"
-                aria-label="PRASUN SHOP Homepage"
+                href="products.html"
+                aria-current="page"
+            >
+                Products
+            </a>
+
+            <a href="about.html">
+                About
+            </a>
+
+            <a href="contact.html">
+                Contact
+            </a>
+
+            <a href="checkout.html">
+                Checkout
+            </a>
+
+        </nav>
+
+
+        <div class="header-actions">
+
+            <a
+                href="cart.html"
+                class="cart-icon-wrap"
+                aria-label="View Shopping Cart"
             >
 
                 <svg
-                    width="24"
-                    height="24"
+                    width="22"
+                    height="22"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -127,723 +747,159 @@
                     stroke-linejoin="round"
                     aria-hidden="true"
                 >
-                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    <circle cx="9" cy="21" r="1"></circle>
+                    <circle cx="20" cy="21" r="1"></circle>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                 </svg>
 
-                <span>PRASUN SHOP</span>
+                <span
+                    id="cart-count"
+                    class="cart-badge"
+                    hidden
+                >
+                    0
+                </span>
 
             </a>
 
-
-            <!-- Desktop Navigation -->
-            <nav
-                class="nav-links"
-                aria-label="Main Navigation"
-            >
-
-                <a
-                    href="index.html"
-                    class="nav-link"
-                >
-                    Shop
-                </a>
-
-                <a
-                    href="about.html"
-                    class="nav-link"
-                >
-                    About
-                </a>
-
-                <a
-                    href="contact.html"
-                    class="nav-link"
-                >
-                    Contact
-                </a>
-
-                <a
-                    href="checkout.html"
-                    class="nav-link"
-                >
-                    Checkout
-                </a>
-
-            </nav>
-
-
-            <!-- Header Actions -->
-            <div class="header-actions">
-
-                <!-- Cart -->
-                <a
-                    href="cart.html"
-                    class="cart-icon-wrap"
-                    aria-label="View Shopping Cart"
-                >
-
-                    <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-                        <circle
-                            cx="9"
-                            cy="21"
-                            r="1"
-                        ></circle>
-
-                        <circle
-                            cx="20"
-                            cy="21"
-                            r="1"
-                        ></circle>
-
-                        <path
-                            d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
-                        ></path>
-                    </svg>
-
-
-                    <span
-                        class="cart-badge"
-                        id="cart-count"
-                        aria-label="0 items in cart"
-                        hidden
-                    >
-                        0
-                    </span>
-
-                </a>
-
-
-                <!-- Mobile Menu -->
-                <button
-                    type="button"
-                    id="mobile-menu-toggle"
-                    class="mobile-menu-btn"
-                    aria-label="Toggle navigation menu"
-                    aria-expanded="false"
-                    aria-controls="mobile-navigation"
-                >
-
-                    <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-                        <line
-                            x1="3"
-                            y1="12"
-                            x2="21"
-                            y2="12"
-                        ></line>
-
-                        <line
-                            x1="3"
-                            y1="6"
-                            x2="21"
-                            y2="6"
-                        ></line>
-
-                        <line
-                            x1="3"
-                            y1="18"
-                            x2="21"
-                            y2="18"
-                        ></line>
-                    </svg>
-
-                </button>
-
-            </div>
-
         </div>
 
+    </div>
 
-        <!-- Mobile Navigation -->
-        <nav
-            id="mobile-navigation"
-            class="mobile-menu"
-            aria-label="Mobile Navigation"
-            hidden
-        >
-
-            <a href="index.html">Shop</a>
-            <a href="about.html">About</a>
-            <a href="contact.html">Contact</a>
-            <a href="cart.html">Cart</a>
-            <a href="checkout.html">Checkout</a>
-
-        </nav>
-
-    </header>
+</header>
 
 
-    <!-- ================================================================
-         MAIN CONTENT
-         ================================================================ -->
+<main class="products-main">
 
-    <main
-        id="main-content"
-        class="products-page"
+    <section class="products-header">
+
+        <p class="eyebrow">
+            PRASUN SHOP
+        </p>
+
+        <h1 class="products-title">
+            Products
+        </h1>
+
+        <p class="products-subtitle">
+            Explore our latest products and discover useful technology,
+            electronics, accessories and everyday essentials.
+        </p>
+
+    </section>
+
+
+    <section
+        class="search-section"
+        aria-label="Product Search"
     >
 
-        <!-- Hero -->
-        <section class="products-hero">
-
-            <p class="products-eyebrow">
-                PRASUN SHOP
-            </p>
-
-            <h1
-                id="page-heading"
-                class="products-heading"
-            >
-                Shop Physical Products
-            </h1>
-
-            <p class="products-intro">
-                Explore useful electronics and everyday technology accessories selected for quality, practicality, and value.
-            </p>
-
-        </section>
-
-
-        <!-- ============================================================
-             SEARCH & CONTROLS
-             ============================================================ -->
-
-        <section
-            class="products-toolbar"
-            aria-label="Product Controls"
+        <form
+            id="product-search-form"
+            class="search-form"
+            role="search"
         >
 
-            <!-- Search -->
-            <form
-                class="products-search"
-                role="search"
-                onsubmit="return false;"
-            >
+            <div class="search-input-wrap">
 
-                <label
-                    for="product-search"
-                    class="sr-only"
-                >
-                    Search products
-                </label>
-
-                <span
-                    class="products-search-icon"
+                <svg
+                    class="search-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                     aria-hidden="true"
                 >
-
-                    <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <circle
-                            cx="11"
-                            cy="11"
-                            r="8"
-                        ></circle>
-
-                        <line
-                            x1="21"
-                            y1="21"
-                            x2="16.65"
-                            y2="16.65"
-                        ></line>
-                    </svg>
-
-                </span>
-
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <path d="m20 20-3.5-3.5"></path>
+                </svg>
 
                 <input
-                    type="search"
                     id="product-search"
-                    name="q"
-                    class="products-search-input"
-                    placeholder="Search live products..."
+                    class="search-input"
+                    type="search"
+                    name="keyword"
+                    placeholder="Search products..."
                     autocomplete="off"
-                    spellcheck="false"
+                    aria-label="Search products"
                 >
-
-
-                <button
-                    type="button"
-                    id="search-clear"
-                    class="search-clear-btn"
-                    aria-label="Clear search"
-                    hidden
-                >
-                    &times;
-                </button>
-
-            </form>
-
-
-            <!-- Product Controls -->
-            <div class="products-controls">
-
-                <span
-                    id="results-count"
-                    class="products-result-count"
-                    aria-live="polite"
-                >
-                    Loading live products...
-                </span>
-
-
-                <div class="products-sort-wrap">
-
-                    <label
-                        for="product-sort"
-                        class="sr-only"
-                    >
-                        Sort products
-                    </label>
-
-                    <select
-                        id="product-sort"
-                        class="products-sort"
-                    >
-
-                        <option value="featured">
-                            Sort by: Featured
-                        </option>
-
-                        <option value="price-low">
-                            Price: Low to High
-                        </option>
-
-                        <option value="price-high">
-                            Price: High to Low
-                        </option>
-
-                        <option value="name">
-                            Name: A–Z
-                        </option>
-
-                    </select>
-
-                </div>
 
             </div>
 
-        </section>
+            <button
+                type="submit"
+                class="search-button"
+            >
+                Search
+            </button>
+
+        </form>
+
+    </section>
 
 
-        <!-- ============================================================
-             CATEGORY FILTERS
-             ============================================================ -->
+    <div class="products-toolbar">
 
-        <div
-            class="products-categories"
-            role="group"
-            aria-label="Filter products by category"
+        <p
+            id="results-count"
+            class="results-count"
         >
+            Loading products...
+        </p>
 
-            <button
-                type="button"
-                class="category-pill active"
-                data-category="all"
-                aria-pressed="true"
-            >
-                All
-            </button>
-
-            <button
-                type="button"
-                class="category-pill"
-                data-category="Smart Lighting"
-                aria-pressed="false"
-            >
-                Smart Lighting
-            </button>
-
-            <button
-                type="button"
-                class="category-pill"
-                data-category="Power & Charging"
-                aria-pressed="false"
-            >
-                Power &amp; Charging
-            </button>
-
-            <button
-                type="button"
-                class="category-pill"
-                data-category="Audio"
-                aria-pressed="false"
-            >
-                Audio
-            </button>
-
-        </div>
-
-
-        <!-- ============================================================
-             PRODUCT GRID
-
-             Products are loaded dynamically via live CJ Dropshipping API proxy.
-             ============================================================ -->
-
-        <section
-            id="product-list"
-            class="products-grid"
-            aria-label="Product listings"
-            aria-live="polite"
-            aria-busy="true"
+        <button
+            type="button"
+            id="clear-search"
+            class="clear-search"
+            hidden
         >
-            <!-- Dynamic items render here -->
-        </section>
+            Clear search
+        </button>
 
-    </main>
-
-
-    <!-- ================================================================
-         FOOTER
-         ================================================================ -->
-
-    <footer class="footer">
-
-        <div class="footer-content">
-
-            <!-- Company -->
-            <div class="footer-col">
-
-                <h2 class="footer-heading">
-                    PRASUN SHOP
-                </h2>
-
-                <p>
-                    Quality electronics and everyday technology accessories selected for modern life and work.
-                </p>
-
-            </div>
+    </div>
 
 
-            <!-- Navigation -->
-            <div class="footer-col">
+    <section
+        id="product-grid"
+        class="product-grid"
+        aria-live="polite"
+        aria-busy="true"
+    >
 
-                <h3>
-                    Navigation
-                </h3>
+        <div class="products-state">
 
-                <ul>
+            <div
+                class="spinner"
+                aria-hidden="true"
+            ></div>
 
-                    <li>
-                        <a href="index.html">
-                            Shop All
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="about.html">
-                            About Us
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="contact.html">
-                            Contact Us
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="cart.html">
-                            Shopping Cart
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="checkout.html">
-                            Checkout
-                        </a>
-                    </li>
-
-                </ul>
-
-            </div>
-
-
-            <!-- Customer Care -->
-            <div class="footer-col">
-
-                <h3>
-                    Customer Care
-                </h3>
-
-                <ul>
-
-                    <li>
-                        <a href="privacy-policy.html">
-                            Privacy Policy
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="terms-of-service.html">
-                            Terms of Service
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="refund-policy.html">
-                            Refund &amp; Return Policy
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="shipping-policy.html">
-                            Shipping Information
-                        </a>
-                    </li>
-
-                </ul>
-
-            </div>
-
-
-            <!-- Contact -->
-            <div class="footer-col">
-
-                <h3>
-                    Connect
-                </h3>
-
-                <ul>
-
-                    <li>
-                        <a href="mailto:contact@prasunbarua.com">
-                            contact@prasunbarua.com
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="contact.html">
-                            Contact Form
-                        </a>
-                    </li>
-
-                </ul>
-
-            </div>
-
-        </div>
-
-
-        <!-- Footer Bottom -->
-        <div class="footer-bottom">
+            <h2>
+                Loading products
+            </h2>
 
             <p>
-                &copy; 2026 PRASUN SHOP. All rights reserved.
+                Fetching the latest product catalog...
             </p>
+
         </div>
 
-    </footer>
+    </section>
+
+</main>
 
 
-    <!-- ================================================================
-         MOBILE MENU & LIVE CJ API SCRIPT LOGIC
-         ================================================================ -->
+<footer class="footer">
 
-    <script>
-        // Mobile Navigation Toggle
-        (() => {
-            const toggle = document.getElementById("mobile-menu-toggle");
-            const menu = document.getElementById("mobile-navigation");
+    <p>
+        &copy; 2026 PRASUN SHOP. All rights reserved.
+    </p>
 
-            if (!toggle || !menu) return;
+</footer>
 
-            toggle.addEventListener("click", () => {
-                const isOpen = toggle.getAttribute("aria-expanded") === "true";
 
-                toggle.setAttribute(
-                    "aria-expanded",
-                    String(!isOpen)
-                );
-
-                menu.hidden = isOpen;
-            });
-
-            menu.addEventListener("click", event => {
-                if (event.target.closest("a")) {
-                    toggle.setAttribute("aria-expanded", "false");
-                    menu.hidden = true;
-                }
-            });
-        })();
-
-        // Dynamic Live CJ Product Fetcher & Filtering Logic
-        let allLiveProducts = [];
-
-        async function fetchLiveCJProducts() {
-            const gridContainer = document.getElementById("product-list");
-            const resultsCount = document.getElementById("results-count");
-
-            try {
-                // Request live inventory catalog from your secure backend proxying CJ Dropshipping API
-                const response = await fetch('/api/products');
-                if (!response.ok) throw new Error('Failed to communicate with API proxy endpoint.');
-                
-                const data = await response.json();
-                
-                // Parse standard CJ product list payloads safely
-                const rawItems = data.data?.list || data.list || data.data || data;
-                
-                if (!Array.isArray(rawItems)) {
-                    throw new Error('Invalid catalog format returned from provider.');
-                }
-
-                // Map live attributes precisely to avoid fake fallback data
-                allLiveProducts = rawItems.map(item => ({
-                    id: item.pid || item.id,
-                    name: item.productName || item.title || "Untitled Product",
-                    price: Number(item.sellPrice || item.price || 0),
-                    image: item.productImage || item.image || "images/placeholder.png",
-                    category: item.categoryName || item.category || "General",
-                    rating: Number(item.rating || 5.0)
-                }));
-
-                gridContainer.setAttribute("aria-busy", "false");
-                filterAndRenderProducts();
-
-            } catch (error) {
-                console.error("Live Catalog Fetch Error:", error);
-                gridContainer.setAttribute("aria-busy", "false");
-                gridContainer.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #86868b;">
-                        <h3>Catalog Temporarily Unavailable</h3>
-                        <p>Could not fetch live items from CJ Dropshipping. Please verify server connection.</p>
-                    </div>
-                `;
-                resultsCount.textContent = "0 products found";
-            }
-        }
-
-        function filterAndRenderProducts() {
-            const searchInput = document.getElementById("product-search");
-            const sortSelect = document.getElementById("product-sort");
-            const activeCategoryBtn = document.querySelector(".category-pill.active");
-            const gridContainer = document.getElementById("product-list");
-            const resultsCount = document.getElementById("results-count");
-            const clearBtn = document.getElementById("search-clear");
-
-            const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
-            const selectedCategory = activeCategoryBtn ? activeCategoryBtn.getAttribute("data-category") : "all";
-            const sortBy = sortSelect ? sortSelect.value : "featured";
-
-            if (clearBtn) {
-                clearBtn.hidden = query.length === 0;
-            }
-
-            // Filter items based on active text queries and categories
-            let filtered = allLiveProducts.filter(item => {
-                const matchesQuery = item.name.toLowerCase().includes(query);
-                const matchesCategory = selectedCategory === "all" || item.category.toLowerCase() === selectedCategory.toLowerCase();
-                return matchesQuery && matchesCategory;
-            });
-
-            // Sort operations
-            filtered.sort((a, b) => {
-                if (sortBy === "price-low") return a.price - b.price;
-                if (sortBy === "price-high") return b.price - a.price;
-                if (sortBy === "name") return a.name.localeCompare(b.name);
-                if (sortBy === "rating") return b.rating - a.rating;
-                return 0; // "featured" keeps original live order
-            });
-
-            resultsCount.textContent = `${filtered.length} product${filtered.length === 1 ? '' : 's'} found`;
-
-            if (filtered.length === 0) {
-                gridContainer.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: #86868b;">
-                        <h3>No matching live items found</h3>
-                        <p>Try modifying your search or selecting a different category filter.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Render live item cards linking dynamically to product detail views
-            gridContainer.innerHTML = filtered.map(item => `
-                <article class="product-card">
-                    <a href="product.html?id=${encodeURIComponent(item.id)}" class="product-link">
-                        <div class="product-card-img-wrap">
-                            <img src="${item.image}" alt="${item.name}" loading="lazy">
-                        </div>
-                        <div class="product-card-info">
-                            <span class="product-category">${item.category}</span>
-                            <h2 class="product-card-title">${item.name}</h2>
-                            <div class="product-card-footer">
-                                <span class="product-card-price">$${item.price.toFixed(2)}</span>
-                                <span class="product-view-btn">View Live Item</span>
-                            </div>
-                        </div>
-                    </a>
-                </article>
-            `).join('');
-        }
-
-        // Attach Event Listeners for search, category pills, and sorting widgets
-        document.addEventListener("DOMContentLoaded", () => {
-            fetchLiveCJProducts();
-
-            const searchInput = document.getElementById("product-search");
-            const clearBtn = document.getElementById("search-clear");
-            const sortSelect = document.getElementById("product-sort");
-            const categoryPills = document.querySelectorAll(".category-pill");
-
-            if (searchInput) {
-                searchInput.addEventListener("input", filterAndRenderProducts);
-            }
-
-            if (clearBtn) {
-                clearBtn.addEventListener("click", () => {
-                    if (searchInput) {
-                        searchInput.value = "";
-                        filterAndRenderProducts();
-                    }
-                });
-            }
-
-            if (sortSelect) {
-                sortSelect.addEventListener("change", filterAndRenderProducts);
-            }
-
-            categoryPills.forEach(pill => {
-                pill.addEventListener("click", () => {
-                    categoryPills.forEach(p => {
-                        p.classList.remove("active");
-                        p.setAttribute("aria-pressed", "false");
-                    });
-                    pill.classList.add("active");
-                    pill.setAttribute("aria-pressed", "true");
-                    filterAndRenderProducts();
-                });
-            });
-        });
-    </script>
+<script src="script.js" defer></script>
 
 </body>
 </html>
