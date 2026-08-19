@@ -20,43 +20,18 @@
         cartBadge: null
     };
 
-    // Catalog dataset with stable, high-reliability product imagery
+    // Expanded mock catalog with 10 products and reliable image links
     const mockProductsCatalog = [
-        { 
-            pid: "1", 
-            productNameEn: "Wireless Bluetooth Headphones", 
-            sellPrice: 29.99, 
-            description: "High-quality wireless headphones sourced directly from fulfillment partners.", 
-            productImage: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80" 
-        },
-        { 
-            pid: "2", 
-            productNameEn: "Ergonomic Desk Chair", 
-            sellPrice: 189.00, 
-            description: "Comfortable ergonomic office chair designed for long hours.", 
-            productImage: "https://images.unsplash.com/photo-1580481077494-e3299acae58d?auto=format&fit=crop&w=600&q=80" 
-        },
-        { 
-            pid: "3", 
-            productNameEn: "Smart Fitness Watch", 
-            sellPrice: 45.50, 
-            description: "Track your health, step counter, and heart rate seamlessly.", 
-            productImage: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80" 
-        },
-        { 
-            pid: "4", 
-            productNameEn: "Portable LED Desk Lamp", 
-            sellPrice: 19.99, 
-            description: "Adjustable brightness touch-control modern desk lamp.", 
-            productImage: "https://images.unsplash.com/photo-1534349762230-e8cadf3afbac?auto=format&fit=crop&w=600&q=80" 
-        },
-        { 
-            pid: "5", 
-            productNameEn: "Stainless Steel Water Bottle", 
-            sellPrice: 15.00, 
-            description: "Double-walled vacuum insulated thermal bottle keeps drinks cold.", 
-            productImage: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=600&q=80" 
-        }
+        { pid: "1", productNameEn: "Wireless Bluetooth Headphones", sellPrice: 29.99, description: "High-quality wireless headphones with active noise cancellation.", productImage: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80" },
+        { pid: "2", productNameEn: "Ergonomic Desk Chair", sellPrice: 189.00, description: "Comfortable ergonomic office chair designed for long hours.", productImage: "https://images.unsplash.com/photo-1580481077494-e3299acae58d?auto=format&fit=crop&w=600&q=80" },
+        { pid: "3", productNameEn: "Smart Fitness Watch", sellPrice: 45.50, description: "Track your health, daily step counter, and heart rate seamlessly.", productImage: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80" },
+        { pid: "4", productNameEn: "Portable LED Desk Lamp", sellPrice: 19.99, description: "Adjustable brightness touch-control modern desk lamp.", productImage: "https://images.unsplash.com/photo-1534349762230-e8cadf3afbac?auto=format&fit=crop&w=600&q=80" },
+        { pid: "5", productNameEn: "Stainless Steel Water Bottle", sellPrice: 15.00, description: "Double-walled vacuum insulated thermal bottle keeps drinks cold.", productImage: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=600&q=80" },
+        { pid: "6", productNameEn: "Minimalist Leather Wallet", sellPrice: 24.99, description: "Slim RFID-blocking genuine leather wallet for everyday carry.", productImage: "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80" },
+        { pid: "7", productNameEn: "Mechanical Gaming Keyboard", sellPrice: 79.99, description: "RGB backlit mechanical keyboard with tactile blue switches.", productImage: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=600&q=80" },
+        { pid: "8", productNameEn: "HD Security Web Camera", sellPrice: 39.99, description: "1080p webcam with built-in microphone for streaming and calls.", productImage: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=600&q=80" },
+        { pid: "9", productNameEn: "Running Sports Sneakers", sellPrice: 65.00, description: "Lightweight breathable athletic shoes designed for peak comfort.", productImage: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80" },
+        { pid: "10", productNameEn: "Travel Laptop Backpack", sellPrice: 49.99, description: "Water-resistant business backpack with USB charging port.", productImage: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=600&q=80" }
     ];
 
     function cacheDOM() {
@@ -112,7 +87,7 @@
             if (DOM.resultsCount) {
                 DOM.resultsCount.textContent = `Showing ${filtered.length} of ${mockProductsCatalog.length} products`;
             }
-        }, 150);
+        }, 100);
     }
 
     function renderProducts(products) {
@@ -134,7 +109,7 @@
                     <div class="product-image-wrapper">
                         <img 
                             src="${p.productImage || CONFIG.FALLBACK_IMAGE}" 
-                            alt="Product Image" 
+                            alt="${p.productNameEn}" 
                             class="product-image" 
                             loading="lazy"
                             onerror="this.onerror=null; this.src='${CONFIG.FALLBACK_IMAGE}';"
@@ -175,13 +150,17 @@
 
         saveCart(cart);
 
+        // Visual feedback
         const originalText = btnElement.textContent;
-        btnElement.textContent = "Added!";
+        btnElement.textContent = "Added ✓";
+        btnElement.style.backgroundColor = "#16a34a";
         btnElement.disabled = true;
+        
         setTimeout(() => {
             btnElement.textContent = originalText;
+            btnElement.style.backgroundColor = "";
             btnElement.disabled = false;
-        }, 1000);
+        }, 1200);
     }
 
     function initEvents() {
@@ -191,13 +170,14 @@
                 clearTimeout(state.searchTimer);
                 state.searchTimer = setTimeout(() => {
                     loadProducts(query);
-                }, 250);
+                }, 200);
             });
         }
 
+        // Global event delegation for "Add to Cart" clicks
         if (DOM.productList) {
             DOM.productList.addEventListener("click", (e) => {
-                const btn = e.target.closest("[data-action='add-cart']");
+                const btn = e.target.closest("button[data-action='add-cart']");
                 if (!btn) return;
                 e.preventDefault();
                 handleAddToCart(btn.dataset.id, btn);
