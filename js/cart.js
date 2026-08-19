@@ -3,43 +3,91 @@
  * PRASUN SHOP — CART MANAGEMENT
  * ============================================================================
  *
- * Single storage key:
+ * Production-ready cart system
  *
+ * Canonical storage:
  *     prasun_cart
  *
- * Compatible with:
+ * Legacy storage automatically migrated from:
+ *     prasunShopCart
+ *     cart
  *
- *     product.js
+ * Compatible with:
  *     products.js
+ *     product.js
+ *     cart.html
+ *     checkout.html
  *     checkout.js
  *
+ * Features:
+ *     - Single canonical localStorage key
+ *     - Automatic legacy-cart migration
+ *     - Quantity controls
+ *     - Remove items
+ *     - Cart count synchronization
+ *     - Cross-tab synchronization
+ *     - Same-page custom cart events
+ *     - Image fallback
+ *     - HTML escaping
+ *     - Currency formatting
+ *     - Duplicate-product normalization
+ *     - Responsive-safe rendering
+ *     - No inline onclick handlers required
  * ============================================================================
  */
 
 "use strict";
 
-
 (() => {
 
-    const CART_KEY =
-        "prasun_cart";
+    /* =========================================================================
+       CONFIGURATION
+       ========================================================================= */
 
-    const CART_EVENT_NAME =
-        "prasunCartUpdated";
+    const CART_KEY = "prasun_cart";
+
+    const LEGACY_KEYS = [
+        "prasunShopCart",
+        "cart"
+    ];
+
+    const CART_EVENT_NAME = "prasunCartUpdated";
+
+    const PRODUCTS_PAGE = "products.html";
+
+    const CHECKOUT_PAGE = "checkout.html";
+
+    const PRODUCT_PAGE = "product.html";
 
 
-    /* ========================================================================
+    /* =========================================================================
        DOM
-       ======================================================================== */
+       ========================================================================= */
+
+    const cartContainer =
+        document.getElementById("cart-container");
+
+    /*
+     * The current cart.html uses #cart-container.
+     *
+     * The code also supports the older #cart-items structure
+     * if that element exists in another version of the page.
+     */
 
     const cartItemsContainer =
-        document.getElementById(
-            "cart-items"
-        );
+        document.getElementById("cart-items") ||
+        cartContainer;
+
+    const cartTotalEl =
+        document.getElementById("cart-total");
+
+    const cartCountEl =
+        document.getElementById("cart-count");
 
 
     /*
-     * cart.js only runs on the cart page.
+     * If this script is accidentally loaded on a page without
+     * a cart container, don't interfere with the page.
      */
 
     if (!cartItemsContainer) {
@@ -47,37 +95,22 @@
     }
 
 
-    const cartTotalEl =
-        document.getElementById(
-            "cart-total"
-        );
-
-    const cartCountEl =
-        document.getElementById(
-            "cart-count"
-        );
-
-
-    /* ========================================================================
+    /* =========================================================================
        CURRENCY
-       ======================================================================== */
+       ========================================================================= */
 
     const currencyFormatter =
-        new Intl.NumberFormat(
-            "en-US",
-            {
-                style: "currency",
-                currency: "USD",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }
-        );
+        new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
 
 
     function formatPrice(value) {
 
-        const number =
-            Number(value);
+        const number = Number(value);
 
         return Number.isFinite(number)
             ? currencyFormatter.format(number)
@@ -85,9 +118,9 @@
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        FALLBACK IMAGE
-       ======================================================================== */
+       ========================================================================= */
 
     const FALLBACK_IMAGE =
         "data:image/svg+xml;charset=UTF-8," +
@@ -119,9 +152,20 @@
         `);
 
 
-    /* ========================================================================
-       ESCAPE HTML
-       ======================================================================== */
+    /* =========================================================================
+       HTML ESCAPING
+       ========================================================================= */
+
+    const ESCAPE_MAP = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+    };
+
+    const ESCAPE_REGEX = /[&<>"']/g;
+
 
     function escapeHTML(value) {
 
@@ -132,37 +176,18 @@
             return "";
         }
 
-        return String(value)
-            .replace(
-                /&/g,
-                "&amp;"
-            )
-            .replace(
-                /</g,
-                "&lt;"
-            )
-            .replace(
-                />/g,
-                "&gt;"
-            )
-            .replace(
-                /"/g,
-                "&quot;"
-            )
-            .replace(
-                /'/g,
-                "&#039;"
-            );
+        return String(value).replace(
+            ESCAPE_REGEX,
+            character => ESCAPE_MAP[character]
+        );
     }
 
 
-    /* ========================================================================
-       NORMALIZE ITEM
-       ======================================================================== */
+    /* =========================================================================
+       NORMALIZE CART ITEM
+       ========================================================================= */
 
-    function normalizeCartItem(
-        item
-    ) {
+    function normalizeCartItem(item) {
 
         if (
             !item ||
@@ -172,9 +197,11 @@
             return null;
         }
 
-
         const price =
-            Number(item.price);
+            Number(
+                String(item.price ?? "")
+                    .replace(/[^0-9.-]/g, "")
+            );
 
         const quantity =
             Number(item.quantity);
@@ -188,6 +215,7 @@
             name:
                 String(
                     item.name ||
+                    item.title ||
                     item.productName ||
                     "Product"
                 ),
@@ -240,82 +268,91 @@
     }
 
 
-    /* ========================================================================
-       GET CART
-       ======================================================================== */
+    /* =========================================================================
+       NORMALIZE ENTIRE CART
+       ========================================================================= */
 
-    function getCart() {
+    function normalizeCart(items) {
+
+        if (!Array.isArray(items)) {
+            return [];
+        }
+
+        const normalized = [];
+
+        /*
+         * Map gives O(1) duplicate lookup instead of repeatedly
+         * scanning the array.
+         */
+
+        const itemMap = new Map();
+
+
+        for (const rawItem of items) {
+
+            const item =
+                normalizeCartItem(rawItem);
+
+            if (!item) {
+                continue;
+            }
+
+
+            const id =
+                String(item.id);
+
+
+            const existing =
+                itemMap.get(id);
+
+
+            if (existing) {
+
+                existing.quantity +=
+                    item.quantity;
+
+            } else {
+
+                itemMap.set(
+                    id,
+                    item
+                );
+
+                normalized.push(item);
+            }
+        }
+
+
+        return normalized;
+    }
+
+
+    /* =========================================================================
+       READ LOCAL STORAGE
+       ========================================================================= */
+
+    function readStorageCart(key) {
 
         try {
 
             const stored =
-                localStorage.getItem(
-                    CART_KEY
-                );
+                localStorage.getItem(key);
 
             if (!stored) {
                 return [];
             }
 
-
             const parsed =
-                JSON.parse(
-                    stored
-                );
+                JSON.parse(stored);
 
-
-            if (
-                !Array.isArray(parsed)
-            ) {
-                return [];
-            }
-
-
-            const normalized = [];
-
-
-            for (
-                const item of parsed
-            ) {
-
-                const valid =
-                    normalizeCartItem(
-                        item
-                    );
-
-                if (!valid) {
-                    continue;
-                }
-
-
-                const existing =
-                    normalized.find(
-                        entry =>
-                            String(entry.id) ===
-                            String(valid.id)
-                    );
-
-
-                if (existing) {
-
-                    existing.quantity +=
-                        valid.quantity;
-
-                } else {
-
-                    normalized.push(
-                        valid
-                    );
-                }
-            }
-
-
-            return normalized;
+            return Array.isArray(parsed)
+                ? parsed
+                : [];
 
         } catch (error) {
 
-            console.error(
-                "[PRASUN SHOP] Cart read error:",
+            console.warn(
+                `[PRASUN SHOP] Unable to read ${key}:`,
                 error
             );
 
@@ -324,13 +361,81 @@
     }
 
 
+    /* =========================================================================
+       CART MIGRATION
+       ========================================================================= */
+
+    function loadCart() {
+
+        /*
+         * First check the new canonical key.
+         */
+
+        const current =
+            readStorageCart(CART_KEY);
+
+
+        if (current.length > 0) {
+
+            return normalizeCart(current);
+        }
+
+
+        /*
+         * If canonical cart is empty, check legacy keys.
+         */
+
+        for (const legacyKey of LEGACY_KEYS) {
+
+            const legacy =
+                readStorageCart(legacyKey);
+
+            if (legacy.length > 0) {
+
+                const migrated =
+                    normalizeCart(legacy);
+
+
+                /*
+                 * Immediately migrate into the canonical key.
+                 */
+
+                try {
+
+                    localStorage.setItem(
+                        CART_KEY,
+                        JSON.stringify(migrated)
+                    );
+
+                    console.info(
+                        `[PRASUN SHOP] Migrated cart from ${legacyKey}`
+                    );
+
+                } catch (error) {
+
+                    console.warn(
+                        "[PRASUN SHOP] Cart migration failed:",
+                        error
+                    );
+                }
+
+
+                return migrated;
+            }
+        }
+
+
+        return [];
+    }
+
+
     let cart =
-        getCart();
+        loadCart();
 
 
-    /* ========================================================================
+    /* =========================================================================
        SAVE CART
-       ======================================================================== */
+       ========================================================================= */
 
     function saveCart() {
 
@@ -338,20 +443,47 @@
 
             localStorage.setItem(
                 CART_KEY,
-                JSON.stringify(
-                    cart
-                )
+                JSON.stringify(cart)
             );
 
+
+            /*
+             * Remove old storage keys so the site has
+             * one source of truth.
+             */
+
+            for (const legacyKey of LEGACY_KEYS) {
+
+                try {
+
+                    localStorage.removeItem(
+                        legacyKey
+                    );
+
+                } catch (error) {
+
+                    console.warn(
+                        `[PRASUN SHOP] Could not remove ${legacyKey}`,
+                        error
+                    );
+                }
+            }
+
+
+            /*
+             * Notify other PRASUN SHOP scripts on the same page.
+             */
 
             window.dispatchEvent(
                 new CustomEvent(
                     CART_EVENT_NAME,
                     {
                         detail: {
-                            cart: [
-                                ...cart
-                            ]
+                            cart: cart.map(
+                                item => ({
+                                    ...item
+                                })
+                            )
                         }
                     }
                 )
@@ -372,9 +504,30 @@
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        CART COUNT
-       ======================================================================== */
+       ========================================================================= */
+
+    function getCartCount() {
+
+        return cart.reduce(
+            (total, item) => {
+
+                const quantity =
+                    Number(item.quantity);
+
+                return total +
+                    (
+                        Number.isFinite(quantity) &&
+                        quantity > 0
+                            ? quantity
+                            : 0
+                    );
+            },
+            0
+        );
+    }
+
 
     function updateCartCount() {
 
@@ -384,22 +537,17 @@
 
 
         const total =
-            cart.reduce(
-                (
-                    sum,
-                    item
-                ) =>
-                    sum +
-                    (
-                        Number(item.quantity) || 1
-                    ),
-                0
-            );
+            getCartCount();
 
 
         cartCountEl.textContent =
             String(total);
 
+
+        /*
+         * Current cart.html uses a visible badge.
+         * Hide it when there are no items.
+         */
 
         cartCountEl.hidden =
             total === 0;
@@ -407,7 +555,11 @@
 
         cartCountEl.setAttribute(
             "aria-label",
-            `${total} ${total === 1 ? "item" : "items"} in cart`
+            `${total} ${
+                total === 1
+                    ? "item"
+                    : "items"
+            } in cart`
         );
 
 
@@ -421,24 +573,25 @@
                 "aria-label",
 
                 total > 0
-                    ? `View Shopping Cart, ${total} ${total === 1 ? "item" : "items"}`
+                    ? `View Shopping Cart, ${total} ${
+                        total === 1
+                            ? "item"
+                            : "items"
+                    }`
                     : "View Shopping Cart"
             );
         }
     }
 
 
-    /* ========================================================================
-       TOTAL
-       ======================================================================== */
+    /* =========================================================================
+       CART TOTAL
+       ========================================================================= */
 
     function calculateTotal() {
 
         return cart.reduce(
-            (
-                total,
-                item
-            ) => {
+            (total, item) => {
 
                 const price =
                     Number(item.price) || 0;
@@ -458,15 +611,15 @@
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        EMPTY CART
-       ======================================================================== */
+       ========================================================================= */
 
     function renderEmptyCart() {
 
         cartItemsContainer.innerHTML = `
 
-            <div class="cart-empty">
+            <div class="empty-cart">
 
                 <div
                     class="cart-empty-icon"
@@ -474,20 +627,30 @@
                 >
 
                     <svg
+                        width="52"
+                        height="52"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        stroke-width="1.7"
+                        stroke-width="1.5"
                         stroke-linecap="round"
                         stroke-linejoin="round"
                     >
 
-                        <path
-                            d="M6 8h12l1 13H5L6 8Z"
-                        ></path>
+                        <circle
+                            cx="9"
+                            cy="21"
+                            r="1"
+                        ></circle>
+
+                        <circle
+                            cx="20"
+                            cy="21"
+                            r="1"
+                        ></circle>
 
                         <path
-                            d="M9 8V6a3 3 0 0 1 6 0v2"
+                            d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
                         ></path>
 
                     </svg>
@@ -496,18 +659,25 @@
 
 
                 <h2>
-                    Your cart is empty
+                    Your shopping bag is empty
                 </h2>
 
 
                 <p>
-                    Discover our latest products and add something you love to your cart.
+                    Discover our latest products and add something you love to your bag.
                 </p>
 
 
                 <a
-                    href="products.html"
-                    class="cart-continue-button"
+                    href="${PRODUCTS_PAGE}"
+                    class="btn-checkout"
+                    style="
+                        display:inline-flex;
+                        align-items:center;
+                        justify-content:center;
+                        text-decoration:none;
+                        margin-top:1rem;
+                    "
                 >
                     Continue Shopping
                 </a>
@@ -525,9 +695,9 @@
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        RENDER CART
-       ======================================================================== */
+       ========================================================================= */
 
     function renderCart() {
 
@@ -542,324 +712,392 @@
         }
 
 
-        let total = 0;
+        /*
+         * Current cart.html uses #cart-container.
+         * Therefore render the complete cart page content here.
+         */
+
+        let subtotal = 0;
 
 
-        const html =
-            cart
-                .map(
-                    item => {
+        const itemsHTML =
+            cart.map(
+                (item, index) => {
 
-                        const price =
-                            Number(item.price) || 0;
+                    const price =
+                        Number(item.price) || 0;
 
-                        const quantity =
-                            Number(item.quantity) || 1;
+                    const quantity =
+                        Number(item.quantity) || 1;
 
-                        const subtotal =
-                            price *
-                            quantity;
-
-
-                        total +=
-                            subtotal;
+                    const itemSubtotal =
+                        price *
+                        quantity;
 
 
-                        const id =
-                            String(item.id);
-
-                        const encodedId =
-                            encodeURIComponent(
-                                id
-                            );
+                    subtotal +=
+                        itemSubtotal;
 
 
-                        const name =
-                            escapeHTML(
-                                item.name ||
-                                "Product"
-                            );
+                    const id =
+                        String(item.id);
+
+                    const encodedId =
+                        encodeURIComponent(id);
 
 
-                        const category =
-                            escapeHTML(
-                                item.category ||
-                                ""
-                            );
+                    const name =
+                        escapeHTML(
+                            item.name ||
+                            "Product"
+                        );
 
 
-                        const image =
-                            escapeHTML(
-                                item.image ||
-                                FALLBACK_IMAGE
-                            );
+                    const category =
+                        escapeHTML(
+                            item.category ||
+                            ""
+                        );
 
 
-                        return `
+                    const image =
+                        escapeHTML(
+                            item.image ||
+                            FALLBACK_IMAGE
+                        );
 
-                            <article
-                                class="cart-item"
-                                data-product-id="${escapeHTML(id)}"
-                            >
 
+                    return `
 
-                                <!-- PRODUCT -->
+                        <article
+                            class="cart-item"
+                            data-product-id="${escapeHTML(id)}"
+                        >
 
-                                <div class="cart-item-product">
+                            <div class="cart-item-info">
 
-                                    <a
-                                        href="product.html?id=${encodedId}"
-                                        class="cart-item-image-link"
-                                        aria-label="View ${name}"
+                                <a
+                                    href="${PRODUCT_PAGE}?id=${encodedId}"
+                                    aria-label="View ${name}"
+                                >
+
+                                    <img
+                                        src="${image}"
+                                        alt="${name}"
+                                        class="cart-item-img"
+                                        loading="lazy"
+                                        decoding="async"
                                     >
 
-                                        <img
-                                            src="${image}"
-                                            alt="${name}"
-                                            class="cart-item-image"
-                                            loading="lazy"
-                                            decoding="async"
+                                </a>
+
+
+                                <div class="cart-item-details">
+
+                                    ${
+                                        category
+                                            ? `
+                                                <span
+                                                    class="cart-item-category"
+                                                >
+                                                    ${category}
+                                                </span>
+                                            `
+                                            : ""
+                                    }
+
+
+                                    <h4>
+                                        <a
+                                            href="${PRODUCT_PAGE}?id=${encodedId}"
+                                            style="
+                                                color:inherit;
+                                                text-decoration:none;
+                                            "
                                         >
-
-                                    </a>
-
-
-                                    <div class="cart-item-info">
+                                            ${name}
+                                        </a>
+                                    </h4>
 
 
-                                        ${
-                                            category
-                                                ? `
+                                    <p class="cart-item-price">
+                                        ${formatPrice(price)} each
+                                    </p>
 
-                                                    <span class="cart-item-category">
+                                </div>
 
-                                                        ${category}
-
-                                                    </span>
-
-                                                `
-                                                : ""
-                                        }
+                            </div>
 
 
-                                        <h2 class="cart-item-title">
+                            <div class="cart-actions">
 
-                                            <a
-                                                href="product.html?id=${encodedId}"
-                                            >
-                                                ${name}
-                                            </a>
+                                <div
+                                    class="qty-controls"
+                                    aria-label="Quantity controls"
+                                >
 
-                                        </h2>
+                                    <button
+                                        type="button"
+                                        class="qty-btn"
+                                        data-action="decrease"
+                                        data-index="${index}"
+                                        aria-label="Decrease quantity"
+                                    >
+                                        −
+                                    </button>
 
 
-                                        <p class="cart-item-price">
+                                    <span
+                                        class="quantity-value"
+                                        aria-label="Quantity ${quantity}"
+                                    >
+                                        ${quantity}
+                                    </span>
 
-                                            ${formatPrice(price)}
-                                            each
 
-                                        </p>
-
-                                    </div>
+                                    <button
+                                        type="button"
+                                        class="qty-btn"
+                                        data-action="increase"
+                                        data-index="${index}"
+                                        aria-label="Increase quantity"
+                                    >
+                                        +
+                                    </button>
 
                                 </div>
 
 
-                                <!-- CONTROLS -->
-
-                                <div class="cart-item-controls">
-
-
-                                    <div
-                                        class="quantity-control"
-                                        aria-label="Quantity controls"
-                                    >
-
-                                        <button
-                                            type="button"
-                                            data-action="decrease"
-                                            data-id="${escapeHTML(id)}"
-                                            aria-label="Decrease quantity of ${name}"
-                                        >
-                                            −
-                                        </button>
+                                <strong class="cart-item-subtotal">
+                                    ${formatPrice(itemSubtotal)}
+                                </strong>
 
 
-                                        <span
-                                            data-role="quantity-display"
-                                            aria-label="Quantity: ${quantity}"
-                                        >
-                                            ${quantity}
-                                        </span>
+                                <button
+                                    type="button"
+                                    class="btn-remove"
+                                    data-action="remove"
+                                    data-index="${index}"
+                                    aria-label="Remove ${name}"
+                                >
+                                    Remove
+                                </button>
+
+                            </div>
+
+                        </article>
+
+                    `;
+                }
+            ).join("");
 
 
-                                        <button
-                                            type="button"
-                                            data-action="increase"
-                                            data-id="${escapeHTML(id)}"
-                                            aria-label="Increase quantity of ${name}"
-                                        >
-                                            +
-                                        </button>
-
-                                    </div>
+        const total =
+            subtotal;
 
 
-                                    <div class="cart-item-subtotal">
+        cartItemsContainer.innerHTML = `
 
-                                        <strong
-                                            data-role="subtotal-display"
-                                        >
-                                            ${formatPrice(subtotal)}
-                                        </strong>
+            ${itemsHTML}
 
 
-                                        <button
-                                            type="button"
-                                            data-action="remove"
-                                            data-id="${escapeHTML(id)}"
-                                            class="cart-remove-button"
-                                            aria-label="Remove ${name} from cart"
-                                        >
-                                            Remove
-                                        </button>
+            <div class="cart-summary">
 
-                                    </div>
+                <div
+                    class="summary-row"
+                    style="
+                        display:flex;
+                        justify-content:space-between;
+                        width:100%;
+                        max-width:360px;
+                        color:var(--apple-gray);
+                    "
+                >
+                    <span>
+                        Subtotal
+                    </span>
 
-                                </div>
-
-                            </article>
-
-                        `;
-                    }
-                )
-                .join("");
+                    <span>
+                        ${formatPrice(subtotal)}
+                    </span>
+                </div>
 
 
-        cartItemsContainer.innerHTML =
-            html;
+                <div
+                    class="summary-row"
+                    style="
+                        display:flex;
+                        justify-content:space-between;
+                        width:100%;
+                        max-width:360px;
+                        color:var(--apple-gray);
+                    "
+                >
+                    <span>
+                        Shipping
+                    </span>
 
+                    <span>
+                        Free
+                    </span>
+                </div>
+
+
+                <div
+                    class="summary-total"
+                    style="
+                        width:100%;
+                        max-width:360px;
+                        display:flex;
+                        justify-content:space-between;
+                    "
+                >
+                    <span>
+                        Total
+                    </span>
+
+                    <span id="cart-total">
+                        ${formatPrice(total)}
+                    </span>
+                </div>
+
+
+                <button
+                    type="button"
+                    class="btn-checkout"
+                    id="proceed-checkout"
+                >
+                    Proceed to Checkout
+                </button>
+
+            </div>
+
+        `;
+
+
+        /*
+         * Update external total element if present.
+         */
 
         if (cartTotalEl) {
 
             cartTotalEl.textContent =
-                formatPrice(
-                    total
-                );
+                formatPrice(total);
+        }
+
+
+        /*
+         * Checkout navigation.
+         */
+
+        const checkoutButton =
+            document.getElementById(
+                "proceed-checkout"
+            );
+
+
+        if (checkoutButton) {
+
+            checkoutButton.addEventListener(
+                "click",
+                () => {
+
+                    if (!cart.length) {
+                        return;
+                    }
+
+                    window.location.href =
+                        CHECKOUT_PAGE;
+                }
+            );
         }
     }
 
 
-    /* ========================================================================
-       UPDATE SINGLE ITEM
-       ======================================================================== */
+    /* =========================================================================
+       UPDATE QUANTITY
+       ========================================================================= */
 
-    function updateItemDOM(
-        article,
-        item
+    function updateQuantity(
+        index,
+        delta
     ) {
 
-        if (!article) {
+        if (
+            !Number.isInteger(index) ||
+            !cart[index]
+        ) {
             return;
         }
 
 
-        const price =
-            Number(item.price) || 0;
+        const item =
+            cart[index];
 
-        const quantity =
+
+        const currentQuantity =
             Number(item.quantity) || 1;
 
 
-        const quantityDisplay =
-            article.querySelector(
-                '[data-role="quantity-display"]'
+        const newQuantity =
+            currentQuantity + delta;
+
+
+        /*
+         * Remove item when quantity reaches zero.
+         */
+
+        if (newQuantity <= 0) {
+
+            cart.splice(
+                index,
+                1
             );
 
+        } else {
 
-        const subtotalDisplay =
-            article.querySelector(
-                '[data-role="subtotal-display"]'
-            );
-
-
-        if (quantityDisplay) {
-
-            quantityDisplay.textContent =
-                String(quantity);
-
-            quantityDisplay.setAttribute(
-                "aria-label",
-                `Quantity: ${quantity}`
-            );
-        }
-
-
-        if (subtotalDisplay) {
-
-            subtotalDisplay.textContent =
-                formatPrice(
-                    price *
-                    quantity
+            item.quantity =
+                Math.floor(
+                    newQuantity
                 );
         }
 
 
-        if (cartTotalEl) {
+        saveCart();
 
-            cartTotalEl.textContent =
-                formatPrice(
-                    calculateTotal()
-                );
-        }
-
-
-        updateCartCount();
+        renderCart();
     }
 
 
-    /* ========================================================================
-       IMAGE FALLBACK
-       ======================================================================== */
+    /* =========================================================================
+       REMOVE ITEM
+       ========================================================================= */
 
-    cartItemsContainer.addEventListener(
-        "error",
-        event => {
+    function removeItem(index) {
 
-            const image =
-                event.target;
-
-
-            if (
-                !image ||
-                image.tagName !== "IMG"
-            ) {
-                return;
-            }
+        if (
+            !Number.isInteger(index) ||
+            !cart[index]
+        ) {
+            return;
+        }
 
 
-            if (
-                image.dataset.fallbackApplied
-            ) {
-                return;
-            }
+        cart.splice(
+            index,
+            1
+        );
 
 
-            image.dataset.fallbackApplied =
-                "true";
+        saveCart();
+
+        renderCart();
+    }
 
 
-            image.src =
-                FALLBACK_IMAGE;
-
-        },
-        true
-    );
-
-
-    /* ========================================================================
-       CART ACTIONS
-       ======================================================================== */
+    /* =========================================================================
+       CART ACTION HANDLER
+       ========================================================================= */
 
     cartItemsContainer.addEventListener(
         "click",
@@ -880,141 +1118,136 @@
                 button.dataset.action;
 
 
-            const id =
-                String(
-                    button.dataset.id ||
-                    ""
+            const index =
+                Number(
+                    button.dataset.index
                 );
 
 
-            const item =
-                cart.find(
-                    entry =>
-                        String(entry.id) ===
-                        id
-                );
-
-
-            if (!item) {
+            if (
+                !Number.isInteger(index) ||
+                index < 0 ||
+                index >= cart.length
+            ) {
                 return;
             }
 
 
-            /* ================================================================
-               REMOVE
-               ================================================================ */
+            /*
+             * Prevent accidental double-click
+             * navigation or duplicate actions.
+             */
 
-            if (
-                action === "remove"
-            ) {
-
-                cart =
-                    cart.filter(
-                        entry =>
-                            String(entry.id) !==
-                            id
-                    );
+            button.disabled = true;
 
 
-                saveCart();
-
-                renderCart();
-
-                return;
-            }
-
-
-            /* ================================================================
-               INCREASE
-               ================================================================ */
-
-            if (
-                action === "increase"
-            ) {
-
-                item.quantity += 1;
-
-                saveCart();
-
-                const article =
-                    button.closest(
-                        ".cart-item"
-                    );
-
-                updateItemDOM(
-                    article,
-                    item
-                );
-
-                return;
-            }
-
-
-            /* ================================================================
-               DECREASE
-               ================================================================ */
-
-            if (
-                action === "decrease"
-            ) {
-
-                item.quantity -= 1;
-
+            try {
 
                 if (
-                    item.quantity <= 0
+                    action === "increase"
                 ) {
 
-                    cart =
-                        cart.filter(
-                            entry =>
-                                String(entry.id) !==
-                                id
-                        );
-
-                    saveCart();
-
-                    renderCart();
+                    updateQuantity(
+                        index,
+                        1
+                    );
 
                     return;
                 }
 
 
-                saveCart();
+                if (
+                    action === "decrease"
+                ) {
 
-
-                const article =
-                    button.closest(
-                        ".cart-item"
+                    updateQuantity(
+                        index,
+                        -1
                     );
 
+                    return;
+                }
 
-                updateItemDOM(
-                    article,
-                    item
-                );
 
-                return;
+                if (
+                    action === "remove"
+                ) {
+
+                    removeItem(
+                        index
+                    );
+
+                    return;
+                }
+
+            } finally {
+
+                /*
+                 * The DOM may have been replaced by renderCart().
+                 * Therefore this only matters if the button still exists.
+                 */
+
+                if (button.isConnected) {
+                    button.disabled = false;
+                }
             }
-
         }
     );
 
 
-    /* ========================================================================
-       STORAGE SYNC
-       ======================================================================== */
+    /* =========================================================================
+       IMAGE FALLBACK
+       ========================================================================= */
+
+    cartItemsContainer.addEventListener(
+        "error",
+        event => {
+
+            const image =
+                event.target;
+
+
+            if (
+                !image ||
+                image.tagName !== "IMG"
+            ) {
+                return;
+            }
+
+
+            if (
+                image.dataset.fallbackApplied === "true"
+            ) {
+                return;
+            }
+
+
+            image.dataset.fallbackApplied =
+                "true";
+
+
+            image.src =
+                FALLBACK_IMAGE;
+        },
+        true
+    );
+
+
+    /* =========================================================================
+       STORAGE SYNCHRONIZATION
+       ========================================================================= */
 
     window.addEventListener(
         "storage",
         event => {
 
             if (
-                event.key === CART_KEY
+                event.key === CART_KEY ||
+                LEGACY_KEYS.includes(event.key)
             ) {
 
                 cart =
-                    getCart();
+                    loadCart();
 
                 renderCart();
             }
@@ -1022,9 +1255,9 @@
     );
 
 
-    /* ========================================================================
-       SAME-PAGE CART SYNC
-       ======================================================================== */
+    /* =========================================================================
+       SAME-PAGE CART SYNCHRONIZATION
+       ========================================================================= */
 
     window.addEventListener(
         CART_EVENT_NAME,
@@ -1038,12 +1271,9 @@
             ) {
 
                 cart =
-                    event.detail.cart
-                        .map(
-                            normalizeCartItem
-                        )
-                        .filter(Boolean);
-
+                    normalizeCart(
+                        event.detail.cart
+                    );
 
                 renderCart();
             }
@@ -1051,9 +1281,147 @@
     );
 
 
-    /* ========================================================================
+    /* =========================================================================
+       PUBLIC CART API
+       ========================================================================= */
+
+    /*
+     * Makes the cart system available to other scripts without exposing
+     * internal implementation details.
+     */
+
+    window.PrasunCart = {
+
+        getCart: () =>
+            cart.map(
+                item => ({
+                    ...item
+                })
+            ),
+
+        getCount:
+            getCartCount,
+
+        getTotal:
+            calculateTotal,
+
+        addItem(item, quantity = 1) {
+
+            const normalized =
+                normalizeCartItem({
+                    ...item,
+                    quantity
+                });
+
+
+            if (!normalized) {
+                return false;
+            }
+
+
+            const existing =
+                cart.find(
+                    item =>
+                        String(item.id) ===
+                        String(normalized.id)
+                );
+
+
+            if (existing) {
+
+                existing.quantity +=
+                    normalized.quantity;
+
+            } else {
+
+                cart.push(
+                    normalized
+                );
+            }
+
+
+            saveCart();
+
+            renderCart();
+
+            return true;
+        },
+
+
+        removeItem(index) {
+
+            removeItem(index);
+        },
+
+
+        updateQuantity(
+            index,
+            quantity
+        ) {
+
+            if (
+                !Number.isInteger(index) ||
+                !cart[index]
+            ) {
+                return false;
+            }
+
+
+            const normalizedQuantity =
+                Math.floor(
+                    Number(quantity)
+                );
+
+
+            if (
+                !Number.isFinite(
+                    normalizedQuantity
+                ) ||
+                normalizedQuantity <= 0
+            ) {
+
+                cart.splice(
+                    index,
+                    1
+                );
+
+            } else {
+
+                cart[index].quantity =
+                    normalizedQuantity;
+            }
+
+
+            saveCart();
+
+            renderCart();
+
+            return true;
+        },
+
+
+        clear() {
+
+            cart = [];
+
+            saveCart();
+
+            renderCart();
+        },
+
+        refresh() {
+
+            cart =
+                loadCart();
+
+            renderCart();
+        }
+    };
+
+
+    /* =========================================================================
        INITIAL RENDER
-       ======================================================================== */
+       ========================================================================= */
 
     renderCart();
 
