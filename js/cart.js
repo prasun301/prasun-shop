@@ -1,33 +1,28 @@
 /**
  * ============================================================================
  * PRASUN SHOP — CART MANAGEMENT
- * cart.js
- * Production-ready cart system
  * ============================================================================
+ * Shared cart system for:
  *
- * Features:
- * - Persistent localStorage cart
- * - Legacy cart migration
- * - Add / remove / increase / decrease quantity
- * - Direct quantity editing
- * - Cart count synchronization
- * - Subtotal / total calculation
- * - Empty-cart rendering
- * - Loading-state protection
- * - Image fallback
- * - Cross-tab synchronization
- * - Custom cart events
- * - Public window.PrasunCart API
- * - Safe HTML escaping
- * - Works independently of the product API
+ *   index.html
+ *   products.html
+ *   product.html
+ *   cart.html
+ *   checkout.html
+ *
+ * Canonical localStorage key:
+ *   prasun_cart
+ *
+ * Legacy keys are automatically migrated.
  * ============================================================================
  */
 
 "use strict";
 
 (() => {
+
     /* =========================================================================
-       1. CONFIGURATION
+       CONFIGURATION
        ========================================================================= */
 
     const CART_KEY = "prasun_cart";
@@ -40,85 +35,57 @@
 
     const CART_EVENT_NAME = "prasunCartUpdated";
 
+    const LEGACY_EVENT_NAME = "cartUpdated";
+
     const MAX_QUANTITY = 99;
 
-    const CART_PAGE = "cart.html";
 
     /* =========================================================================
-       2. SAFE MEMORY STORAGE FALLBACK
+       FALLBACK IMAGE
        ========================================================================= */
 
-    let memoryStorage = {};
+    const FALLBACK_IMAGE =
+        "data:image/svg+xml;charset=UTF-8," +
+        encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 width="600"
+                 height="600"
+                 viewBox="0 0 600 600">
 
-    function isLocalStorageAvailable() {
-        try {
-            const testKey = "__prasun_cart_test__";
+                <rect width="600"
+                      height="600"
+                      fill="#f8fafc"/>
 
-            window.localStorage.setItem(testKey, "1");
-            window.localStorage.removeItem(testKey);
+                <path
+                    d="M150 420
+                       L250 315
+                       L330 380
+                       L410 300
+                       L490 420 Z"
+                    fill="#e2e8f0"/>
 
-            return true;
-        } catch (error) {
-            return false;
-        }
-    }
+                <circle
+                    cx="255"
+                    cy="220"
+                    r="48"
+                    fill="#cbd5e1"/>
 
-    const hasLocalStorage = isLocalStorageAvailable();
+                <text
+                    x="300"
+                    y="500"
+                    text-anchor="middle"
+                    fill="#64748b"
+                    font-family="Arial,sans-serif"
+                    font-size="24">
+                    Image unavailable
+                </text>
 
-    function getStorageItem(key) {
-        if (hasLocalStorage) {
-            try {
-                return window.localStorage.getItem(key);
-            } catch (error) {
-                console.warn(
-                    "[PRASUN SHOP] Unable to read localStorage:",
-                    error
-                );
-            }
-        }
+            </svg>
+        `);
 
-        return Object.prototype.hasOwnProperty.call(memoryStorage, key)
-            ? memoryStorage[key]
-            : null;
-    }
-
-    function setStorageItem(key, value) {
-        const stringValue = String(value);
-
-        if (hasLocalStorage) {
-            try {
-                window.localStorage.setItem(key, stringValue);
-                return true;
-            } catch (error) {
-                console.warn(
-                    "[PRASUN SHOP] Unable to write localStorage:",
-                    error
-                );
-            }
-        }
-
-        memoryStorage[key] = stringValue;
-
-        return true;
-    }
-
-    function removeStorageItem(key) {
-        if (hasLocalStorage) {
-            try {
-                window.localStorage.removeItem(key);
-            } catch (error) {
-                console.warn(
-                    "[PRASUN SHOP] Unable to remove localStorage item:",
-                    error
-                );
-            }
-        }
-
-        delete memoryStorage[key];
-    }
 
     /* =========================================================================
-       3. CURRENCY
+       CURRENCY
        ========================================================================= */
 
     const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -128,74 +95,19 @@
         maximumFractionDigits: 2
     });
 
+
     function formatPrice(value) {
+
         const number = Number(value);
 
-        if (!Number.isFinite(number)) {
-            return "$0.00";
-        }
-
-        return currencyFormatter.format(number);
+        return Number.isFinite(number)
+            ? currencyFormatter.format(number)
+            : "$0.00";
     }
 
-    /* =========================================================================
-       4. FALLBACK IMAGE
-       ========================================================================= */
-
-    const FALLBACK_IMAGE =
-        "data:image/svg+xml;charset=UTF-8," +
-        encodeURIComponent(`
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="500"
-                height="500"
-                viewBox="0 0 500 500"
-            >
-                <rect
-                    width="500"
-                    height="500"
-                    fill="#f1f5f9"
-                />
-
-                <path
-                    d="M160 190h180v150H160z"
-                    fill="none"
-                    stroke="#94a3b8"
-                    stroke-width="8"
-                    rx="8"
-                />
-
-                <circle
-                    cx="220"
-                    cy="240"
-                    r="18"
-                    fill="#94a3b8"
-                />
-
-                <path
-                    d="M175 315l55-55 38 38 28-27 29 44"
-                    fill="none"
-                    stroke="#94a3b8"
-                    stroke-width="8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                />
-
-                <text
-                    x="250"
-                    y="390"
-                    text-anchor="middle"
-                    fill="#64748b"
-                    font-family="Arial,sans-serif"
-                    font-size="22"
-                >
-                    Image unavailable
-                </text>
-            </svg>
-        `);
 
     /* =========================================================================
-       5. HTML ESCAPING
+       HTML ESCAPING
        ========================================================================= */
 
     const ESCAPE_MAP = {
@@ -206,7 +118,9 @@
         "'": "&#039;"
     };
 
+
     function escapeHTML(value) {
+
         if (value === null || value === undefined) {
             return "";
         }
@@ -217,167 +131,227 @@
         );
     }
 
+
     /* =========================================================================
-       6. IMAGE URL SANITIZATION
+       STORAGE
        ========================================================================= */
 
-    function getSafeImageURL(value) {
-        if (!value) {
-            return FALLBACK_IMAGE;
+    let memoryStorage = {};
+
+
+    function storageAvailable() {
+
+        try {
+
+            const testKey = "__prasun_cart_test__";
+
+            localStorage.setItem(testKey, "1");
+            localStorage.removeItem(testKey);
+
+            return true;
+
+        } catch (_) {
+
+            return false;
         }
-
-        const image = String(value).trim();
-
-        if (!image) {
-            return FALLBACK_IMAGE;
-        }
-
-        /*
-         * Allow:
-         * - https://
-         * - http://
-         * - relative URLs
-         * - data:image
-         * - blob:
-         */
-
-        if (
-            image.startsWith("https://") ||
-            image.startsWith("http://") ||
-            image.startsWith("/") ||
-            image.startsWith("./") ||
-            image.startsWith("../") ||
-            image.startsWith("data:image/") ||
-            image.startsWith("blob:")
-        ) {
-            return image;
-        }
-
-        return FALLBACK_IMAGE;
     }
 
-    /* =========================================================================
-       7. ACCESSIBILITY
-       ========================================================================= */
 
-    function announce(message) {
-        if (!document.body) {
-            return;
+    const HAS_STORAGE = storageAvailable();
+
+
+    function readStorage(key) {
+
+        if (HAS_STORAGE) {
+
+            try {
+                return localStorage.getItem(key);
+            } catch (_) {
+                return null;
+            }
         }
 
-        let liveRegion = document.getElementById("cart-live-region");
-
-        if (!liveRegion) {
-            liveRegion = document.createElement("div");
-
-            liveRegion.id = "cart-live-region";
-            liveRegion.className = "visually-hidden";
-
-            liveRegion.setAttribute("aria-live", "polite");
-            liveRegion.setAttribute("aria-atomic", "true");
-
-            document.body.appendChild(liveRegion);
-        }
-
-        liveRegion.textContent = "";
-
-        window.setTimeout(() => {
-            liveRegion.textContent = message;
-        }, 20);
+        return Object.prototype.hasOwnProperty.call(memoryStorage, key)
+            ? memoryStorage[key]
+            : null;
     }
 
+
+    function writeStorage(key, value) {
+
+        if (HAS_STORAGE) {
+
+            try {
+
+                localStorage.setItem(
+                    key,
+                    String(value)
+                );
+
+                return true;
+
+            } catch (error) {
+
+                console.error(
+                    "[PRASUN SHOP] Unable to save cart.",
+                    error
+                );
+
+                return false;
+            }
+        }
+
+        memoryStorage[key] = String(value);
+
+        return true;
+    }
+
+
+    function deleteStorage(key) {
+
+        if (HAS_STORAGE) {
+
+            try {
+                localStorage.removeItem(key);
+            } catch (_) {}
+
+        } else {
+
+            delete memoryStorage[key];
+        }
+    }
+
+
     /* =========================================================================
-       8. NORMALIZE CART ITEM
+       NORMALIZE CART ITEM
        ========================================================================= */
 
     function normalizeCartItem(item) {
+
         if (!item || typeof item !== "object") {
             return null;
         }
 
+
+        const rawId =
+            item.id ??
+            item.productId ??
+            item.pid ??
+            item.sku;
+
+
         if (
-            item.id === undefined ||
-            item.id === null ||
-            String(item.id).trim() === ""
+            rawId === undefined ||
+            rawId === null ||
+            String(rawId).trim() === ""
         ) {
             return null;
         }
 
-        const id = String(item.id);
 
-        const priceNumber = Number(
+        const id = String(rawId);
+
+        const sku = String(
+            item.sku ??
+            item.productSku ??
+            id
+        );
+
+
+        const name = String(
+            item.name ??
+            item.productName ??
+            item.title ??
+            "Product"
+        );
+
+
+        const rawPrice = Number(
             item.price ??
+            item.sellPrice ??
             item.salePrice ??
             item.productPrice ??
             0
         );
 
-        const quantityNumber = Number(
-            item.quantity ??
-            item.qty ??
-            1
-        );
 
-        const ratingNumber = Number(item.rating);
-
-        const safePrice =
-            Number.isFinite(priceNumber) && priceNumber >= 0
-                ? priceNumber
+        const price =
+            Number.isFinite(rawPrice) && rawPrice >= 0
+                ? rawPrice
                 : 0;
 
-        let safeQuantity =
-            Number.isFinite(quantityNumber) && quantityNumber > 0
-                ? Math.floor(quantityNumber)
-                : 1;
 
-        safeQuantity = Math.min(
-            MAX_QUANTITY,
-            Math.max(1, safeQuantity)
+        const rawQuantity = Number(
+            item.quantity ?? 1
         );
 
-        const safeRating =
+
+        let quantity =
+            Number.isFinite(rawQuantity) && rawQuantity > 0
+                ? Math.floor(rawQuantity)
+                : 1;
+
+
+        quantity = Math.max(
+            1,
+            Math.min(MAX_QUANTITY, quantity)
+        );
+
+
+        const image = String(
+            item.image ??
+            item.productImage ??
+            item.imageUrl ??
+            ""
+        );
+
+
+        const category = String(
+            item.category ??
+            item.categoryName ??
+            ""
+        );
+
+
+        const description = String(
+            item.description ??
+            ""
+        );
+
+
+        const ratingNumber = Number(
+            item.rating
+        );
+
+
+        const rating =
             Number.isFinite(ratingNumber)
-                ? Math.min(5, Math.max(0, ratingNumber))
-                : 5;
+                ? Math.max(
+                    0,
+                    Math.min(5, ratingNumber)
+                )
+                : null;
+
 
         return {
+
             id,
 
-            sku: String(
-                item.sku ??
-                item.productSku ??
-                item.SKU ??
-                id
-            ),
+            sku,
 
-            name: String(
-                item.name ??
-                item.productName ??
-                item.title ??
-                "Product"
-            ),
+            name,
 
-            price: safePrice,
+            price,
 
-            image: String(
-                item.image ??
-                item.productImage ??
-                item.imageUrl ??
-                item.thumbnail ??
-                ""
-            ),
+            image,
 
-            category: String(
-                item.category ??
-                item.categoryName ??
-                ""
-            ),
+            category,
 
-            description: String(
-                item.description ?? ""
-            ),
+            description,
 
-            rating: safeRating,
+            rating,
+
+            quantity,
 
             features: Array.isArray(item.features)
                 ? item.features
@@ -387,35 +361,41 @@
                 item.specifications &&
                 typeof item.specifications === "object"
                     ? item.specifications
-                    : {},
-
-            quantity: safeQuantity
+                    : {}
         };
     }
 
+
     /* =========================================================================
-       9. PARSE CART JSON
+       PARSE CART
        ========================================================================= */
 
     function parseCart(raw) {
+
         if (!raw) {
             return [];
         }
 
+
         try {
+
             const parsed = JSON.parse(raw);
+
 
             if (!Array.isArray(parsed)) {
                 return [];
             }
 
+
             return parsed
                 .map(normalizeCartItem)
                 .filter(Boolean);
 
+
         } catch (error) {
-            console.warn(
-                "[PRASUN SHOP] Invalid cart data. Resetting cart.",
+
+            console.error(
+                "[PRASUN SHOP] Invalid cart data.",
                 error
             );
 
@@ -423,85 +403,117 @@
         }
     }
 
+
     /* =========================================================================
-       10. MERGE DUPLICATE ITEMS
+       MERGE DUPLICATES
        ========================================================================= */
 
     function mergeDuplicateItems(items) {
+
         const map = new Map();
 
-        for (const item of items) {
+
+        for (const rawItem of items) {
+
+            const item = normalizeCartItem(rawItem);
+
             if (!item) {
                 continue;
             }
 
-            const id = String(item.id);
 
-            if (map.has(id)) {
-                const existing = map.get(id);
+            const key =
+                String(item.id || item.sku)
+                    .trim()
+                    .toLowerCase();
+
+
+            const existing = map.get(key);
+
+
+            if (existing) {
 
                 existing.quantity = Math.min(
                     MAX_QUANTITY,
                     existing.quantity + item.quantity
                 );
+
             } else {
-                map.set(id, {
-                    ...item
-                });
+
+                map.set(
+                    key,
+                    { ...item }
+                );
             }
         }
+
 
         return Array.from(map.values());
     }
 
+
     /* =========================================================================
-       11. LOAD CART
+       READ CART
        ========================================================================= */
 
-    function loadCart() {
+    function getCart() {
+
         try {
-            /* Primary cart */
 
-            const primaryCart = getStorageItem(CART_KEY);
+            const primary = readStorage(CART_KEY);
 
-            if (primaryCart !== null) {
+
+            if (primary !== null) {
+
                 return mergeDuplicateItems(
-                    parseCart(primaryCart)
+                    parseCart(primary)
                 );
             }
 
-            /* Legacy cart migration */
 
-            for (const legacyKey of LEGACY_KEYS) {
-                const legacyData = getStorageItem(legacyKey);
+            /* -------------------------------------------------------------
+               Legacy migration
+               ------------------------------------------------------------- */
+
+            for (const key of LEGACY_KEYS) {
+
+                const legacyData =
+                    readStorage(key);
+
 
                 if (!legacyData) {
                     continue;
                 }
 
-                const migratedCart = mergeDuplicateItems(
-                    parseCart(legacyData)
-                );
 
-                if (migratedCart.length > 0) {
-                    setStorageItem(
-                        CART_KEY,
-                        JSON.stringify(migratedCart)
+                const migrated =
+                    mergeDuplicateItems(
+                        parseCart(legacyData)
                     );
 
-                    for (const key of LEGACY_KEYS) {
-                        removeStorageItem(key);
-                    }
 
-                    return migratedCart;
+                if (migrated.length) {
+
+                    writeStorage(
+                        CART_KEY,
+                        JSON.stringify(migrated)
+                    );
+
+                    LEGACY_KEYS.forEach(
+                        deleteStorage
+                    );
+
+                    return migrated;
                 }
             }
 
+
             return [];
 
         } catch (error) {
+
             console.error(
-                "[PRASUN SHOP] Failed to load cart:",
+                "[PRASUN SHOP] Cart read error.",
                 error
             );
 
@@ -509,148 +521,168 @@
         }
     }
 
-    /* =========================================================================
-       12. CART STATE
-       ========================================================================= */
-
-    let cart = loadCart();
 
     /* =========================================================================
-       13. SAVE CART
+       CURRENT CART STATE
        ========================================================================= */
 
-    function saveCart(options = {}) {
-        const silent =
-            typeof options === "boolean"
-                ? options
-                : Boolean(options.silent);
+    let cart = getCart();
+
+
+    /* =========================================================================
+       SAVE CART
+       ========================================================================= */
+
+    function saveCart() {
+
+        const normalizedCart =
+            mergeDuplicateItems(cart);
+
+
+        cart = normalizedCart;
+
+
+        writeStorage(
+            CART_KEY,
+            JSON.stringify(cart)
+        );
+
+
+        /* Remove old cart formats */
+
+        LEGACY_KEYS.forEach(
+            deleteStorage
+        );
+
+
+        /* -------------------------------------------------------------
+           Unified event
+           ------------------------------------------------------------- */
+
+        const eventDetail = {
+            cart: cart.map(
+                item => ({ ...item })
+            )
+        };
+
 
         try {
-            const cleanCart = mergeDuplicateItems(
-                cart
-                    .map(normalizeCartItem)
-                    .filter(Boolean)
-            );
-
-            cart = cleanCart;
-
-            setStorageItem(
-                CART_KEY,
-                JSON.stringify(cart)
-            );
-
-            /*
-             * Remove obsolete legacy keys.
-             */
-
-            LEGACY_KEYS.forEach(key => {
-                removeStorageItem(key);
-            });
-
-            /*
-             * Notify same-page scripts.
-             */
 
             window.dispatchEvent(
-                new CustomEvent(CART_EVENT_NAME, {
-                    detail: {
-                        cart: cart.map(item => ({
-                            ...item
-                        })),
-                        silent
+                new CustomEvent(
+                    CART_EVENT_NAME,
+                    {
+                        detail: eventDetail
                     }
-                })
+                )
             );
 
-            /*
-             * Backward compatibility.
-             */
+        } catch (_) {}
+
+
+        /* Legacy compatibility */
+
+        try {
 
             window.dispatchEvent(
-                new CustomEvent("cartUpdated", {
-                    detail: {
-                        cart: cart.map(item => ({
-                            ...item
-                        })),
-                        silent
+                new CustomEvent(
+                    LEGACY_EVENT_NAME,
+                    {
+                        detail: {
+                            cart: cart.map(
+                                item => ({ ...item })
+                            )
+                        }
                     }
-                })
+                )
             );
 
-            return true;
+        } catch (_) {}
 
-        } catch (error) {
-            console.error(
-                "[PRASUN SHOP] Cart save error:",
-                error
-            );
 
-            return false;
-        }
+        return true;
     }
 
+
     /* =========================================================================
-       14. CART TOTAL QUANTITY
+       CART TOTALS
        ========================================================================= */
 
     function getTotalQuantity() {
+
         return cart.reduce(
             (total, item) => {
-                const quantity = Number(item.quantity);
 
-                if (
-                    Number.isFinite(quantity) &&
-                    quantity > 0
-                ) {
-                    return total + Math.floor(quantity);
-                }
+                const quantity =
+                    Number(item.quantity);
 
-                return total;
+
+                return total +
+                    (
+                        Number.isFinite(quantity) &&
+                        quantity > 0
+                            ? Math.floor(quantity)
+                            : 0
+                    );
+
             },
             0
         );
     }
 
-    /* =========================================================================
-       15. CART SUBTOTAL
-       ========================================================================= */
 
-    function calculateSubtotal() {
+    function getSubtotal() {
+
         return cart.reduce(
             (total, item) => {
-                const price = Number(item.price) || 0;
-                const quantity = Number(item.quantity) || 0;
 
-                return total + price * quantity;
+                const price =
+                    Number(item.price) || 0;
+
+                const quantity =
+                    Number(item.quantity) || 0;
+
+
+                return total +
+                    (price * quantity);
+
             },
             0
         );
     }
 
+
     /* =========================================================================
-       16. UPDATE CART HEADER
+       UPDATE HEADER
        ========================================================================= */
 
     function updateCartHeader() {
-        const totalQuantity = getTotalQuantity();
 
-        const countElements = [
-            document.getElementById("cart-count"),
-            document.getElementById("cart-items-count")
-        ];
+        const totalQuantity =
+            getTotalQuantity();
 
-        const cartCount = countElements[0];
-        const cartItemsCount = countElements[1];
+
+        const cartCount =
+            document.getElementById(
+                "cart-count"
+            );
+
+
+        const cartItemsCount =
+            document.getElementById(
+                "cart-items-count"
+            );
+
 
         if (cartCount) {
-            cartCount.textContent = String(totalQuantity);
 
-            /*
-             * Don't permanently hide the counter if your CSS expects
-             * it to remain visible.
-             */
+            cartCount.textContent =
+                String(totalQuantity);
 
-            cartCount.hidden = totalQuantity === 0;
+
+            cartCount.hidden =
+                totalQuantity === 0;
+
 
             cartCount.setAttribute(
                 "aria-label",
@@ -662,7 +694,9 @@
             );
         }
 
+
         if (cartItemsCount) {
+
             cartItemsCount.textContent =
                 `${totalQuantity} ${
                     totalQuantity === 1
@@ -670,162 +704,162 @@
                         : "items"
                 }`;
         }
-
-        /*
-         * Support alternate cart count elements.
-         */
-
-        document
-            .querySelectorAll(
-                "[data-cart-count]"
-            )
-            .forEach(element => {
-                element.textContent =
-                    String(totalQuantity);
-
-                element.setAttribute(
-                    "data-cart-count",
-                    String(totalQuantity)
-                );
-            });
     }
 
+
     /* =========================================================================
-       17. UPDATE TOTALS
+       UPDATE SUMMARY
        ========================================================================= */
 
-    function updateTotals() {
-        const subtotal = calculateSubtotal();
+    function updateSummary() {
 
-        const subtotalElements = [
-            document.getElementById("cart-subtotal"),
-            document.querySelector(
-                "[data-cart-subtotal]"
-            )
-        ];
+        const subtotal =
+            getSubtotal();
 
-        const totalElements = [
-            document.getElementById("cart-total"),
-            document.querySelector(
-                "[data-cart-total]"
-            )
-        ];
 
-        subtotalElements.forEach(element => {
-            if (element) {
-                element.textContent =
-                    formatPrice(subtotal);
-            }
-        });
+        const subtotalElement =
+            document.getElementById(
+                "cart-subtotal"
+            );
 
-        totalElements.forEach(element => {
-            if (element) {
-                element.textContent =
-                    formatPrice(subtotal);
-            }
-        });
+
+        const totalElement =
+            document.getElementById(
+                "cart-total"
+            );
+
 
         const checkoutButton =
             document.getElementById(
                 "checkout-button"
             );
 
+
         const clearButton =
             document.getElementById(
                 "clear-cart-button"
             );
 
-        const empty =
-            cart.length === 0;
+
+        if (subtotalElement) {
+
+            subtotalElement.textContent =
+                formatPrice(subtotal);
+        }
+
+
+        if (totalElement) {
+
+            totalElement.textContent =
+                formatPrice(subtotal);
+        }
+
 
         if (checkoutButton) {
-            checkoutButton.disabled = empty;
+
+            const empty =
+                cart.length === 0;
+
+
+            checkoutButton.disabled =
+                empty;
+
+
+            checkoutButton.setAttribute(
+                "aria-disabled",
+                empty
+                    ? "true"
+                    : "false"
+            );
+
 
             checkoutButton.classList.toggle(
                 "disabled",
                 empty
             );
-
-            checkoutButton.setAttribute(
-                "aria-disabled",
-                String(empty)
-            );
         }
+
 
         if (clearButton) {
-            clearButton.disabled = empty;
+
+            clearButton.disabled =
+                cart.length === 0;
         }
     }
 
+
     /* =========================================================================
-       18. REMOVE LOADING STATE
+       ACCESSIBILITY
        ========================================================================= */
 
-    function removeLoadingState() {
-        const container =
-            document.getElementById("cart-items");
+    function announce(message) {
 
-        if (container) {
-            container.classList.remove(
-                "loading",
-                "is-loading"
+        let region =
+            document.getElementById(
+                "cart-live-region"
             );
 
-            container.removeAttribute(
-                "aria-busy"
+
+        if (!region) {
+
+            region =
+                document.createElement(
+                    "div"
+                );
+
+
+            region.id =
+                "cart-live-region";
+
+
+            region.className =
+                "visually-hidden";
+
+
+            region.setAttribute(
+                "aria-live",
+                "polite"
+            );
+
+
+            region.setAttribute(
+                "aria-atomic",
+                "true"
+            );
+
+
+            document.body.appendChild(
+                region
             );
         }
 
-        /*
-         * Remove common loading elements if present.
-         */
 
-        document
-            .querySelectorAll(
-                "#cart-loading, .cart-loading, [data-cart-loading]"
-            )
-            .forEach(element => {
-                element.remove();
-            });
-
-        /*
-         * Remove text-only loading placeholder.
-         */
-
-        if (container) {
-            const loadingChildren =
-                Array.from(container.children);
-
-            loadingChildren.forEach(child => {
-                const text =
-                    child.textContent
-                        ?.trim()
-                        .toLowerCase();
-
-                if (
-                    text === "loading..." ||
-                    text === "loading…"
-                ) {
-                    child.remove();
-                }
-            });
-        }
+        region.textContent =
+            message;
     }
 
+
     /* =========================================================================
-       19. EMPTY CART
+       EMPTY CART
        ========================================================================= */
 
     function renderEmptyCart() {
+
         const container =
-            document.getElementById("cart-items");
+            document.getElementById(
+                "cart-items"
+            );
+
 
         if (!container) {
             return;
         }
 
+
         container.innerHTML = `
+
             <div class="cart-empty">
+
                 <div
                     class="cart-empty-icon"
                     aria-hidden="true"
@@ -847,43 +881,53 @@
 
                 <p>
                     Discover our products and add
-                    something you love to your shopping cart.
+                    something you love.
                 </p>
 
                 <a
-                    href="products.html"
+                    href="/"
                     class="continue-button"
                 >
                     Continue Shopping
                 </a>
+
             </div>
         `;
     }
 
+
     /* =========================================================================
-       20. CREATE CART ITEM
+       CART ITEM HTML
        ========================================================================= */
 
     function createCartItemHTML(item) {
+
         const id =
             String(item.id);
+
 
         const encodedId =
             encodeURIComponent(id);
 
+
         const name =
             escapeHTML(item.name);
+
 
         const category =
             escapeHTML(item.category);
 
+
         const image =
             escapeHTML(
-                getSafeImageURL(item.image)
+                item.image ||
+                FALLBACK_IMAGE
             );
+
 
         const price =
             Number(item.price) || 0;
+
 
         const quantity =
             Math.max(
@@ -894,10 +938,13 @@
                 )
             );
 
-        const subtotal =
+
+        const itemSubtotal =
             price * quantity;
 
+
         return `
+
             <article
                 class="cart-item"
                 data-product-id="${escapeHTML(id)}"
@@ -906,7 +953,7 @@
                 <div class="cart-item-product">
 
                     <a
-                        href="product.html?id=${encodedId}"
+                        href="/product.html?id=${encodedId}"
                         class="cart-item-image-link"
                         aria-label="View ${name}"
                     >
@@ -922,6 +969,7 @@
 
                     </a>
 
+
                     <div class="cart-item-info">
 
                         ${
@@ -930,17 +978,21 @@
                                     <span class="cart-item-category">
                                         ${category}
                                     </span>
-                                  `
+                                `
                                 : ""
                         }
 
+
                         <h2 class="cart-item-title">
+
                             <a
-                                href="product.html?id=${encodedId}"
+                                href="/product.html?id=${encodedId}"
                             >
                                 ${name}
                             </a>
+
                         </h2>
+
 
                         <p class="cart-item-price">
                             ${formatPrice(price)} each
@@ -963,14 +1015,11 @@
                             data-action="decrease"
                             data-id="${escapeHTML(id)}"
                             aria-label="Decrease quantity of ${name}"
-                            ${
-                                quantity <= 1
-                                    ? 'aria-disabled="true"'
-                                    : ""
-                            }
+                            ${quantity <= 1 ? "disabled" : ""}
                         >
                             −
                         </button>
+
 
                         <input
                             type="number"
@@ -980,21 +1029,17 @@
                             value="${quantity}"
                             min="1"
                             max="${MAX_QUANTITY}"
-                            step="1"
                             inputmode="numeric"
                             aria-label="Quantity for ${name}"
                         >
+
 
                         <button
                             type="button"
                             data-action="increase"
                             data-id="${escapeHTML(id)}"
                             aria-label="Increase quantity of ${name}"
-                            ${
-                                quantity >= MAX_QUANTITY
-                                    ? 'aria-disabled="true"'
-                                    : ""
-                            }
+                            ${quantity >= MAX_QUANTITY ? "disabled" : ""}
                         >
                             +
                         </button>
@@ -1004,11 +1049,10 @@
 
                     <div class="cart-item-subtotal">
 
-                        <strong
-                            data-role="subtotal"
-                        >
-                            ${formatPrice(subtotal)}
+                        <strong data-role="subtotal">
+                            ${formatPrice(itemSubtotal)}
                         </strong>
+
 
                         <button
                             type="button"
@@ -1028,372 +1072,426 @@
         `;
     }
 
+
     /* =========================================================================
-       21. IMAGE FALLBACKS
+       IMAGE FALLBACKS
        ========================================================================= */
 
     function attachImageFallbacks() {
+
         const container =
-            document.getElementById("cart-items");
+            document.getElementById(
+                "cart-items"
+            );
+
 
         if (!container) {
             return;
         }
 
-        const images =
-            container.querySelectorAll(
+
+        container
+            .querySelectorAll(
                 "img[data-cart-image]"
-            );
+            )
+            .forEach(image => {
 
-        images.forEach(image => {
-            image.addEventListener(
-                "error",
-                () => {
-                    if (
-                        image.dataset.fallbackApplied ===
-                        "true"
-                    ) {
-                        return;
+                image.addEventListener(
+                    "error",
+                    () => {
+
+                        if (
+                            image.dataset.fallbackApplied
+                        ) {
+                            return;
+                        }
+
+
+                        image.dataset.fallbackApplied =
+                            "true";
+
+
+                        image.src =
+                            FALLBACK_IMAGE;
+
+                    },
+                    {
+                        once: true
                     }
-
-                    image.dataset.fallbackApplied =
-                        "true";
-
-                    image.src =
-                        FALLBACK_IMAGE;
-                },
-                {
-                    once: true
-                }
-            );
-        });
+                );
+            });
     }
 
+
     /* =========================================================================
-       22. RENDER CART
+       RENDER CART
        ========================================================================= */
 
     function renderCart() {
-        /*
-         * Always update header/totals first.
-         */
 
         updateCartHeader();
-        updateTotals();
+
+        updateSummary();
+
 
         const container =
-            document.getElementById("cart-items");
-
-        /*
-         * If cart.html doesn't have #cart-items,
-         * don't throw an exception.
-         */
-
-        if (!container) {
-            console.warn(
-                "[PRASUN SHOP] #cart-items was not found in cart.html."
+            document.getElementById(
+                "cart-items"
             );
 
-            removeLoadingState();
 
+        if (!container) {
             return;
         }
 
-        /*
-         * IMPORTANT:
-         * Remove Loading state BEFORE rendering.
-         */
-
-        removeLoadingState();
-
-        /*
-         * Empty cart.
-         */
 
         if (!cart.length) {
+
             renderEmptyCart();
+
             return;
         }
 
-        /*
-         * Render products.
-         */
 
         container.innerHTML =
             cart
                 .map(createCartItemHTML)
                 .join("");
 
-        container.setAttribute(
-            "aria-busy",
-            "false"
-        );
 
         attachImageFallbacks();
     }
 
+
     /* =========================================================================
-       23. UPDATE ONE ITEM WITHOUT FULL RENDER
+       UPDATE SINGLE ITEM
        ========================================================================= */
 
-    function updateSingleItemDOM(
-        article,
-        item
-    ) {
-        if (!article || !item) {
+    function updateSingleItem(article, item) {
+
+        if (!article) {
             return;
         }
+
 
         const quantity =
             Number(item.quantity) || 1;
 
-        const price =
-            Number(item.price) || 0;
 
         const subtotal =
-            price * quantity;
+            (Number(item.price) || 0) *
+            quantity;
+
 
         const input =
             article.querySelector(
                 '[data-role="quantity-input"]'
             );
 
+
         const subtotalElement =
             article.querySelector(
                 '[data-role="subtotal"]'
             );
 
-        const decreaseButton =
+
+        const decrease =
             article.querySelector(
                 '[data-action="decrease"]'
             );
 
-        const increaseButton =
+
+        const increase =
             article.querySelector(
                 '[data-action="increase"]'
             );
 
+
         if (input) {
+
             input.value =
                 String(quantity);
         }
 
+
+        if (decrease) {
+
+            decrease.disabled =
+                quantity <= 1;
+        }
+
+
+        if (increase) {
+
+            increase.disabled =
+                quantity >= MAX_QUANTITY;
+        }
+
+
         if (subtotalElement) {
+
             subtotalElement.textContent =
                 formatPrice(subtotal);
         }
 
-        if (decreaseButton) {
-            decreaseButton.setAttribute(
-                "aria-disabled",
-                String(quantity <= 1)
-            );
-        }
-
-        if (increaseButton) {
-            increaseButton.setAttribute(
-                "aria-disabled",
-                String(quantity >= MAX_QUANTITY)
-            );
-        }
 
         updateCartHeader();
-        updateTotals();
+
+        updateSummary();
     }
 
-    /* =========================================================================
-       24. FIND CART ITEM
-       ========================================================================= */
-
-    function findCartItem(id) {
-        const stringId =
-            String(id);
-
-        return cart.find(
-            item =>
-                String(item.id) === stringId
-        );
-    }
 
     /* =========================================================================
-       25. SET QUANTITY
+       ADD ITEM
        ========================================================================= */
 
-    function setQuantity(id, quantity) {
-        const item =
-            findCartItem(id);
+    function addItem(rawItem, quantity = 1) {
 
-        if (!item) {
+        const normalized =
+            normalizeCartItem({
+                ...rawItem,
+                quantity
+            });
+
+
+        if (!normalized) {
             return false;
         }
 
-        let newQuantity =
-            Number(quantity);
 
-        if (!Number.isFinite(newQuantity)) {
-            newQuantity = 1;
-        }
-
-        newQuantity =
-            Math.floor(newQuantity);
-
-        /*
-         * Quantity 0 removes item.
-         */
-
-        if (newQuantity <= 0) {
-            removeItem(id);
-            return true;
-        }
-
-        newQuantity =
-            Math.min(
-                MAX_QUANTITY,
-                Math.max(1, newQuantity)
+        const existing =
+            cart.find(
+                item =>
+                    String(item.id) ===
+                    String(normalized.id)
             );
 
-        item.quantity =
-            newQuantity;
+
+        if (existing) {
+
+            existing.quantity =
+                Math.min(
+                    MAX_QUANTITY,
+                    existing.quantity +
+                    normalized.quantity
+                );
+
+        } else {
+
+            cart.push(
+                normalized
+            );
+        }
+
 
         saveCart();
+
+        renderCart();
+
+
+        announce(
+            `Added ${normalized.name} to your cart.`
+        );
+
 
         return true;
     }
 
+
     /* =========================================================================
-       26. REMOVE ITEM
+       REMOVE ITEM
        ========================================================================= */
 
     function removeItem(id) {
+
         const stringId =
             String(id);
 
+
+        const existing =
+            cart.find(
+                item =>
+                    String(item.id) ===
+                    stringId
+            );
+
+
+        if (!existing) {
+            return false;
+        }
+
+
+        cart =
+            cart.filter(
+                item =>
+                    String(item.id) !==
+                    stringId
+            );
+
+
+        saveCart();
+
+        renderCart();
+
+
+        announce(
+            `${existing.name} removed from your cart.`
+        );
+
+
+        return true;
+    }
+
+
+    /* =========================================================================
+       UPDATE QUANTITY
+       ========================================================================= */
+
+    function updateQuantity(id, quantity) {
+
+        const stringId =
+            String(id);
+
+
         const item =
-            findCartItem(stringId);
+            cart.find(
+                entry =>
+                    String(entry.id) ===
+                    stringId
+            );
+
 
         if (!item) {
             return false;
         }
 
-        cart =
-            cart.filter(
-                entry =>
-                    String(entry.id) !==
-                    stringId
+
+        let q =
+            Number(quantity);
+
+
+        if (
+            !Number.isFinite(q) ||
+            q < 1
+        ) {
+            q = 1;
+        }
+
+
+        q =
+            Math.min(
+                MAX_QUANTITY,
+                Math.floor(q)
             );
+
+
+        item.quantity =
+            q;
+
+
+        saveCart();
+
+        renderCart();
+
+
+        return true;
+    }
+
+
+    /* =========================================================================
+       CLEAR CART
+       ========================================================================= */
+
+    function clearCart() {
+
+        cart = [];
 
         saveCart();
 
         renderCart();
 
         announce(
-            `${item.name} removed from cart.`
+            "Your cart has been cleared."
         );
-
-        return true;
     }
 
+
     /* =========================================================================
-       27. INITIALIZE CART APP
+       EVENT LISTENERS
        ========================================================================= */
 
     function initCartApp() {
-        /*
-         * Make sure DOM exists.
-         */
-
-        if (!document.body) {
-            return;
-        }
-
-        /*
-         * Re-read cart from storage.
-         */
-
-        cart =
-            loadCart();
-
-        /*
-         * Save normalized version.
-         */
-
-        setStorageItem(
-            CART_KEY,
-            JSON.stringify(cart)
-        );
-
-        /*
-         * Remove legacy keys.
-         */
-
-        LEGACY_KEYS.forEach(key => {
-            removeStorageItem(key);
-        });
 
         const container =
-            document.getElementById("cart-items");
+            document.getElementById(
+                "cart-items"
+            );
+
 
         const checkoutButton =
             document.getElementById(
                 "checkout-button"
             );
 
-        const clearCartButton =
+
+        const clearButton =
             document.getElementById(
                 "clear-cart-button"
             );
 
-        /* =====================================================================
-           CART CLICK EVENTS
-           ===================================================================== */
+
+        /* -------------------------------------------------------------
+           Cart item buttons
+           ------------------------------------------------------------- */
 
         if (container) {
+
             container.addEventListener(
                 "click",
                 event => {
+
                     const button =
                         event.target.closest(
                             "button[data-action]"
                         );
 
+
                     if (!button) {
                         return;
                     }
 
+
                     const action =
                         button.dataset.action;
 
+
                     const id =
-                        String(
-                            button.dataset.id || ""
-                        );
+                        button.dataset.id;
+
 
                     const item =
-                        findCartItem(id);
+                        cart.find(
+                            entry =>
+                                String(entry.id) ===
+                                String(id)
+                        );
+
 
                     if (!item) {
                         return;
                     }
 
-                    const article =
-                        button.closest(
-                            ".cart-item"
-                        );
-
-                    /* ---------------------------------------------------------
-                       REMOVE
-                       --------------------------------------------------------- */
 
                     if (action === "remove") {
+
                         removeItem(id);
+
                         return;
                     }
 
-                    /* ---------------------------------------------------------
-                       INCREASE
-                       --------------------------------------------------------- */
 
                     if (action === "increase") {
+
                         if (
                             item.quantity >=
                             MAX_QUANTITY
@@ -1401,588 +1499,325 @@
                             return;
                         }
 
+
                         item.quantity += 1;
+
 
                         saveCart();
 
-                        updateSingleItemDOM(
-                            article,
+
+                        updateSingleItem(
+                            button.closest(
+                                ".cart-item"
+                            ),
                             item
                         );
 
+
                         announce(
-                            `Increased ${item.name} quantity to ${item.quantity}.`
+                            `${item.name} quantity increased to ${item.quantity}.`
                         );
+
 
                         return;
                     }
 
-                    /* ---------------------------------------------------------
-                       DECREASE
-                       --------------------------------------------------------- */
 
                     if (action === "decrease") {
+
                         if (
                             item.quantity <= 1
                         ) {
                             return;
                         }
 
+
                         item.quantity -= 1;
 
-                        saveCart();
-
-                        updateSingleItemDOM(
-                            article,
-                            item
-                        );
-
-                        announce(
-                            `Decreased ${item.name} quantity to ${item.quantity}.`
-                        );
-                    }
-                }
-            );
-
-            /* =================================================================
-               QUANTITY INPUT
-               ================================================================= */
-
-            container.addEventListener(
-                "change",
-                event => {
-                    const input =
-                        event.target.closest(
-                            'input[data-role="quantity-input"]'
-                        );
-
-                    if (!input) {
-                        return;
-                    }
-
-                    const id =
-                        String(
-                            input.dataset.id || ""
-                        );
-
-                    const item =
-                        findCartItem(id);
-
-                    if (!item) {
-                        return;
-                    }
-
-                    let quantity =
-                        parseInt(
-                            input.value,
-                            10
-                        );
-
-                    if (
-                        !Number.isFinite(
-                            quantity
-                        )
-                    ) {
-                        quantity = 1;
-                    }
-
-                    quantity =
-                        Math.min(
-                            MAX_QUANTITY,
-                            Math.max(
-                                1,
-                                quantity
-                            )
-                        );
-
-                    item.quantity =
-                        quantity;
-
-                    saveCart();
-
-                    updateSingleItemDOM(
-                        input.closest(
-                            ".cart-item"
-                        ),
-                        item
-                    );
-
-                    announce(
-                        `Updated ${item.name} quantity to ${quantity}.`
-                    );
-                }
-            );
-
-            /* ================================================================
-               QUANTITY INPUT ENTER / BLUR SAFETY
-               ================================================================ */
-
-            container.addEventListener(
-                "blur",
-                event => {
-                    const input =
-                        event.target.closest(
-                            'input[data-role="quantity-input"]'
-                        );
-
-                    if (!input) {
-                        return;
-                    }
-
-                    const item =
-                        findCartItem(
-                            input.dataset.id
-                        );
-
-                    if (!item) {
-                        return;
-                    }
-
-                    let quantity =
-                        parseInt(
-                            input.value,
-                            10
-                        );
-
-                    if (
-                        !Number.isFinite(
-                            quantity
-                        )
-                    ) {
-                        quantity = 1;
-                    }
-
-                    quantity =
-                        Math.min(
-                            MAX_QUANTITY,
-                            Math.max(
-                                1,
-                                quantity
-                            )
-                        );
-
-                    if (
-                        quantity !==
-                        item.quantity
-                    ) {
-                        item.quantity =
-                            quantity;
 
                         saveCart();
 
-                        updateSingleItemDOM(
-                            input.closest(
+
+                        updateSingleItem(
+                            button.closest(
                                 ".cart-item"
                             ),
                             item
                         );
+
+
+                        announce(
+                            `${item.name} quantity decreased to ${item.quantity}.`
+                        );
                     }
-                },
-                true
+
+                }
+            );
+
+
+            /* -------------------------------------------------------------
+               Quantity input
+               ------------------------------------------------------------- */
+
+            container.addEventListener(
+                "change",
+                event => {
+
+                    const input =
+                        event.target.closest(
+                            '[data-role="quantity-input"]'
+                        );
+
+
+                    if (!input) {
+                        return;
+                    }
+
+
+                    updateQuantity(
+                        input.dataset.id,
+                        input.value
+                    );
+                }
             );
         }
 
-        /* =====================================================================
-           CHECKOUT
-           ===================================================================== */
+
+        /* -------------------------------------------------------------
+           Clear cart
+           ------------------------------------------------------------- */
+
+        if (clearButton) {
+
+            clearButton.addEventListener(
+                "click",
+                () => {
+
+                    if (!cart.length) {
+                        return;
+                    }
+
+
+                    if (
+                        window.confirm(
+                            "Are you sure you want to clear your cart?"
+                        )
+                    ) {
+                        clearCart();
+                    }
+                }
+            );
+        }
+
+
+        /* -------------------------------------------------------------
+           Checkout
+           ------------------------------------------------------------- */
 
         if (checkoutButton) {
+
             checkoutButton.addEventListener(
                 "click",
                 event => {
-                    /*
-                     * Always use latest storage state.
-                     */
 
                     cart =
-                        loadCart();
+                        getCart();
+
 
                     if (!cart.length) {
+
                         event.preventDefault();
 
-                        alert(
+                        window.alert(
                             "Your cart is empty."
                         );
+
 
                         renderCart();
 
                         return;
                     }
 
+
                     /*
-                     * If your checkout page exists,
-                     * allow normal navigation.
-                     *
-                     * Otherwise your existing href/action
-                     * will be used.
+                     * If checkout.html exists,
+                     * navigate there.
                      */
+
+                    event.preventDefault();
+
+                    window.location.href =
+                        "/checkout.html";
                 }
             );
         }
 
-        /* =====================================================================
-           CLEAR CART
-           ===================================================================== */
 
-        if (clearCartButton) {
-            clearCartButton.addEventListener(
-                "click",
-                () => {
-                    if (!cart.length) {
-                        return;
-                    }
+        /* -------------------------------------------------------------
+           Initial hydration
+           ------------------------------------------------------------- */
 
-                    const confirmed =
-                        window.confirm(
-                            "Are you sure you want to clear your cart?"
-                        );
+        cart =
+            getCart();
 
-                    if (!confirmed) {
-                        return;
-                    }
-
-                    cart = [];
-
-                    saveCart();
-
-                    renderCart();
-
-                    announce(
-                        "Cart cleared."
-                    );
-                }
-            );
-        }
 
         /*
-         * FIRST RENDER.
-         *
-         * This is intentionally synchronous.
-         * No API call is required.
-         * No product API is required.
+         * Re-save normalized cart.
+         * This also ensures older cart formats
+         * become the canonical format.
          */
+
+        writeStorage(
+            CART_KEY,
+            JSON.stringify(cart)
+        );
+
 
         renderCart();
-
-        /*
-         * Extra safety:
-         * if another script inserted "Loading..." after initialization,
-         * render again on the next event loop.
-         */
-
-        window.setTimeout(
-            () => {
-                if (
-                    document.getElementById(
-                        "cart-items"
-                    )
-                ) {
-                    renderCart();
-                }
-            },
-            0
-        );
     }
 
+
     /* =========================================================================
-       28. INITIALIZATION
+       CROSS-TAB SYNCHRONIZATION
+       ========================================================================= */
+
+    window.addEventListener(
+        "storage",
+        event => {
+
+            if (
+                event.key === CART_KEY ||
+                LEGACY_KEYS.includes(event.key)
+            ) {
+
+                cart =
+                    getCart();
+
+
+                renderCart();
+            }
+        }
+    );
+
+
+    /* =========================================================================
+       SAME-PAGE CART EVENT
+       ========================================================================= */
+
+    window.addEventListener(
+        CART_EVENT_NAME,
+        event => {
+
+            /*
+             * Accept both:
+             *
+             * detail.cart
+             *
+             * and
+             *
+             * detail
+             *
+             * for compatibility.
+             */
+
+            const incoming =
+                Array.isArray(event.detail)
+                    ? event.detail
+                    : event.detail?.cart;
+
+
+            if (!Array.isArray(incoming)) {
+                return;
+            }
+
+
+            cart =
+                incoming
+                    .map(normalizeCartItem)
+                    .filter(Boolean);
+
+
+            renderCart();
+        }
+    );
+
+
+    window.addEventListener(
+        LEGACY_EVENT_NAME,
+        () => {
+
+            cart =
+                getCart();
+
+
+            renderCart();
+        }
+    );
+
+
+    /* =========================================================================
+       GLOBAL API
+       ========================================================================= */
+
+    window.PrasunCart = {
+
+        getCart() {
+
+            return cart.map(
+                item => ({ ...item })
+            );
+        },
+
+
+        getTotals() {
+
+            const subtotal =
+                getSubtotal();
+
+
+            return {
+
+                itemCount:
+                    getTotalQuantity(),
+
+                subtotal,
+
+                formattedSubtotal:
+                    formatPrice(subtotal)
+            };
+        },
+
+
+        addItem,
+
+
+        removeItem,
+
+
+        updateQuantity,
+
+
+        clearCart
+    };
+
+
+    /* =========================================================================
+       START
        ========================================================================= */
 
     if (
         document.readyState ===
         "loading"
     ) {
+
         document.addEventListener(
             "DOMContentLoaded",
-            initCartApp,
-            {
-                once: true
-            }
+            initCartApp
         );
+
     } else {
+
         initCartApp();
     }
-
-    /* =========================================================================
-       29. CROSS-TAB STORAGE SYNCHRONIZATION
-       ========================================================================= */
-
-    window.addEventListener(
-        "storage",
-        event => {
-            if (
-                event.key === CART_KEY ||
-                LEGACY_KEYS.includes(
-                    event.key
-                )
-            ) {
-                cart =
-                    loadCart();
-
-                renderCart();
-            }
-        }
-    );
-
-    /* =========================================================================
-       30. PRASUN CART EVENT
-       ========================================================================= */
-
-    window.addEventListener(
-        CART_EVENT_NAME,
-        event => {
-            if (
-                event.detail &&
-                Array.isArray(
-                    event.detail.cart
-                )
-            ) {
-                cart =
-                    event.detail.cart
-                        .map(
-                            normalizeCartItem
-                        )
-                        .filter(Boolean);
-
-                renderCart();
-            }
-        }
-    );
-
-    /* =========================================================================
-       31. LEGACY CART EVENT
-       ========================================================================= */
-
-    window.addEventListener(
-        "cartUpdated",
-        () => {
-            cart =
-                loadCart();
-
-            renderCart();
-        }
-    );
-
-    /* =========================================================================
-       32. PUBLIC GLOBAL API
-       ========================================================================= */
-
-    window.PrasunCart = {
-
-        /* ---------------------------------------------------------------------
-           Get cart
-           --------------------------------------------------------------------- */
-
-        getCart() {
-            return cart.map(
-                item => ({
-                    ...item
-                })
-            );
-        },
-
-        /* ---------------------------------------------------------------------
-           Get quantity
-           --------------------------------------------------------------------- */
-
-        getItemCount() {
-            return getTotalQuantity();
-        },
-
-        /* ---------------------------------------------------------------------
-           Get subtotal
-           --------------------------------------------------------------------- */
-
-        getSubtotal() {
-            return calculateSubtotal();
-        },
-
-        /* ---------------------------------------------------------------------
-           Get totals
-           --------------------------------------------------------------------- */
-
-        getTotals() {
-            const itemCount =
-                getTotalQuantity();
-
-            const subtotal =
-                calculateSubtotal();
-
-            return {
-                itemCount,
-                subtotal,
-                total: subtotal,
-                formattedSubtotal:
-                    formatPrice(subtotal),
-                formattedTotal:
-                    formatPrice(subtotal)
-            };
-        },
-
-        /* ---------------------------------------------------------------------
-           Check if item exists
-           --------------------------------------------------------------------- */
-
-        hasItem(id) {
-            return Boolean(
-                findCartItem(id)
-            );
-        },
-
-        /* ---------------------------------------------------------------------
-           Add item
-           --------------------------------------------------------------------- */
-
-        addItem(
-            rawItem,
-            quantity = 1
-        ) {
-            const normalized =
-                normalizeCartItem({
-                    ...rawItem,
-                    quantity
-                });
-
-            if (!normalized) {
-                console.warn(
-                    "[PRASUN SHOP] Invalid product passed to addItem()."
-                );
-
-                return false;
-            }
-
-            const existing =
-                findCartItem(
-                    normalized.id
-                );
-
-            if (existing) {
-                existing.quantity =
-                    Math.min(
-                        MAX_QUANTITY,
-                        existing.quantity +
-                            normalized.quantity
-                    );
-            } else {
-                cart.push(
-                    normalized
-                );
-            }
-
-            saveCart();
-
-            renderCart();
-
-            announce(
-                `${normalized.name} added to cart.`
-            );
-
-            return true;
-        },
-
-        /* ---------------------------------------------------------------------
-           Remove item
-           --------------------------------------------------------------------- */
-
-        removeItem(id) {
-            return removeItem(id);
-        },
-
-        /* ---------------------------------------------------------------------
-           Update quantity
-           --------------------------------------------------------------------- */
-
-        updateQuantity(
-            id,
-            quantity
-        ) {
-            const item =
-                findCartItem(id);
-
-            if (!item) {
-                return false;
-            }
-
-            const numericQuantity =
-                Number(quantity);
-
-            if (
-                !Number.isFinite(
-                    numericQuantity
-                )
-            ) {
-                return false;
-            }
-
-            if (
-                numericQuantity <= 0
-            ) {
-                return removeItem(id);
-            }
-
-            item.quantity =
-                Math.min(
-                    MAX_QUANTITY,
-                    Math.max(
-                        1,
-                        Math.floor(
-                            numericQuantity
-                        )
-                    )
-                );
-
-            saveCart();
-
-            renderCart();
-
-            return true;
-        },
-
-        /* ---------------------------------------------------------------------
-           Clear cart
-           --------------------------------------------------------------------- */
-
-        clearCart() {
-            cart = [];
-
-            saveCart();
-
-            renderCart();
-
-            announce(
-                "Cart emptied."
-            );
-
-            return true;
-        },
-
-        /* ---------------------------------------------------------------------
-           Refresh
-           --------------------------------------------------------------------- */
-
-        refresh() {
-            cart =
-                loadCart();
-
-            renderCart();
-
-            return this.getCart();
-        }
-    };
-
-    /* =========================================================================
-       33. DEBUG HELPER
-       ========================================================================= */
-
-    /*
-     * Open browser console and run:
-     *
-     * PrasunCart.getCart()
-     * PrasunCart.getTotals()
-     *
-     * to inspect the current cart.
-     */
-
-    window.PrasunCartReady = true;
 
 })();
