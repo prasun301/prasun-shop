@@ -14,11 +14,11 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>PRASUN SHOP — Physical Products</title>
+  <title>PRASUN SHOP — Quality Physical Products</title>
 
   <meta
     name="description"
-    content="Shop quality physical products from PRASUN SHOP."
+    content="Shop selected physical products from PRASUN SHOP with convenient online ordering and trusted fulfillment."
   >
 
   <meta
@@ -29,6 +29,16 @@
   <meta
     name="theme-color"
     content="#ffffff"
+  >
+
+  <meta
+    name="author"
+    content="Prasun Barua"
+  >
+
+  <link
+    rel="canonical"
+    href="https://shop.prasunbarua.com/"
   >
 
 
@@ -81,30 +91,39 @@
 
   <!-- =========================================================
        MAIN STYLESHEET
-
-       Version number intentionally added to prevent the browser
-       from serving an old cached stylesheet.
        ========================================================= -->
 
   <link
     rel="stylesheet"
-    href="style.css?v=20260819-01"
+    href="style.css?v=20260819-02"
   >
 
 
   <!-- =========================================================
-       SMALL FALLBACK STYLES
-
-       These do NOT replace style.css.
-       They prevent the page from becoming completely unusable
-       while the external stylesheet is loading.
+       FALLBACK / ACCESSIBILITY STYLES
        ========================================================= -->
 
   <style>
 
-    /*
-     * Accessibility helper
-     */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+
+    html,
+    body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+
+    body {
+      margin: 0;
+    }
+
+
     .visually-hidden {
       position: absolute !important;
       width: 1px !important;
@@ -118,10 +137,6 @@
     }
 
 
-    /*
-     * Prevent an unstyled flash from making the product
-     * section look completely broken.
-     */
     .products-empty {
       min-height: 220px;
       padding: 50px 20px;
@@ -129,21 +144,21 @@
     }
 
 
-    /*
-     * Product images should never overflow their cards.
-     */
     .product-card img {
       max-width: 100%;
       height: auto;
     }
 
 
-    /*
-     * Search wrapper must be positioned so the clear button
-     * can sit correctly inside it.
-     */
     .search-wrapper {
       position: relative;
+      width: 100%;
+    }
+
+
+    .products-search-input {
+      width: 100%;
+      padding-right: 44px;
     }
 
 
@@ -156,6 +171,12 @@
       height: 30px;
 
       transform: translateY(-50%);
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 0;
 
       border: 0;
       border-radius: 50%;
@@ -177,21 +198,35 @@
     }
 
 
-    /*
-     * Make room for the clear-search button.
-     */
-    .products-search-input {
-      padding-right: 42px;
+    .search-clear:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
     }
 
 
-    /*
-     * Prevent horizontal overflow.
-     */
-    html,
-    body {
-      max-width: 100%;
-      overflow-x: hidden;
+    .cart-count[hidden] {
+      display: none !important;
+    }
+
+
+    .product-grid[aria-busy="true"] {
+      pointer-events: none;
+    }
+
+
+    @media (max-width: 700px) {
+
+      .products-toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .products-categories {
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 4px;
+        scrollbar-width: thin;
+      }
+
     }
 
   </style>
@@ -222,7 +257,9 @@
     <div class="header-container">
 
 
-      <!-- LOGO -->
+      <!-- =====================================================
+           LOGO
+           ===================================================== -->
 
       <a
         href="index.html"
@@ -250,6 +287,7 @@
 
         </svg>
 
+
         <span>
           PRASUN SHOP
         </span>
@@ -257,7 +295,9 @@
       </a>
 
 
-      <!-- NAVIGATION -->
+      <!-- =====================================================
+           MAIN NAVIGATION
+           ===================================================== -->
 
       <nav
         class="nav-links"
@@ -276,9 +316,20 @@
         <a
           href="cart.html"
           class="cart-link"
+          aria-label="View Shopping Cart"
         >
 
           Cart
+
+
+          <!-- =================================================
+               CART BADGE
+
+               Managed by cart-count.js.
+               Canonical storage key:
+
+                   prasun_cart
+               ================================================= -->
 
           <span
             id="cart-count"
@@ -314,26 +365,38 @@
   <main class="shop-container">
 
 
-    <!-- PAGE TITLE -->
+    <!-- =======================================================
+         PAGE INTRODUCTION
+         ======================================================= -->
 
-    <h1 class="shop-title">
-      Shop Physical Products
-    </h1>
+    <header class="shop-header">
+
+      <h1 class="shop-title">
+        Shop Physical Products
+      </h1>
 
 
-    <p class="shop-subtitle">
-      Discover useful products from PRASUN SHOP.
-    </p>
+      <p class="shop-subtitle">
+        Discover useful products selected for everyday life,
+        home, technology, and more.
+      </p>
+
+    </header>
 
 
     <!-- =======================================================
-         SEARCH + SORT
+         SEARCH + SORT TOOLBAR
          ======================================================= -->
 
-    <div class="products-toolbar">
+    <section
+      class="products-toolbar"
+      aria-label="Product search and sorting"
+    >
 
 
-      <!-- SEARCH -->
+      <!-- =====================================================
+           SEARCH
+           ===================================================== -->
 
       <div class="search-wrapper">
 
@@ -352,7 +415,9 @@
           placeholder="Search products..."
           autocomplete="off"
           spellcheck="false"
+          enterkeyhint="search"
           aria-label="Search products"
+          aria-controls="product-list"
         >
 
 
@@ -360,62 +425,68 @@
           id="clear-search"
           class="search-clear"
           type="button"
-          aria-label="Clear search"
+          aria-label="Clear product search"
           title="Clear search"
           hidden
         >
-          &times;
+          <span aria-hidden="true">&times;</span>
         </button>
 
       </div>
 
 
-      <!-- SORT -->
+      <!-- =====================================================
+           SORT
+           ===================================================== -->
 
-      <label
-        for="product-sort"
-        class="visually-hidden"
-      >
-        Sort products
-      </label>
+      <div class="products-sort-wrapper">
+
+        <label
+          for="product-sort"
+          class="visually-hidden"
+        >
+          Sort products
+        </label>
 
 
-      <select
-        id="product-sort"
-        class="products-sort"
-        aria-label="Sort products"
-      >
+        <select
+          id="product-sort"
+          class="products-sort"
+          aria-label="Sort products"
+        >
 
-        <option value="featured">
-          Featured
-        </option>
+          <option value="featured">
+            Featured
+          </option>
 
-        <option value="price-low">
-          Price: Low to High
-        </option>
+          <option value="price-low">
+            Price: Low to High
+          </option>
 
-        <option value="price-high">
-          Price: High to Low
-        </option>
+          <option value="price-high">
+            Price: High to Low
+          </option>
 
-        <option value="rating">
-          Highest Rated
-        </option>
+          <option value="rating">
+            Highest Rated
+          </option>
 
-        <option value="name">
-          Name: A to Z
-        </option>
+          <option value="name">
+            Name: A to Z
+          </option>
 
-      </select>
+        </select>
 
-    </div>
+      </div>
+
+    </section>
 
 
     <!-- =======================================================
          CATEGORY FILTERS
          ======================================================= -->
 
-    <div
+    <nav
       class="products-categories"
       aria-label="Product categories"
     >
@@ -459,16 +530,22 @@
         Fitness
       </button>
 
-    </div>
+    </nav>
 
 
     <!-- =======================================================
          RESULTS INFORMATION
          ======================================================= -->
 
-    <div class="products-result-bar">
+    <div
+      class="products-result-bar"
+      aria-live="polite"
+    >
 
-      <span id="page-heading">
+      <span
+        id="page-heading"
+        class="products-result-heading"
+      >
         All Products
       </span>
 
@@ -476,7 +553,6 @@
       <span
         id="results-count"
         class="products-result-count"
-        aria-live="polite"
       >
         Loading products...
       </span>
@@ -488,7 +564,13 @@
          PRODUCT GRID
 
          IMPORTANT:
-         script.js must target #product-list.
+         script.js should render products into:
+
+             #product-list
+
+         cart/product scripts should use:
+
+             prasun_cart
          ======================================================= -->
 
     <section
@@ -496,7 +578,7 @@
       class="product-grid"
       aria-live="polite"
       aria-busy="true"
-      aria-label="Products"
+      aria-label="Product results"
     >
 
       <div
@@ -510,7 +592,7 @@
 
 
         <p>
-          Please wait while products are loaded from CJ Dropshipping.
+          Please wait while our product catalog loads.
         </p>
 
       </div>
@@ -545,9 +627,16 @@
 
 
       <p>
-        PRASUN SHOP offers selected physical products through trusted
-        fulfillment partners. Product availability, pricing, shipping
-        options, and delivery times may vary by product and destination.
+        PRASUN SHOP offers selected physical products through
+        trusted fulfillment partners. Product availability,
+        pricing, shipping options, and delivery times may vary
+        by product and destination.
+      </p>
+
+
+      <p>
+        Please review the product details and shipping information
+        before placing your order.
       </p>
 
     </section>
@@ -606,13 +695,26 @@
 
   <!-- =========================================================
        JAVASCRIPT
-
-       Version number forces browsers/CDN to request the latest
-       script.js instead of an old cached version.
        ========================================================= -->
 
+  <!--
+    Product/catalog functionality.
+  -->
+
   <script
-    src="script.js?v=20260819-01"
+    src="script.js?v=20260819-02"
+    defer
+  ></script>
+
+
+  <!--
+    Global cart badge.
+
+    This should be loaded on every page that contains #cart-count.
+  -->
+
+  <script
+    src="cart-count.js?v=20260819-02"
     defer
   ></script>
 
