@@ -1,12 +1,12 @@
 /**
- * products.js - Prasun Shop CJ Catalog Manager
+ * products.js - Prasun Shop Catalog Manager
  */
 (function () {
     "use strict";
 
     const CONFIG = {
         CART_KEY: "prasun_cart_items",
-        FALLBACK_IMAGE: "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='14'%3ENo CJ Image Available%3C/text%3E%3C/svg%3E"
+        FALLBACK_IMAGE: "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='14'%3ENo Image Available%3C/text%3E%3C/svg%3E"
     };
 
     let state = {
@@ -20,42 +20,42 @@
         cartBadge: null
     };
 
-    // Mock catalog structured with authentic CJ Dropshipping product image URLs
+    // Catalog dataset with stable, high-reliability product imagery
     const mockProductsCatalog = [
         { 
             pid: "1", 
             productNameEn: "Wireless Bluetooth Headphones", 
             sellPrice: 29.99, 
-            description: "High-quality wireless headphones sourced directly from CJ.", 
-            productImage: "https://cc-west-usa.oss-us-west-1.aliyuncs.com/cjf/10000000/238473824732.jpg" // Example CJ CDN structure, falls back cleanly if broken
+            description: "High-quality wireless headphones sourced directly from fulfillment partners.", 
+            productImage: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80" 
         },
         { 
             pid: "2", 
             productNameEn: "Ergonomic Desk Chair", 
             sellPrice: 189.00, 
             description: "Comfortable ergonomic office chair designed for long hours.", 
-            productImage: "https://cc-west-usa.oss-us-west-1.aliyuncs.com/cjf/10000000/chair-sample.jpg" 
+            productImage: "https://images.unsplash.com/photo-1580481077494-e3299acae58d?auto=format&fit=crop&w=600&q=80" 
         },
         { 
             pid: "3", 
             productNameEn: "Smart Fitness Watch", 
             sellPrice: 45.50, 
             description: "Track your health, step counter, and heart rate seamlessly.", 
-            productImage: "https://cc-west-usa.oss-us-west-1.aliyuncs.com/cjf/10000000/watch-sample.jpg" 
+            productImage: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80" 
         },
         { 
             pid: "4", 
             productNameEn: "Portable LED Desk Lamp", 
             sellPrice: 19.99, 
             description: "Adjustable brightness touch-control modern desk lamp.", 
-            productImage: "https://cc-west-usa.oss-us-west-1.aliyuncs.com/cjf/10000000/lamp-sample.jpg" 
+            productImage: "https://images.unsplash.com/photo-1534349762230-e8cadf3afbac?auto=format&fit=crop&w=600&q=80" 
         },
         { 
             pid: "5", 
             productNameEn: "Stainless Steel Water Bottle", 
             sellPrice: 15.00, 
             description: "Double-walled vacuum insulated thermal bottle keeps drinks cold.", 
-            productImage: "https://cc-west-usa.oss-us-west-1.aliyuncs.com/cjf/10000000/bottle-sample.jpg" 
+            productImage: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=600&q=80" 
         }
     ];
 
@@ -129,18 +129,15 @@
         }
 
         DOM.productList.innerHTML = products.map(p => {
-            // Ensures if a CJ image link returns 404, it immediately drops to the SVG fallback banner
-            const imgSrc = p.productImage || CONFIG.FALLBACK_IMAGE;
-
             return `
                 <article class="product-card" data-id="${p.pid}">
                     <div class="product-image-wrapper">
                         <img 
-                            src="${imgSrc}" 
-                            alt="${p.productNameEn}" 
+                            src="${p.productImage || CONFIG.FALLBACK_IMAGE}" 
+                            alt="Product Image" 
                             class="product-image" 
                             loading="lazy"
-                            onerror="this.onerror=null; this.src='${CONFIG.FALLBACK_IMAGE}'; this.classList.add('is-fallback');"
+                            onerror="this.onerror=null; this.src='${CONFIG.FALLBACK_IMAGE}';"
                         />
                     </div>
                     <div class="product-info">
