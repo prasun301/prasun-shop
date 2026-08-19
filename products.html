@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Products — PRASUN SHOP</title>
-    <meta name="description" content="Browse physical products available from PRASUN SHOP.">
+    <meta name="description" content="Browse quality electronics, smart accessories, power products, and audio products available from PRASUN SHOP.">
     <meta name="theme-color" content="#ffffff">
 
     <link rel="canonical" href="https://prasunshop.com/products.html">
@@ -14,565 +14,517 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://prasunshop.com/products.html">
     <meta property="og:title" content="Products — PRASUN SHOP">
-    <meta property="og:description" content="Browse physical products available from PRASUN SHOP.">
+    <meta property="og:description" content="Browse quality electronics, smart accessories, power products, and audio products from PRASUN SHOP.">
     <meta property="og:image" content="https://prasunshop.com/assets/og-image.jpg">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Products — PRASUN SHOP">
-    <meta name="twitter:description" content="Browse physical products available from PRASUN SHOP.">
+    <meta name="twitter:description" content="Browse quality electronics, smart accessories, power products, and audio products from PRASUN SHOP.">
 
     <!-- Favicon -->
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
-    <!-- CSS -->
+    <!-- Main Stylesheet -->
     <link rel="stylesheet" href="css/style.css">
 
-    <!-- Main Site JS -->
+    <!-- Main Shop Script -->
     <script src="js/script.js" defer></script>
-
-    <!-- Products JS -->
-    <script src="js/products.js" defer></script>
 </head>
 
 <body>
 
-<!-- =========================================================
-     SKIP LINK
-     ========================================================= -->
+    <!-- Skip Link -->
+    <a href="#main-content" class="skip-link">
+        Skip to content
+    </a>
 
-<a href="#main-content" class="skip-link">
-    Skip to content
-</a>
+    <!-- Accessibility Live Region -->
+    <div
+        id="a11y-status-region"
+        class="visually-hidden"
+        aria-live="polite"
+        aria-atomic="true">
+    </div>
 
+    <!-- ================================================================
+         HEADER
+         ================================================================ -->
+    <header class="header">
 
-<!-- =========================================================
-     ACCESSIBILITY LIVE REGION
-     ========================================================= -->
+        <div class="header-container">
 
-<div
-    id="a11y-status-region"
-    class="visually-hidden"
-    aria-live="polite"
-    aria-atomic="true"
-></div>
+            <!-- Logo -->
+            <a
+                href="index.html"
+                class="logo"
+                aria-label="PRASUN SHOP Homepage">
 
+                <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true">
 
-<!-- =========================================================
-     HEADER
-     ========================================================= -->
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <path d="M16 10a4 4 0 0 1-8 0"></path>
 
-<header class="header">
+                </svg>
 
-    <div class="header-container">
-
-        <!-- Logo -->
-        <a
-            href="index.html"
-            class="logo"
-            aria-label="PRASUN SHOP Homepage"
-        >
-            <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-            >
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <path d="M16 10a4 4 0 0 1-8 0"></path>
-            </svg>
-
-            <span>PRASUN SHOP</span>
-        </a>
-
-
-        <!-- Desktop Navigation -->
-        <nav class="nav-links" aria-label="Main Navigation">
-
-            <a href="index.html" class="active">
-                Shop
+                <span>PRASUN SHOP</span>
             </a>
 
-            <a href="about.html">
-                About
-            </a>
+            <!-- Desktop Navigation -->
+            <nav
+                class="nav-links"
+                aria-label="Main Navigation">
 
-            <a href="contact.html">
-                Contact
-            </a>
+                <a href="index.html">Shop</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <a href="checkout.html">Checkout</a>
 
-            <a href="checkout.html">
-                Checkout
-            </a>
+            </nav>
+
+            <!-- Header Actions -->
+            <div class="header-actions">
+
+                <!-- Cart -->
+                <a
+                    href="cart.html"
+                    class="cart-icon-wrap"
+                    aria-label="View Shopping Cart">
+
+                    <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true">
+
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+
+                    </svg>
+
+                    <span
+                        class="cart-badge"
+                        id="cart-count"
+                        aria-hidden="true"
+                        hidden>
+                        0
+                    </span>
+
+                </a>
+
+                <!-- Mobile Menu -->
+                <button
+                    type="button"
+                    id="mobile-menu-toggle"
+                    class="mobile-menu-btn"
+                    aria-label="Toggle navigation menu"
+                    aria-expanded="false"
+                    aria-controls="mobile-navigation">
+
+                    <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true">
+
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+
+                    </svg>
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- Mobile Navigation -->
+        <nav
+            id="mobile-navigation"
+            class="mobile-menu"
+            aria-label="Mobile Navigation"
+            hidden>
+
+            <a href="index.html">Shop</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <a href="cart.html">Cart</a>
+            <a href="checkout.html">Checkout</a>
 
         </nav>
 
-
-        <!-- Header Actions -->
-        <div class="header-actions">
-
-            <!-- Cart -->
-            <a
-                href="cart.html"
-                class="cart-icon-wrap"
-                aria-label="View Shopping Cart"
-            >
-
-                <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                >
-                    <circle cx="9" cy="21" r="1"></circle>
-                    <circle cx="20" cy="21" r="1"></circle>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                </svg>
-
-                <span
-                    id="cart-count"
-                    class="cart-badge"
-                    hidden
-                    aria-hidden="true"
-                >
-                    0
-                </span>
-
-            </a>
+    </header>
 
 
-            <!-- Mobile Menu -->
-            <button
-                type="button"
-                id="mobile-menu-toggle"
-                class="mobile-menu-btn"
-                aria-label="Toggle navigation menu"
-                aria-expanded="false"
-                aria-controls="mobile-navigation"
-            >
-                <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                >
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </button>
+    <!-- ================================================================
+         MAIN CONTENT
+         ================================================================ -->
+    <main
+        id="main-content"
+        class="products-page">
 
-        </div>
+        <!-- Hero -->
+        <section class="products-hero">
 
-    </div>
+            <p class="products-eyebrow">
+                PRASUN SHOP
+            </p>
+
+            <h1
+                id="products-heading"
+                class="products-heading">
+                Shop Products
+            </h1>
+
+            <p class="products-intro">
+                Explore useful electronics and everyday technology accessories selected for quality, practicality, and value.
+            </p>
+
+        </section>
 
 
-    <!-- Mobile Navigation -->
-    <nav
-        id="mobile-navigation"
-        class="mobile-menu"
-        aria-label="Mobile Navigation"
-        hidden
-    >
-        <a href="index.html">Shop</a>
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
-        <a href="cart.html">Cart</a>
-        <a href="checkout.html">Checkout</a>
-    </nav>
+        <!-- ============================================================
+             SEARCH & CONTROLS
+             ============================================================ -->
+        <section
+            class="products-toolbar"
+            aria-label="Product Controls">
 
-</header>
-
-
-<!-- =========================================================
-     MAIN CONTENT
-     ========================================================= -->
-
-<main
-    id="main-content"
-    class="products-page"
->
-
-
-    <!-- =====================================================
-         HERO
-         ===================================================== -->
-
-    <section class="products-hero">
-
-        <p class="products-eyebrow">
-            PRASUN SHOP
-        </p>
-
-        <h1
-            id="products-heading"
-            class="products-heading"
-        >
-            All Products
-        </h1>
-
-        <p class="products-intro">
-            Browse our collection of physical products available for purchase.
-        </p>
-
-    </section>
-
-
-    <!-- =====================================================
-         SEARCH & CONTROLS
-         ===================================================== -->
-
-    <section
-        class="products-toolbar"
-        aria-label="Product Controls"
-    >
-
-        <!-- Search -->
-        <form
-            class="products-search"
-            role="search"
-            action=""
-            method="GET"
-        >
-
-            <label
-                for="product-search"
-                class="sr-only"
-            >
-                Search products
-            </label>
-
-            <span
-                class="products-search-icon"
-                aria-hidden="true"
-            >
-                <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                >
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line
-                        x1="21"
-                        y1="21"
-                        x2="16.65"
-                        y2="16.65"
-                    ></line>
-                </svg>
-            </span>
-
-            <input
-                type="search"
-                id="product-search"
-                name="q"
-                class="products-search-input"
-                placeholder="Search products"
-                autocomplete="off"
-            >
-
-            <button
-                type="button"
-                id="search-clear"
-                class="search-clear-btn"
-                aria-label="Clear search query"
-                hidden
-            >
-                &times;
-            </button>
-
-        </form>
-
-
-        <!-- Sort & Count -->
-        <div class="products-controls">
-
-            <span
-                id="products-count"
-                class="products-result-count"
-                aria-live="polite"
-            >
-                Loading products...
-            </span>
-
-            <div class="products-sort-wrap">
+            <!-- Search -->
+            <form
+                class="products-search"
+                role="search"
+                action="products.html"
+                method="GET">
 
                 <label
-                    for="product-sort"
-                    class="sr-only"
-                >
-                    Sort products
+                    for="product-search"
+                    class="sr-only">
+                    Search products
                 </label>
 
-                <select
-                    id="product-sort"
-                    class="products-sort"
-                >
-                    <option value="featured">
-                        Sort by: Featured
-                    </option>
+                <span
+                    class="products-search-icon"
+                    aria-hidden="true">
 
-                    <option value="price-low">
-                        Price: Low to High
-                    </option>
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
 
-                    <option value="price-high">
-                        Price: High to Low
-                    </option>
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line
+                            x1="21"
+                            y1="21"
+                            x2="16.65"
+                            y2="16.65">
+                        </line>
 
-                    <option value="rating">
-                        Highest Rated
-                    </option>
+                    </svg>
 
-                    <option value="name">
-                        Name: A–Z
-                    </option>
-                </select>
+                </span>
+
+                <input
+                    type="search"
+                    id="product-search"
+                    name="q"
+                    class="products-search-input"
+                    placeholder="Search products"
+                    autocomplete="off">
+
+                <button
+                    type="button"
+                    id="search-clear"
+                    class="search-clear-btn"
+                    aria-label="Clear search"
+                    hidden>
+                    &times;
+                </button>
+
+            </form>
+
+
+            <!-- Product Controls -->
+            <div class="products-controls">
+
+                <span
+                    id="products-count"
+                    class="products-result-count"
+                    aria-live="polite">
+                    0 products
+                </span>
+
+                <div class="products-sort-wrap">
+
+                    <label
+                        for="product-sort"
+                        class="sr-only">
+                        Sort products
+                    </label>
+
+                    <select
+                        id="product-sort"
+                        class="products-sort">
+
+                        <option value="featured">
+                            Sort by: Featured
+                        </option>
+
+                        <option value="price-low">
+                            Price: Low to High
+                        </option>
+
+                        <option value="price-high">
+                            Price: High to Low
+                        </option>
+
+                        <option value="rating">
+                            Highest Rated
+                        </option>
+
+                        <option value="name">
+                            Name: A–Z
+                        </option>
+
+                    </select>
+
+                </div>
 
             </div>
 
-        </div>
-
-    </section>
+        </section>
 
 
-    <!-- =====================================================
-         CATEGORY FILTERS
-         ===================================================== -->
-
-    <div
-        class="products-categories"
-        role="group"
-        aria-label="Filter products by category"
-    >
-
-        <button
-            type="button"
-            class="category-pill active"
-            data-category="all"
-            aria-pressed="true"
-        >
-            All
-        </button>
-
-    </div>
-
-
-    <!-- =====================================================
-         DYNAMIC PRODUCT GRID
-
-         IMPORTANT:
-         Do NOT place hard-coded product cards here.
-         products.js will populate this container.
-         ===================================================== -->
-
-    <section
-        id="product-list"
-        class="products-grid"
-        aria-label="Product listings"
-        aria-live="polite"
-        aria-busy="true"
-    >
-
+        <!-- ============================================================
+             CATEGORY FILTERS
+             ============================================================ -->
         <div
-            class="products-empty"
-            role="status"
-        >
+            class="products-categories"
+            role="group"
+            aria-label="Filter products by category">
 
-            <div
-                class="products-empty-icon"
-                aria-hidden="true"
-            >
-                <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="9"
-                    ></circle>
+            <button
+                type="button"
+                class="category-pill active"
+                data-category="all"
+                aria-pressed="true">
+                All
+            </button>
 
-                    <path d="M12 8v4"></path>
-                    <path d="M12 16h.01"></path>
-                </svg>
+            <button
+                type="button"
+                class="category-pill"
+                data-category="Smart Lighting"
+                aria-pressed="false">
+                Smart Lighting
+            </button>
+
+            <button
+                type="button"
+                class="category-pill"
+                data-category="Power & Charging"
+                aria-pressed="false">
+                Power &amp; Charging
+            </button>
+
+            <button
+                type="button"
+                class="category-pill"
+                data-category="Audio"
+                aria-pressed="false">
+                Audio
+            </button>
+
+        </div>
+
+
+        <!-- ============================================================
+             PRODUCT GRID
+
+             IMPORTANT:
+             Product cards are generated by script.js.
+             Do not add hard-coded ebook/product cards here.
+             ============================================================ -->
+        <section
+            id="product-list"
+            class="products-grid"
+            aria-label="Product listings"
+            aria-busy="false">
+
+        </section>
+
+    </main>
+
+
+    <!-- ================================================================
+         FOOTER
+         ================================================================ -->
+    <footer class="footer">
+
+        <div class="footer-content">
+
+            <!-- Company -->
+            <div class="footer-col">
+
+                <h2 class="footer-heading">
+                    PRASUN SHOP
+                </h2>
+
+                <p>
+                    Quality electronics and everyday technology accessories selected for modern life and work.
+                </p>
+
             </div>
 
-            <h2>
-                Loading products...
-            </h2>
+
+            <!-- Navigation -->
+            <div class="footer-col">
+
+                <h3>
+                    Navigation
+                </h3>
+
+                <ul>
+
+                    <li>
+                        <a href="index.html">
+                            Shop All
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="about.html">
+                            About Us
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="contact.html">
+                            Contact Us
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="cart.html">
+                            Shopping Cart
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="checkout.html">
+                            Checkout
+                        </a>
+                    </li>
+
+                </ul>
+
+            </div>
+
+
+            <!-- Customer Care -->
+            <div class="footer-col">
+
+                <h3>
+                    Customer Care
+                </h3>
+
+                <ul>
+
+                    <li>
+                        <a href="privacy-policy.html">
+                            Privacy Policy
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="terms-of-service.html">
+                            Terms of Service
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="refund-policy.html">
+                            Refund &amp; Return Policy
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="shipping-policy.html">
+                            Shipping Information
+                        </a>
+                    </li>
+
+                </ul>
+
+            </div>
+
+
+            <!-- Contact -->
+            <div class="footer-col">
+
+                <h3>
+                    Connect
+                </h3>
+
+                <ul>
+
+                    <li>
+                        <a href="mailto:support@prasunshop.com">
+                            support@prasunshop.com
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="contact.html">
+                            Contact Form
+                        </a>
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+
+        <!-- Footer Bottom -->
+        <div class="footer-bottom">
 
             <p>
-                Please wait while products are loaded.
+                &copy; 2026 PRASUN SHOP. All rights reserved.
             </p>
 
         </div>
 
-    </section>
-
-</main>
-
-
-<!-- =========================================================
-     FOOTER
-     ========================================================= -->
-
-<footer class="footer">
-
-    <div class="footer-content">
-
-        <!-- Store -->
-        <div class="footer-col">
-
-            <h2 class="footer-heading">
-                PRASUN SHOP
-            </h2>
-
-            <p>
-                Quality physical products selected for modern life and work.
-            </p>
-
-        </div>
-
-
-        <!-- Navigation -->
-        <div class="footer-col">
-
-            <h3>Navigation</h3>
-
-            <ul>
-
-                <li>
-                    <a href="index.html">
-                        Shop All
-                    </a>
-                </li>
-
-                <li>
-                    <a href="about.html">
-                        About Us
-                    </a>
-                </li>
-
-                <li>
-                    <a href="contact.html">
-                        Contact Us
-                    </a>
-                </li>
-
-                <li>
-                    <a href="cart.html">
-                        Shopping Cart
-                    </a>
-                </li>
-
-                <li>
-                    <a href="checkout.html">
-                        Checkout
-                    </a>
-                </li>
-
-            </ul>
-
-        </div>
-
-
-        <!-- Customer Care -->
-        <div class="footer-col">
-
-            <h3>Customer Care</h3>
-
-            <ul>
-
-                <li>
-                    <a href="privacy-policy.html">
-                        Privacy Policy
-                    </a>
-                </li>
-
-                <li>
-                    <a href="terms-of-service.html">
-                        Terms of Service
-                    </a>
-                </li>
-
-                <li>
-                    <a href="refund-policy.html">
-                        Refund &amp; Return Policy
-                    </a>
-                </li>
-
-                <li>
-                    <a href="shipping-policy.html">
-                        Shipping Information
-                    </a>
-                </li>
-
-            </ul>
-
-        </div>
-
-
-        <!-- Connect -->
-        <div class="footer-col">
-
-            <h3>Connect</h3>
-
-            <ul>
-
-                <li>
-                    <a href="mailto:support@prasunshop.com">
-                        support@prasunshop.com
-                    </a>
-                </li>
-
-                <li>
-                    <a href="contact.html">
-                        Contact Form
-                    </a>
-                </li>
-
-            </ul>
-
-        </div>
-
-    </div>
-
-
-    <!-- Footer Bottom -->
-    <div class="footer-bottom">
-
-        <p>
-            &copy; 2026 PRASUN SHOP. All rights reserved.
-        </p>
-
-    </div>
-
-</footer>
+    </footer>
 
 </body>
 </html>
