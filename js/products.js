@@ -59,37 +59,51 @@
         DOM.cartBadge.style.display = total > 0 ? "inline-block" : "none";
     }
 
-    async function fetchCJProducts(keyword = "", page = 1) {
-        if (!DOM.productList) return;
+  async function fetchCJProducts(keyword = "", page = 1) {
+    if (!DOM.productList) return;
 
-        if (DOM.resultsCount) {
-            DOM.resultsCount.textContent = "Loading products...";
+    if (DOM.resultsCount) {
+        DOM.resultsCount.textContent = "Loading products...";
+    }
+
+    try {
+        const endpoint = `${CONFIG.API_URL}?productName=${encodeURIComponent(keyword)}&pageNum=${page}&pageSize=${state.pageSize}`;
+        const response = await fetch(endpoint);
+        
+        if (!response.ok) {
+            throw new Error(`Server returned status ${response.status}`);
         }
 
-        DOM.productList.innerHTML = `
-            <div class="no-results">
-                <h3>Searching CJ Dropshipping...</h3>
-                <p>Fetching the latest catalog items matching your request.</p>
-            </div>
-        `;
+        const data = await response.json();
+        const productsList = data?.data?.list || data?.list || (Array.isArray(data) ? data : []);
+        const totalCount = data?.data?.total || productsList.length;
 
-        try {
-            const endpoint = `${CONFIG.API_URL}?productName=${encodeURIComponent(keyword)}&pageNum=${page}&pageSize=${state.pageSize}`;
-            const response = await fetch(endpoint);
-            
-            if (!response.ok) {
-                throw new Error(`Server returned status ${response.status}`);
-            }
+        renderProducts(productsList);
 
-            const data = await response.json();
-            const productsList = data?.data?.list || data?.list || (Array.isArray(data) ? data : []);
-            const totalCount = data?.data?.total || productsList.length;
+        if (DOM.resultsCount) {
+            DOM.resultsCount.textContent = `Showing ${productsList.length} of ${totalCount} products`;
+        }
+    } catch (error) {
+        console.warn("API request failed, switching to local mock products catalog:", error);
+        
+        // Local fallback mock products for immediate offline/frontend testing
+        const mockProducts = [
+            { pid: "1", productNameEn: "Wireless Bluetooth Headphones", sellPrice: 29.99, description: "High-quality wireless headphones from CJ.", productImage: "" },
+            { pid: "2", productNameEn: "Ergonomic Desk Chair", sellPrice: 189.00, description: "Comfortable ergonomic office chair.", productImage: "" },
+            { pid: "3", productNameEn: "Smart Fitness Watch", sellPrice: 45.50, description: "Track your health, steps, and heart rate seamlessly.", productImage: "" }
+        ];
 
-            renderProducts(productsList);
+        const filtered = keyword 
+            ? mockProducts.filter(p => p.productNameEn.toLowerCase().includes(keyword.toLowerCase()))
+            : mockProducts;
 
-            if (DOM.resultsCount) {
-                DOM.resultsCount.textContent = `Showing ${productsList.length} of ${totalCount} products`;
-            }
+        renderProducts(filtered);
+
+        if (DOM.resultsCount) {
+            DOM.resultsCount.textContent = `Showing ${filtered.length} products (Offline Mock Mode)`;
+        }
+    }
+}
         } catch (error) {
             console.warn("API request failed or using fallback mode:", error);
             renderErrorState("Unable to reach CJ Dropshipping API server. Please check your backend proxy configuration.");
