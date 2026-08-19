@@ -468,9 +468,10 @@ img {
   border-color: var(--text-dark);
 }
 
-/* 6. PRODUCT GRID & CARDS
+/* 6. PRODUCT GRID & CARDS (Aligned with JS output)
    -------------------------------------------------------------------------- */
-.products-grid {
+.products-grid,
+#product-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
   gap: 1.75rem;
@@ -495,32 +496,43 @@ img {
   border-color: var(--neutral-300);
 }
 
-.product-card-image {
+.product-card.is-disabled {
+  opacity: 0.75;
+}
+
+/* Supports both .product-card-image and .product-image-wrapper */
+.product-card-image,
+.product-image-wrapper {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 3;
   background-color: var(--neutral-100);
   overflow: hidden;
   position: relative;
 }
 
-.product-card-image img {
+.product-card-image img,
+.product-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.35s ease;
 }
 
-.product-card-image img.is-fallback {
+.product-card-image img.is-fallback,
+.product-image.is-fallback {
   object-fit: contain;
   padding: 2rem;
   opacity: 0.6;
 }
 
-.product-card:hover .product-card-image img:not(.is-fallback) {
+.product-card:hover .product-card-image img:not(.is-fallback),
+.product-card:hover .product-image:not(.is-fallback) {
   transform: scale(1.05);
 }
 
-.product-card-body {
+/* Card Body & Info Container */
+.product-card-body,
+.product-info {
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -554,17 +566,12 @@ img {
   font-weight: 700;
   color: var(--primary-color);
   letter-spacing: 0.05em;
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  background-color: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
-  padding: 0.2rem 0.55rem;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
+  margin-bottom: 0.35rem;
+  display: block;
 }
 
-.product-title {
+.product-title,
+.product-name {
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-dark);
@@ -581,16 +588,7 @@ img {
   color: var(--primary-color);
 }
 
-/* Hover-overlay focus area for card title */
-.product-title-link::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 4.5rem; /* Leaves room for bottom 'Add to Cart' button interaction */
-  left: 0;
-}
-
+/* Description handling with 2-line clamp */
 .product-description {
   font-size: 0.875rem;
   color: var(--text-muted);
@@ -603,6 +601,7 @@ img {
   line-height: 1.45;
 }
 
+/* Footer row inside cards */
 .product-bottom {
   margin-top: auto;
   display: flex;
@@ -611,7 +610,7 @@ img {
   padding-top: 0.85rem;
   border-top: 1px solid var(--neutral-100);
   position: relative;
-  z-index: 2; /* Keeps price and button clickable above link overlay */
+  z-index: 2;
 }
 
 .product-price {
@@ -620,7 +619,9 @@ img {
   color: var(--text-dark);
 }
 
-.product-add-btn {
+/* Action Buttons */
+.product-add-btn,
+.add-cart-btn {
   background-color: var(--text-dark);
   color: #ffffff;
   padding: 0.55rem 1rem;
@@ -628,14 +629,25 @@ img {
   font-size: 0.85rem;
   font-weight: 600;
   transition: var(--transition-fast);
+  border: none;
+  cursor: pointer;
 }
 
-.product-add-btn:hover {
+.product-add-btn:hover:not(:disabled),
+.add-cart-btn:hover:not(:disabled) {
   background-color: var(--primary-color);
 }
 
-.product-add-btn:active {
+.product-add-btn:active:not(:disabled),
+.add-cart-btn:active:not(:disabled) {
   transform: scale(0.97);
+}
+
+.product-add-btn:disabled,
+.add-cart-btn:disabled {
+  background-color: var(--neutral-200);
+  color: var(--neutral-400);
+  cursor: not-allowed;
 }
 
 /* 7. SKELETON SHIMMER LOADING STATES
@@ -685,7 +697,8 @@ img {
 /* 8. EMPTY & ERROR UI STATES
    -------------------------------------------------------------------------- */
 .products-empty,
-.products-error {
+.products-error,
+.no-results {
   grid-column: 1 / -1;
   text-align: center;
   padding: 4rem 1.5rem;
@@ -707,7 +720,9 @@ img {
 }
 
 .products-empty h2,
-.products-error h2 {
+.products-empty h3,
+.products-error h2,
+.no-results h3 {
   font-size: 1.35rem;
   font-weight: 700;
   color: var(--text-dark);
@@ -715,7 +730,8 @@ img {
 }
 
 .products-empty p,
-.products-error p {
+.products-error p,
+.no-results p {
   color: var(--text-muted);
   font-size: 0.925rem;
   margin-bottom: 1.5rem;
@@ -871,7 +887,8 @@ img {
     font-size: 1.75rem;
   }
 
-  .products-grid {
+  .products-grid,
+  #product-list {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1.25rem;
   }
