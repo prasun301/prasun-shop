@@ -1,15 +1,14 @@
 /**
  * ============================================================================
  * PRASUN SHOP — MAIN SCRIPT (js/script.js)
- * Handles Product Fetching, Rendering, Search, and Cart Integration
- * Optimized for Performance, Memory Management, and Consistent Cart Keys
+ * Fixed Product Fetching, Targeting, and Layout Replacement
  * ============================================================================
  */
 
 "use strict";
 
 (function () {
-    const CART_KEY = "prasunShopCart"; // Aligned with other modules
+    const CART_KEY = "prasunShopCart";
 
     document.addEventListener("DOMContentLoaded", () => {
         initShop();
@@ -54,7 +53,6 @@
             const response = await fetch(endpoint);
             const data = await response.json();
 
-            // Handle various backend payload structures safely
             const productsList = data.products || data.data?.list || data.list || (Array.isArray(data) ? data : null);
 
             if (data && (data.success || Array.isArray(productsList)) && Array.isArray(productsList)) {
@@ -94,7 +92,6 @@
         productsContainer.style.gridTemplateColumns = "repeat(auto-fill, minmax(240px, 1fr))";
         productsContainer.style.gap = "20px";
 
-        // Pre-map items for optimal rendering performance
         productsContainer.innerHTML = products.map(productRaw => {
             const rawId = productRaw.pid || productRaw.id || productRaw.sku || "";
             const rawName = productRaw.productNameEn || productRaw.productName || productRaw.title || productRaw.name || "Product";
@@ -106,9 +103,8 @@
             const safeName = escapeHtml(rawName);
             const safeId = escapeHtml(String(rawId));
 
-            // Wrap card in a anchor or use data attributes to allow clicking through to product detail page if desired
             return `
-                <div class="product-card" style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; background: #fff; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div class="product-card" style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; background: #fff; display: flex; flex-direction: column; justify-content: space-link; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                     <div>
                         <a href="product.html?id=${safeId}" style="text-decoration: none; display: block;">
                             <div style="width: 100%; height: 180px; background: #f9fafb; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
@@ -119,7 +115,7 @@
                     </div>
                     <div>
                         <div style="font-size: 18px; font-weight: 700; color: #2563eb; margin-bottom: 12px;">$${safePrice}</div>
-                        <button type="button" onclick='window.PrasunShopAddToCart("${safeId}", ${JSON.stringify(rawName)}, ${rawPrice}, ${JSON.stringify(safeImage)})' style="width: 100%; background: #111827; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.2s;">
+                        <button type="button" onclick='window.PrasunShopAddToCart("${safeId}", ${JSON.stringify(rawName)}, ${rawPrice}, ${JSON.stringify(safeImage)})' style="width: 100%; background: #111827; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 500;">
                             Add to Cart
                         </button>
                     </div>
@@ -128,10 +124,8 @@
         }).join("");
     }
 
-    // Global Add To Cart handler used by product cards
     window.PrasunShopAddToCart = function(id, name, price, image) {
         let cart = [];
-
         try {
             const raw = localStorage.getItem(CART_KEY);
             if (raw) {
@@ -139,7 +133,6 @@
                 if (Array.isArray(parsed)) cart = parsed;
             }
         } catch (e) {
-            console.error("Error reading cart from localStorage:", e);
             cart = [];
         }
 
@@ -147,40 +140,20 @@
         if (existingIndex > -1) {
             cart[existingIndex].quantity = (Number(cart[existingIndex].quantity) || 1) + 1;
         } else {
-            cart.push({ 
-                id, 
-                name: String(name || "Product"), 
-                price: Number(price) || 0, 
-                image: String(image || ""), 
-                quantity: 1 
-            });
+            cart.push({ id, name: String(name || "Product"), price: Number(price) || 0, image: String(image || ""), quantity: 1 });
         }
 
         try {
             localStorage.setItem(CART_KEY, JSON.stringify(cart));
-        } catch (e) {
-            console.error("Error saving cart to localStorage:", e);
-        }
+        } catch (e) {}
 
-        // Dispatch custom event to trigger badge updates across tabs/pages
         window.dispatchEvent(new CustomEvent("prasunCartUpdated"));
-
-        // If compatibility object exists, update badge immediately
         if (window.PrasunShopProducts && typeof window.PrasunShopProducts.updateCartBadge === "function") {
             window.PrasunShopProducts.updateCartBadge();
         }
-
-        // Simple non-intrusive notification feedback (can be swapped with toast notification if desired)
-        console.log(`Successfully added "${name}" to your cart!`);
     };
 
-    const ESCAPE_MAP = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-    };
+    const ESCAPE_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
     const ESCAPE_REGEX = /[&<>"']/g;
 
     function escapeHtml(str) {
