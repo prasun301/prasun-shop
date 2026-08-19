@@ -1,23 +1,6 @@
 /**
  * ============================================================================
- * PRASUN SHOP — ENHANCED CART MANAGEMENT (v2.0)
- * ============================================================================
- *
- * Canonical storage:
- *      prasun_cart
- *
- * Legacy storage supported:
- *      prasunShopCart, cart, prasun_cart_items
- *
- * Features:
- * - Cart normalization & deduplication
- * - Automatic legacy storage migration
- * - Global window.PrasunCart public API
- * - Interactive quantity controls with direct input & bounds protection
- * - Multi-page badge synchronization (works with or without cart table present)
- * - Live accessibility announcements (aria-live)
- * - Memory store fallback for restricted local storage
- * - Clear cart trigger support (#clear-cart-button)
+ * PRASUN SHOP — ENHANCED CART MANAGEMENT (v2.1)
  * ============================================================================
  */
 
@@ -28,16 +11,6 @@
     const LEGACY_KEYS = ["prasunShopCart", "cart", "prasun_cart_items"];
     const CART_EVENT_NAME = "prasunCartUpdated";
     const MAX_QUANTITY = 99;
-
-    const cartItemsContainer = document.getElementById("cart-items");
-    const cartTotalEl = document.getElementById("cart-total");
-    const cartSubtotalEl = document.getElementById("cart-subtotal");
-    const cartCountEl = document.getElementById("cart-count");
-    const cartItemsCountEl = document.getElementById("cart-items-count");
-    const checkoutButton = document.getElementById("checkout-button");
-    const clearCartButton = document.getElementById("clear-cart-button");
-
-    let liveRegionEl = document.getElementById("cart-live-region");
 
     /* Safe storage fallback */
     let memoryStorage = null;
@@ -122,6 +95,7 @@
     }
 
     function announceAccessibility(message) {
+        let liveRegionEl = document.getElementById("cart-live-region");
         if (!liveRegionEl) {
             liveRegionEl = document.createElement("div");
             liveRegionEl.id = "cart-live-region";
@@ -216,7 +190,6 @@
     function saveCart(silent = false) {
         try {
             setStorageItem(CART_KEY, JSON.stringify(cart));
-
             LEGACY_KEYS.forEach(key => removeStorageItem(key));
 
             window.dispatchEvent(
@@ -252,6 +225,8 @@
 
     function updateCartHeader() {
         const totalQuantity = getTotalQuantity();
+        const cartCountEl = document.getElementById("cart-count");
+        const cartItemsCountEl = document.getElementById("cart-items-count");
 
         if (cartCountEl) {
             cartCountEl.textContent = String(totalQuantity);
@@ -269,6 +244,10 @@
 
     function updateTotals() {
         const subtotal = calculateSubtotal();
+        const cartSubtotalEl = document.getElementById("cart-subtotal");
+        const cartTotalEl = document.getElementById("cart-total");
+        const checkoutButton = document.getElementById("checkout-button");
+        const clearCartButton = document.getElementById("clear-cart-button");
 
         if (cartSubtotalEl) {
             cartSubtotalEl.textContent = formatPrice(subtotal);
@@ -290,6 +269,7 @@
     }
 
     function renderEmptyCart() {
+        const cartItemsContainer = document.getElementById("cart-items");
         if (!cartItemsContainer) return;
 
         cartItemsContainer.innerHTML = `
@@ -360,6 +340,7 @@
     }
 
     function attachImageFallbacks() {
+        const cartItemsContainer = document.getElementById("cart-items");
         if (!cartItemsContainer) return;
         const images = cartItemsContainer.querySelectorAll("img[data-cart-image]");
 
@@ -376,6 +357,7 @@
         updateCartHeader();
         updateTotals();
 
+        const cartItemsContainer = document.getElementById("cart-items");
         if (!cartItemsContainer) return;
 
         if (!cart.length) {
@@ -417,84 +399,100 @@
         updateTotals();
     }
 
-    /* Event Delegation for Cart Actions */
-    if (cartItemsContainer) {
-        cartItemsContainer.addEventListener("click", event => {
-            const button = event.target.closest("button[data-action]");
-            if (!button) return;
+    function initCartApp() {
+        const cartItemsContainer = document.getElementById("cart-items");
+        const checkoutButton = document.getElementById("checkout-button");
+        const clearCartButton = document.getElementById("clear-cart-button");
 
-            const action = button.dataset.action;
-            const id = String(button.dataset.id || "");
-            const item = cart.find(entry => String(entry.id) === id);
+        if (cartItemsContainer) {
+            cartItemsContainer.addEventListener("click", event => {
+                const button = event.target.closest("button[data-action]");
+                if (!button) return;
 
-            if (!item) return;
+                const action = button.dataset.action;
+                const id = String(button.dataset.id || "");
+                const item = cart.find(entry => String(entry.id) === id);
 
-            if (action === "remove") {
-                cart = cart.filter(entry => String(entry.id) !== id);
+                if (!item) return;
+
+                if (action === "remove") {
+                    cart = cart.filter(entry => String(entry.id) !== id);
+                    saveCart();
+                    renderCart();
+                    announceAccessibility(`${item.name} removed from cart.`);
+                    return;
+                }
+
+                if (action === "increase") {
+                    if (item.quantity >= MAX_QUANTITY) return;
+                    item.quantity += 1;
+                    saveCart();
+                    updateSingleItemDOM(button.closest(".cart-item"), item);
+                    announceAccessibility(`Increased ${item.name} quantity to ${item.quantity}.`);
+                    return;
+                }
+
+                if (action === "decrease") {
+                    if (item.quantity <= 1) return;
+                    item.quantity -= 1;
+                    saveCart();
+                    updateSingleItemDOM(button.closest(".cart-item"), item);
+                    announceAccessibility(`Decreased ${item.name} quantity to ${item.quantity}.`);
+                }
+            });
+
+            cartItemsContainer.addEventListener("change", event => {
+                const input = event.target.closest('input[data-role="quantity-input"]');
+                if (!input) return;
+
+                const id = String(input.dataset.id || "");
+                const item = cart.find(entry => String(entry.id) === id);
+                if (!item) return;
+
+                let parsedVal = parseInt(input.value, 10);
+                if (isNaN(parsedVal) || parsedVal < 1) parsedVal = 1;
+                if (parsedVal > MAX_QUANTITY) parsedVal = MAX_QUANTITY;
+
+                item.quantity = parsedVal;
                 saveCart();
-                renderCart();
-                announceAccessibility(`${item.name} removed from cart.`);
-                return;
-            }
+                updateSingleItemDOM(input.closest(".cart-item"), item);
+                announceAccessibility(`Updated ${item.name} quantity to ${item.quantity}.`);
+            });
+        }
 
-            if (action === "increase") {
-                if (item.quantity >= MAX_QUANTITY) return;
-                item.quantity += 1;
-                saveCart();
-                updateSingleItemDOM(button.closest(".cart-item"), item);
-                announceAccessibility(`Increased ${item.name} quantity to ${item.quantity}.`);
-                return;
-            }
+        if (checkoutButton) {
+            checkoutButton.addEventListener("click", event => {
+                cart = getCart();
+                if (!cart.length) {
+                    event.preventDefault();
+                    alert("Your cart is empty.");
+                    renderCart();
+                }
+            });
+        }
 
-            if (action === "decrease") {
-                if (item.quantity <= 1) return;
-                item.quantity -= 1;
-                saveCart();
-                updateSingleItemDOM(button.closest(".cart-item"), item);
-                announceAccessibility(`Decreased ${item.name} quantity to ${item.quantity}.`);
-            }
-        });
+        if (clearCartButton) {
+            clearCartButton.addEventListener("click", () => {
+                if (!cart.length) return;
+                if (confirm("Are you sure you want to clear your cart?")) {
+                    cart = [];
+                    saveCart();
+                    renderCart();
+                    announceAccessibility("Cart cleared.");
+                }
+            });
+        }
 
-        cartItemsContainer.addEventListener("change", event => {
-            const input = event.target.closest('input[data-role="quantity-input"]');
-            if (!input) return;
-
-            const id = String(input.dataset.id || "");
-            const item = cart.find(entry => String(entry.id) === id);
-            if (!item) return;
-
-            let parsedVal = parseInt(input.value, 10);
-            if (isNaN(parsedVal) || parsedVal < 1) parsedVal = 1;
-            if (parsedVal > MAX_QUANTITY) parsedVal = MAX_QUANTITY;
-
-            item.quantity = parsedVal;
-            saveCart();
-            updateSingleItemDOM(input.closest(".cart-item"), item);
-            announceAccessibility(`Updated ${item.name} quantity to ${item.quantity}.`);
-        });
+        /* Initial Sync and Hydration */
+        cart = getCart();
+        setStorageItem(CART_KEY, JSON.stringify(cart));
+        renderCart();
     }
 
-    if (checkoutButton) {
-        checkoutButton.addEventListener("click", event => {
-            cart = getCart();
-            if (!cart.length) {
-                event.preventDefault();
-                alert("Your cart is empty.");
-                renderCart();
-            }
-        });
-    }
-
-    if (clearCartButton) {
-        clearCartButton.addEventListener("click", () => {
-            if (!cart.length) return;
-            if (confirm("Are you sure you want to clear your cart?")) {
-                cart = [];
-                saveCart();
-                renderCart();
-                announceAccessibility("Cart cleared.");
-            }
-        });
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initCartApp);
+    } else {
+        initCartApp();
     }
 
     /* Tab Synchronization */
@@ -516,11 +514,6 @@
         cart = getCart();
         renderCart();
     });
-
-    /* Initial Sync and Hydration */
-    cart = getCart();
-    setStorageItem(CART_KEY, JSON.stringify(cart));
-    renderCart();
 
     /* =========================================================================
      * PUBLIC GLOBAL API (window.PrasunCart)
