@@ -831,99 +831,81 @@
     }
 
     /* ========================================================================
-       STAR RATING
+       UI RENDERERS
        ======================================================================== */
-    function renderStars(rating) {
-        if (rating === null || rating === undefined || !Number.isFinite(Number(rating))) {
-            return `<span class="product-stars-empty">No rating</span>`;
-        }
-        const numeric = Math.max(0, Math.min(5, Number(rating)));
-        const rounded = Math.round(numeric);
-        return "★".repeat(rounded) + "☆".repeat(5 - rounded);
+    function renderLoading(message = "Loading catalog...") {
+        productList.innerHTML = `
+            <div class="product-status-card" role="status">
+                <div class="spinner" aria-hidden="true"></div>
+                <p>${escapeHTML(message)}</p>
+            </div>
+        `;
+        announce(message);
     }
 
-    /* ========================================================================
-       PRODUCT RATING TEXT
-       ======================================================================== */
-    function renderRatingText(rating) {
-        if (rating === null || rating === undefined || !Number.isFinite(Number(rating))) {
-            return "";
+    function renderError(message, retryCallback = null) {
+        productList.innerHTML = `
+            <div class="product-status-card error" role="alert">
+                <p>${escapeHTML(message)}</p>
+                ${retryCallback ? '<button type="button" class="btn btn-secondary" id="retry-btn">Try Again</button>' : ''}
+            </div>
+        `;
+        if (retryCallback) {
+            document.getElementById("retry-btn")?.addEventListener("click", retryCallback);
         }
-        return Number(rating).toFixed(1);
+        announce(message);
     }
 
-    /* ========================================================================
-       PRODUCT CARD
-       ======================================================================== */
-    function createProductCard(product) {
-        const id = String(product.id);
-        const encodedId = encodeURIComponent(id);
-        const name = escapeHTML(product.name);
-        const category = escapeHTML(product.category || "Product");
-        const description = escapeHTML(
-            product.description || "Quality product from PRASUN SHOP."
-        );
-        const image = escapeHTML(product.image || FALLBACK_IMAGE);
-        const price = formatPrice(product.price);
-        const ratingText = renderRatingText(product.rating);
-        const stars = renderStars(product.rating);
-        const sku = escapeHTML(product.sku || "");
-        const ratingLabel = ratingText ? `Rated ${ratingText} out of 5` : "No rating available";
+    function renderEmpty(message = "No products found matching your criteria.") {
+        productList.innerHTML = `
+            <div class="product-status-card empty">
+                <p>${escapeHTML(message)}</p>
+            </div>
+        `;
+        announce(message);
+    }
+
+    function renderRating(rating) {
+        if (rating === null || rating === undefined || !Number.isFinite(rating)) {
+            return '<span class="rating-badge rating-none">No reviews</span>';
+        }
+        const stars = "★".repeat(Math.round(rating)) + "☆".repeat(5 - Math.round(rating));
+        return `<span class="rating-badge" aria-label="Rating ${rating.toFixed(1)} out of 5 stars">${stars} (${rating.toFixed(1)})</span>`;
+    }
+
+    function renderProductCard(product) {
+        const detailUrl = `${PRODUCT_DETAIL_PAGE}?id=${encodeURIComponent(product.id || product.sku)}`;
+        const imageSrc = escapeHTML(product.image || FALLBACK_IMAGE);
 
         return `
-            <article
-                class="product-card"
-                data-product-id="${escapeHTML(id)}"
-                data-product-sku="${sku}"
-            >
-                <div class="product-card-inner">
-                    <a
-                        href="${PRODUCT_DETAIL_PAGE}?id=${encodedId}"
-                        class="product-card-link"
-                        aria-label="View ${name}"
-                    >
-                        <div class="product-card-image">
-                            <span class="product-category">${category}</span>
-                            <img
-                                src="${image}"
-                                alt="${name}"
-                                loading="lazy"
-                                decoding="async"
-                                data-product-image="true"
-                                width="600"
-                                height="600"
-                            >
-                        </div>
-                        <div class="product-card-body">
-                            <div
-                                class="product-rating"
-                                aria-label="${escapeHTML(ratingLabel)}"
-                            >
-                                <span class="product-stars" aria-hidden="true">${stars}</span>
-                                ${
-                                    ratingText
-                                        ? `<span class="product-rating-number">${escapeHTML(ratingText)}</span>`
-                                        : ""
-                                }
-                            </div>
-                            <h3 class="product-title">${name}</h3>
-                            <p class="product-description">${description}</p>
-                            <div class="product-bottom">
-                                <span class="product-price">${escapeHTML(price)}</span>
-                                <span class="product-view-button">View Product →</span>
-                            </div>
-                        </div>
-                    </a>
-                    <div class="product-card-actions">
+            <article class="product-card" data-id="${escapeHTML(product.id)}" data-sku="${escapeHTML(product.sku)}">
+                <a href="${detailUrl}" class="product-card-image-link" tabindex="-1" aria-hidden="true">
+                    <img
+                        src="${imageSrc}"
+                        alt="${escapeHTML(product.name)}"
+                        loading="lazy"
+                        onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}';"
+                        class="product-image"
+                    />
+                </a>
+                <div class="product-card-body">
+                    <div class="product-meta">
+                        <span class="product-category">${escapeHTML(product.category)}</span>
+                        ${renderRating(product.rating)}
+                    </div>
+                    <h3 class="product-title">
+                        <a href="${detailUrl}">${escapeHTML(product.name)}</a>
+                    </h3>
+                    <p class="product-description">${escapeHTML(product.description)}</p>
+                    <div class="product-card-footer">
+                        <span class="product-price">${formatPrice(product.price)}</span>
                         <button
                             type="button"
-                            class="btn-add-to-cart"
-                            data-action="add-to-cart"
-                            data-product-id="${escapeHTML(id)}"
-                            aria-label="Add ${name} to cart"
+                            class="btn btn-primary add-to-cart-btn"
+                            data-id="${escapeHTML(product.id)}"
+                            aria-label="Add ${escapeHTML(product.name)} to cart"
                         >
-                            <span class="cart-button-icon" aria-hidden="true">+</span>
-                            <span class="cart-button-text">Add to Cart</span>
+                            Add to Cart
                         </button>
                     </div>
                 </div>
@@ -931,524 +913,226 @@
         `;
     }
 
-    /* ========================================================================
-       LOADING STATE
-       ======================================================================== */
-    function renderLoading(message = "Loading products...") {
-        productList.setAttribute("aria-busy", "true");
-        productList.innerHTML = `
-            <div class="products-loading" role="status">
-                <div class="products-loading-spinner" aria-hidden="true"></div>
-                <h2>${escapeHTML(message)}</h2>
-                <p>We're preparing the latest products for you.</p>
-            </div>
-        `;
-    }
-
-    /* ========================================================================
-       EMPTY STATE
-       ======================================================================== */
-    function renderEmpty() {
-        productList.setAttribute("aria-busy", "false");
-        productList.innerHTML = `
-            <div class="products-empty" role="status">
-                <div class="products-empty-icon" aria-hidden="true">🔎</div>
-                <h2>No products found</h2>
-                <p>Try another search term or select a different category.</p>
-                <button
-                    type="button"
-                    class="products-reset-button"
-                    data-action="reset-filters"
-                >
-                    Clear Filters
-                </button>
-            </div>
-        `;
-    }
-
-    /* ========================================================================
-       RESULT BAR
-       ======================================================================== */
-    function updateResultBar() {
+    function updateProductHeadingAndCount() {
+        if (productsCount) {
+            productsCount.textContent = `${filteredProducts.length} ${filteredProducts.length === 1 ? "product" : "products"}`;
+        }
         if (productsHeading) {
-            if (currentSearch) {
-                productsHeading.textContent = `Search results for "${currentSearch}"`;
+            if (currentSearch.trim()) {
+                productsHeading.textContent = `Search Results for "${currentSearch.trim()}"`;
             } else if (activeCategory !== "all") {
                 productsHeading.textContent = activeCategory;
             } else {
                 productsHeading.textContent = "All Products";
             }
         }
-        if (productsCount) {
-            const count = filteredProducts.length;
-            productsCount.textContent = `${count} ${count === 1 ? "product" : "products"}`;
-        }
     }
 
-    /* ========================================================================
-       RENDER PRODUCTS
-       ======================================================================== */
     function renderProducts() {
         filterProducts();
-        updateClearSearchButton();
+        updateProductHeadingAndCount();
+
         if (!filteredProducts.length) {
             renderEmpty();
-            updateResultBar();
             return;
         }
-        productList.innerHTML = filteredProducts.map(createProductCard).join("");
-        productList.setAttribute("aria-busy", "false");
-        updateResultBar();
-        attachImageFallbacks();
-        announce(
-            `${filteredProducts.length} ${
-                filteredProducts.length === 1 ? "product" : "products"
-            } displayed.`
-        );
+
+        productList.innerHTML = filteredProducts.map(renderProductCard).join("");
+        announce(`Showing ${filteredProducts.length} products`);
     }
 
     /* ========================================================================
-       IMAGE FALLBACK
+       SHOPPING CART ENGINE
        ======================================================================== */
-    function attachImageFallbacks() {
-        const images = productList.querySelectorAll("img[data-product-image]");
-        images.forEach(image => {
-            image.addEventListener(
-                "error",
-                () => {
-                    if (image.dataset.fallbackApplied === "true") return;
-                    image.dataset.fallbackApplied = "true";
-                    image.src = FALLBACK_IMAGE;
-                },
-                { once: true }
-            );
-        });
-    }
-
-    /* ========================================================================
-       CART READ
-       ======================================================================== */
-    function readCart() {
+    function getCart() {
         try {
-            const stored = localStorage.getItem(CART_KEY);
-            if (!stored) return [];
-            const parsed = JSON.parse(stored);
-            if (!Array.isArray(parsed)) return [];
-            return parsed
-                .filter(item => item && typeof item === "object")
-                .map(item => ({
-                    ...item,
-                    id: String(item.id ?? ""),
-                    quantity: Math.max(
-                        1,
-                        Math.min(MAX_CART_QUANTITY, Math.floor(Number(item.quantity) || 1))
-                    )
-                }))
-                .filter(item => item.id);
-        } catch (error) {
-            console.error("[PRASUN SHOP] Cart read error:", error);
+            const raw = localStorage.getItem(CART_KEY);
+            return raw ? JSON.parse(raw) : [];
+        } catch {
             return [];
         }
     }
 
-    /* ========================================================================
-       CART SAVE
-       ======================================================================== */
     function saveCart(cart) {
         try {
             localStorage.setItem(CART_KEY, JSON.stringify(cart));
-            window.dispatchEvent(
-                new CustomEvent(CART_EVENT_NAME, {
-                    detail: { cart: [...cart] }
-                })
-            );
-            updateCartCount(cart);
-            return true;
-        } catch (error) {
-            console.error("[PRASUN SHOP] Cart save error:", error);
-            return false;
+            window.dispatchEvent(new CustomEvent(CART_EVENT_NAME, { detail: cart }));
+        } catch (e) {
+            console.error("[PRASUN SHOP] Failed to save cart to localStorage", e);
         }
     }
 
-    /* ========================================================================
-       CART COUNT
-       ======================================================================== */
-    function updateCartCount(suppliedCart = null) {
+    function updateCartBadge() {
         if (!cartCount) return;
-        const cart = suppliedCart || readCart();
-        const total = cart.reduce((sum, item) => {
-            const quantity = Math.max(
-                1,
-                Math.min(MAX_CART_QUANTITY, Math.floor(Number(item?.quantity) || 1))
-            );
-            return sum + quantity;
-        }, 0);
-
-        cartCount.textContent = String(total);
-        cartCount.hidden = total <= 0;
-
-        const cartLink = cartCount.closest("a");
-        if (cartLink) {
-            cartLink.setAttribute(
-                "aria-label",
-                total > 0
-                    ? `View Shopping Cart, ${total} ${total === 1 ? "item" : "items"}`
-                    : "View Shopping Cart"
-            );
-        }
+        const cart = getCart();
+        const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        cartCount.textContent = String(totalItems);
+        cartCount.hidden = totalItems === 0;
     }
 
-    /* ========================================================================
-       ADD TO CART
-       ======================================================================== */
-    function addToCart(product) {
-        if (!product) return false;
-        const cart = readCart();
-        const productId = String(product.id);
-        const existing = cart.find(item => String(item.id) === productId);
+    function addToCart(productId) {
+        const product = allProducts.find(p => p.id === productId || p.sku === productId) ||
+                        masterCatalog.find(p => p.id === productId || p.sku === productId);
 
-        if (existing) {
-            existing.quantity = Math.min(
-                MAX_CART_QUANTITY,
-                Math.max(1, Number(existing.quantity) || 1) + 1
-            );
+        if (!product) return;
+
+        const cart = getCart();
+        const existingIndex = cart.findIndex(item => item.id === product.id || item.sku === product.sku);
+
+        if (existingIndex > -1) {
+            const currentQty = cart[existingIndex].quantity || 1;
+            cart[existingIndex].quantity = Math.min(MAX_CART_QUANTITY, currentQty + 1);
         } else {
             cart.push({
                 id: product.id,
-                sku: product.sku || product.id,
+                sku: product.sku,
                 name: product.name,
-                price: parsePrice(product.price),
-                image: product.image || "",
-                images: Array.isArray(product.images) ? [...product.images] : [],
-                category: product.category || "",
-                description: product.description || "",
-                rating: product.rating ?? null,
-                features: Array.isArray(product.features) ? [...product.features] : [],
-                specifications: normalizeObject(product.specifications),
-                variants: Array.isArray(product.variants) ? [...product.variants] : [],
-                productId: product.productId || product.cjProductId || product.id,
-                cjProductId: product.cjProductId || product.productId || product.id,
-                cjSku: product.cjSku || product.sku || "",
-                inventory: product.inventory ?? null,
+                price: product.price,
+                image: product.image,
                 quantity: 1
             });
         }
-        return saveCart(cart);
+
+        saveCart(cart);
+        updateCartBadge();
+        announce(`Added ${product.name} to your cart.`);
     }
 
     /* ========================================================================
-       BUTTON FEEDBACK
+       SEARCH ENGINE (DEBOUNCED & RACE-PROTECTED)
        ======================================================================== */
-    function showAddedFeedback(button) {
-        if (!button || button.dataset.busy === "true") return;
-        button.dataset.busy = "true";
-        const textElement = button.querySelector(".cart-button-text");
-        const originalText = textElement ? textElement.textContent : button.textContent;
-
-        if (textElement) {
-            textElement.textContent = "Added ✓";
-        } else {
-            button.textContent = "Added ✓";
-        }
-        button.classList.add("is-added");
-        button.disabled = true;
-
-        window.setTimeout(() => {
-            if (textElement) {
-                textElement.textContent = originalText;
-            } else {
-                button.textContent = originalText;
-            }
-            button.classList.remove("is-added");
-            button.disabled = false;
-            button.dataset.busy = "false";
-        }, 1100);
-    }
-
-    /* ========================================================================
-       PRODUCT LIST EVENTS
-       ======================================================================== */
-    productList.addEventListener("click", event => {
-        const button = event.target.closest("button[data-action]");
-        if (!button) return;
-        const action = button.dataset.action;
-
-        if (action === "reset-filters") {
-            if (activeSearchController) {
-                activeSearchController.abort();
-                activeSearchController = null;
-            }
-            searchRequestSequence++;
-            currentSearch = "";
-            activeCategory = "all";
-            if (searchInput) {
-                searchInput.value = "";
-            }
-            allProducts = masterCatalog;
-            buildCategories();
-            setActiveCategory("all");
-            renderProducts();
-            announce("Search and category filters cleared.");
-            return;
-        }
-
-        if (action !== "add-to-cart") return;
-        event.preventDefault();
-        event.stopPropagation();
-
-        const productId = String(button.dataset.productId || "");
-        const product = allProducts.find(item => String(item.id) === productId);
-
-        if (!product) {
-            console.error("[PRASUN SHOP] Product not found:", productId);
-            return;
-        }
-
-        if (addToCart(product)) {
-            showAddedFeedback(button);
-            announce(`${product.name} added to cart.`);
-        }
-    });
-
-    /* ========================================================================
-       SEARCH REQUEST
-       ======================================================================== */
-    async function performSearch(keyword) {
-        const trimmed = String(keyword || "").trim();
+    async function handleSearchExecution(query) {
+        const trimmed = query.trim();
+        searchRequestSequence++;
+        const currentSeq = searchRequestSequence;
 
         if (activeSearchController) {
             activeSearchController.abort();
+            activeSearchController = null;
         }
 
-        const requestId = ++searchRequestSequence;
-        currentSearch = trimmed;
+        if (trimmed.length >= MIN_SEARCH_LENGTH) {
+            renderLoading(`Searching for "${trimmed}"...`);
+            activeSearchController = new AbortController();
 
-        if (trimmed.length < MIN_SEARCH_LENGTH) {
-            allProducts = masterCatalog;
-            renderProducts();
-            return;
-        }
+            try {
+                const apiResults = await loadProductsFromAPI(trimmed, activeSearchController.signal);
+                if (currentSeq !== searchRequestSequence) return; // Race condition check
 
-        renderProducts();
+                allProducts = mergeProducts(masterCatalog, apiResults);
+                buildCategories();
+                renderProducts();
+            } catch (err) {
+                if (err.name === "AbortError") return;
+                if (currentSeq !== searchRequestSequence) return;
 
-        const controller = new AbortController();
-        activeSearchController = controller;
-
-        try {
-            const apiProducts = await loadProductsFromAPI(trimmed, controller.signal);
-
-            if (requestId !== searchRequestSequence || controller.signal.aborted) {
-                return;
-            }
-
-            const localMatches = masterCatalog.filter(product =>
-                matchesSearch(product, trimmed)
-            );
-            allProducts = mergeProducts(localMatches, apiProducts);
-            buildCategories();
-            renderProducts();
-            announce(`${filteredProducts.length} search results found for ${trimmed}.`);
-        } catch (error) {
-            if (error?.name === "AbortError") return;
-            if (requestId !== searchRequestSequence) return;
-
-            console.warn(
-                "[PRASUN SHOP] Live search unavailable. Local search remains active.",
-                error
-            );
-            allProducts = masterCatalog;
-            buildCategories();
-            renderProducts();
-            announce("Live search is temporarily unavailable. Showing local results.");
-        } finally {
-            if (requestId === searchRequestSequence) {
-                activeSearchController = null;
-            }
-        }
-    }
-
-    /* ========================================================================
-       MATCH SEARCH
-       ======================================================================== */
-    function matchesSearch(product, search) {
-        const normalizedSearch = String(search || "").trim().toLowerCase();
-        if (!normalizedSearch) {
-            return true;
-        }
-        const specifications = product.specifications || {};
-        const searchableText = [
-            product.name,
-            product.category,
-            product.sku,
-            product.cjSku,
-            product.productId,
-            product.cjProductId,
-            product.description,
-            ...(product.features || []),
-            ...Object.keys(specifications),
-            ...Object.values(specifications)
-        ]
-            .filter(value => value !== null && value !== undefined)
-            .join(" ")
-            .toLowerCase();
-
-        return searchableText.includes(normalizedSearch);
-    }
-
-    /* ========================================================================
-       SEARCH INPUT EVENTS
-       ======================================================================== */
-    if (searchInput) {
-        searchInput.addEventListener("input", () => {
-            window.clearTimeout(searchTimer);
-            updateClearSearchButton();
-            currentSearch = searchInput.value.trim();
-
-            renderProducts();
-
-            if (currentSearch.length === 0) {
-                searchRequestSequence++;
-                if (activeSearchController) {
-                    activeSearchController.abort();
+                console.warn("[PRASUN SHOP] Live search failed, falling back to local dataset:", err.message);
+                allProducts = [...masterCatalog];
+                renderProducts();
+            } finally {
+                if (currentSeq === searchRequestSequence) {
                     activeSearchController = null;
                 }
-                allProducts = masterCatalog;
-                buildCategories();
-                renderProducts();
-                return;
             }
-
-            if (currentSearch.length < MIN_SEARCH_LENGTH) {
-                return;
-            }
-
-            searchTimer = window.setTimeout(() => {
-                performSearch(currentSearch);
-            }, SEARCH_DELAY);
-        });
-
-        searchInput.addEventListener("keydown", event => {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                window.clearTimeout(searchTimer);
-                performSearch(searchInput.value);
-            }
-        });
+        } else {
+            allProducts = [...masterCatalog];
+            renderProducts();
+        }
     }
 
-    /* ========================================================================
-       CLEAR SEARCH
-       ======================================================================== */
-    if (clearSearchButton && searchInput) {
-        clearSearchButton.addEventListener("click", () => {
+    function onSearchInput(e) {
+        currentSearch = e.target.value;
+        updateClearSearchButton();
+
+        if (searchTimer) {
             window.clearTimeout(searchTimer);
-            searchRequestSequence++;
-            if (activeSearchController) {
-                activeSearchController.abort();
-                activeSearchController = null;
+        }
+
+        searchTimer = window.setTimeout(() => {
+            handleSearchExecution(currentSearch);
+        }, SEARCH_DELAY);
+    }
+
+    /* ========================================================================
+       EVENT LISTENERS & BINDINGS
+       ======================================================================== */
+    function attachEventListeners() {
+        searchInput?.addEventListener("input", onSearchInput);
+
+        clearSearchButton?.addEventListener("click", () => {
+            if (searchInput) {
+                searchInput.value = "";
+                currentSearch = "";
+                updateClearSearchButton();
+                handleSearchExecution("");
+                searchInput.focus();
             }
-            searchInput.value = "";
-            currentSearch = "";
-            allProducts = masterCatalog;
-            buildCategories();
-            setActiveCategory("all");
-            renderProducts();
-            searchInput.focus();
-            announce("Search cleared.");
         });
-    }
 
-    /* ========================================================================
-       SORT EVENTS
-       ======================================================================== */
-    if (sortSelect) {
-        sortSelect.addEventListener("change", () => {
-            currentSort = sortSelect.value || "featured";
+        sortSelect?.addEventListener("change", e => {
+            currentSort = e.target.value;
             renderProducts();
-            announce(
-                `Products sorted by ${
-                    sortSelect.options[sortSelect.selectedIndex]?.text || "Featured"
-                }.`
-            );
         });
-    }
 
-    /* ========================================================================
-       CATEGORY EVENTS
-       ======================================================================== */
-    if (categoriesContainer) {
-        categoriesContainer.addEventListener("click", event => {
-            const button = event.target.closest(".category-pill");
+        categoriesContainer?.addEventListener("click", e => {
+            const button = e.target.closest(".category-pill");
             if (!button) return;
-            activeCategory = button.dataset.category || "all";
-            setActiveCategory(activeCategory);
+            const category = button.dataset.category;
+            setActiveCategory(category);
             renderProducts();
-            announce(`Category ${activeCategory} selected.`);
+        });
+
+        productList.addEventListener("click", e => {
+            const btn = e.target.closest(".add-to-cart-btn");
+            if (!btn) return;
+            const id = btn.dataset.id;
+            if (id) {
+                addToCart(id);
+            }
+        });
+
+        window.addEventListener(CART_EVENT_NAME, updateCartBadge);
+        window.addEventListener("storage", e => {
+            if (e.key === CART_KEY) updateCartBadge();
         });
     }
 
     /* ========================================================================
-       CART SYNCHRONIZATION
+       INITIALIZATION
        ======================================================================== */
-    window.addEventListener("storage", event => {
-        if (event.key === CART_KEY) {
-            updateCartCount();
-        }
-    });
+    async function initCatalog() {
+        catalogRequestSequence++;
+        const currentSeq = catalogRequestSequence;
+        renderLoading("Fetching products...");
 
-    window.addEventListener(CART_EVENT_NAME, event => {
-        if (event.detail && Array.isArray(event.detail.cart)) {
-            updateCartCount(event.detail.cart);
-        }
-    });
-
-    /* ========================================================================
-       INITIAL CATALOG LOADING
-       ======================================================================== */
-    async function initializeProducts() {
-        masterCatalog = getLocalProducts();
-        allProducts = masterCatalog;
-        buildCategories();
-        setActiveCategory("all");
-        renderProducts();
-
-        const requestId = ++catalogRequestSequence;
         try {
-            const apiProducts = await loadProductsFromAPI();
-            if (requestId !== catalogRequestSequence) return;
+            const remoteProducts = await loadProductsFromAPI();
+            if (currentSeq !== catalogRequestSequence) return;
 
-            if (apiProducts.length) {
-                masterCatalog = mergeProducts(getLocalProducts(), apiProducts);
-                allProducts = masterCatalog;
-                buildCategories();
-                setActiveCategory(activeCategory);
-                renderProducts();
-                announce(`${allProducts.length} products loaded.`);
-            }
-        } catch (error) {
-            console.warn(
-                "[PRASUN SHOP] API unavailable. Local catalog remains active.",
-                error
-            );
+            masterCatalog = mergeProducts(getLocalProducts(), remoteProducts);
+            allProducts = [...masterCatalog];
+        } catch (err) {
+            if (currentSeq !== catalogRequestSequence) return;
+            console.warn("[PRASUN SHOP] Remote API unavailable. Utilizing local fallback catalog.", err.message);
+
             masterCatalog = getLocalProducts();
-            allProducts = masterCatalog;
-            buildCategories();
-            setActiveCategory(activeCategory);
-            renderProducts();
-            announce("Products loaded from the local catalog.");
+            allProducts = [...masterCatalog];
         }
+
+        buildCategories();
+        renderProducts();
+        updateCartBadge();
+        updateClearSearchButton();
     }
 
-    /* ========================================================================
-       INITIAL STATE
-       ======================================================================== */
-    updateCartCount();
-    updateClearSearchButton();
+    function init() {
+        attachEventListeners();
+        initCatalog();
+    }
 
-    masterCatalog = getLocalProducts();
-    allProducts = masterCatalog;
-    buildCategories();
-    setActiveCategory("all");
-    renderLoading();
-    initializeProducts();
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
 })();
