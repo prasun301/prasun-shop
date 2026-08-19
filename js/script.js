@@ -3,56 +3,107 @@
  * PRASUN SHOP — PRODUCTS & INTERACTIVITY
  * ============================================================================
  *
- * Responsibilities:
- *   - Load products from Cloudflare Worker / CJ API
- *   - Search products
- *   - Filter by category
- *   - Sort products
- *   - Render product cards
- *   - Add products through the canonical PrasunCart system
- *
  * IMPORTANT:
- *   This file DOES NOT write directly to localStorage.
- *
- *   cart.js is the single owner of:
- *
- *       localStorage["prasun_cart"]
- *
+ * - CJ product identity is preserved.
+ * - Search results can be added directly to cart.
+ * - Cart receives cjProductId / cjSku / variantId / variantSku.
+ * - Original CJ/API product data is preserved in `raw`.
+ * - Product names are NEVER used as the primary product ID.
  * ============================================================================
  */
 
 "use strict";
 
 (() => {
-
-    /* =========================================================================
-       CONFIGURATION
-       ========================================================================= */
-
     const API_ENDPOINT =
         "https://prasun-shop-api.prasun301.workers.dev/api/products";
 
-    const CART_EVENT_NAME =
-        "prasunCartUpdated";
+    const CART_KEY = "prasun_cart";
+    const CART_EVENT_NAME = "prasunCartUpdated";
 
-    const API_TIMEOUT =
-        12000;
+    const API_TIMEOUT = 15000;
+    const SEARCH_DELAY = 350;
+    const MAX_CART_QUANTITY = 99;
+    const MIN_SEARCH_LENGTH = 2;
 
-    const SEARCH_DELAY =
-        400;
+    const PRODUCT_DETAIL_PAGE = "/product.html";
 
-    const MIN_SEARCH_LENGTH =
-        2;
+    /* =========================================================================
+       DOM
+       ========================================================================= */
 
-    const PRODUCT_DETAIL_PAGE =
-        "/product.html";
+    const productList =
+        document.getElementById("product-list");
+
+    if (!productList) {
+        return;
+    }
+
+    const searchInput =
+        document.getElementById("product-search");
+
+    const sortSelect =
+        document.getElementById("product-sort");
+
+    const categoriesContainer =
+        document.getElementById("products-categories");
+
+    const productsHeading =
+        document.getElementById("products-heading") ||
+        document.getElementById("page-heading");
+
+    const productsCount =
+        document.getElementById("results-count");
+
+    const clearSearchButton =
+        document.getElementById("clear-search");
+
+    const ariaLiveRegion =
+        document.getElementById("aria-live-region");
+
+    const cartCount =
+        document.getElementById("cart-count");
+
+    /* =========================================================================
+       FALLBACK IMAGE
+       ========================================================================= */
+
+    const FALLBACK_IMAGE =
+        "data:image/svg+xml;charset=UTF-8," +
+        encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 width="800"
+                 height="800"
+                 viewBox="0 0 800 800">
+
+                <rect width="800"
+                      height="800"
+                      fill="#f8fafc"/>
+
+                <path d="M220 540 L330 420 L420 500 L500 430 L580 540 Z"
+                      fill="#e2e8f0"/>
+
+                <circle cx="330"
+                        cy="300"
+                        r="55"
+                        fill="#cbd5e1"/>
+
+                <text x="400"
+                      y="635"
+                      text-anchor="middle"
+                      fill="#64748b"
+                      font-family="Arial,sans-serif"
+                      font-size="28">
+                    Image unavailable
+                </text>
+            </svg>
+        `);
 
     /* =========================================================================
        LOCAL CATALOG
        ========================================================================= */
 
     const LOCAL_CATALOG = [
-
         {
             id: "001",
             pid: "7F16D3D3-8D71-4231-9F58-C525DF053933",
@@ -61,7 +112,8 @@
             category: "Solar Lighting",
             price: 14.99,
             rating: 4.8,
-            image: "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/10_57d942b5-c025-425a-a8a4-d87c6a612631.png",
+            image:
+                "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/10_57d942b5-c025-425a-a8a4-d87c6a612631.png",
             images: [
                 "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/10_57d942b5-c025-425a-a8a4-d87c6a612631.png"
             ],
@@ -87,7 +139,8 @@
             category: "Smart Tech",
             price: 24.99,
             rating: 4.7,
-            image: "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg",
+            image:
+                "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg",
             images: [
                 "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/1_d000e27d-654f-42a9-a69e-fa741145c989.jpg"
             ],
@@ -113,7 +166,8 @@
             category: "Security Cameras",
             price: 29.99,
             rating: 4.9,
-            image: "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg",
+            image:
+                "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg",
             images: [
                 "https://cc-west-usa.oss-us-west-1.aliyuncs.com/1688/683789098711/1_6c876bad-b1e0-4d44-9c62-e7c1d9daadb1_trans.jpeg"
             ],
@@ -137,7 +191,7 @@
             sku: "CJSN-SOLAR-WALL-04",
             name: "Outdoor LED Solar Motion Sensor Wall Light",
             category: "Solar Lighting",
-            price: 16.50,
+            price: 16.5,
             rating: 4.8,
             image: "",
             images: [],
@@ -233,7 +287,7 @@
             sku: "CJSN-POCKET-CAM-08",
             name: "4K HD Anti-Shake Mini Pocket Sports Action Camera",
             category: "Cameras",
-            price: 45.00,
+            price: 45,
             rating: 4.7,
             image: "",
             images: [],
@@ -305,7 +359,7 @@
             sku: "CJSN-STREET-LIGHT-11",
             name: "Commercial Heavy-Duty Solar Street Light",
             category: "Solar Lighting",
-            price: 42.50,
+            price: 42.5,
             rating: 4.9,
             image: "",
             images: [],
@@ -342,7 +396,7 @@
             ],
             specifications: {
                 "Light Tone": "Warm White",
-                Mounting: "Wall Mount"
+                "Mounting": "Wall Mount"
             },
             variants: []
         },
@@ -473,7 +527,7 @@
             sku: "CJSN-118LED-SOLAR-18",
             name: "118-LED PIR Motion Sensor Outdoor Solar Light",
             category: "Solar Lighting",
-            price: 22.50,
+            price: 22.5,
             rating: 4.9,
             image: "",
             images: [],
@@ -538,113 +592,7 @@
             },
             variants: []
         }
-
     ];
-
-    /* =========================================================================
-       DOM
-       ========================================================================= */
-
-    const productList =
-        document.getElementById("product-list");
-
-    if (!productList) {
-        return;
-    }
-
-    const searchInput =
-        document.getElementById("product-search");
-
-    const sortSelect =
-        document.getElementById("product-sort");
-
-    const categoriesContainer =
-        document.getElementById("products-categories");
-
-    const productsHeading =
-        document.getElementById("products-heading") ||
-        document.getElementById("page-heading");
-
-    const productsCount =
-        document.getElementById("results-count");
-
-    const clearSearchButton =
-        document.getElementById("clear-search");
-
-    const ariaLiveRegion =
-        document.getElementById("aria-live-region");
-
-    const cartCount =
-        document.getElementById("cart-count");
-
-    /* =========================================================================
-       STATE
-       ========================================================================= */
-
-    let masterCatalog = [];
-
-    let allProducts = [];
-
-    let filteredProducts = [];
-
-    let activeCategory = "all";
-
-    let currentSearch = "";
-
-    let currentSort =
-        sortSelect?.value || "featured";
-
-    let searchTimer = null;
-
-    let activeSearchController = null;
-
-    let searchRequestSequence = 0;
-
-    let catalogRequestSequence = 0;
-
-    /* =========================================================================
-       FALLBACK IMAGE
-       ========================================================================= */
-
-    const FALLBACK_IMAGE =
-        "data:image/svg+xml;charset=UTF-8," +
-        encodeURIComponent(`
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="800"
-                height="800"
-                viewBox="0 0 800 800"
-            >
-                <rect
-                    width="800"
-                    height="800"
-                    fill="#f8fafc"
-                />
-
-                <path
-                    d="M220 540 L330 420 L420 500 L500 430 L580 540 Z"
-                    fill="#e2e8f0"
-                />
-
-                <circle
-                    cx="330"
-                    cy="300"
-                    r="55"
-                    fill="#cbd5e1"
-                />
-
-                <text
-                    x="400"
-                    y="635"
-                    text-anchor="middle"
-                    fill="#64748b"
-                    font-family="Arial, sans-serif"
-                    font-size="28"
-                >
-                    Image unavailable
-                </text>
-            </svg>
-        `);
 
     /* =========================================================================
        HELPERS
@@ -659,7 +607,6 @@
     };
 
     function escapeHTML(value) {
-
         if (
             value === null ||
             value === undefined
@@ -669,8 +616,7 @@
 
         return String(value).replace(
             /[&<>"']/g,
-            character =>
-                ESCAPE_MAP[character]
+            char => ESCAPE_MAP[char]
         );
     }
 
@@ -678,7 +624,6 @@
         value,
         fallback = ""
     ) {
-
         if (
             value === null ||
             value === undefined
@@ -692,6 +637,25 @@
         return text || fallback;
     }
 
+    function parsePrice(value) {
+        if (
+            typeof value === "number" &&
+            Number.isFinite(value)
+        ) {
+            return Math.max(0, value);
+        }
+
+        const parsed =
+            parseFloat(
+                String(value ?? "")
+                    .replace(/[^0-9.-]/g, "")
+            );
+
+        return Number.isFinite(parsed)
+            ? Math.max(0, parsed)
+            : 0;
+    }
+
     const currencyFormatter =
         new Intl.NumberFormat(
             "en-US",
@@ -703,76 +667,13 @@
             }
         );
 
-    function parsePrice(value) {
-
-        if (
-            typeof value === "number" &&
-            Number.isFinite(value)
-        ) {
-            return Math.max(0, value);
-        }
-
-        const parsed =
-            parseFloat(
-                String(value ?? "")
-                    .replace(
-                        /[^0-9.-]/g,
-                        ""
-                    )
-            );
-
-        return Number.isFinite(parsed)
-            ? Math.max(0, parsed)
-            : 0;
-    }
-
-    function extractPrice(product) {
-
-        if (
-            !product ||
-            typeof product !== "object"
-        ) {
-            return 0;
-        }
-
-        const candidates = [
-            product.discountPrice,
-            product.nowPrice,
-            product.sellPrice,
-            product.price,
-            product.startSellPrice,
-            product.salePrice,
-            product.productPrice
-        ];
-
-        for (
-            const candidate of candidates
-        ) {
-
-            const parsed =
-                parsePrice(candidate);
-
-            if (parsed > 0) {
-                return parsed;
-            }
-        }
-
-        return 0;
-    }
-
     function formatPrice(value) {
-
         return currencyFormatter.format(
             parsePrice(value)
         );
     }
 
-    /* =========================================================================
-       IMAGE NORMALIZATION
-       ========================================================================= */
-
     function normalizeImageURL(value) {
-
         if (!value) {
             return "";
         }
@@ -801,25 +702,16 @@
 
         return (
             "https://" +
-            image.replace(
-                /^\/+/,
-                ""
-            )
+            image.replace(/^\/+/, "")
         );
     }
 
     function extractImages(product) {
-
         const candidates = [];
 
-        function addCandidate(value) {
-
+        const addCandidate = value => {
             if (Array.isArray(value)) {
-
-                value.forEach(
-                    addCandidate
-                );
-
+                value.forEach(addCandidate);
                 return;
             }
 
@@ -827,67 +719,34 @@
                 value &&
                 typeof value === "object"
             ) {
-
-                addCandidate(
-                    value.url
-                );
-
-                addCandidate(
-                    value.imageUrl
-                );
-
-                addCandidate(
-                    value.image
-                );
-
+                addCandidate(value.url);
+                addCandidate(value.imageUrl);
+                addCandidate(value.image);
                 return;
             }
 
             const normalized =
-                normalizeImageURL(
-                    value
-                );
+                normalizeImageURL(value);
 
             if (normalized) {
-                candidates.push(
-                    normalized
-                );
+                candidates.push(normalized);
             }
-        }
+        };
 
-        addCandidate(
-            product.image
-        );
-
-        addCandidate(
-            product.bigImage
-        );
-
-        addCandidate(
-            product.imageUrl
-        );
-
-        addCandidate(
-            product.productImage
-        );
-
-        addCandidate(
-            product.images
-        );
+        addCandidate(product.image);
+        addCandidate(product.bigImage);
+        addCandidate(product.imageUrl);
+        addCandidate(product.productImage);
+        addCandidate(product.images);
+        addCandidate(product.mainImage);
+        addCandidate(product.productImageUrl);
 
         return [
             ...new Set(candidates)
         ];
     }
 
-    /* =========================================================================
-       PRODUCT NORMALIZATION
-       ========================================================================= */
-
-    function normalizeRating(
-        product
-    ) {
-
+    function normalizeRating(product) {
         const value =
             product?.rating ??
             product?.score ??
@@ -907,19 +766,105 @@
         return Number.isFinite(numeric)
             ? Math.max(
                 0,
-                Math.min(
-                    5,
-                    numeric
-                )
+                Math.min(5, numeric)
             )
             : null;
     }
+
+    /* =========================================================================
+       CJ IDENTITY
+       ========================================================================= */
+
+    function firstValue(...values) {
+        for (const value of values) {
+            const text =
+                cleanText(value);
+
+            if (text) {
+                return text;
+            }
+        }
+
+        return "";
+    }
+
+    function getCJProductId(product) {
+        return firstValue(
+            product?.cjProductId,
+            product?.cjPid,
+            product?.productId,
+            product?.pid,
+            product?.id
+        );
+    }
+
+    function getCJSku(product) {
+        return firstValue(
+            product?.cjSku,
+            product?.productSku,
+            product?.sku,
+            product?.productSkuEn
+        );
+    }
+
+    function getVariantId(product) {
+        return firstValue(
+            product?.variantId,
+            product?.variantID,
+            product?.vid,
+            product?.cjVariantId,
+            product?.variant?.id,
+            product?.variant?.variantId
+        );
+    }
+
+    function getVariantSku(product) {
+        return firstValue(
+            product?.variantSku,
+            product?.variantSKU,
+            product?.cjVariantSku,
+            product?.variant?.sku
+        );
+    }
+
+    function normalizeVariants(product) {
+        const variants =
+            product?.variants ??
+            product?.variantList ??
+            product?.variantListData ??
+            [];
+
+        if (!Array.isArray(variants)) {
+            return [];
+        }
+
+        return variants.map(variant => ({
+            ...variant,
+
+            id:
+                firstValue(
+                    variant?.id,
+                    variant?.variantId,
+                    variant?.vid
+                ),
+
+            sku:
+                firstValue(
+                    variant?.sku,
+                    variant?.variantSku,
+                    variant?.variantSKU
+                )
+        }));
+    }
+
+    /* =========================================================================
+       PRODUCT NORMALIZATION
+       ========================================================================= */
 
     function normalizeProduct(
         product,
         index = 0
     ) {
-
         if (
             !product ||
             typeof product !== "object"
@@ -927,39 +872,42 @@
             return null;
         }
 
-        const id =
-            product.id ??
-            product.pid ??
-            product.productId ??
+        const cjProductId =
+            getCJProductId(product);
+
+        const cjSku =
+            getCJSku(product);
+
+        const variantId =
+            getVariantId(product);
+
+        const variantSku =
+            getVariantSku(product);
+
+        const localId =
+            firstValue(
+                product.id,
+                product.pid,
+                product.productId,
+                cjProductId
+            ) ||
             `product-${index + 1}`;
 
-        const sku =
-            product.sku ??
-            product.productSku ??
-            product.productSkuEn ??
-            id;
-
         const name =
-            product.name ??
-            product.title ??
-            product.productName ??
+            firstValue(
+                product.name,
+                product.productName,
+                product.title,
+                product.productNameEn
+            ) ||
             "CJ Product";
 
         const category =
-            product.category ??
-            product.categoryName ??
+            firstValue(
+                product.category,
+                product.categoryName
+            ) ||
             "General";
-
-        const description =
-            product.description ??
-            product.productDescription ??
-            "";
-
-        const price =
-            extractPrice(product);
-
-        const rating =
-            normalizeRating(product);
 
         const images =
             extractImages(product);
@@ -967,67 +915,46 @@
         const image =
             images[0] || "";
 
-        /*
-         * IMPORTANT:
-         *
-         * We preserve the complete original CJ object
-         * inside `raw`.
-         *
-         * This allows cart.js to retain:
-         *
-         *   pid
-         *   productId
-         *   productSku
-         *   variantId
-         *   variantSku
-         *   cjProductId
-         *   cjSku
-         *   etc.
-         */
         return {
+            id: localId,
 
-            id:
-                cleanText(
-                    id,
-                    `product-${index + 1}`
-                ),
+            /*
+             * Keep CJ's actual identifiers.
+             */
+            cjProductId,
+            cjPid: cjProductId,
 
             sku:
-                cleanText(
-                    sku,
-                    `SKU-${index + 1}`
-                ),
+                cjSku ||
+                `SKU-${index + 1}`,
 
-            name:
-                cleanText(
-                    name,
-                    "CJ Product"
-                ),
+            cjSku,
+            productSku: cjSku,
 
-            category:
-                cleanText(
-                    category,
-                    "General"
-                ),
+            variantId,
+            variantSku,
 
-            price,
+            name,
+            category,
 
-            rating,
+            price:
+                extractPrice(product),
+
+            rating:
+                normalizeRating(product),
 
             image,
-
             images,
 
             description:
-                cleanText(
-                    description,
-                    "Quality product from PRASUN SHOP."
-                ),
+                firstValue(
+                    product.description,
+                    product.productDescription
+                ) ||
+                "Quality product from PRASUN SHOP.",
 
             features:
-                Array.isArray(
-                    product.features
-                )
+                Array.isArray(product.features)
                     ? product.features
                     : [],
 
@@ -1038,29 +965,50 @@
                     : {},
 
             variants:
-                Array.isArray(
-                    product.variants
-                )
-                    ? product.variants
-                    : [],
+                normalizeVariants(product),
 
-            raw:
-                product
+            /*
+             * VERY IMPORTANT:
+             * Preserve the complete original CJ/API product.
+             */
+            raw: product
         };
     }
 
-    /* =========================================================================
-       API RESPONSE
-       ========================================================================= */
+    function extractPrice(product) {
+        if (
+            !product ||
+            typeof product !== "object"
+        ) {
+            return 0;
+        }
+
+        const candidates = [
+            product.discountPrice,
+            product.nowPrice,
+            product.sellPrice,
+            product.price,
+            product.startSellPrice,
+            product.salePrice,
+            product.productPrice
+        ];
+
+        for (const candidate of candidates) {
+            const parsed =
+                parsePrice(candidate);
+
+            if (parsed > 0) {
+                return parsed;
+            }
+        }
+
+        return 0;
+    }
 
     function extractProducts(data) {
-
         if (Array.isArray(data)) {
-
             return data
-                .map(
-                    normalizeProduct
-                )
+                .map(normalizeProduct)
                 .filter(Boolean);
         }
 
@@ -1082,18 +1030,10 @@
             data.data?.results
         ];
 
-        for (
-            const candidate of candidates
-        ) {
-
-            if (
-                Array.isArray(candidate)
-            ) {
-
+        for (const candidate of candidates) {
+            if (Array.isArray(candidate)) {
                 return candidate
-                    .map(
-                        normalizeProduct
-                    )
+                    .map(normalizeProduct)
                     .filter(Boolean);
             }
         }
@@ -1102,43 +1042,35 @@
     }
 
     function getLocalProducts() {
-
         return LOCAL_CATALOG
-            .map(
-                normalizeProduct
-            )
+            .map(normalizeProduct)
             .filter(Boolean);
     }
 
     function productKey(product) {
-
-        return String(
-            product?.sku ||
-            product?.id ||
-            ""
-        )
-            .trim()
-            .toLowerCase();
+        return (
+            firstValue(
+                product.cjProductId,
+                product.cjSku,
+                product.sku,
+                product.id
+            )
+            .toLowerCase()
+        );
     }
 
     function mergeProducts(
         baseProducts,
         incomingProducts
     ) {
-
-        const map =
-            new Map();
+        const map = new Map();
 
         for (
-            const product
-            of baseProducts || []
+            const product of
+            baseProducts || []
         ) {
-
             const normalized =
-                normalizeProduct(
-                    product.raw ||
-                    product
-                );
+                normalizeProduct(product);
 
             if (!normalized) {
                 continue;
@@ -1151,15 +1083,11 @@
         }
 
         for (
-            const product
-            of incomingProducts || []
+            const product of
+            incomingProducts || []
         ) {
-
             const normalized =
-                normalizeProduct(
-                    product.raw ||
-                    product
-                );
+                normalizeProduct(product);
 
             if (!normalized) {
                 continue;
@@ -1177,64 +1105,33 @@
     }
 
     /* =========================================================================
-       NETWORK
+       API
        ========================================================================= */
 
     async function fetchJSON(
         url,
-        timeout = API_TIMEOUT,
-        signal = null
+        timeout = API_TIMEOUT
     ) {
-
         const controller =
             new AbortController();
 
-        let timedOut = false;
-
         const timeoutId =
             window.setTimeout(
-                () => {
-
-                    timedOut = true;
-
-                    controller.abort();
-
-                },
+                () => controller.abort(),
                 timeout
             );
 
-        if (signal) {
-
-            if (signal.aborted) {
-                controller.abort();
-            } else {
-
-                signal.addEventListener(
-                    "abort",
-                    () => controller.abort(),
-                    {
-                        once: true
-                    }
-                );
-            }
-        }
-
         try {
-
             const response =
                 await fetch(
                     url,
                     {
                         method: "GET",
-
                         headers: {
                             Accept:
                                 "application/json"
                         },
-
-                        cache:
-                            "no-store",
-
+                        cache: "no-store",
                         signal:
                             controller.signal
                     }
@@ -1244,7 +1141,6 @@
                 await response.text();
 
             if (!response.ok) {
-
                 throw new Error(
                     `HTTP ${response.status}`
                 );
@@ -1256,21 +1152,7 @@
 
             return JSON.parse(text);
 
-        } catch (error) {
-
-            if (
-                timedOut ||
-                error?.name ===
-                    "AbortError"
-            ) {
-
-                throw error;
-            }
-
-            throw error;
-
         } finally {
-
             window.clearTimeout(
                 timeoutId
             );
@@ -1278,19 +1160,15 @@
     }
 
     async function loadProductsFromAPI(
-        keyword = "",
-        signal = null
+        keyword = ""
     ) {
-
         const trimmed =
-            String(keyword || "")
-                .trim();
+            String(keyword || "").trim();
 
         let url =
             API_ENDPOINT;
 
         if (trimmed) {
-
             const params =
                 new URLSearchParams();
 
@@ -1304,17 +1182,12 @@
         }
 
         const data =
-            await fetchJSON(
-                url,
-                API_TIMEOUT,
-                signal
-            );
+            await fetchJSON(url);
 
         const products =
             extractProducts(data);
 
         if (!products.length) {
-
             throw new Error(
                 "API returned no usable products."
             );
@@ -1324,48 +1197,42 @@
     }
 
     /* =========================================================================
-       ACCESSIBILITY
+       SEARCH / FILTER
        ========================================================================= */
 
     function announce(message) {
-
-        if (!ariaLiveRegion) {
-            return;
+        if (ariaLiveRegion) {
+            ariaLiveRegion.textContent =
+                message;
         }
-
-        ariaLiveRegion.textContent =
-            "";
-
-        window.setTimeout(
-            () => {
-
-                ariaLiveRegion.textContent =
-                    message;
-
-            },
-            20
-        );
     }
 
     function updateClearSearchButton() {
-
         if (
-            !clearSearchButton ||
-            !searchInput
+            clearSearchButton &&
+            searchInput
         ) {
-            return;
+            clearSearchButton.hidden =
+                !searchInput.value.trim();
         }
-
-        clearSearchButton.hidden =
-            !searchInput.value.trim();
     }
 
-    /* =========================================================================
-       FILTERING
-       ========================================================================= */
+    let masterCatalog = [];
+    let allProducts = [];
+    let filteredProducts = [];
+
+    let activeCategory = "all";
+    let currentSearch = "";
+    let currentSort =
+        sortSelect?.value ||
+        "featured";
+
+    let searchTimer = null;
+    let activeSearchController = null;
+    let searchRequestSequence = 0;
+    let catalogRequestSequence = 0;
 
     function filterProducts() {
-
         const search =
             currentSearch
                 .trim()
@@ -1379,7 +1246,6 @@
                         activeCategory !==
                         "all"
                     ) {
-
                         const category =
                             String(
                                 product.category ||
@@ -1402,17 +1268,19 @@
                         return true;
                     }
 
-                    const searchableText =
+                    const searchable =
                         [
                             product.name,
                             product.category,
                             product.sku,
+                            product.cjSku,
+                            product.cjProductId,
                             product.description
                         ]
                             .join(" ")
                             .toLowerCase();
 
-                    return searchableText.includes(
+                    return searchable.includes(
                         search
                     );
                 }
@@ -1422,56 +1290,39 @@
     }
 
     function applySort() {
-
         switch (currentSort) {
 
             case "price-low":
-
                 filteredProducts.sort(
                     (a, b) =>
-                        parsePrice(
-                            a.price
-                        ) -
-                        parsePrice(
-                            b.price
-                        )
+                        parsePrice(a.price) -
+                        parsePrice(b.price)
                 );
-
                 break;
 
             case "price-high":
-
                 filteredProducts.sort(
                     (a, b) =>
-                        parsePrice(
-                            b.price
-                        ) -
-                        parsePrice(
-                            a.price
-                        )
+                        parsePrice(b.price) -
+                        parsePrice(a.price)
                 );
-
                 break;
 
             case "rating":
-
                 filteredProducts.sort(
                     (a, b) =>
                         (b.rating || 0) -
                         (a.rating || 0)
                 );
-
                 break;
 
             case "name-az":
-
                 filteredProducts.sort(
                     (a, b) =>
                         a.name.localeCompare(
                             b.name
                         )
                 );
-
                 break;
 
             default:
@@ -1479,12 +1330,7 @@
         }
     }
 
-    /* =========================================================================
-       CATEGORIES
-       ========================================================================= */
-
     function buildCategories() {
-
         if (!categoriesContainer) {
             return;
         }
@@ -1501,7 +1347,6 @@
                     );
 
                 if (category) {
-
                     categoryMap.set(
                         category.toLowerCase(),
                         category
@@ -1513,18 +1358,14 @@
         const categories =
             Array.from(
                 categoryMap.values()
-            ).sort(
-                (a, b) =>
-                    a.localeCompare(b)
-            );
+            ).sort();
 
         categoriesContainer.innerHTML = `
             <button
                 type="button"
                 class="category-pill"
                 data-category="all"
-                aria-pressed="false"
-            >
+                aria-pressed="false">
                 All
             </button>
 
@@ -1535,8 +1376,7 @@
                             type="button"
                             class="category-pill"
                             data-category="${escapeHTML(category)}"
-                            aria-pressed="false"
-                        >
+                            aria-pressed="false">
                             ${escapeHTML(category)}
                         </button>
                     `
@@ -1552,15 +1392,12 @@
     function setActiveCategory(
         category
     ) {
-
         activeCategory =
             String(
                 category || "all"
             );
 
-        if (
-            !categoriesContainer
-        ) {
+        if (!categoriesContainer) {
             return;
         }
 
@@ -1568,47 +1405,45 @@
             .querySelectorAll(
                 ".category-pill"
             )
-            .forEach(
-                button => {
+            .forEach(button => {
 
-                    const active =
-                        button.dataset.category
-                            .toLowerCase() ===
-                        activeCategory
-                            .toLowerCase();
+                const active =
+                    button.dataset
+                        .category
+                        .toLowerCase() ===
+                    activeCategory
+                        .toLowerCase();
 
-                    button.classList.toggle(
-                        "active",
-                        active
-                    );
+                button.classList.toggle(
+                    "active",
+                    active
+                );
 
-                    button.setAttribute(
-                        "aria-pressed",
-                        active
-                            ? "true"
-                            : "false"
-                    );
-                }
-            );
+                button.setAttribute(
+                    "aria-pressed",
+                    active
+                        ? "true"
+                        : "false"
+                );
+            });
     }
 
     /* =========================================================================
-       RENDER STATES
+       RENDER
        ========================================================================= */
 
     function renderLoading(
         message = "Loading catalog..."
     ) {
-
         productList.innerHTML = `
             <div
                 class="product-status-card"
-                role="status"
-            >
+                role="status">
+
                 <div
                     class="spinner"
-                    aria-hidden="true"
-                ></div>
+                    aria-hidden="true">
+                </div>
 
                 <p>
                     ${escapeHTML(message)}
@@ -1623,55 +1458,26 @@
         message =
             "No products found matching your criteria."
     ) {
-
         productList.innerHTML = `
             <div
-                class="product-status-card empty"
-                role="status"
-            >
-                <div
-                    class="product-status-icon"
-                    aria-hidden="true"
-                >
-                    <svg
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.7"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <circle
-                            cx="11"
-                            cy="11"
-                            r="7"
-                        ></circle>
-
-                        <path
-                            d="m20 20-4-4"
-                        ></path>
-                    </svg>
-                </div>
+                class="product-status-card empty">
 
                 <p>
                     ${escapeHTML(message)}
                 </p>
+
             </div>
         `;
 
         announce(message);
     }
 
-    function renderRating(
-        rating
-    ) {
-
+    function renderRating(rating) {
         if (
             rating === null ||
             rating === undefined ||
             !Number.isFinite(rating)
         ) {
-
             return `
                 <span class="rating-badge rating-none">
                     No reviews
@@ -1683,9 +1489,7 @@
             Math.round(rating);
 
         const stars =
-            "★".repeat(
-                rounded
-            ) +
+            "★".repeat(rounded) +
             "☆".repeat(
                 5 - rounded
             );
@@ -1693,29 +1497,26 @@
         return `
             <span class="rating-badge">
                 ${stars}
-                <span>
-                    (${rating.toFixed(1)})
-                </span>
+                (${rating.toFixed(1)})
             </span>
         `;
     }
 
-    /* =========================================================================
-       PRODUCT CARD
-       ========================================================================= */
-
     function renderProductCard(
         product
     ) {
-
-        const detailIdentifier =
-            product.id ||
-            product.sku;
+        /*
+         * Prefer CJ product ID for detail URL.
+         */
+        const detailId =
+            firstValue(
+                product.cjProductId,
+                product.cjSku,
+                product.id
+            );
 
         const detailUrl =
-            `${PRODUCT_DETAIL_PAGE}?id=${encodeURIComponent(
-                detailIdentifier
-            )}`;
+            `${PRODUCT_DETAIL_PAGE}?id=${encodeURIComponent(detailId)}`;
 
         const imageSrc =
             escapeHTML(
@@ -1723,28 +1524,31 @@
                 FALLBACK_IMAGE
             );
 
+        /*
+         * data-id remains the internal identity.
+         * data-cj-product-id is the actual CJ identity.
+         */
         return `
             <article
                 class="product-card"
                 data-id="${escapeHTML(product.id)}"
-                data-sku="${escapeHTML(product.sku)}"
-            >
+                data-cj-product-id="${escapeHTML(product.cjProductId)}"
+                data-cj-sku="${escapeHTML(product.cjSku)}"
+                data-sku="${escapeHTML(product.sku)}">
 
                 <a
                     href="${detailUrl}"
                     class="product-card-image-link"
-                    aria-label="${escapeHTML(product.name)}"
-                >
+                    tabindex="-1"
+                    aria-hidden="true">
 
                     <img
                         src="${imageSrc}"
                         alt="${escapeHTML(product.name)}"
                         loading="lazy"
                         decoding="async"
-                        class="product-image"
-                        onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}';"
-                    >
-
+                        onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}'"
+                        class="product-image">
                 </a>
 
                 <div class="product-card-body">
@@ -1755,7 +1559,9 @@
                             ${escapeHTML(product.category)}
                         </span>
 
-                        ${renderRating(product.rating)}
+                        ${renderRating(
+                            product.rating
+                        )}
 
                     </div>
 
@@ -1768,7 +1574,9 @@
                     </h3>
 
                     <p class="product-description">
-                        ${escapeHTML(product.description)}
+                        ${escapeHTML(
+                            product.description
+                        )}
                     </p>
 
                     <div class="product-card-footer">
@@ -1781,16 +1589,17 @@
                             type="button"
                             class="btn-add-to-cart"
                             data-id="${escapeHTML(product.id)}"
-                            aria-label="Add ${escapeHTML(product.name)} to cart"
-                        >
-                            <span
-                                class="cart-button-icon"
-                                aria-hidden="true"
-                            >
+                            data-cj-product-id="${escapeHTML(product.cjProductId)}"
+                            data-cj-sku="${escapeHTML(product.cjSku)}"
+                            data-sku="${escapeHTML(product.sku)}"
+                            aria-label="Add ${escapeHTML(product.name)} to cart">
+
+                            <span class="cart-button-icon">
                                 +
                             </span>
 
                             Add to Cart
+
                         </button>
 
                     </div>
@@ -1802,15 +1611,9 @@
     }
 
     function updateProductHeadingAndCount() {
-
         if (productsCount) {
-
             productsCount.textContent =
-                `${filteredProducts.length} ${
-                    filteredProducts.length === 1
-                        ? "product"
-                        : "products"
-                }`;
+                `${filteredProducts.length} products`;
         }
 
         if (productsHeading) {
@@ -1818,20 +1621,14 @@
             if (
                 currentSearch.trim()
             ) {
-
                 productsHeading.textContent =
                     `Search Results for "${currentSearch.trim()}"`;
-
             } else if (
-                activeCategory !==
-                "all"
+                activeCategory !== "all"
             ) {
-
                 productsHeading.textContent =
                     activeCategory;
-
             } else {
-
                 productsHeading.textContent =
                     "All Products";
             }
@@ -1839,25 +1636,18 @@
     }
 
     function renderProducts() {
-
         filterProducts();
 
         updateProductHeadingAndCount();
 
-        if (
-            !filteredProducts.length
-        ) {
-
+        if (!filteredProducts.length) {
             renderEmpty();
-
             return;
         }
 
         productList.innerHTML =
             filteredProducts
-                .map(
-                    renderProductCard
-                )
+                .map(renderProductCard)
                 .join("");
 
         announce(
@@ -1866,43 +1656,65 @@
     }
 
     /* =========================================================================
-       CART BADGE
+       CART
        ========================================================================= */
 
-    function updateCartBadge() {
+    function getCart() {
+        try {
+            const raw =
+                localStorage.getItem(
+                    CART_KEY
+                );
 
+            if (!raw) {
+                return [];
+            }
+
+            const parsed =
+                JSON.parse(raw);
+
+            return Array.isArray(parsed)
+                ? parsed
+                : [];
+
+        } catch {
+            return [];
+        }
+    }
+
+    function saveCart(cart) {
+        try {
+            localStorage.setItem(
+                CART_KEY,
+                JSON.stringify(cart)
+            );
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    CART_EVENT_NAME,
+                    {
+                        detail: {
+                            cart
+                        }
+                    }
+                )
+            );
+
+        } catch (error) {
+            console.error(
+                "[PRASUN SHOP] Failed to save cart:",
+                error
+            );
+        }
+    }
+
+    function updateCartBadge() {
         if (!cartCount) {
             return;
         }
 
-        /*
-         * cart.js owns the canonical cart.
-         */
-        let cart = [];
-
-        try {
-
-            const raw =
-                localStorage.getItem(
-                    "prasun_cart"
-                );
-
-            const parsed =
-                raw
-                    ? JSON.parse(raw)
-                    : [];
-
-            if (Array.isArray(parsed)) {
-                cart = parsed;
-            }
-
-        } catch (error) {
-
-            console.warn(
-                "[PRASUN SHOP] Unable to read cart badge:",
-                error
-            );
-        }
+        const cart =
+            getCart();
 
         const totalItems =
             cart.reduce(
@@ -1911,7 +1723,7 @@
                     Math.max(
                         1,
                         Number(
-                            item?.quantity
+                            item.quantity
                         ) || 1
                     ),
                 0
@@ -1921,79 +1733,173 @@
             String(totalItems);
 
         cartCount.hidden =
-            totalItems <= 0;
+            totalItems === 0;
     }
 
-    /* =========================================================================
-       ADD TO CART
-       ========================================================================= */
+    function findProductForCart(
+        productId,
+        button = null
+    ) {
+        const candidates = [
+            productId,
+            button?.dataset?.id,
+            button?.dataset?.cjProductId,
+            button?.dataset?.cjSku,
+            button?.dataset?.sku
+        ]
+            .map(cleanText)
+            .filter(Boolean);
+
+        for (const candidate of candidates) {
+
+            const found =
+                allProducts.find(
+                    product =>
+                        [
+                            product.id,
+                            product.cjProductId,
+                            product.cjSku,
+                            product.sku
+                        ]
+                            .filter(Boolean)
+                            .map(String)
+                            .includes(
+                                String(candidate)
+                            )
+                );
+
+            if (found) {
+                return found;
+            }
+
+            const master =
+                masterCatalog.find(
+                    product =>
+                        [
+                            product.id,
+                            product.cjProductId,
+                            product.cjSku,
+                            product.sku
+                        ]
+                            .filter(Boolean)
+                            .map(String)
+                            .includes(
+                                String(candidate)
+                            )
+                );
+
+            if (master) {
+                return master;
+            }
+        }
+
+        return null;
+    }
+
+    function sameCartItem(
+        item,
+        product
+    ) {
+        const itemVariantId =
+            firstValue(
+                item.variantId,
+                item.cjVariantId
+            );
+
+        const productVariantId =
+            firstValue(
+                product.variantId,
+                product.cjVariantId
+            );
+
+        if (
+            itemVariantId ||
+            productVariantId
+        ) {
+            return (
+                itemVariantId &&
+                productVariantId &&
+                itemVariantId ===
+                    productVariantId
+            );
+        }
+
+        const itemCJId =
+            firstValue(
+                item.cjProductId,
+                item.cjPid
+            );
+
+        const productCJId =
+            firstValue(
+                product.cjProductId,
+                product.cjPid
+            );
+
+        if (
+            itemCJId &&
+            productCJId
+        ) {
+            return (
+                itemCJId ===
+                productCJId
+            );
+        }
+
+        const itemSku =
+            firstValue(
+                item.cjSku,
+                item.sku
+            );
+
+        const productSku =
+            firstValue(
+                product.cjSku,
+                product.sku
+            );
+
+        if (
+            itemSku &&
+            productSku
+        ) {
+            return (
+                itemSku ===
+                productSku
+            );
+        }
+
+        return false;
+    }
 
     function addToCart(
-        productId
+        productId,
+        button = null
     ) {
-
         const product =
-            allProducts.find(
-                item =>
-                    String(item.id) ===
-                        String(productId) ||
-                    String(item.sku) ===
-                        String(productId)
-            ) ||
-            masterCatalog.find(
-                item =>
-                    String(item.id) ===
-                        String(productId) ||
-                    String(item.sku) ===
-                        String(productId)
+            findProductForCart(
+                productId,
+                button
             );
 
         if (!product) {
-
             console.error(
                 "[PRASUN SHOP] Product not found:",
                 productId
             );
 
             announce(
-                "Unable to find this product."
+                "Unable to add this product to cart."
             );
 
-            return;
+            return false;
         }
 
         /*
-         * IMPORTANT:
+         * THIS IS THE IMPORTANT PART.
          *
-         * cart.js must be loaded on products.html.
-         *
-         * Do not duplicate cart logic here.
+         * Store every identity that checkout/CJ may need.
          */
-        if (
-            !window.PrasunCart ||
-            typeof
-                window.PrasunCart.addProduct !==
-                "function"
-        ) {
-
-            console.error(
-                "[PRASUN SHOP] PrasunCart is not available."
-            );
-
-            announce(
-                "Cart system is not ready. Please refresh the page."
-            );
-
-            return;
-        }
-
-        const raw =
-            product.raw || {};
-
-        /*
-         * Preserve every important CJ identity field.
-         */
-        const cartProduct = {
+        const cartItem = {
 
             id:
                 product.id,
@@ -2002,35 +1908,22 @@
                 product.sku,
 
             cjProductId:
-                raw.cjProductId ||
-                raw.cjPid ||
-                raw.pid ||
-                raw.productId ||
-                raw.productID ||
-                product.id,
+                product.cjProductId,
+
+            cjPid:
+                product.cjProductId,
 
             cjSku:
-                raw.cjSku ||
-                raw.cjSKU ||
-                raw.productSku ||
-                raw.productSKU ||
-                raw.sku ||
-                product.sku,
+                product.cjSku,
+
+            productSku:
+                product.cjSku,
 
             variantId:
-                raw.variantId ||
-                raw.variantID ||
-                raw.vid ||
-                raw.cjVariantId ||
-                raw.cjVariantID ||
-                "",
+                product.variantId || "",
 
             variantSku:
-                raw.variantSku ||
-                raw.variantSKU ||
-                raw.cjVariantSku ||
-                raw.cjVariantSKU ||
-                "",
+                product.variantSku || "",
 
             name:
                 product.name,
@@ -2039,44 +1932,120 @@
                 product.category,
 
             price:
-                product.price,
+                parsePrice(
+                    product.price
+                ),
 
             image:
                 product.image ||
-                product.images?.[0] ||
-                "",
+                FALLBACK_IMAGE,
+
+            images:
+                Array.isArray(
+                    product.images
+                )
+                    ? product.images
+                    : [],
 
             quantity:
                 1,
 
             /*
-             * Keep the original product information available
-             * for checkout/order processing.
+             * Preserve the complete normalized and
+             * original product for checkout.
              */
-            productData:
-                raw
+            rawProduct:
+                product,
+
+            cjProduct:
+                product.raw || product
         };
 
-        const added =
-            window.PrasunCart.addProduct(
-                cartProduct,
-                1
+        const cart =
+            getCart();
+
+        const existingIndex =
+            cart.findIndex(
+                item =>
+                    sameCartItem(
+                        item,
+                        product
+                    )
             );
 
-        if (!added) {
+        if (
+            existingIndex >= 0
+        ) {
+            cart[
+                existingIndex
+            ].quantity =
+                Math.min(
+                    MAX_CART_QUANTITY,
+                    (
+                        Number(
+                            cart[
+                                existingIndex
+                            ].quantity
+                        ) || 1
+                    ) + 1
+                );
 
-            announce(
-                "Unable to add this product to your cart."
+            /*
+             * Refresh all product metadata.
+             */
+            cart[
+                existingIndex
+            ] = {
+                ...cart[
+                    existingIndex
+                ],
+                ...cartItem,
+
+                quantity:
+                    cart[
+                        existingIndex
+                    ].quantity
+            };
+
+        } else {
+            cart.push(
+                cartItem
             );
-
-            return;
         }
 
+        saveCart(cart);
         updateCartBadge();
 
         announce(
             `${product.name} added to your cart.`
         );
+
+        /*
+         * Optional visual feedback.
+         */
+        if (button) {
+            const original =
+                button.innerHTML;
+
+            button.disabled =
+                true;
+
+            button.innerHTML =
+                "✓ Added";
+
+            window.setTimeout(
+                () => {
+                    button.disabled =
+                        false;
+
+                    button.innerHTML =
+                        original;
+                },
+                900
+            );
+        }
+
+        return true;
     }
 
     /* =========================================================================
@@ -2086,30 +2055,25 @@
     async function handleSearchExecution(
         query
     ) {
-
         const trimmed =
             query.trim();
 
         searchRequestSequence++;
 
-        const currentSequence =
+        const currentSeq =
             searchRequestSequence;
 
         if (
             activeSearchController
         ) {
-
             activeSearchController.abort();
-
-            activeSearchController =
-                null;
+            activeSearchController = null;
         }
 
         if (
             trimmed.length >=
             MIN_SEARCH_LENGTH
         ) {
-
             renderLoading(
                 `Searching for "${trimmed}"...`
             );
@@ -2119,23 +2083,25 @@
 
             try {
 
+                /*
+                 * API endpoint performs CJ/search.
+                 */
                 const apiResults =
                     await loadProductsFromAPI(
-                        trimmed,
-                        activeSearchController.signal
+                        trimmed
                     );
 
                 if (
-                    currentSequence !==
+                    currentSeq !==
                     searchRequestSequence
                 ) {
                     return;
                 }
 
                 /*
-                 * Remote results override duplicate local
-                 * products because the remote object contains
-                 * the actual CJ identifiers.
+                 * Search results are merged with
+                 * local catalog but CJ results
+                 * override local records.
                  */
                 allProducts =
                     mergeProducts(
@@ -2144,7 +2110,6 @@
                     );
 
                 buildCategories();
-
                 renderProducts();
 
             } catch (error) {
@@ -2152,19 +2117,14 @@
                 if (
                     error?.name ===
                         "AbortError" ||
-                    currentSequence !==
+                    currentSeq !==
                         searchRequestSequence
                 ) {
                     return;
                 }
 
-                console.warn(
-                    "[PRASUN SHOP] Search API failed:",
-                    error
-                );
-
                 /*
-                 * Still search the locally loaded catalog.
+                 * Local search fallback.
                  */
                 allProducts =
                     [...masterCatalog];
@@ -2174,10 +2134,9 @@
             } finally {
 
                 if (
-                    currentSequence ===
+                    currentSeq ===
                     searchRequestSequence
                 ) {
-
                     activeSearchController =
                         null;
                 }
@@ -2195,14 +2154,12 @@
     function onSearchInput(
         event
     ) {
-
         currentSearch =
             event.target.value;
 
         updateClearSearchButton();
 
         if (searchTimer) {
-
             window.clearTimeout(
                 searchTimer
             );
@@ -2210,13 +2167,10 @@
 
         searchTimer =
             window.setTimeout(
-                () => {
-
+                () =>
                     handleSearchExecution(
                         currentSearch
-                    );
-
-                },
+                    ),
                 SEARCH_DELAY
             );
     }
@@ -2236,22 +2190,23 @@
             "click",
             () => {
 
-                if (searchInput) {
-
-                    searchInput.value =
-                        "";
-
-                    currentSearch =
-                        "";
-
-                    updateClearSearchButton();
-
-                    handleSearchExecution(
-                        ""
-                    );
-
-                    searchInput.focus();
+                if (!searchInput) {
+                    return;
                 }
+
+                searchInput.value =
+                    "";
+
+                currentSearch =
+                    "";
+
+                updateClearSearchButton();
+
+                handleSearchExecution(
+                    ""
+                );
+
+                searchInput.focus();
             }
         );
 
@@ -2300,14 +2255,20 @@
                     return;
                 }
 
+                event.preventDefault();
+
                 const id =
-                    button.dataset.id;
+                    button.dataset.id ||
+                    button.dataset.cjProductId ||
+                    button.dataset.cjSku ||
+                    button.dataset.sku;
 
-                if (!id) {
-                    return;
+                if (id) {
+                    addToCart(
+                        id,
+                        button
+                    );
                 }
-
-                addToCart(id);
             }
         );
 
@@ -2322,9 +2283,8 @@
 
                 if (
                     event.key ===
-                    "prasun_cart"
+                    CART_KEY
                 ) {
-
                     updateCartBadge();
                 }
             }
@@ -2332,14 +2292,14 @@
     }
 
     /* =========================================================================
-       CATALOG INITIALIZATION
+       INITIALIZATION
        ========================================================================= */
 
     async function initCatalog() {
 
         catalogRequestSequence++;
 
-        const currentSequence =
+        const currentSeq =
             catalogRequestSequence;
 
         renderLoading(
@@ -2352,16 +2312,12 @@
                 await loadProductsFromAPI();
 
             if (
-                currentSequence !==
+                currentSeq !==
                 catalogRequestSequence
             ) {
                 return;
             }
 
-            /*
-             * Local catalog first.
-             * Remote CJ catalog overrides duplicate SKUs.
-             */
             masterCatalog =
                 mergeProducts(
                     getLocalProducts(),
@@ -2373,17 +2329,18 @@
 
         } catch (error) {
 
+            console.warn(
+                "[PRASUN SHOP] API catalog failed:",
+                error?.message ||
+                    error
+            );
+
             if (
-                currentSequence !==
+                currentSeq !==
                 catalogRequestSequence
             ) {
                 return;
             }
-
-            console.warn(
-                "[PRASUN SHOP] Remote catalog unavailable. Using local catalog.",
-                error
-            );
 
             masterCatalog =
                 getLocalProducts();
@@ -2393,22 +2350,13 @@
         }
 
         buildCategories();
-
         renderProducts();
-
         updateCartBadge();
-
         updateClearSearchButton();
     }
 
-    /* =========================================================================
-       INITIALIZATION
-       ========================================================================= */
-
     function init() {
-
         attachEventListeners();
-
         initCatalog();
     }
 
@@ -2416,18 +2364,11 @@
         document.readyState ===
         "loading"
     ) {
-
         document.addEventListener(
             "DOMContentLoaded",
-            init,
-            {
-                once: true
-            }
+            init
         );
-
     } else {
-
         init();
     }
-
 })();
