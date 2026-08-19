@@ -32,11 +32,11 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>PRASUN SHOP — Digital eBook Store</title>
+  <title>PRASUN SHOP — Physical Products</title>
 
   <meta
     name="description"
-    content="Practical technical eBooks written by Prasun Barua covering solar energy, electrical engineering, solar PV testing, and semiconductor manufacturing."
+    content="Shop quality physical products from PRASUN SHOP."
   >
 
 
@@ -63,16 +63,6 @@
 
 
   <!-- =====================================================
-       LEMON SQUEEZY
-       ===================================================== -->
-
-  <script
-    src="https://assets.lemonsqueezy.com/lemon.js"
-    defer>
-  </script>
-
-
-  <!-- =====================================================
        GOOGLE ADSENSE
        ===================================================== -->
 
@@ -93,7 +83,7 @@
        STORE VARIABLES
        ===================================================== */
 
-    .ebook-store-container {
+    .store-container {
 
       --store-text: #334155;
       --store-heading: #0f172a;
@@ -104,7 +94,7 @@
       --store-card-bg: #ffffff;
       --store-card-border: #e2e8f0;
 
-      --store-cover-bg: #f8fafc;
+      --store-image-bg: #f8fafc;
 
       --store-card-shadow:
         0 4px 6px -1px rgba(0,0,0,.05),
@@ -132,7 +122,7 @@
 
     @media (prefers-color-scheme: dark) {
 
-      .ebook-store-container {
+      .store-container {
 
         --store-text: #cbd5e1;
         --store-heading: #f8fafc;
@@ -143,7 +133,7 @@
         --store-card-bg: #1e293b;
         --store-card-border: #334155;
 
-        --store-cover-bg: #0f172a;
+        --store-image-bg: #0f172a;
 
         --store-card-shadow:
           0 4px 6px -1px rgba(0,0,0,.3),
@@ -272,6 +262,8 @@
 
       display: flex;
 
+      align-items: center;
+
       gap: 2rem;
     }
 
@@ -301,10 +293,80 @@
 
 
     /* =====================================================
+       CART
+       ===================================================== */
+
+    .cart-link {
+
+      position: relative;
+
+      display: inline-flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      text-decoration: none;
+
+      color: #64748b;
+    }
+
+
+    .cart-link:hover {
+
+      color: #0f172a;
+    }
+
+
+    .cart-icon {
+
+      width: 21px;
+
+      height: 21px;
+    }
+
+
+    .cart-count {
+
+      position: absolute;
+
+      top: -8px;
+
+      right: -10px;
+
+      min-width: 18px;
+
+      height: 18px;
+
+      padding: 0 5px;
+
+      display: inline-flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      border-radius: 9999px;
+
+      background: #dc2626;
+
+      color: #ffffff;
+
+      font-size: 10px;
+
+      font-weight: 700;
+
+      line-height: 1;
+
+      border: 2px solid #ffffff;
+    }
+
+
+    /* =====================================================
        MAIN STORE
        ===================================================== */
 
-    .ebook-store-container {
+    .store-container {
 
       max-width: 1080px;
 
@@ -338,32 +400,261 @@
 
       font-size: 1.05rem;
 
-      margin-bottom: 32px;
+      margin-bottom: 28px;
     }
 
 
     /* =====================================================
-       EBOOK GRID
+       STORE CONTROLS
        ===================================================== */
 
-    .ebook-grid {
+    .products-toolbar {
+
+      display: flex;
+
+      flex-wrap: wrap;
+
+      gap: 12px;
+
+      align-items: center;
+
+      margin-bottom: 20px;
+    }
+
+
+    .products-search {
+
+      position: relative;
+
+      flex: 1 1 320px;
+    }
+
+
+    .products-search-input {
+
+      width: 100%;
+
+      height: 44px;
+
+      padding:
+        0 44px 0 14px;
+
+      border:
+        1px solid #cbd5e1;
+
+      border-radius: 8px;
+
+      background: #ffffff;
+
+      color: #0f172a;
+
+      font-family: inherit;
+
+      font-size: 14px;
+
+      outline: none;
+
+      transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+    }
+
+
+    .products-search-input:focus {
+
+      border-color:
+        var(--store-focus-ring);
+
+      box-shadow:
+        0 0 0 3px rgba(37,99,235,.12);
+    }
+
+
+    .search-clear {
+
+      position: absolute;
+
+      top: 50%;
+
+      right: 10px;
+
+      transform: translateY(-50%);
+
+      border: 0;
+
+      background: transparent;
+
+      color: #64748b;
+
+      cursor: pointer;
+
+      font-size: 18px;
+
+      line-height: 1;
+
+      padding: 5px;
+    }
+
+
+    .products-sort {
+
+      height: 44px;
+
+      padding:
+        0 34px 0 12px;
+
+      border:
+        1px solid #cbd5e1;
+
+      border-radius: 8px;
+
+      background: #ffffff;
+
+      color: #334155;
+
+      font-family: inherit;
+
+      font-size: 14px;
+
+      cursor: pointer;
+
+      outline: none;
+    }
+
+
+    .products-sort:focus {
+
+      border-color:
+        var(--store-focus-ring);
+
+      box-shadow:
+        0 0 0 3px rgba(37,99,235,.12);
+    }
+
+
+    /* =====================================================
+       CATEGORIES
+       ===================================================== */
+
+    .products-categories {
+
+      display: flex;
+
+      flex-wrap: wrap;
+
+      gap: 8px;
+
+      margin-bottom: 20px;
+    }
+
+
+    .category-pill {
+
+      border:
+        1px solid #cbd5e1;
+
+      background: #ffffff;
+
+      color: #475569;
+
+      border-radius: 9999px;
+
+      padding:
+        7px 14px;
+
+      font-family: inherit;
+
+      font-size: 13px;
+
+      font-weight: 600;
+
+      cursor: pointer;
+
+      transition:
+        background-color .15s ease,
+        color .15s ease,
+        border-color .15s ease;
+    }
+
+
+    .category-pill:hover {
+
+      border-color: #94a3b8;
+
+      color: #0f172a;
+    }
+
+
+    .category-pill.active {
+
+      background: #0f172a;
+
+      border-color: #0f172a;
+
+      color: #ffffff;
+    }
+
+
+    /* =====================================================
+       RESULTS BAR
+       ===================================================== */
+
+    .products-results-bar {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      gap: 12px;
+
+      margin-bottom: 18px;
+    }
+
+
+    .products-heading {
+
+      color:
+        var(--store-heading);
+
+      font-size: 1.15rem;
+
+      font-weight: 700;
+    }
+
+
+    .products-result-count {
+
+      color:
+        var(--store-subtext);
+
+      font-size: 13px;
+    }
+
+
+    /* =====================================================
+       PRODUCT GRID
+       ===================================================== */
+
+    .product-grid {
 
       display: grid;
 
       grid-template-columns:
         repeat(auto-fill, minmax(230px, 1fr));
 
-      gap: 28px;
+      gap: 24px;
 
       margin-bottom: 48px;
     }
 
 
     /* =====================================================
-       EBOOK CARD
+       PRODUCT CARD
        ===================================================== */
 
-    .ebook-card {
+    .product-card {
 
       background-color:
         var(--store-card-bg);
@@ -373,13 +664,7 @@
 
       border-radius: 12px;
 
-      padding: 20px;
-
-      display: flex;
-
-      flex-direction: column;
-
-      justify-content: space-between;
+      overflow: hidden;
 
       box-shadow:
         var(--store-card-shadow);
@@ -390,7 +675,7 @@
     }
 
 
-    .ebook-card:hover {
+    .product-card:hover {
 
       transform:
         translateY(-4px);
@@ -400,39 +685,41 @@
     }
 
 
-    .ebook-card-top {
+    .product-card-inner {
+
+      height: 100%;
+
+      display: flex;
+
+      flex-direction: column;
+    }
+
+
+    .product-card-link {
 
       display: flex;
 
       flex-direction: column;
 
       flex-grow: 1;
-    }
 
+      text-decoration: none;
 
-    .ebook-card-bottom {
-
-      margin-top: 16px;
-
-      display: flex;
-
-      flex-direction: column;
+      color: inherit;
     }
 
 
     /* =====================================================
-       COVER
+       PRODUCT IMAGE
        ===================================================== */
 
-    .ebook-cover-wrap {
+    .product-card-image {
 
-      text-align: center;
-
-      margin-bottom: 16px;
+      position: relative;
 
       width: 100%;
 
-      aspect-ratio: 3 / 4;
+      aspect-ratio: 1 / 1;
 
       display: flex;
 
@@ -442,47 +729,70 @@
 
       overflow: hidden;
 
-      border-radius: 8px;
+      background:
+        var(--store-image-bg);
 
-      background-color:
-        var(--store-cover-bg);
-
-      border:
+      border-bottom:
         1px solid var(--store-card-border);
     }
 
 
-    .ebook-cover-wrap img {
+    .product-card-image img {
 
-      max-height: 100%;
+      width: 100%;
 
-      max-width: 100%;
+      height: 100%;
 
       object-fit: contain;
 
-      border-radius: 4px;
-
-      box-shadow:
-        0 4px 12px rgba(0,0,0,.15);
+      padding: 12px;
 
       transition:
         transform .3s ease;
     }
 
 
-    .ebook-card:hover
-    .ebook-cover-wrap img {
+    .product-card:hover
+    .product-card-image img {
 
       transform:
-        scale(1.03);
+        scale(1.04);
+    }
+
+
+    .product-category {
+
+      position: absolute;
+
+      top: 10px;
+
+      left: 10px;
+
+      background:
+        rgba(15,23,42,.88);
+
+      color: #ffffff;
+
+      border-radius: 9999px;
+
+      padding:
+        4px 9px;
+
+      font-size: 10px;
+
+      font-weight: 700;
+
+      line-height: 1.2;
     }
 
 
     /* =====================================================
-       DETAILS
+       PRODUCT BODY
        ===================================================== */
 
-    .ebook-details {
+    .product-card-body {
+
+      padding: 16px;
 
       display: flex;
 
@@ -492,37 +802,34 @@
     }
 
 
-    .ebook-format {
+    .product-meta {
 
-      font-size: 11px;
-
-      font-weight: 700;
-
-      text-transform: uppercase;
-
-      letter-spacing: .08em;
-
-      color:
-        var(--store-subtext);
-
-      margin-bottom: 4px;
+      margin-bottom: 5px;
     }
 
 
-    .ebook-title {
+    .product-rating {
+
+      color: #b45309;
+
+      font-size: 12px;
+
+      font-weight: 700;
+    }
+
+
+    .product-title {
 
       color:
         var(--store-heading);
 
-      font-size: 17px;
+      font-size: 16px;
 
       font-weight: 700;
 
-      margin-bottom: 6px;
+      line-height: 1.35;
 
-      line-height: 1.3;
-
-      min-height: 44px;
+      margin-bottom: 7px;
 
       display: -webkit-box;
 
@@ -534,25 +841,12 @@
     }
 
 
-    .ebook-author {
+    .product-description {
 
       color:
         var(--store-subtext);
 
       font-size: 13px;
-
-      font-weight: 500;
-
-      margin-bottom: 10px;
-    }
-
-
-    .ebook-description {
-
-      color:
-        var(--store-text);
-
-      font-size: 13.5px;
 
       line-height: 1.45;
 
@@ -568,47 +862,48 @@
     }
 
 
-    /* =====================================================
-       PRICE
-       ===================================================== */
-
-    .ebook-price {
+    .product-price {
 
       color:
         var(--store-price);
 
-      font-size: 22px;
+      font-size: 21px;
 
       font-weight: 700;
 
-      margin-bottom: 12px;
+      line-height: 1.2;
 
-      line-height: 1;
+      margin-top: auto;
     }
 
 
     /* =====================================================
-       LEMON SQUEEZY BUY BUTTON
+       PRODUCT ACTIONS
        ===================================================== */
 
-    .btn-buy-now {
+    .product-card-actions {
 
-      background-color:
-        var(--store-btn-bg);
+      padding:
+        0 16px 16px;
+    }
+
+
+    .btn-add-to-cart {
+
+      width: 100%;
 
       border:
         1px solid var(--store-btn-border);
 
       border-radius: 9999px;
 
+      background:
+        var(--store-btn-bg);
+
       color:
-        var(--store-btn-text) !important;
+        var(--store-btn-text);
 
-      cursor: pointer;
-
-      display: block;
-
-      width: 100%;
+      font-family: inherit;
 
       font-size: 14px;
 
@@ -616,9 +911,7 @@
 
       padding: 10px 0;
 
-      text-align: center;
-
-      text-decoration: none;
+      cursor: pointer;
 
       box-shadow:
         0 1px 2px rgba(0,0,0,.05);
@@ -626,21 +919,19 @@
       transition:
         background-color .15s ease,
         transform .08s ease;
-
-      user-select: none;
     }
 
 
-    .btn-buy-now:hover {
+    .btn-add-to-cart:hover {
 
-      background-color:
+      background:
         var(--store-btn-hover);
     }
 
 
-    .btn-buy-now:active {
+    .btn-add-to-cart:active {
 
-      background-color:
+      background:
         var(--store-btn-active);
 
       transform:
@@ -648,7 +939,7 @@
     }
 
 
-    .btn-buy-now:focus-visible {
+    .btn-add-to-cart:focus-visible {
 
       outline:
         3px solid var(--store-focus-ring);
@@ -658,37 +949,113 @@
 
 
     /* =====================================================
-       DELIVERY NOTICE
+       EMPTY / ERROR STATES
        ===================================================== */
 
-    .store-footer {
+    .products-empty,
+    .products-error {
 
-      border-top:
-        1px solid var(--store-divider);
+      grid-column:
+        1 / -1;
 
-      padding-top: 24px;
+      text-align: center;
 
-      margin-top: 32px;
+      padding:
+        60px 20px;
     }
 
 
-    .store-footer h3 {
+    .products-empty-icon {
+
+      width: 48px;
+
+      height: 48px;
+
+      margin:
+        0 auto 16px;
+
+      color: #94a3b8;
+    }
+
+
+    .products-empty-icon svg {
+
+      width: 100%;
+
+      height: 100%;
+    }
+
+
+    .products-empty h2,
+    .products-error h2 {
 
       color:
         var(--store-heading);
 
-      font-size: 1rem;
+      font-size: 1.25rem;
 
       margin-bottom: 8px;
     }
 
 
-    .store-footer p {
+    .products-empty p,
+    .products-error p {
 
       color:
         var(--store-subtext);
 
-      font-size: .875rem;
+      font-size: 14px;
+
+      margin-bottom: 18px;
+    }
+
+
+    .products-empty-button {
+
+      border: 0;
+
+      border-radius: 9999px;
+
+      background: #0f172a;
+
+      color: #ffffff;
+
+      padding:
+        9px 18px;
+
+      font-family: inherit;
+
+      font-size: 13px;
+
+      font-weight: 600;
+
+      cursor: pointer;
+    }
+
+
+    /* =====================================================
+       VISUALLY HIDDEN
+       ===================================================== */
+
+    .visually-hidden {
+
+      position: absolute !important;
+
+      width: 1px !important;
+
+      height: 1px !important;
+
+      padding: 0 !important;
+
+      margin: -1px !important;
+
+      overflow: hidden !important;
+
+      clip: rect(0,0,0,0) !important;
+
+      white-space: nowrap !important;
+
+      border: 0 !important;
     }
 
 
@@ -774,32 +1141,103 @@
 
     @media (max-width: 640px) {
 
-      .ebook-store-container {
+      .header-container {
 
-        padding: 16px;
-
-        margin: 16px auto;
-      }
-
-
-      .ebook-grid {
-
-        gap: 20px;
-
-        grid-template-columns:
-          repeat(auto-fill, minmax(180px, 1fr));
-      }
-
-
-      .ebook-card {
-
-        padding: 16px;
+        padding:
+          .85rem 1rem;
       }
 
 
       .nav-links {
 
         gap: 1rem;
+      }
+
+
+      .nav-links a {
+
+        font-size: .85rem;
+      }
+
+
+      .store-container {
+
+        padding: 16px;
+
+        margin:
+          16px auto;
+      }
+
+
+      .store-title {
+
+        font-size: 1.7rem;
+      }
+
+
+      .store-subtitle {
+
+        font-size: .95rem;
+      }
+
+
+      .products-toolbar {
+
+        align-items: stretch;
+      }
+
+
+      .products-search {
+
+        flex-basis: 100%;
+      }
+
+
+      .products-sort {
+
+        width: 100%;
+      }
+
+
+      .product-grid {
+
+        gap: 16px;
+
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+
+
+      .product-card-body {
+
+        padding: 12px;
+      }
+
+
+      .product-card-actions {
+
+        padding:
+          0 12px 12px;
+      }
+
+
+      .product-title {
+
+        font-size: 14px;
+      }
+
+
+      .product-description {
+
+        font-size: 12px;
+
+        -webkit-line-clamp: 2;
+      }
+
+
+      .product-price {
+
+        font-size: 18px;
       }
 
     }
@@ -855,7 +1293,7 @@
         <a
           href="index.html"
           class="active">
-          eBooks
+          Shop
         </a>
 
         <a href="about.html">
@@ -866,6 +1304,48 @@
           Contact
         </a>
 
+        <a
+          href="cart.html"
+          class="cart-link"
+          aria-label="Shopping Cart">
+
+          <svg
+            class="cart-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true">
+
+            <circle
+              cx="9"
+              cy="20"
+              r="1">
+            </circle>
+
+            <circle
+              cx="19"
+              cy="20"
+              r="1">
+            </circle>
+
+            <path
+              d="M3 4h2l2.4 11.4a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L21 8H6">
+            </path>
+
+          </svg>
+
+          <span
+            id="cart-count"
+            class="cart-count"
+            hidden>
+            0
+          </span>
+
+        </a>
+
       </nav>
 
     </div>
@@ -874,350 +1354,155 @@
 
 
   <!-- =====================================================
-       STORE CONTENT
+       MAIN STORE
        ===================================================== -->
 
-  <main class="ebook-store-container">
+  <main class="store-container">
 
     <h1 class="store-title">
-      Digital eBook Store
+      Shop Physical Products
     </h1>
 
 
     <p class="store-subtitle">
-      Practical guides written by Prasun Barua to help you make informed technical decisions.
+      Discover quality products available through PRASUN SHOP.
     </p>
 
 
-    <div class="ebook-grid">
-
-
-      <!-- =================================================
-           BOOK 1
-           ================================================= -->
-
-      <article class="ebook-card">
-
-        <div class="ebook-card-top">
-
-          <div class="ebook-cover-wrap">
-
-            <img
-              alt="Solar Power for Homeowners eBook Cover"
-              loading="lazy"
-              src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiIxfOGUbYa98pQoN_FP6uTG7jBHXlzXAgJSmsO7cOzDJm916VTJFC25oR-osUlnjkUYOmBvcbVoIylf0tJOna6Jce9kxAPcYLLLNum5Cn5RlpLVXaZGbC9tSxxc4O4XFukXwtHJWMd3pMSZl4NWCsKhpaIfDWporp1rHKs2g46ce8egss5ZuKmoYuNBGc/s1536/Solar_Power_for_Homeowners_Cover.png"
-            >
-
-          </div>
-
-
-          <div class="ebook-details">
-
-            <span class="ebook-format">
-              PDF eBook
-            </span>
-
-
-            <h2
-              class="ebook-title"
-              title="Solar Power for Homeowners">
-
-              Solar Power for Homeowners
-
-            </h2>
-
-
-            <p class="ebook-author">
-              by Prasun Barua
-            </p>
-
-
-            <p class="ebook-description">
-              Learn how residential solar systems work and make informed solar investment decisions.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div class="ebook-card-bottom">
-
-          <div class="ebook-price">
-            $9.99
-          </div>
-
-
-          <!-- =================================================
-               BOOK 1 LEMON SQUEEZY OVERLAY CHECKOUT
-               ================================================= -->
-
-          <a
-            class="btn-buy-now lemonsqueezy-button"
-            href="https://prasun.lemonsqueezy.com/checkout/buy/2017dd99-e492-44fe-a00d-62d0c2483636?embed=1"
-          >
-            Buy Now
-          </a>
-
-        </div>
-
-      </article>
-
-
-
-      <!-- =================================================
-           BOOK 2
-           ================================================= -->
-
-      <article class="ebook-card">
-
-        <div class="ebook-card-top">
-
-          <div class="ebook-cover-wrap">
-
-            <img
-              alt="Basic Electrical Engineering eBook Cover"
-              loading="lazy"
-              src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwQurv7BNGLHSjwz-rjt5AqanGmklvpmutwlcbh4VBT6zguNg14Z1DShVq8lLn4TZq2ctxeOGrCeurTk_vW15FyzUkIpQTLbM3KRhXi0waUGk6DwKaYOZqOTELmqjGkbvYUX-jh6sCe_obdKQnSDhX4hyLhA25mRztDrFiBA_3QbM7Lc8QyHTs8jr8Hwo/s1600/Basic_Electrical_Engineering_A_Complete_Intuitive_Guide_Cover.png"
-            >
-
-          </div>
-
-
-          <div class="ebook-details">
-
-            <span class="ebook-format">
-              PDF eBook
-            </span>
-
-
-            <h2
-              class="ebook-title"
-              title="Basic Electrical Engineering: A Complete Intuitive Guide">
-
-              Basic Electrical Engineering:
-              A Complete Intuitive Guide
-
-            </h2>
-
-
-            <p class="ebook-author">
-              by Prasun Barua
-            </p>
-
-
-            <p class="ebook-description">
-              A beginner-friendly guide to the fundamental concepts of electrical engineering.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div class="ebook-card-bottom">
-
-          <div class="ebook-price">
-            $12.99
-          </div>
-
-
-          <!-- =================================================
-               BOOK 2 LEMON SQUEEZY OVERLAY CHECKOUT
-               
-               REPLACE THE URL BELOW WITH YOUR REAL
-               LEMON SQUEEZY CHECKOUT URL.
-              
-               ================================================= -->
-
-          <a
-            class="btn-buy-now lemonsqueezy-button"
-            href="https://prasun.lemonsqueezy.com/checkout/buy/dbf9ab0b-ef86-4ade-9856-19ec5093e382?embed=1"
-          >
-            Buy Now
-          </a>
-
-        </div>
-
-      </article>
-
-
-
-      <!-- =================================================
-           BOOK 3
-           ================================================= -->
-
-      <article class="ebook-card">
-
-        <div class="ebook-card-top">
-
-          <div class="ebook-cover-wrap">
-
-            <img
-              alt="Solar PV Testing and Commissioning eBook Cover"
-              loading="lazy"
-              src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhAd71nCQo13VxXWRcoz-WQUpRA5cktSl5UV0lTz5wzT0zWMZNQyMfeHGRJqanK2jjDh8etDpS2Amiv6pPN2SwVuJ7m3RwhE2784tPaZyCgQ1fy_kUMMbqx0wpReUEBvl_wfGv7uKL5ye9Zy6UFBuMd_34KOqlNBOY6E2W6CnCehOe0WFueXMDHt0ByBJE/s1600/Solar%20PV%20Testing%20and%20Commissioning.png"
-            >
-
-          </div>
-
-
-          <div class="ebook-details">
-
-            <span class="ebook-format">
-              PDF eBook
-            </span>
-
-
-            <h2
-              class="ebook-title"
-              title="Solar PV Testing and Commissioning">
-
-              Solar PV Testing and Commissioning
-
-            </h2>
-
-
-            <p class="ebook-author">
-              by Prasun Barua
-            </p>
-
-
-            <p class="ebook-description">
-              Practical procedures and best practices for testing and commissioning solar PV systems.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div class="ebook-card-bottom">
-
-          <div class="ebook-price">
-            $6.99
-          </div>
-
-
-          <!-- =================================================
-               BOOK 3 LEMON SQUEEZY OVERLAY CHECKOUT
-               
-               REPLACE THE URL BELOW WITH YOUR REAL
-               LEMON SQUEEZY CHECKOUT URL.
-               ================================================= -->
-
-          <a
-            class="btn-buy-now lemonsqueezy-button"
-            href="https://prasun.lemonsqueezy.com/checkout/buy/3e6959b0-9fb3-44dd-bce0-2553aee8d801?embed=1"
-          >
-            Buy Now
-          </a>
-
-        </div>
-
-      </article>
-
-
-
-      <!-- =================================================
-           BOOK 4
-           ================================================= -->
-
-      <article class="ebook-card">
-
-        <div class="ebook-card-top">
-
-          <div class="ebook-cover-wrap">
-
-            <img
-              alt="Semiconductor Manufacturing Explained eBook Cover"
-              loading="lazy"
-              src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiKkRpJtcCHXxhFSJ84JOBqjJuTEXwT2BmCPGv8dVVyWiuQgT9Y0JKXA1GczoSuzakmp-bIzO-BmMYbPf6tDGZdASsKVYFNEHWyEAJPPXfesTKxRDvhJMmRe062Y-ZB9MHY3X9FBPjhLBwsEIQEPPhGS5bwjp-836loYiXSlf_GAVpaUgegWZgZi-_uge8/s1600/Semiconductor%20Manufacturing%20Explained.png"
-            >
-
-          </div>
-
-
-          <div class="ebook-details">
-
-            <span class="ebook-format">
-              PDF eBook
-            </span>
-
-
-            <h2
-              class="ebook-title"
-              title="Semiconductor Manufacturing Explained">
-
-              Semiconductor Manufacturing Explained
-
-            </h2>
-
-
-            <p class="ebook-author">
-              by Prasun Barua
-            </p>
-
-
-            <p class="ebook-description">
-              A structured and accessible guide to the science, engineering, and industrial processes behind modern chip manufacturing.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div class="ebook-card-bottom">
-
-          <div class="ebook-price">
-            $5.99
-          </div>
-
-
-          <!-- =================================================
-               BOOK 4 LEMON SQUEEZY OVERLAY CHECKOUT
-               
-               REPLACE THE URL BELOW WITH YOUR REAL
-               LEMON SQUEEZY CHECKOUT URL.
-               ================================================= -->
-
-          <a
-            class="btn-buy-now lemonsqueezy-button"
-            href="https://prasun.lemonsqueezy.com/checkout/buy/c40511d3-20de-455b-8a66-655b67ff399f?embed=1"
-          >
-            Buy Now
-          </a>
-
-        </div>
-
-      </article>
-
+    <!-- ===================================================
+         SEARCH / SORT
+         =================================================== -->
+
+    <div class="products-toolbar">
+
+      <div class="products-search">
+
+        <input
+          type="search"
+          id="product-search"
+          class="products-search-input"
+          placeholder="Search products..."
+          autocomplete="off"
+          aria-label="Search products"
+        >
+
+        <button
+          type="button"
+          id="search-clear"
+          class="search-clear"
+          aria-label="Clear search"
+          aria-hidden="true"
+          hidden>
+          &times;
+        </button>
+
+      </div>
+
+
+      <select
+        id="product-sort"
+        class="products-sort"
+        aria-label="Sort products">
+
+        <option value="featured">
+          Featured
+        </option>
+
+        <option value="price-low">
+          Price: Low to High
+        </option>
+
+        <option value="price-high">
+          Price: High to Low
+        </option>
+
+        <option value="rating">
+          Rating
+        </option>
+
+        <option value="name">
+          Name
+        </option>
+
+      </select>
 
     </div>
 
 
-    <!-- =====================================================
-         DIGITAL DELIVERY NOTICE
-         ===================================================== -->
+    <!-- ===================================================
+         CATEGORIES
+         =================================================== -->
 
-    <div class="store-footer">
+    <div
+      class="products-categories"
+      aria-label="Product categories">
 
-      <h3>
-        Digital Product Delivery Notice
-      </h3>
+      <button
+        type="button"
+        class="category-pill active"
+        data-category="all"
+        aria-pressed="true">
 
+        All
 
-      <p>
-        All items listed are digital products. No physical products
-        will be shipped. After successful payment, Lemon Squeezy
-        will provide secure access to your purchased digital product.
-      </p>
+      </button>
 
     </div>
+
+
+    <!-- ===================================================
+         RESULTS HEADER
+         =================================================== -->
+
+    <div class="products-results-bar">
+
+      <h2
+        id="products-heading"
+        class="products-heading">
+
+        All Products
+
+      </h2>
+
+
+      <span
+        id="products-count"
+        class="products-result-count"
+        aria-live="polite">
+
+        Loading products...
+
+      </span>
+
+    </div>
+
+
+    <!-- ===================================================
+         DYNAMIC PRODUCT GRID
+         =================================================== -->
+
+    <section
+      id="product-list"
+      class="product-grid"
+      aria-label="Products"
+      aria-live="polite"
+      aria-busy="true">
+
+      <!-- Products are loaded dynamically by products.js -->
+
+      <div
+        class="products-empty"
+        role="status">
+
+        <p>
+          Loading products...
+        </p>
+
+      </div>
+
+    </section>
 
   </main>
-
 
 
   <!-- =====================================================
@@ -1264,6 +1549,16 @@
     </p>
 
   </footer>
+
+
+  <!-- =====================================================
+       PRODUCTS JAVASCRIPT
+       ===================================================== -->
+
+  <script
+    src="products.js"
+    defer>
+  </script>
 
 
 </body>
