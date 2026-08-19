@@ -11,12 +11,11 @@
   <script>
     window.dataLayer = window.dataLayer || [];
 
-    function gtag(){
+    function gtag() {
       dataLayer.push(arguments);
     }
 
     gtag('js', new Date());
-
     gtag('config', 'G-D9F2VQ4247');
   </script>
 
@@ -80,79 +79,37 @@
   <style>
 
     /* =====================================================
-       STORE VARIABLES
+       VARIABLES
        ===================================================== */
 
-    .store-container {
+    :root {
 
-      --store-text: #334155;
-      --store-heading: #0f172a;
-      --store-subtext: #64748b;
+      --shop-text: #334155;
+      --shop-heading: #0f172a;
+      --shop-subtext: #64748b;
 
-      --store-divider: #e2e8f0;
+      --shop-divider: #e2e8f0;
 
-      --store-card-bg: #ffffff;
-      --store-card-border: #e2e8f0;
+      --shop-card-bg: #ffffff;
+      --shop-card-border: #e2e8f0;
 
-      --store-image-bg: #f8fafc;
+      --shop-page-bg: #f8fafc;
 
-      --store-card-shadow:
+      --shop-price: #b12704;
+
+      --shop-primary: #ffd814;
+      --shop-primary-hover: #f7ca00;
+      --shop-primary-active: #f0b800;
+
+      --shop-focus: #2563eb;
+
+      --shop-shadow:
         0 4px 6px -1px rgba(0,0,0,.05),
         0 2px 4px -2px rgba(0,0,0,.05);
 
-      --store-card-hover-shadow:
+      --shop-hover-shadow:
         0 20px 25px -5px rgba(0,0,0,.08),
         0 8px 10px -6px rgba(0,0,0,.04);
-
-      --store-price: #b12704;
-
-      --store-btn-bg: #ffd814;
-      --store-btn-text: #0f172a;
-      --store-btn-hover: #f7ca00;
-      --store-btn-active: #f0b800;
-      --store-btn-border: #f2c200;
-
-      --store-focus-ring: #2563eb;
-    }
-
-
-    /* =====================================================
-       DARK MODE
-       ===================================================== */
-
-    @media (prefers-color-scheme: dark) {
-
-      .store-container {
-
-        --store-text: #cbd5e1;
-        --store-heading: #f8fafc;
-        --store-subtext: #94a3b8;
-
-        --store-divider: #334155;
-
-        --store-card-bg: #1e293b;
-        --store-card-border: #334155;
-
-        --store-image-bg: #0f172a;
-
-        --store-card-shadow:
-          0 4px 6px -1px rgba(0,0,0,.3),
-          0 2px 4px -2px rgba(0,0,0,.2);
-
-        --store-card-hover-shadow:
-          0 20px 25px -5px rgba(0,0,0,.45),
-          0 8px 10px -6px rgba(0,0,0,.3);
-
-        --store-price: #ffa41c;
-
-        --store-btn-bg: #f7c948;
-        --store-btn-text: #0f172a;
-        --store-btn-hover: #f0b829;
-        --store-btn-active: #e2a81a;
-        --store-btn-border: #c89512;
-
-        --store-focus-ring: #38bdf8;
-      }
     }
 
 
@@ -161,11 +118,8 @@
        ===================================================== */
 
     * {
-
       box-sizing: border-box;
-
       margin: 0;
-
       padding: 0;
     }
 
@@ -176,9 +130,9 @@
 
     body {
 
-      background-color: #f8fafc;
+      background: var(--shop-page-bg);
 
-      color: #334155;
+      color: var(--shop-text);
 
       font-family:
         system-ui,
@@ -202,21 +156,17 @@
 
     .header {
 
-      border-bottom:
-        1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
 
       position: sticky;
 
       top: 0;
 
-      background:
-        rgba(255,255,255,.95);
+      background: rgba(255,255,255,.95);
 
-      backdrop-filter:
-        blur(12px);
+      backdrop-filter: blur(12px);
 
-      -webkit-backdrop-filter:
-        blur(12px);
+      -webkit-backdrop-filter: blur(12px);
 
       z-index: 100;
     }
@@ -264,7 +214,7 @@
 
       align-items: center;
 
-      gap: 2rem;
+      gap: 1.5rem;
     }
 
 
@@ -278,8 +228,7 @@
 
       font-weight: 500;
 
-      transition:
-        color .2s ease;
+      transition: color .2s ease;
     }
 
 
@@ -293,7 +242,7 @@
 
 
     /* =====================================================
-       CART
+       CART LINK
        ===================================================== */
 
     .cart-link {
@@ -304,39 +253,15 @@
 
       align-items: center;
 
-      justify-content: center;
-
-      text-decoration: none;
-
-      color: #64748b;
-    }
-
-
-    .cart-link:hover {
-
-      color: #0f172a;
-    }
-
-
-    .cart-icon {
-
-      width: 21px;
-
-      height: 21px;
+      gap: 6px;
     }
 
 
     .cart-count {
 
-      position: absolute;
+      min-width: 20px;
 
-      top: -8px;
-
-      right: -10px;
-
-      min-width: 18px;
-
-      height: 18px;
+      height: 20px;
 
       padding: 0 5px;
 
@@ -346,19 +271,15 @@
 
       justify-content: center;
 
-      border-radius: 9999px;
+      border-radius: 999px;
 
-      background: #dc2626;
+      background: #0f172a;
 
       color: #ffffff;
 
-      font-size: 10px;
+      font-size: 11px;
 
       font-weight: 700;
-
-      line-height: 1;
-
-      border: 2px solid #ffffff;
     }
 
 
@@ -366,37 +287,33 @@
        MAIN STORE
        ===================================================== */
 
-    .store-container {
+    .shop-container {
 
       max-width: 1080px;
 
-      margin: 20px auto 40px;
+      margin: 0 auto;
 
-      padding: 24px;
-
-      color: var(--store-text);
+      padding: 32px 24px 48px;
     }
 
 
-    .store-title {
+    .shop-title {
 
-      color:
-        var(--store-heading);
+      color: var(--shop-heading);
 
       font-size: 2rem;
 
       font-weight: 800;
 
-      margin-bottom: 8px;
-
       letter-spacing: -.02em;
+
+      margin-bottom: 8px;
     }
 
 
-    .store-subtitle {
+    .shop-subtitle {
 
-      color:
-        var(--store-subtext);
+      color: var(--shop-subtext);
 
       font-size: 1.05rem;
 
@@ -405,28 +322,26 @@
 
 
     /* =====================================================
-       STORE CONTROLS
+       PRODUCT CONTROLS
        ===================================================== */
 
     .products-toolbar {
 
-      display: flex;
+      display: grid;
 
-      flex-wrap: wrap;
+      grid-template-columns:
+        minmax(0, 1fr)
+        auto;
 
       gap: 12px;
-
-      align-items: center;
 
       margin-bottom: 20px;
     }
 
 
-    .products-search {
+    .search-wrapper {
 
       position: relative;
-
-      flex: 1 1 320px;
     }
 
 
@@ -437,7 +352,8 @@
       height: 44px;
 
       padding:
-        0 44px 0 14px;
+        0 44px
+        0 14px;
 
       border:
         1px solid #cbd5e1;
@@ -447,8 +363,6 @@
       background: #ffffff;
 
       color: #0f172a;
-
-      font-family: inherit;
 
       font-size: 14px;
 
@@ -462,8 +376,7 @@
 
     .products-search-input:focus {
 
-      border-color:
-        var(--store-focus-ring);
+      border-color: var(--shop-focus);
 
       box-shadow:
         0 0 0 3px rgba(37,99,235,.12);
@@ -474,9 +387,9 @@
 
       position: absolute;
 
-      top: 50%;
-
       right: 10px;
+
+      top: 50%;
 
       transform: translateY(-50%);
 
@@ -488,11 +401,9 @@
 
       cursor: pointer;
 
-      font-size: 18px;
+      font-size: 20px;
 
       line-height: 1;
-
-      padding: 5px;
     }
 
 
@@ -500,8 +411,7 @@
 
       height: 44px;
 
-      padding:
-        0 34px 0 12px;
+      padding: 0 12px;
 
       border:
         1px solid #cbd5e1;
@@ -512,23 +422,9 @@
 
       color: #334155;
 
-      font-family: inherit;
-
       font-size: 14px;
 
       cursor: pointer;
-
-      outline: none;
-    }
-
-
-    .products-sort:focus {
-
-      border-color:
-        var(--store-focus-ring);
-
-      box-shadow:
-        0 0 0 3px rgba(37,99,235,.12);
     }
 
 
@@ -553,16 +449,13 @@
       border:
         1px solid #cbd5e1;
 
+      border-radius: 999px;
+
       background: #ffffff;
 
       color: #475569;
 
-      border-radius: 9999px;
-
-      padding:
-        7px 14px;
-
-      font-family: inherit;
+      padding: 7px 14px;
 
       font-size: 13px;
 
@@ -571,9 +464,9 @@
       cursor: pointer;
 
       transition:
-        background-color .15s ease,
-        color .15s ease,
-        border-color .15s ease;
+        background .2s ease,
+        color .2s ease,
+        border-color .2s ease;
     }
 
 
@@ -596,10 +489,10 @@
 
 
     /* =====================================================
-       RESULTS BAR
+       RESULTS INFO
        ===================================================== */
 
-    .products-results-bar {
+    .products-result-bar {
 
       display: flex;
 
@@ -610,24 +503,8 @@
       gap: 12px;
 
       margin-bottom: 18px;
-    }
 
-
-    .products-heading {
-
-      color:
-        var(--store-heading);
-
-      font-size: 1.15rem;
-
-      font-weight: 700;
-    }
-
-
-    .products-result-count {
-
-      color:
-        var(--store-subtext);
+      color: var(--shop-subtext);
 
       font-size: 13px;
     }
@@ -642,11 +519,9 @@
       display: grid;
 
       grid-template-columns:
-        repeat(auto-fill, minmax(230px, 1fr));
+        repeat(auto-fill, minmax(220px, 1fr));
 
       gap: 24px;
-
-      margin-bottom: 48px;
     }
 
 
@@ -656,18 +531,16 @@
 
     .product-card {
 
-      background-color:
-        var(--store-card-bg);
+      background: var(--shop-card-bg);
 
       border:
-        1px solid var(--store-card-border);
+        1px solid var(--shop-card-border);
 
       border-radius: 12px;
 
       overflow: hidden;
 
-      box-shadow:
-        var(--store-card-shadow);
+      box-shadow: var(--shop-shadow);
 
       transition:
         transform .2s ease,
@@ -677,11 +550,9 @@
 
     .product-card:hover {
 
-      transform:
-        translateY(-4px);
+      transform: translateY(-4px);
 
-      box-shadow:
-        var(--store-card-hover-shadow);
+      box-shadow: var(--shop-hover-shadow);
     }
 
 
@@ -697,15 +568,15 @@
 
     .product-card-link {
 
+      color: inherit;
+
+      text-decoration: none;
+
       display: flex;
 
       flex-direction: column;
 
       flex-grow: 1;
-
-      text-decoration: none;
-
-      color: inherit;
     }
 
 
@@ -721,19 +592,9 @@
 
       aspect-ratio: 1 / 1;
 
-      display: flex;
-
-      align-items: center;
-
-      justify-content: center;
+      background: #f8fafc;
 
       overflow: hidden;
-
-      background:
-        var(--store-image-bg);
-
-      border-bottom:
-        1px solid var(--store-card-border);
     }
 
 
@@ -755,8 +616,7 @@
     .product-card:hover
     .product-card-image img {
 
-      transform:
-        scale(1.04);
+      transform: scale(1.04);
     }
 
 
@@ -768,21 +628,21 @@
 
       left: 10px;
 
-      background:
-        rgba(15,23,42,.88);
+      background: rgba(15,23,42,.9);
 
       color: #ffffff;
 
-      border-radius: 9999px;
+      padding: 4px 8px;
 
-      padding:
-        4px 9px;
+      border-radius: 999px;
 
       font-size: 10px;
 
       font-weight: 700;
 
-      line-height: 1.2;
+      text-transform: uppercase;
+
+      letter-spacing: .04em;
     }
 
 
@@ -792,13 +652,7 @@
 
     .product-card-body {
 
-      padding: 16px;
-
-      display: flex;
-
-      flex-direction: column;
-
-      flex-grow: 1;
+      padding: 15px 16px 12px;
     }
 
 
@@ -820,8 +674,7 @@
 
     .product-title {
 
-      color:
-        var(--store-heading);
+      color: var(--shop-heading);
 
       font-size: 16px;
 
@@ -829,7 +682,7 @@
 
       line-height: 1.35;
 
-      margin-bottom: 7px;
+      margin-bottom: 6px;
 
       display: -webkit-box;
 
@@ -843,18 +696,17 @@
 
     .product-description {
 
-      color:
-        var(--store-subtext);
+      color: var(--shop-subtext);
 
       font-size: 13px;
 
       line-height: 1.45;
 
-      margin-bottom: 12px;
+      margin-bottom: 10px;
 
       display: -webkit-box;
 
-      -webkit-line-clamp: 3;
+      -webkit-line-clamp: 2;
 
       -webkit-box-orient: vertical;
 
@@ -864,16 +716,13 @@
 
     .product-price {
 
-      color:
-        var(--store-price);
+      color: var(--shop-price);
 
-      font-size: 21px;
+      font-size: 20px;
 
-      font-weight: 700;
+      font-weight: 800;
 
       line-height: 1.2;
-
-      margin-top: auto;
     }
 
 
@@ -883,8 +732,7 @@
 
     .product-card-actions {
 
-      padding:
-        0 16px 16px;
+      padding: 0 16px 16px;
     }
 
 
@@ -893,120 +741,133 @@
       width: 100%;
 
       border:
-        1px solid var(--store-btn-border);
+        1px solid #f2c200;
 
-      border-radius: 9999px;
+      border-radius: 999px;
 
-      background:
-        var(--store-btn-bg);
+      background: var(--shop-primary);
 
-      color:
-        var(--store-btn-text);
+      color: #0f172a;
 
-      font-family: inherit;
+      padding: 10px 14px;
 
       font-size: 14px;
 
-      font-weight: 600;
-
-      padding: 10px 0;
+      font-weight: 700;
 
       cursor: pointer;
 
-      box-shadow:
-        0 1px 2px rgba(0,0,0,.05);
-
       transition:
-        background-color .15s ease,
+        background .15s ease,
         transform .08s ease;
     }
 
 
     .btn-add-to-cart:hover {
 
-      background:
-        var(--store-btn-hover);
+      background: var(--shop-primary-hover);
     }
 
 
     .btn-add-to-cart:active {
 
-      background:
-        var(--store-btn-active);
+      background: var(--shop-primary-active);
 
-      transform:
-        scale(.98);
+      transform: scale(.98);
     }
 
 
     .btn-add-to-cart:focus-visible {
 
       outline:
-        3px solid var(--store-focus-ring);
+        3px solid var(--shop-focus);
 
       outline-offset: 3px;
     }
 
 
     /* =====================================================
-       EMPTY / ERROR STATES
+       LOAD MORE
+       ===================================================== */
+
+    .products-pagination-container {
+
+      grid-column: 1 / -1;
+
+      text-align: center;
+
+      padding: 16px 0 4px;
+    }
+
+
+    .btn-load-more {
+
+      border:
+        1px solid #cbd5e1;
+
+      border-radius: 999px;
+
+      background: #ffffff;
+
+      color: #0f172a;
+
+      padding: 10px 24px;
+
+      font-size: 14px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+    }
+
+
+    .btn-load-more:hover {
+
+      background: #f1f5f9;
+    }
+
+
+    /* =====================================================
+       EMPTY / ERROR
        ===================================================== */
 
     .products-empty,
     .products-error {
 
-      grid-column:
-        1 / -1;
+      grid-column: 1 / -1;
 
       text-align: center;
 
-      padding:
-        60px 20px;
-    }
+      padding: 60px 20px;
 
+      background: #ffffff;
 
-    .products-empty-icon {
+      border:
+        1px solid var(--shop-card-border);
 
-      width: 48px;
-
-      height: 48px;
-
-      margin:
-        0 auto 16px;
-
-      color: #94a3b8;
-    }
-
-
-    .products-empty-icon svg {
-
-      width: 100%;
-
-      height: 100%;
+      border-radius: 12px;
     }
 
 
     .products-empty h2,
     .products-error h2 {
 
-      color:
-        var(--store-heading);
+      color: var(--shop-heading);
 
-      font-size: 1.25rem;
+      font-size: 1.2rem;
 
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
 
     .products-empty p,
     .products-error p {
 
-      color:
-        var(--store-subtext);
+      color: var(--shop-subtext);
 
       font-size: 14px;
 
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
 
@@ -1014,27 +875,57 @@
 
       border: 0;
 
-      border-radius: 9999px;
+      border-radius: 999px;
 
       background: #0f172a;
 
       color: #ffffff;
 
-      padding:
-        9px 18px;
-
-      font-family: inherit;
+      padding: 9px 18px;
 
       font-size: 13px;
 
-      font-weight: 600;
+      font-weight: 700;
 
       cursor: pointer;
     }
 
 
     /* =====================================================
-       VISUALLY HIDDEN
+       STORE INFORMATION
+       ===================================================== */
+
+    .store-info {
+
+      border-top:
+        1px solid var(--shop-divider);
+
+      margin-top: 42px;
+
+      padding-top: 24px;
+    }
+
+
+    .store-info h2 {
+
+      color: var(--shop-heading);
+
+      font-size: 1rem;
+
+      margin-bottom: 8px;
+    }
+
+
+    .store-info p {
+
+      color: var(--shop-subtext);
+
+      font-size: .875rem;
+    }
+
+
+    /* =====================================================
+       ACCESSIBILITY
        ===================================================== */
 
     .visually-hidden {
@@ -1051,7 +942,7 @@
 
       overflow: hidden !important;
 
-      clip: rect(0,0,0,0) !important;
+      clip: rect(0, 0, 0, 0) !important;
 
       white-space: nowrap !important;
 
@@ -1068,16 +959,13 @@
       border-top:
         1px solid #e2e8f0;
 
-      background-color:
-        #ffffff;
+      background: #ffffff;
 
-      padding:
-        2.5rem 1.5rem;
+      padding: 2.5rem 1.5rem;
 
       text-align: center;
 
-      color:
-        #64748b;
+      color: #64748b;
 
       font-size: .875rem;
 
@@ -1101,35 +989,27 @@
 
     .footer-links a {
 
-      color:
-        #64748b;
+      color: #64748b;
 
       text-decoration: none;
 
       font-weight: 500;
-
-      transition:
-        color .2s ease;
     }
 
 
     .footer-links a:hover {
 
-      color:
-        #0f172a;
+      color: #0f172a;
 
-      text-decoration:
-        underline;
+      text-decoration: underline;
     }
 
 
     .footer p a {
 
-      color:
-        #334155;
+      color: #334155;
 
-      text-decoration:
-        underline;
+      text-decoration: underline;
 
       font-weight: 500;
     }
@@ -1143,14 +1023,13 @@
 
       .header-container {
 
-        padding:
-          .85rem 1rem;
+        padding: .9rem 1rem;
       }
 
 
       .nav-links {
 
-        gap: 1rem;
+        gap: .9rem;
       }
 
 
@@ -1160,51 +1039,30 @@
       }
 
 
-      .store-container {
+      .shop-container {
 
-        padding: 16px;
-
-        margin:
-          16px auto;
+        padding: 24px 16px 40px;
       }
 
 
-      .store-title {
+      .shop-title {
 
-        font-size: 1.7rem;
-      }
-
-
-      .store-subtitle {
-
-        font-size: .95rem;
+        font-size: 1.65rem;
       }
 
 
       .products-toolbar {
 
-        align-items: stretch;
-      }
-
-
-      .products-search {
-
-        flex-basis: 100%;
-      }
-
-
-      .products-sort {
-
-        width: 100%;
+        grid-template-columns: 1fr;
       }
 
 
       .product-grid {
 
-        gap: 16px;
-
         grid-template-columns:
           repeat(2, minmax(0, 1fr));
+
+        gap: 14px;
       }
 
 
@@ -1230,8 +1088,6 @@
       .product-description {
 
         font-size: 12px;
-
-        -webkit-line-clamp: 2;
       }
 
 
@@ -1271,15 +1127,14 @@
           stroke="currentColor"
           stroke-width="2"
           stroke-linecap="round"
-          stroke-linejoin="round">
+          stroke-linejoin="round"
+          aria-hidden="true">
 
-          <path
-            d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20">
-          </path>
+          <path d="M3 9l9-6 9 6"></path>
 
-          <path
-            d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z">
-          </path>
+          <path d="M5 10v10h14V10"></path>
+
+          <path d="M9 20v-6h6v6"></path>
 
         </svg>
 
@@ -1288,7 +1143,7 @@
       </a>
 
 
-      <nav class="nav-links">
+      <nav class="nav-links" aria-label="Main navigation">
 
         <a
           href="index.html"
@@ -1296,46 +1151,9 @@
           Shop
         </a>
 
-        <a href="about.html">
-          About
-        </a>
+        <a href="cart.html" class="cart-link">
 
-        <a href="contact.html">
-          Contact
-        </a>
-
-        <a
-          href="cart.html"
-          class="cart-link"
-          aria-label="Shopping Cart">
-
-          <svg
-            class="cart-icon"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true">
-
-            <circle
-              cx="9"
-              cy="20"
-              r="1">
-            </circle>
-
-            <circle
-              cx="19"
-              cy="20"
-              r="1">
-            </circle>
-
-            <path
-              d="M3 4h2l2.4 11.4a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.6L21 8H6">
-            </path>
-
-          </svg>
+          Cart
 
           <span
             id="cart-count"
@@ -1346,6 +1164,14 @@
 
         </a>
 
+        <a href="about.html">
+          About
+        </a>
+
+        <a href="contact.html">
+          Contact
+        </a>
+
       </nav>
 
     </div>
@@ -1354,42 +1180,48 @@
 
 
   <!-- =====================================================
-       MAIN STORE
+       MAIN SHOP
        ===================================================== -->
 
-  <main class="store-container">
+  <main class="shop-container">
 
-    <h1 class="store-title">
+    <h1 class="shop-title">
       Shop Physical Products
     </h1>
 
 
-    <p class="store-subtitle">
-      Discover quality products available through PRASUN SHOP.
+    <p class="shop-subtitle">
+      Discover useful products from PRASUN SHOP.
     </p>
 
 
     <!-- ===================================================
-         SEARCH / SORT
+         SEARCH + SORT
          =================================================== -->
 
     <div class="products-toolbar">
 
-      <div class="products-search">
+      <div class="search-wrapper">
+
+        <label
+          for="product-search"
+          class="visually-hidden">
+          Search products
+        </label>
 
         <input
-          type="search"
           id="product-search"
           class="products-search-input"
+          type="search"
           placeholder="Search products..."
           autocomplete="off"
-          aria-label="Search products"
+          spellcheck="false"
         >
 
         <button
-          type="button"
           id="search-clear"
           class="search-clear"
+          type="button"
           aria-label="Clear search"
           aria-hidden="true"
           hidden>
@@ -1399,10 +1231,15 @@
       </div>
 
 
+      <label
+        for="product-sort"
+        class="visually-hidden">
+        Sort products
+      </label>
+
       <select
         id="product-sort"
-        class="products-sort"
-        aria-label="Sort products">
+        class="products-sort">
 
         <option value="featured">
           Featured
@@ -1417,11 +1254,11 @@
         </option>
 
         <option value="rating">
-          Rating
+          Highest Rated
         </option>
 
         <option value="name">
-          Name
+          Name: A to Z
         </option>
 
       </select>
@@ -1430,7 +1267,7 @@
 
 
     <!-- ===================================================
-         CATEGORIES
+         CATEGORY FILTERS
          =================================================== -->
 
     <div
@@ -1442,63 +1279,75 @@
         class="category-pill active"
         data-category="all"
         aria-pressed="true">
-
         All
-
       </button>
 
     </div>
 
 
     <!-- ===================================================
-         RESULTS HEADER
+         RESULT INFORMATION
          =================================================== -->
 
-    <div class="products-results-bar">
+    <div class="products-result-bar">
 
-      <h2
-        id="products-heading"
-        class="products-heading">
-
+      <span id="products-heading">
         All Products
-
-      </h2>
-
+      </span>
 
       <span
         id="products-count"
-        class="products-result-count"
-        aria-live="polite">
-
+        class="products-result-count">
         Loading products...
-
       </span>
 
     </div>
 
 
     <!-- ===================================================
-         DYNAMIC PRODUCT GRID
+         PRODUCT GRID
          =================================================== -->
 
     <section
       id="product-list"
       class="product-grid"
-      aria-label="Products"
       aria-live="polite"
-      aria-busy="true">
-
-      <!-- Products are loaded dynamically by products.js -->
+      aria-busy="true"
+      aria-label="Products">
 
       <div
         class="products-empty"
         role="status">
 
-        <p>
+        <h2>
           Loading products...
+        </h2>
+
+        <p>
+          Please wait while products are loaded.
         </p>
 
       </div>
+
+    </section>
+
+
+    <!-- ===================================================
+         STORE INFORMATION
+         =================================================== -->
+
+    <section class="store-info">
+
+      <h2>
+        About PRASUN SHOP
+      </h2>
+
+      <p>
+        PRASUN SHOP offers selected physical products through
+        trusted fulfillment partners. Product availability,
+        pricing, shipping options, and delivery times may vary
+        by product and destination.
+      </p>
 
     </section>
 
@@ -1539,8 +1388,7 @@
       <a
         href="https://prasunbarua.com"
         target="_blank"
-        rel="noopener"
-      >
+        rel="noopener">
         Prasun Barua
       </a>.
 
