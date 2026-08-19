@@ -1,7 +1,7 @@
 /**
  * ============================================================================
- * PRASUN SHOP — MAIN SCRIPT (js/script.js)
- * Fixed Product Fetching, Targeting, and Layout Replacement
+ * PRASUN SHOP — MAIN SCRIPT (script.js)
+ * Aligned with index.html IDs and elements
  * ============================================================================
  */
 
@@ -15,14 +15,14 @@
     });
 
     async function initShop() {
-        const productsContainer = document.getElementById("products-container") || document.querySelector(".products-grid");
-        if (!productsContainer) return;
+        const productList = document.getElementById("product-list");
+        if (!productList) return;
 
         // Initial load
         await fetchAndRenderProducts();
 
         // Hook up search input listener with debounce
-        const searchInput = document.getElementById("search-input") || document.querySelector("input[type='search'], input[name='keyword']");
+        const searchInput = document.getElementById("product-search");
         if (searchInput) {
             let debounceTimer;
             searchInput.addEventListener("input", (e) => {
@@ -35,12 +35,17 @@
     }
 
     async function fetchAndRenderProducts(keyword = "") {
-        const productsContainer = document.getElementById("products-container") || document.querySelector(".products-grid");
-        if (!productsContainer) return;
+        const productList = document.getElementById("product-list");
+        const resultsCount = document.getElementById("results-count");
+        
+        if (!productList) return;
 
-        productsContainer.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
-                <p>Loading products from CJ Dropshipping...</p>
+        if (resultsCount) resultsCount.innerText = "Loading products...";
+
+        productList.innerHTML = `
+            <div class="products-empty" role="status" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <h2>Loading products...</h2>
+                <p>Please wait while products are loaded from CJ Dropshipping.</p>
             </div>
         `;
 
@@ -56,18 +61,23 @@
             const productsList = data.products || data.data?.list || data.list || (Array.isArray(data) ? data : null);
 
             if (data && (data.success || Array.isArray(productsList)) && Array.isArray(productsList)) {
+                if (resultsCount) resultsCount.innerText = `${productsList.length} products found`;
                 renderProducts(productsList);
             } else {
-                productsContainer.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #d97706;">
-                        <p>No products available right now. Please check back soon!</p>
+                if (resultsCount) resultsCount.innerText = "0 products found";
+                productList.innerHTML = `
+                    <div class="products-empty" role="status" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <h2>No products available</h2>
+                        <p>Please check back soon!</p>
                     </div>
                 `;
             }
         } catch (error) {
             console.error("[PRASUN SHOP] Failed to load products:", error);
-            productsContainer.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #dc2626;">
+            if (resultsCount) resultsCount.innerText = "Error loading";
+            productList.innerHTML = `
+                <div class="products-empty" role="status" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #dc2626;">
+                    <h2>Connection Error</h2>
                     <p>Failed to connect to product server. Please check your network connection.</p>
                 </div>
             `;
@@ -75,51 +85,57 @@
     }
 
     function renderProducts(products) {
-        const productsContainer = document.getElementById("products-container") || document.querySelector(".products-grid");
-        if (!productsContainer) return;
+        const productList = document.getElementById("product-list");
+        if (!productList) return;
 
         if (!Array.isArray(products) || products.length === 0) {
-            productsContainer.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;">
+            productList.innerHTML = `
+                <div class="products-empty" role="status" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                    <h2>No products found</h2>
                     <p>No products matched your search criteria.</p>
                 </div>
             `;
             return;
         }
 
-        // Apply clean styling grid layout via innerHTML
-        productsContainer.style.display = "grid";
-        productsContainer.style.gridTemplateColumns = "repeat(auto-fill, minmax(240px, 1fr))";
-        productsContainer.style.gap = "20px";
-
-        productsContainer.innerHTML = products.map(productRaw => {
+        productList.innerHTML = products.map(productRaw => {
             const rawId = productRaw.pid || productRaw.id || productRaw.sku || "";
             const rawName = productRaw.productNameEn || productRaw.productName || productRaw.title || productRaw.name || "Product";
             const rawPrice = Number(productRaw.sellPrice || productRaw.price || 0);
             const rawImage = productRaw.productImage || productRaw.image || "";
+            const rawCategory = productRaw.categoryName || productRaw.category || "General";
 
             const safeImage = rawImage ? rawImage : "https://via.placeholder.com/300?text=Prasun+Shop";
             const safePrice = Number.isFinite(rawPrice) ? rawPrice.toFixed(2) : "0.00";
             const safeName = escapeHtml(rawName);
             const safeId = escapeHtml(String(rawId));
+            const safeCategory = escapeHtml(rawCategory);
 
             return `
-                <div class="product-card" style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; background: #fff; display: flex; flex-direction: column; justify-content: space-link; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div>
-                        <a href="product.html?id=${safeId}" style="text-decoration: none; display: block;">
-                            <div style="width: 100%; height: 180px; background: #f9fafb; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
-                                <img src="${safeImage}" alt="${safeName}" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.src='https://via.placeholder.com/300?text=Image+Unavailable'">
+                <article class="product-card">
+                    <div class="product-card-inner">
+                        <a href="product.html?id=${safeId}" class="product-card-link">
+                            <div class="product-card-image">
+                                <span class="product-category">${safeCategory}</span>
+                                <img src="${safeImage}" alt="${safeName}" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=Image+Unavailable'">
                             </div>
-                            <h3 style="font-size: 15px; font-weight: 600; color: #1f2937; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 40px;">${safeName}</h3>
+                            <div class="product-card-body">
+                                <span class="product-rating">★ 4.8</span>
+                                <h3 class="product-title">${safeName}</h3>
+                                <p class="product-description">High quality item available now at PRASUN SHOP.</p>
+                                <div class="product-bottom">
+                                    <span class="product-price">$${safePrice}</span>
+                                    <span class="product-view-button">View Details &rarr;</span>
+                                </div>
+                            </div>
                         </a>
+                        <div class="product-card-actions">
+                            <button type="button" class="btn-add-to-cart" onclick='window.PrasunShopAddToCart("${safeId}", ${JSON.stringify(rawName)}, ${rawPrice}, ${JSON.stringify(safeImage)})'>
+                                Add to Cart
+                            </button>
+                        </div>
                     </div>
-                    <div>
-                        <div style="font-size: 18px; font-weight: 700; color: #2563eb; margin-bottom: 12px;">$${safePrice}</div>
-                        <button type="button" onclick='window.PrasunShopAddToCart("${safeId}", ${JSON.stringify(rawName)}, ${rawPrice}, ${JSON.stringify(safeImage)})' style="width: 100%; background: #111827; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 500;">
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
+                </article>
             `;
         }).join("");
     }
@@ -148,9 +164,16 @@
         } catch (e) {}
 
         window.dispatchEvent(new CustomEvent("prasunCartUpdated"));
-        if (window.PrasunShopProducts && typeof window.PrasunShopProducts.updateCartBadge === "function") {
-            window.PrasunShopProducts.updateCartBadge();
+        
+        // Update badge count directly if element exists
+        const badge = document.getElementById("cart-count");
+        if (badge) {
+            const totalCount = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+            badge.innerText = totalCount;
+            badge.hidden = totalCount === 0;
         }
+
+        console.log(`Added "${name}" to cart successfully!`);
     };
 
     const ESCAPE_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
