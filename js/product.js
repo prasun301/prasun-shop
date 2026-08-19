@@ -1,30 +1,99 @@
 /**
- * Prasun Shop — Product Details Module (Live CJ Dropshipping API Integration)
- * Performance & Memory Optimized Implementation
+ * ============================================================================
+ * PRASUN SHOP — PRODUCT DETAILS
+ * ============================================================================
+ *
+ * Single product API:
+ *
+ *     /api/products?id=001
+ *
+ * Cart:
+ *
+ *     prasun_cart
+ *
+ * Compatible with cart.js.
+ *
+ * ============================================================================
  */
+
 "use strict";
 
-(function () {
-    const container = document.getElementById("product-detail");
-    if (!container) return;
 
-    const CART_KEY = "prasunShopCart";
-    const API_ENDPOINT = "/api/products";
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get("id");
+(() => {
 
-    // 1. Module-scoped cached Formatter (avoids instantiation on every price format)
-    const currencyFormatter = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD"
-    });
+    /* ========================================================================
+       CONFIG
+       ======================================================================== */
 
-    function formatPrice(price) {
-        const num = Number(price);
-        return Number.isFinite(num) ? currencyFormatter.format(num) : "$0.00";
+    const API_ENDPOINT =
+        "/api/products";
+
+    const CART_KEY =
+        "prasun_cart";
+
+    const CART_EVENT_NAME =
+        "prasunCartUpdated";
+
+    const MAX_QUANTITY =
+        10;
+
+
+    /* ========================================================================
+       DOM
+       ======================================================================== */
+
+    const container =
+        document.getElementById(
+            "product-detail"
+        );
+
+    if (!container) {
+        return;
     }
 
-    // 2. Single-pass HTML Escaping via lookup map (Fixed to safely handle 0 and false)
+
+    const breadcrumb =
+        document.getElementById(
+            "breadcrumb-title"
+        );
+
+    const cartCount =
+        document.getElementById(
+            "cart-count"
+        );
+
+
+    /* ========================================================================
+       CURRENCY
+       ======================================================================== */
+
+    const currencyFormatter =
+        new Intl.NumberFormat(
+            "en-US",
+            {
+                style: "currency",
+                currency: "USD",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        );
+
+
+    function formatPrice(value) {
+
+        const number =
+            Number(value);
+
+        return Number.isFinite(number)
+            ? currencyFormatter.format(number)
+            : "$0.00";
+    }
+
+
+    /* ========================================================================
+       HTML ESCAPING
+       ======================================================================== */
+
     const ESCAPE_MAP = {
         "&": "&amp;",
         "<": "&lt;",
@@ -32,347 +101,1137 @@
         '"': "&quot;",
         "'": "&#039;"
     };
-    const ESCAPE_REGEX = /[&<>"']/g;
 
-    function escapeHTML(str) {
-        if (str === null || str === undefined) return "";
-        return String(str).replace(ESCAPE_REGEX, (match) => ESCAPE_MAP[match]);
+
+    function escapeHTML(value) {
+
+        if (
+            value === null ||
+            value === undefined
+        ) {
+            return "";
+        }
+
+        return String(value)
+            .replace(
+                /[&<>"']/g,
+                character =>
+                    ESCAPE_MAP[character]
+            );
     }
 
-    // 3. In-Memory Cart State (prevents repetitive localStorage parsing on clicks)
-    let cachedCart = null;
 
-    function getCart() {
-        if (cachedCart !== null) return cachedCart;
+    /* ========================================================================
+       FALLBACK IMAGE
+       ======================================================================== */
+
+    const FALLBACK_IMAGE =
+        "data:image/svg+xml;charset=UTF-8," +
+        encodeURIComponent(`
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="600"
+                height="600"
+                viewBox="0 0 600 600"
+            >
+                <rect
+                    width="600"
+                    height="600"
+                    fill="#f4f4f5"
+                />
+
+                <text
+                    x="300"
+                    y="300"
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                    fill="#a1a1aa"
+                    font-family="Arial, sans-serif"
+                    font-size="22"
+                >
+                    Image unavailable
+                </text>
+            </svg>
+        `);
+
+
+    /* ========================================================================
+       CART
+       ======================================================================== */
+
+    function readCart() {
 
         try {
-            const stored = localStorage.getItem(CART_KEY);
+
+            const stored =
+                localStorage.getItem(
+                    CART_KEY
+                );
+
             if (!stored) {
-                cachedCart = [];
-                return cachedCart;
+                return [];
             }
 
-            const parsed = JSON.parse(stored);
-            if (!Array.isArray(parsed)) {
-                cachedCart = [];
-                return cachedCart;
-            }
+            const parsed =
+                JSON.parse(stored);
 
-            const validCart = [];
-            const seenIds = new Set();
+            return Array.isArray(parsed)
+                ? parsed
+                : [];
 
-            for (let i = 0; i < parsed.length; i++) {
-                const item = parsed[i];
-                if (!item || item.id === undefined || item.id === null) continue;
-
-                const idStr = String(item.id);
-                if (seenIds.has(idStr)) continue;
-                seenIds.add(idStr);
-
-                const qty = Number(item.quantity);
-                validCart.push({
-                    id: item.id,
-                    name: String(item.name || "Product"),
-                    price: Number.isFinite(Number(item.price)) ? Number(item.price) : 0,
-                    image: String(item.image || ""),
-                    category: String(item.category || ""),
-                    quantity: Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 1
-                });
-            }
-
-            cachedCart = validCart;
-            return cachedCart;
         } catch (error) {
-            console.error("Error reading cart:", error);
-            cachedCart = [];
-            return cachedCart;
+
+            console.error(
+                "[PRASUN SHOP] Cart read error:",
+                error
+            );
+
+            return [];
         }
     }
 
+
     function saveCart(cart) {
+
         try {
-            localStorage.setItem(CART_KEY, JSON.stringify(cart));
-            cachedCart = cart;
+
+            localStorage.setItem(
+                CART_KEY,
+                JSON.stringify(cart)
+            );
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    CART_EVENT_NAME,
+                    {
+                        detail: {
+                            cart: cart
+                        }
+                    }
+                )
+            );
+
+            updateCartBadge(cart);
+
             return true;
+
         } catch (error) {
-            console.error("Failed to save cart:", error);
+
+            console.error(
+                "[PRASUN SHOP] Cart save error:",
+                error
+            );
+
             return false;
         }
     }
 
-    // 4. Centralized Cart Add Logic
-    function addProductToCart(product, quantityToAdd) {
-        const cart = getCart();
-        const productIdStr = String(product.id);
-        const existing = cart.find((item) => String(item.id) === productIdStr);
 
-        if (existing) {
-            existing.quantity = (Number(existing.quantity) || 1) + quantityToAdd;
-        } else {
-            cart.push({
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                image: product.image,
-                category: product.category,
-                quantity: quantityToAdd
-            });
-        }
+    function updateCartBadge(
+        suppliedCart = null
+    ) {
 
-        if (saveCart(cart)) {
-            if (typeof updateCartCount === "function") {
-                updateCartCount();
-            }
-            return true;
-        }
-        return false;
-    }
-
-    // Button feedback state helper
-    function showButtonFeedback(button, successText) {
-        if (!button) return;
-        const textSpan = button.querySelector("span:not(.w-4)") || button;
-        const originalContent = textSpan.textContent;
-
-        button.disabled = true;
-        button.classList.add("opacity-75");
-        textSpan.textContent = successText;
-
-        setTimeout(() => {
-            textSpan.textContent = originalContent;
-            button.disabled = false;
-            button.classList.remove("opacity-75");
-        }, 1200);
-    }
-
-    // Render Blank State
-    function renderNotFound(message, submessage) {
-        container.innerHTML = `
-            <div class="py-16 text-center">
-                <h2 class="text-xl font-semibold text-zinc-900 mb-2">${escapeHTML(message)}</h2>
-                <p class="text-zinc-500 text-sm font-medium mb-6">${escapeHTML(submessage)}</p>
-                <a href="products.html" class="inline-flex items-center justify-center px-4 py-2.5 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-xl transition-all shadow-xs">
-                    Back to Products
-                </a>
-            </div>
-        `;
-    }
-
-    // Main Fetch & Render Logic via CJ API Backend Proxy
-    async function loadProduct() {
-        if (!productId) {
-            renderNotFound("No Product Specified", "Please select a valid product from the catalog.");
+        if (!cartCount) {
             return;
         }
 
-        try {
-            const response = await fetch(API_ENDPOINT);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const cart =
+            suppliedCart ||
+            readCart();
 
-            const data = await response.json();
-            const rawList = data.data?.list || data.list || data.data || data;
+        const total =
+            cart.reduce(
+                (
+                    sum,
+                    item
+                ) => {
 
-            if (!Array.isArray(rawList)) throw new Error("Invalid format received from API proxy");
+                    const quantity =
+                        Number(
+                            item?.quantity
+                        );
 
-            const productRaw = rawList.find((item) => item && String(item.pid || item.id) === String(productId));
+                    return sum +
+                        (
+                            Number.isFinite(quantity) &&
+                            quantity > 0
+                                ? Math.floor(quantity)
+                                : 1
+                        );
 
-            if (!productRaw) {
-                renderNotFound("Product Not Found", "The live product you're looking for doesn't exist or has been removed.");
-                return;
-            }
+                },
+                0
+            );
 
-            const productName = productRaw.productNameEn || productRaw.productName || productRaw.title || "Untitled Product";
-            const productPrice = Number(productRaw.sellPrice || productRaw.price || 0);
-            const productImage = productRaw.productImage || productRaw.image || "";
-            const productCategory = productRaw.categoryName || productRaw.category || "Smart Product";
-            const productDesc = productRaw.description || productRaw.productDescription || "No detailed product description provided.";
+        cartCount.textContent =
+            String(total);
 
-            const product = {
-                id: productRaw.pid || productRaw.id,
-                name: String(productName),
-                price: Number.isFinite(productPrice) ? productPrice : 0,
-                image: String(productImage),
-                category: String(productCategory),
-                rating: productRaw.rating !== undefined && productRaw.rating !== null ? productRaw.rating : "5.0",
-                sku: productRaw.sku || productRaw.pid || "N/A",
-                description: String(productDesc),
-                features: Array.isArray(productRaw.features) ? productRaw.features : [],
-                specifications: productRaw.specifications && typeof productRaw.specifications === "object" ? productRaw.specifications : {}
-            };
+        cartCount.hidden =
+            total === 0;
 
-            // Pre-build HTML fragments efficiently
-            const featuresHTML = product.features.length
-                ? `
-                    <div class="mt-6 pt-6 border-t border-zinc-200/80">
-                        <h3 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-3">Key Features</h3>
-                        <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-zinc-600">
-                            ${product.features.map((f) => `
-                                <li class="flex items-center gap-2">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-zinc-900 shrink-0"></span>
-                                    <span>${escapeHTML(f)}</span>
-                                </li>
-                            `).join("")}
-                        </ul>
-                    </div>
-                `
-                : "";
+        const cartLink =
+            cartCount.closest("a");
 
-            const specKeys = Object.keys(product.specifications);
-            const specificationsHTML = specKeys.length > 0
-                ? `
-                    <div class="mt-6 pt-6 border-t border-zinc-200/80">
-                        <h3 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-3">Specifications</h3>
-                        <div class="border border-zinc-200/80 rounded-xl overflow-hidden shadow-xs">
-                            <table class="w-full text-left text-xs">
-                                <tbody class="divide-y divide-zinc-200/80 bg-white">
-                                    ${specKeys.map((k) => `
-                                        <tr>
-                                            <td class="px-4 py-3 font-medium text-zinc-500 bg-zinc-50/50 w-1/3">${escapeHTML(k)}</td>
-                                            <td class="px-4 py-3 text-zinc-900">${escapeHTML(product.specifications[k])}</td>
-                                        </tr>
-                                    `).join("")}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `
-                : "";
+        if (cartLink) {
 
-            // Single innerHTML write to update DOM
-            container.innerHTML = `
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
-                    <div class="aspect-square bg-zinc-100 rounded-2xl overflow-hidden border border-zinc-200/80 shadow-xs lg:sticky lg:top-24">
-                        <img 
-                            src="${escapeHTML(product.image)}" 
-                            alt="${escapeHTML(product.name)}"
-                            class="w-full h-full object-cover"
-                            loading="eager"
-                            decoding="async"
-                            onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'400\\' viewBox=\\'0 0 400 400\\'%3E%3Crect width=\\'400\\' height=\\'400\\' fill=\\'%23f4f4f5\\'/%3E%3Ctext x=\\'50%25\\' y=\\'50%25\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' fill=\\'%23a1a1aa\\' font-family=\\'sans-serif\\' font-size=\\'16\\'%3ENo Image%3C/text%3E%3C/svg%3E';"
-                        >
-                    </div>
+            cartLink.setAttribute(
+                "aria-label",
 
-                    <div class="flex flex-col">
-                        <div class="flex items-center justify-between text-xs text-zinc-500 mb-3">
-                            <span class="inline-flex items-center px-2.5 py-1 bg-zinc-100 font-semibold text-zinc-800 rounded-full">
-                                ${escapeHTML(product.category)}
-                            </span>
-                            <span class="flex items-center gap-1 font-medium text-amber-500">
-                                ★ <span class="text-zinc-700">${escapeHTML(product.rating)}</span> / 5.0
-                            </span>
-                        </div>
-
-                        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 mb-3">
-                            ${escapeHTML(product.name)}
-                        </h1>
-
-                        <div class="flex items-center gap-4 text-xs text-zinc-500 mb-6">
-                            <span>SKU: <span class="font-medium text-zinc-700">${escapeHTML(product.sku)}</span></span>
-                            <span class="flex items-center gap-1.5 text-emerald-600 font-medium">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> In Stock
-                            </span>
-                        </div>
-
-                        <div class="text-2xl font-bold text-zinc-900 mb-6 pb-6 border-b border-zinc-200/80">
-                            ${formatPrice(product.price)}
-                        </div>
-
-                        <p class="text-sm text-zinc-600 leading-relaxed mb-6">
-                            ${escapeHTML(product.description)}
-                        </p>
-
-                        <div class="flex items-center gap-4 mb-6">
-                            <label for="product-quantity" class="text-xs font-semibold text-zinc-700 uppercase tracking-wider">Quantity</label>
-                            <div class="inline-flex items-center border border-zinc-200 rounded-xl bg-white shadow-xs">
-                                <button type="button" id="qty-decrement" class="px-3 py-2 text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer" aria-label="Decrease quantity">−</button>
-                                <input type="number" id="product-quantity" value="1" min="1" max="10" class="w-12 text-center text-sm font-semibold text-zinc-900 bg-transparent focus:outline-none" aria-label="Product quantity">
-                                <button type="button" id="qty-increment" class="px-3 py-2 text-zinc-600 hover:text-zinc-900 transition-colors cursor-pointer" aria-label="Increase quantity">+</button>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col sm:flex-row gap-3 pt-2">
-                            <button 
-                                type="button"
-                                id="add-to-cart-btn"
-                                class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-white hover:bg-zinc-50 text-zinc-900 font-semibold rounded-xl text-sm border border-zinc-300 transition-all shadow-xs active:scale-[0.98] cursor-pointer"
-                            >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                                </svg>
-                                <span>Add to Cart</span>
-                            </button>
-                            <button 
-                                type="button"
-                                id="buy-now-btn"
-                                class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold rounded-xl text-sm transition-all shadow-xs active:scale-[0.98] cursor-pointer"
-                            >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                </svg>
-                                <span>Buy Now</span>
-                            </button>
-                        </div>
-
-                        ${featuresHTML}
-                        ${specificationsHTML}
-                    </div>
-                </div>
-            `;
-
-            // 5. Setup single Event Delegation Listener
-            setupEventDelegation(product);
-
-        } catch (error) {
-            console.error("Error loading product details:", error);
-            renderNotFound("Failed to load details", "Please check your network or server proxy and refresh to try again.");
+                total > 0
+                    ? `View Shopping Cart, ${total} ${total === 1 ? "item" : "items"}`
+                    : "View Shopping Cart"
+            );
         }
     }
 
-    // 6. Single Event Delegation Listener
-    function setupEventDelegation(product) {
-        container.addEventListener("click", (e) => {
-            const target = e.target.closest("button");
-            if (!target) return;
 
-            const qtyInput = document.getElementById("product-quantity");
-            const getQty = () => {
-                let v = parseInt(qtyInput?.value, 10) || 1;
-                return Math.max(1, Math.min(10, v));
-            };
+    /* ========================================================================
+       ADD TO CART
+       ======================================================================== */
 
-            if (target.id === "qty-decrement") {
-                if (qtyInput) qtyInput.value = Math.max(1, getQty() - 1);
-                return;
-            }
+    function addProductToCart(
+        product,
+        quantity
+    ) {
 
-            if (target.id === "qty-increment") {
-                if (qtyInput) qtyInput.value = Math.min(10, getQty() + 1);
-                return;
-            }
+        const cart =
+            readCart();
 
-            if (target.id === "add-to-cart-btn") {
-                if (addProductToCart(product, getQty())) {
-                    showButtonFeedback(target, "Added ✓");
-                }
-                return;
-            }
+        const id =
+            String(product.id);
 
-            if (target.id === "buy-now-btn") {
-                if (addProductToCart(product, getQty())) {
-                    window.location.href = "cart.html";
-                }
-                return;
-            }
-        });
+        const safeQuantity =
+            Math.max(
+                1,
+                Math.min(
+                    MAX_QUANTITY,
+                    Number(quantity) || 1
+                )
+            );
 
-        // Quantity input boundaries on change
-        container.addEventListener("change", (e) => {
-            if (e.target && e.target.id === "product-quantity") {
-                let val = parseInt(e.target.value, 10) || 1;
-                e.target.value = Math.max(1, Math.min(10, val));
-            }
-        });
+        const existing =
+            cart.find(
+                item =>
+                    String(item.id) === id
+            );
+
+
+        if (existing) {
+
+            existing.quantity =
+                (
+                    Number(existing.quantity) ||
+                    0
+                ) +
+                safeQuantity;
+
+        } else {
+
+            cart.push({
+
+                id: product.id,
+
+                name: product.name,
+
+                price: Number(product.price) || 0,
+
+                image: product.image || "",
+
+                category: product.category || "",
+
+                description:
+                    product.description || "",
+
+                rating:
+                    Number(product.rating) || 5,
+
+                sku:
+                    product.sku || product.id,
+
+                quantity:
+                    safeQuantity
+
+            });
+        }
+
+
+        return saveCart(cart);
     }
 
+
+    /* ========================================================================
+       BUTTON FEEDBACK
+       ======================================================================== */
+
+    function buttonFeedback(
+        button,
+        text
+    ) {
+
+        if (!button) {
+            return;
+        }
+
+        const span =
+            button.querySelector(
+                "span"
+            );
+
+        const originalText =
+            span
+                ? span.textContent
+                : button.textContent;
+
+        button.disabled = true;
+
+        if (span) {
+            span.textContent = text;
+        } else {
+            button.textContent = text;
+        }
+
+        window.setTimeout(
+            () => {
+
+                if (span) {
+                    span.textContent =
+                        originalText;
+                } else {
+                    button.textContent =
+                        originalText;
+                }
+
+                button.disabled = false;
+
+            },
+            1200
+        );
+    }
+
+
+    /* ========================================================================
+       ERROR STATE
+       ======================================================================== */
+
+    function renderError(
+        title,
+        message
+    ) {
+
+        container.innerHTML = `
+
+            <div class="product-error">
+
+                <h2>
+                    ${escapeHTML(title)}
+                </h2>
+
+                <p>
+                    ${escapeHTML(message)}
+                </p>
+
+                <a
+                    href="products.html"
+                    class="back-button"
+                >
+                    Back to Products
+                </a>
+
+            </div>
+
+        `;
+    }
+
+
+    /* ========================================================================
+       LOADING STATE
+       ======================================================================== */
+
+    function renderLoading() {
+
+        container.innerHTML = `
+
+            <div class="product-loading">
+
+                <div
+                    class="loading-spinner"
+                    aria-hidden="true"
+                ></div>
+
+                <p>
+                    Loading product details...
+                </p>
+
+            </div>
+
+        `;
+    }
+
+
+    /* ========================================================================
+       GET PRODUCT ID
+       ======================================================================== */
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+    const productId =
+        params.get("id");
+
+
+    /* ========================================================================
+       RENDER FEATURES
+       ======================================================================== */
+
+    function renderFeatures(
+        features
+    ) {
+
+        if (
+            !Array.isArray(features) ||
+            features.length === 0
+        ) {
+            return "";
+        }
+
+        const validFeatures =
+            features
+                .filter(
+                    feature =>
+                        feature !== null &&
+                        feature !== undefined &&
+                        String(feature).trim() !== ""
+                );
+
+        if (!validFeatures.length) {
+            return "";
+        }
+
+        return `
+
+            <section class="product-extra-section">
+
+                <h2 class="product-extra-title">
+                    Key Features
+                </h2>
+
+                <ul class="feature-list">
+
+                    ${validFeatures
+                        .map(
+                            feature => `
+
+                                <li>
+
+                                    <span
+                                        class="feature-dot"
+                                        aria-hidden="true"
+                                    ></span>
+
+                                    <span>
+                                        ${escapeHTML(feature)}
+                                    </span>
+
+                                </li>
+
+                            `
+                        )
+                        .join("")}
+
+                </ul>
+
+            </section>
+
+        `;
+    }
+
+
+    /* ========================================================================
+       RENDER SPECIFICATIONS
+       ======================================================================== */
+
+    function renderSpecifications(
+        specifications
+    ) {
+
+        if (
+            !specifications ||
+            typeof specifications !== "object"
+        ) {
+            return "";
+        }
+
+        const keys =
+            Object.keys(
+                specifications
+            );
+
+        if (!keys.length) {
+            return "";
+        }
+
+        return `
+
+            <section class="product-extra-section">
+
+                <h2 class="product-extra-title">
+                    Specifications
+                </h2>
+
+                <table class="spec-table">
+
+                    <tbody>
+
+                        ${keys
+                            .map(
+                                key => `
+
+                                    <tr>
+
+                                        <td>
+                                            ${escapeHTML(key)}
+                                        </td>
+
+                                        <td>
+                                            ${escapeHTML(
+                                                specifications[key]
+                                            )}
+                                        </td>
+
+                                    </tr>
+
+                                `
+                            )
+                            .join("")}
+
+                    </tbody>
+
+                </table>
+
+            </section>
+
+        `;
+    }
+
+
+    /* ========================================================================
+       RENDER PRODUCT
+       ======================================================================== */
+
+    function renderProduct(
+        product
+    ) {
+
+        const image =
+            product.image ||
+            FALLBACK_IMAGE;
+
+        const rating =
+            Number.isFinite(
+                Number(product.rating)
+            )
+                ? Number(product.rating).toFixed(1)
+                : "5.0";
+
+
+        document.title =
+            `${product.name} — PRASUN SHOP`;
+
+
+        if (breadcrumb) {
+
+            breadcrumb.textContent =
+                product.name;
+        }
+
+
+        container.innerHTML = `
+
+            <div class="product-grid">
+
+
+                <!-- ========================================================
+                     PRODUCT IMAGE
+                     ======================================================== -->
+
+                <div class="product-image-container">
+
+                    <img
+                        id="product-main-image"
+                        src="${escapeHTML(image)}"
+                        alt="${escapeHTML(product.name)}"
+                        loading="eager"
+                        decoding="async"
+                    >
+
+                </div>
+
+
+                <!-- ========================================================
+                     PRODUCT DETAILS
+                     ======================================================== -->
+
+                <div class="product-details">
+
+
+                    <div class="product-category-row">
+
+                        <span class="product-category">
+                            ${escapeHTML(
+                                product.category ||
+                                "Product"
+                            )}
+                        </span>
+
+
+                        <span class="product-rating">
+
+                            <span class="product-rating-star">
+                                ★
+                            </span>
+
+                            ${escapeHTML(rating)}
+                            / 5.0
+
+                        </span>
+
+                    </div>
+
+
+                    <h1 class="product-title">
+                        ${escapeHTML(product.name)}
+                    </h1>
+
+
+                    <div class="product-meta">
+
+                        <span>
+                            SKU:
+                            <strong>
+                                ${escapeHTML(
+                                    product.sku ||
+                                    product.id
+                                )}
+                            </strong>
+                        </span>
+
+
+                        <span class="product-stock">
+
+                            <span
+                                class="stock-dot"
+                                aria-hidden="true"
+                            ></span>
+
+                            In Stock
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="product-price">
+
+                        ${formatPrice(
+                            product.price
+                        )}
+
+                    </div>
+
+
+                    <p class="product-description">
+
+                        ${escapeHTML(
+                            product.description ||
+                            "No detailed product description provided."
+                        )}
+
+                    </p>
+
+
+                    <!-- ====================================================
+                         QUANTITY
+                         ==================================================== -->
+
+                    <div class="quantity-row">
+
+                        <label
+                            class="quantity-label"
+                            for="product-quantity"
+                        >
+                            Quantity
+                        </label>
+
+
+                        <div
+                            class="quantity-control"
+                            role="group"
+                            aria-label="Product quantity"
+                        >
+
+                            <button
+                                type="button"
+                                id="qty-decrement"
+                                aria-label="Decrease quantity"
+                            >
+                                −
+                            </button>
+
+
+                            <input
+                                id="product-quantity"
+                                type="number"
+                                min="1"
+                                max="${MAX_QUANTITY}"
+                                step="1"
+                                value="1"
+                                inputmode="numeric"
+                                aria-label="Product quantity"
+                            >
+
+
+                            <button
+                                type="button"
+                                id="qty-increment"
+                                aria-label="Increase quantity"
+                            >
+                                +
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ====================================================
+                         ACTION BUTTONS
+                         ==================================================== -->
+
+                    <div class="button-group">
+
+                        <button
+                            type="button"
+                            id="add-to-cart-btn"
+                            class="product-button product-button-secondary"
+                        >
+
+                            <svg
+                                width="17"
+                                height="17"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+
+                                <circle
+                                    cx="9"
+                                    cy="21"
+                                    r="1"
+                                ></circle>
+
+                                <circle
+                                    cx="20"
+                                    cy="21"
+                                    r="1"
+                                ></circle>
+
+                                <path
+                                    d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
+                                ></path>
+
+                            </svg>
+
+
+                            <span>
+                                Add to Cart
+                            </span>
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            id="buy-now-btn"
+                            class="product-button product-button-primary"
+                        >
+
+                            <svg
+                                width="17"
+                                height="17"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+
+                                <path
+                                    d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"
+                                ></path>
+
+                            </svg>
+
+
+                            <span>
+                                Buy Now
+                            </span>
+
+                        </button>
+
+                    </div>
+
+
+                    ${renderFeatures(
+                        product.features
+                    )}
+
+
+                    ${renderSpecifications(
+                        product.specifications
+                    )}
+
+                </div>
+
+            </div>
+
+        `;
+
+
+        /* ================================================================
+           IMAGE FALLBACK
+           ================================================================ */
+
+        const imageElement =
+            document.getElementById(
+                "product-main-image"
+            );
+
+        if (imageElement) {
+
+            imageElement.addEventListener(
+                "error",
+                () => {
+
+                    if (
+                        imageElement.dataset.fallbackApplied
+                    ) {
+                        return;
+                    }
+
+                    imageElement.dataset.fallbackApplied =
+                        "true";
+
+                    imageElement.src =
+                        FALLBACK_IMAGE;
+
+                }
+            );
+        }
+
+
+        /* ================================================================
+           BUTTONS
+           ================================================================ */
+
+        const quantityInput =
+            document.getElementById(
+                "product-quantity"
+            );
+
+        const decrementButton =
+            document.getElementById(
+                "qty-decrement"
+            );
+
+        const incrementButton =
+            document.getElementById(
+                "qty-increment"
+            );
+
+        const addButton =
+            document.getElementById(
+                "add-to-cart-btn"
+            );
+
+        const buyButton =
+            document.getElementById(
+                "buy-now-btn"
+            );
+
+
+        function getQuantity() {
+
+            if (!quantityInput) {
+                return 1;
+            }
+
+            let quantity =
+                parseInt(
+                    quantityInput.value,
+                    10
+                );
+
+            if (
+                !Number.isFinite(quantity)
+            ) {
+                quantity = 1;
+            }
+
+            quantity =
+                Math.max(
+                    1,
+                    Math.min(
+                        MAX_QUANTITY,
+                        quantity
+                    )
+                );
+
+            quantityInput.value =
+                String(quantity);
+
+            return quantity;
+        }
+
+
+        if (decrementButton) {
+
+            decrementButton.addEventListener(
+                "click",
+                () => {
+
+                    const current =
+                        getQuantity();
+
+                    quantityInput.value =
+                        String(
+                            Math.max(
+                                1,
+                                current - 1
+                            )
+                        );
+                }
+            );
+        }
+
+
+        if (incrementButton) {
+
+            incrementButton.addEventListener(
+                "click",
+                () => {
+
+                    const current =
+                        getQuantity();
+
+                    quantityInput.value =
+                        String(
+                            Math.min(
+                                MAX_QUANTITY,
+                                current + 1
+                            )
+                        );
+                }
+            );
+        }
+
+
+        if (quantityInput) {
+
+            quantityInput.addEventListener(
+                "change",
+                getQuantity
+            );
+
+            quantityInput.addEventListener(
+                "blur",
+                getQuantity
+            );
+        }
+
+
+        /* ================================================================
+           ADD TO CART
+           ================================================================ */
+
+        if (addButton) {
+
+            addButton.addEventListener(
+                "click",
+                () => {
+
+                    const quantity =
+                        getQuantity();
+
+                    const success =
+                        addProductToCart(
+                            product,
+                            quantity
+                        );
+
+                    if (success) {
+
+                        buttonFeedback(
+                            addButton,
+                            "Added ✓"
+                        );
+                    }
+
+                }
+            );
+        }
+
+
+        /* ================================================================
+           BUY NOW
+           ================================================================ */
+
+        if (buyButton) {
+
+            buyButton.addEventListener(
+                "click",
+                () => {
+
+                    const quantity =
+                        getQuantity();
+
+                    const success =
+                        addProductToCart(
+                            product,
+                            quantity
+                        );
+
+                    if (success) {
+
+                        window.location.href =
+                            "cart.html";
+                    }
+
+                }
+            );
+        }
+    }
+
+
+    /* ========================================================================
+       LOAD PRODUCT
+       ======================================================================== */
+
+    async function loadProduct() {
+
+        updateCartBadge();
+
+
+        if (!productId) {
+
+            renderError(
+                "No Product Selected",
+                "Please return to the shop and select a valid product."
+            );
+
+            return;
+        }
+
+
+        renderLoading();
+
+
+        try {
+
+            const url =
+                `${API_ENDPOINT}?id=${encodeURIComponent(productId)}`;
+
+
+            const response =
+                await fetch(
+                    url,
+                    {
+                        method: "GET",
+
+                        headers: {
+                            "Accept":
+                                "application/json"
+                        },
+
+                        cache: "no-store"
+                    }
+                );
+
+
+            let data = null;
+
+            try {
+
+                data =
+                    await response.json();
+
+            } catch (jsonError) {
+
+                throw new Error(
+                    "The server returned an invalid JSON response."
+                );
+            }
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data?.error ||
+                    `HTTP ${response.status}`
+                );
+            }
+
+
+            const product =
+                data?.product ||
+                data?.data ||
+                null;
+
+
+            if (
+                !product ||
+                !product.id
+            ) {
+
+                throw new Error(
+                    "Product data was not found."
+                );
+            }
+
+
+            renderProduct(
+                product
+            );
+
+        } catch (error) {
+
+            console.error(
+                "[PRASUN SHOP] Product loading error:",
+                error
+            );
+
+
+            renderError(
+                "Unable to Load Product",
+                "We could not retrieve this product right now. Please return to the shop and try again."
+            );
+        }
+    }
+
+
+    /* ========================================================================
+       INITIALIZATION
+       ======================================================================== */
+
+    updateCartBadge();
+
     loadProduct();
+
 })();
