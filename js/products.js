@@ -1,16 +1,18 @@
 /**
- * products.js - Prasun Shop Catalog & Live Search Manager
+ * products.js - Prasun Shop Catalog & Live CJ Dropshipping API Manager
  */
 (function () {
     "use strict";
 
     const CONFIG = {
         CART_KEY: "prasun_cart_items",
+        API_ENDPOINT: "/api/products", // Connects to your backend server proxying CJ Dropshipping API
         FALLBACK_IMAGE: "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200' viewBox='0 0 300 200'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='14'%3ENo CJ Image Available%3C/text%3E%3C/svg%3E"
     };
 
     let state = {
-        searchTimer: null
+        searchTimer: null,
+        allProducts: []
     };
 
     const DOM = {
@@ -19,15 +21,6 @@
         resultsCount: null,
         cartBadge: null
     };
-
-    // CJ Dropshipping Product Catalog Mock Dataset
-    const mockProductsCatalog = [
-        { pid: "1", productNameEn: "Wireless Bluetooth Headphones", sellPrice: 29.99, description: "High-quality wireless headphones sourced directly from CJ.", productImage: "" },
-        { pid: "2", productNameEn: "Ergonomic Desk Chair", sellPrice: 189.00, description: "Comfortable ergonomic office chair designed for long hours.", productImage: "" },
-        { pid: "3", productNameEn: "Smart Fitness Watch", sellPrice: 45.50, description: "Track your health, step counter, and heart rate seamlessly.", productImage: "" },
-        { pid: "4", productNameEn: "Portable LED Desk Lamp", sellPrice: 19.99, description: "Adjustable brightness touch-control desk lamp.", productImage: "" },
-        { pid: "5", productNameEn: "Stainless Steel Water Bottle", sellPrice: 15.00, description: "Double-walled vacuum insulated thermal bottle.", productImage: "" }
-    ];
 
     function cacheDOM() {
         DOM.productList = document.getElementById("product-list");
@@ -61,29 +54,72 @@
         DOM.cartBadge.style.display = total > 0 ? "inline-block" : "none";
     }
 
-    // Search and Render Catalog Items
-    function loadProducts(keyword = "") {
+    // Fetch Live Products from Backend/CJ Dropshipping API
+    async function fetchLiveCatalog() {
         if (!DOM.productList) return;
 
         if (DOM.resultsCount) {
-            DOM.resultsCount.textContent = "Loading products...";
+            DOM.resultsCount.textContent = "Fetching live products from CJ Dropshipping...";
         }
 
-        setTimeout(() => {
-            const query = keyword.toLowerCase().trim();
-            const filtered = query 
-                ? mockProductsCatalog.filter(p => 
-                    p.productNameEn.toLowerCase().includes(query) || 
-                    p.description.toLowerCase().includes(query)
-                  )
-                : mockProductsCatalog;
-
-            renderProducts(filtered);
-
-            if (DOM.resultsCount) {
-                DOM.resultsCount.textContent = `Showing ${filtered.length} of ${mockProductsCatalog.length} products`;
+        try {
+            const response = await fetch(CONFIG.API_ENDPOINT);
+            if (!response.ok) {
+                throw new Error("Failed to load products from API server.");
             }
-        }, 150);
+
+            const data = await response.json();
+            
+            // Extract array safely depending on your backend response structure
+            const rawList = data.data?.list || data.list || data.data || data;
+
+            if (!Array.isArray(rawList)) {
+                throw new Error("Invalid product data format received.");
+            }
+
+            // Map data accurately to live properties
+            state.allProducts = rawList.map(p => ({
+                pid: p.pid || p.id,
+                productNameEn: p.productNameEn || p.productName || p.title || "Untitled Product",
+                sellPrice: Number(p.sellPrice || p.price || 0),
+                description: p.description || p.productDescription || "No description provided.",
+                productImage: p.productImage || p.image || ""
+            }));
+
+            loadProducts(""); // Render full list initially
+        } catch (error) {
+            console.error("CJ API Error:", error);
+            if (DOM.productList) {
+                DOM.productList.innerHTML = `
+                    <div class="no-results" style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+                        <h3>Catalog Temporarily Unavailable</h3>
+                        <p>Could not fetch live items from CJ Dropshipping. Please check your backend configuration.</p>
+                    </div>
+                `;
+            }
+            if (DOM.resultsCount) {
+                DOM.resultsCount.textContent = "Error loading live products";
+            }
+        }
+    }
+
+    // Filter and Render Catalog Items
+    function loadProducts(keyword = "") {
+        if (!DOM.productList) return;
+
+        const query = keyword.toLowerCase().trim();
+        const filtered = query 
+            ? state.allProducts.filter(p => 
+                p.productNameEn.toLowerCase().includes(query) || 
+                p.description.toLowerCase().includes(query)
+              )
+            : state.allProducts;
+
+        renderProducts(filtered);
+
+        if (DOM.resultsCount) {
+            DOM.resultsCount.textContent = `Showing ${filtered.length} of ${state.allProducts.length} live products`;
+        }
     }
 
     function renderProducts(products) {
@@ -91,9 +127,9 @@
 
         if (!products || products.length === 0) {
             DOM.productList.innerHTML = `
-                <div class="no-results">
+                <div class="no-results" style="grid-column: 1/-1; text-align: center; padding: 3rem;">
                     <h3>No Products Found</h3>
-                    <p>No products match your search criteria. Try a different keyword.</p>
+                    <p>No live products match your search criteria. Try a different keyword.</p>
                 </div>
             `;
             return;
@@ -180,6 +216,6 @@
         cacheDOM();
         updateCartBadge();
         initEvents();
-        loadProducts("");
+        fetchLiveCatalog(); // Triggers real API data fetch on page load
     });
 })();
