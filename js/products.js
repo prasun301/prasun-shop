@@ -4,24 +4,16 @@
  * js/products.js
  * ============================================================================
  *
- * Standalone storefront product manager.
- *
- * DOES NOT REQUIRE script.js
+ * Standalone storefront product manager with Live CJ API Search.
  *
  * Features:
- * - Cloudflare Worker API
- * - Product loading
- * - Product normalization
- * - Search
- * - Category filtering
- * - Sorting
- * - Product rendering
- * - Product images
- * - Add-to-cart integration
- * - Accessibility
- * - Loading / empty / error states
- * - API diagnostics
- * - Retry support
+ * - Direct Cloudflare Worker API search (?q=keyword)
+ * - Input debouncing (400ms)
+ * - Product normalization & fallback images
+ * - Live category pill generation
+ * - Client-side sorting (Price, Rating, Name)
+ * - Add-to-cart integration (window.addToCart & custom events)
+ * - Screen-reader live region accessibility
  * ============================================================================
  */
 
@@ -47,7 +39,10 @@
       "/product.html",
 
     REQUEST_TIMEOUT:
-      20000
+      20000,
+
+    DEBOUNCE_DELAY:
+      400
   };
 
 
@@ -70,7 +65,7 @@
 
 
   /* ==========================================================================
-     3. DOM
+     3. DOM & TIMERS
      ========================================================================== */
 
   const elements = {
@@ -83,6 +78,8 @@
     pageHeading: null,
     liveRegion: null
   };
+
+  let searchDebounceTimer = null;
 
 
   /* ==========================================================================
@@ -149,7 +146,12 @@
 
       elements.searchInput.addEventListener(
         "input",
-        handleSearch
+        handleSearchInput
+      );
+
+      elements.searchInput.addEventListener(
+        "keydown",
+        handleSearchKeydown
       );
     }
 
@@ -199,19 +201,37 @@
 
 
   /* ==========================================================================
-     7. SEARCH
+     7. LIVE SEARCH (DEBOUNCED API CALL)
      ========================================================================== */
 
-  function handleSearch(event) {
+  function handleSearchInput(event) {
 
     state.searchQuery =
-      normalizeText(
-        event.target.value
-      );
+      event.target.value.trim();
 
     updateClearSearchButton();
 
-    applyFiltersAndRender();
+    window.clearTimeout(searchDebounceTimer);
+
+    searchDebounceTimer = window.setTimeout(
+      () => {
+        loadProducts(state.searchQuery);
+      },
+      CONFIG.DEBOUNCE_DELAY
+    );
+  }
+
+
+  function handleSearchKeydown(event) {
+
+    if (event.key === "Enter") {
+
+      event.preventDefault();
+
+      window.clearTimeout(searchDebounceTimer);
+
+      loadProducts(state.searchQuery);
+    }
   }
 
 
@@ -228,7 +248,7 @@
 
     updateClearSearchButton();
 
-    applyFiltersAndRender();
+    loadProducts("");
   }
 
 
@@ -244,14 +264,10 @@
 
 
   /* ==========================================================================
-     8. LOAD PRODUCTS
+     8. LOAD PRODUCTS (SERVER-SIDE API SEARCH)
      ========================================================================== */
 
-  async function loadProducts() {
-
-    if (state.loading) {
-      return;
-    }
+  async function loadProducts(query = state.searchQuery) {
 
     state.loading = true;
 
@@ -259,167 +275,96 @@
 
     showLoadingState();
 
-    const apiUrl =
-      `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`;
+    let apiUrl = `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`;
+
+    if (query && query.trim().length > 0) {
+      apiUrl += `?q=${encodeURIComponent(query.trim())}`;
+    }
 
     console.log(
-      "[PRASUN SHOP] Loading products from:",
+      "[PRASUN SHOP] Fetching products from:",
       apiUrl
     );
 
     try {
 
-      const controller =
-        new AbortController();
+      const controller = new AbortController();
 
-      const timeout =
-        window.setTimeout(
-          () => controller.abort(),
-          CONFIG.REQUEST_TIMEOUT
-        );
-
+      const timeout = window.setTimeout(
+        () => controller.abort(),
+        CONFIG.REQUEST_TIMEOUT
+      );
 
       let response;
 
       try {
 
-        response =
-          await fetch(
-            apiUrl,
-            {
-              method: "GET",
-
-              headers: {
-                "Accept":
-                  "application/json"
-              },
-
-              cache: "no-store",
-
-              signal:
-                controller.signal
-            }
-          );
+        response = await fetch(
+          apiUrl,
+          {
+            method: "GET",
+            headers: {
+              "Accept": "application/json"
+            },
+            cache: "no-store",
+            signal: controller.signal
+          }
+        );
 
       } finally {
 
-        window.clearTimeout(
-          timeout
-        );
+        window.clearTimeout(timeout);
       }
 
-
-      const responseText =
-        await response.text();
-
-
-      console.log(
-        "[PRASUN SHOP] API HTTP status:",
-        response.status
-      );
-
+      const responseText = await response.text();
 
       if (!response.ok) {
 
         let errorData = null;
 
         try {
-
-          errorData =
-            JSON.parse(
-              responseText
-            );
-
+          errorData = JSON.parse(responseText);
         } catch {
-
-          errorData =
-            responseText;
+          errorData = responseText;
         }
 
-
-        console.error(
-          "[PRASUN SHOP] API error response:",
-          errorData
-        );
-
-
         throw new Error(
-          getApiErrorMessage(
-            response.status,
-            errorData
-          )
+          getApiErrorMessage(response.status, errorData)
         );
       }
-
 
       let data;
 
       try {
-
-        data =
-          JSON.parse(
-            responseText
-          );
-
+        data = JSON.parse(responseText);
       } catch (jsonError) {
-
-        console.error(
-          "[PRASUN SHOP] Invalid JSON:",
-          responseText
-        );
-
-        throw new Error(
-          "The product server returned invalid JSON."
-        );
+        throw new Error("The product server returned invalid JSON.");
       }
 
+      const rawProducts = extractProducts(data);
 
-      console.log(
-        "[PRASUN SHOP] API response:",
-        data
-      );
+      state.products = rawProducts
+        .map(normalizeProduct)
+        .filter(product => product && product.id);
 
+      state.activeCategory = "all";
 
-      const rawProducts =
-        extractProducts(
-          data
-        );
-
-
-      state.products =
-        rawProducts
-          .map(normalizeProduct)
-          .filter(
-            product =>
-              product &&
-              product.id
-          );
-
-
-      console.log(
-        "[PRASUN SHOP] Products loaded:",
-        state.products.length
-      );
-
-
-      if (
-        state.products.length === 0
-      ) {
+      if (state.products.length === 0) {
 
         renderEmptyState(
-          "No products are currently available."
+          query
+            ? `No products found matching "${escapeHtml(query)}".`
+            : "No products are currently available."
         );
 
         return;
       }
-
 
       renderCategoryPills();
 
       updatePageHeading();
 
       applyFiltersAndRender();
-
 
     } catch (error) {
 
@@ -428,26 +373,15 @@
         error
       );
 
-
       let message =
         error?.message ||
         "Unable to load products. Please try again.";
 
-
-      if (
-        error?.name ===
-        "AbortError"
-      ) {
-
-        message =
-          "The product request timed out. Please try again.";
+      if (error?.name === "AbortError") {
+        message = "The product request timed out. Please try again.";
       }
 
-
-      renderErrorState(
-        message
-      );
-
+      renderErrorState(message);
 
     } finally {
 
@@ -464,115 +398,15 @@
 
   function extractProducts(data) {
 
-    if (!data) {
-      return [];
-    }
+    if (!data) return [];
 
+    if (Array.isArray(data)) return data;
 
-    /* Direct array */
+    if (Array.isArray(data.products)) return data.products;
 
-    if (Array.isArray(data)) {
-      return data;
-    }
+    if (data.data && Array.isArray(data.data.products)) return data.data.products;
 
-
-    /* Normal Worker response */
-
-    if (
-      Array.isArray(
-        data.products
-      )
-    ) {
-
-      return data.products;
-    }
-
-
-    /* data.products */
-
-    if (
-      data.data &&
-      Array.isArray(
-        data.data.products
-      )
-    ) {
-
-      return data.data.products;
-    }
-
-
-    /* data.data */
-
-    if (
-      data.data &&
-      Array.isArray(
-        data.data
-      )
-    ) {
-
-      return data.data;
-    }
-
-
-    /* result.products */
-
-    if (
-      data.result &&
-      Array.isArray(
-        data.result.products
-      )
-    ) {
-
-      return data.result.products;
-    }
-
-
-    /* AliExpress raw response */
-
-    const aliResponse =
-      data.aliexpress_ds_recommend_feed_get_response;
-
-
-    if (
-      aliResponse &&
-      aliResponse.result &&
-      aliResponse.result.products
-    ) {
-
-      const products =
-        aliResponse.result.products;
-
-
-      if (
-        Array.isArray(
-          products.integer
-        )
-      ) {
-
-        return products.integer;
-      }
-
-
-      if (
-        Array.isArray(
-          products.product
-        )
-      ) {
-
-        return products.product;
-      }
-
-
-      if (
-        Array.isArray(
-          products
-        )
-      ) {
-
-        return products;
-      }
-    }
-
+    if (data.data && Array.isArray(data.data)) return data.data;
 
     return [];
   }
@@ -582,53 +416,20 @@
      10. API ERROR MESSAGE
      ========================================================================== */
 
-  function getApiErrorMessage(
-    status,
-    data
-  ) {
+  function getApiErrorMessage(status, data) {
 
-    if (
-      data &&
-      typeof data === "object"
-    ) {
+    if (data && typeof data === "object") {
 
-      if (data.message) {
-        return String(data.message);
-      }
+      if (data.message) return String(data.message);
 
-      if (data.error) {
-        return String(data.error);
-      }
-
-      if (
-        data.details &&
-        typeof data.details === "string"
-      ) {
-
-        return String(
-          data.details
-        );
-      }
+      if (data.error) return String(data.error);
     }
 
+    if (status === 404) return "Products API endpoint was not found.";
 
-    if (status === 404) {
+    if (status === 502) return "The product server returned a 502 error.";
 
-      return "Products API endpoint was not found.";
-    }
-
-
-    if (status === 502) {
-
-      return "The product server returned a 502 error.";
-    }
-
-
-    if (status === 503) {
-
-      return "The product server is temporarily unavailable.";
-    }
-
+    if (status === 503) return "The product server is temporarily unavailable.";
 
     return `Product server error (HTTP ${status}).`;
   }
@@ -638,338 +439,97 @@
      11. NORMALIZE PRODUCT
      ========================================================================== */
 
-  function normalizeProduct(
-    product
-  ) {
+  function normalizeProduct(product) {
 
-    if (
-      !product ||
-      typeof product !== "object"
-    ) {
-
+    if (!product || typeof product !== "object") {
       return null;
     }
 
-
-    const id =
+    const id = String(
       product.id ??
       product.pid ??
-      product.productId ??
-      product.product_id ??
       product.sku ??
-      "";
+      ""
+    );
 
+    if (!id) return null;
 
-    if (!id) {
-      return null;
-    }
-
-
-    const name =
+    const name = String(
       product.name ??
       product.title ??
-      product.productName ??
-      product.product_name ??
-      product.product_title ??
-      "Product";
+      product.productNameEn ??
+      "Product"
+    );
 
+    let price = Number.parseFloat(
+      String(product.price ?? product.sellPrice ?? 0).replace(/[^0-9.-]/g, "")
+    ) || 0;
 
-    const sku =
-      product.sku ??
-      product.SKU ??
-      id;
-
-
-    let price =
-      product.price ??
-      product.salePrice ??
-      product.sale_price ??
-      product.sellPrice ??
-      product.sell_price ??
-      product.target_sale_price ??
-      product.target_original_price ??
-      product.original_price ??
-      0;
-
-
-    if (
-      typeof price === "object" &&
-      price !== null
-    ) {
-
-      price =
-        price.value ??
-        price.amount ??
-        price.price ??
-        0;
-    }
-
-
-    price =
-      Number.parseFloat(
-        String(price)
-          .replace(
-            /[^0-9.-]/g,
-            ""
-          )
-      ) || 0;
-
-
-    const category =
+    const category = String(
       product.category ??
       product.categoryName ??
-      product.category_name ??
-      product.first_level_category_name ??
-      product.second_level_category_name ??
-      "General";
+      "General"
+    );
 
+    const image = getProductImage(product);
 
-    const description =
-      product.description ??
-      product.desc ??
-      product.productDescription ??
-      product.product_description ??
-      "";
-
-
-    const rating =
-      getProductRating(
-        product
-      );
-
-
-    const image =
-      getProductImage(
-        product
-      );
-
-
-    const stock =
-      product.stock ??
-      product.inventory ??
-      product.quantity ??
-      null;
-
+    const rating = getProductRating(product);
 
     return {
-
       ...product,
-
-      id:
-        String(id),
-
-      pid:
-        String(
-          product.pid ??
-          id
-        ),
-
-      sku:
-        String(sku),
-
-      name:
-        String(name),
-
-      title:
-        String(name),
-
-      price:
-        Number(
-          price.toFixed(2)
-        ),
-
-      category:
-        String(category),
-
-      description:
-        String(description),
-
+      id,
+      pid: id,
+      sku: String(product.sku || id),
+      name,
+      title: name,
+      price: Number(price.toFixed(2)),
+      category,
       image,
-
       rating,
-
-      stock
+      product_url: product.product_url || ""
     };
   }
 
 
   /* ==========================================================================
-     12. IMAGE
+     12. IMAGE EXTRACTOR
      ========================================================================== */
 
-  function getProductImage(
-    product
-  ) {
+  function getProductImage(product) {
 
-    const directImages = [
-
+    const candidates = [
       product.image,
-
-      product.imageUrl,
-
-      product.image_url,
-
       product.productImage,
-
-      product.product_image,
-
-      product.product_main_image_url,
-
-      product.mainImage,
-
-      product.main_image,
-
-      product.main_image_url,
-
-      product.image_url_1,
-
-      product.img,
-
-      product.thumbnail
+      product.imageUrl,
+      product.mainImage
     ];
 
+    for (const img of candidates) {
 
-    for (
-      const image of directImages
-    ) {
+      if (typeof img === "string" && img.trim()) {
 
-      if (
-        typeof image === "string" &&
-        image.trim()
-      ) {
-
-        return image.trim();
+        return img.trim();
       }
     }
 
+    if (Array.isArray(product.images) && product.images[0]) {
 
-    const arrays = [
-
-      product.images,
-
-      product.imageList,
-
-      product.image_list,
-
-      product.productImages,
-
-      product.product_images
-    ];
-
-
-    for (
-      const array of arrays
-    ) {
-
-      if (
-        !Array.isArray(array)
-      ) {
-
-        continue;
-      }
-
-
-      for (
-        const item of array
-      ) {
-
-        if (
-          typeof item === "string" &&
-          item.trim()
-        ) {
-
-          return item.trim();
-        }
-
-
-        if (
-          item &&
-          typeof item === "object"
-        ) {
-
-          const image =
-            item.url ??
-            item.image ??
-            item.imageUrl ??
-            item.image_url;
-
-
-          if (
-            typeof image === "string" &&
-            image.trim()
-          ) {
-
-            return image.trim();
-          }
-        }
-      }
+      return String(product.images[0]);
     }
-
 
     return CONFIG.PLACEHOLDER_IMAGE;
   }
 
 
   /* ==========================================================================
-     13. RATING
+     13. RATING EXTRACTOR
      ========================================================================== */
 
-  function getProductRating(
-    product
-  ) {
+  function getProductRating(product) {
 
-    let rating =
-      product.rating ??
-      product.rate ??
-      product.averageRating ??
-      product.average_rating ??
-      product.evaluate_rate ??
-      0;
+    let rating = Number.parseFloat(product.rating) || 4.8;
 
-
-    if (
-      typeof rating === "object" &&
-      rating !== null
-    ) {
-
-      rating =
-        rating.rate ??
-        rating.value ??
-        rating.average ??
-        0;
-    }
-
-
-    rating =
-      Number.parseFloat(
-        String(rating)
-          .replace("%", "")
-      ) || 0;
-
-
-    /*
-     * AliExpress evaluate_rate may be percentage-like.
-     * Example: 80 -> 4.0
-     */
-
-    if (
-      rating > 5
-    ) {
-
-      rating =
-        rating / 20;
-    }
-
-
-    return Number(
-      Math.max(
-        0,
-        Math.min(
-          5,
-          rating
-        )
-      ).toFixed(1)
-    );
+    return Number(Math.max(0, Math.min(5, rating)).toFixed(1));
   }
 
 
@@ -979,82 +539,42 @@
 
   function renderCategoryPills() {
 
-    if (
-      !elements.categoriesNav
-    ) {
+    if (!elements.categoriesNav) return;
 
-      return;
-    }
+    const categories = new Map();
 
+    categories.set("all", "All");
 
-    const categories =
-      new Map();
+    state.products.forEach(product => {
 
+      const label = String(product.category || "General").trim();
 
-    categories.set(
-      "all",
-      "All"
-    );
+      if (!label) return;
 
+      const key = normalizeCategory(label);
 
-    state.products.forEach(
-      product => {
+      if (!categories.has(key)) {
 
-        const label =
-          String(
-            product.category ||
-            "General"
-          ).trim();
-
-
-        if (!label) {
-          return;
-        }
-
-
-        const key =
-          normalizeCategory(
-            label
-          );
-
-
-        if (
-          !categories.has(key)
-        ) {
-
-          categories.set(
-            key,
-            label
-          );
-        }
+        categories.set(key, label);
       }
-    );
+    });
 
+    elements.categoriesNav.innerHTML = Array.from(categories.entries())
+      .map(([key, label]) => {
 
-    elements.categoriesNav.innerHTML =
-      Array.from(
-        categories.entries()
-      )
-      .map(
-        ([key, label]) => {
+        const active = key === state.activeCategory;
 
-          const active =
-            key ===
-            state.activeCategory;
-
-
-          return `
-            <button
-              type="button"
-              class="category-pill${active ? " active" : ""}"
-              data-category="${escapeHtml(key)}"
-              aria-pressed="${active ? "true" : "false"}"
-            >
-              ${escapeHtml(label)}
-            </button>
-          `;
-        }
-      )
+        return `
+          <button
+            type="button"
+            class="category-pill${active ? " active" : ""}"
+            data-category="${escapeHtml(key)}"
+            aria-pressed="${active ? "true" : "false"}"
+          >
+            ${escapeHtml(label)}
+          </button>
+        `;
+      })
       .join("");
   }
 
@@ -1063,66 +583,31 @@
      15. CATEGORY CLICK
      ========================================================================== */
 
-  function handleCategoryClick(
-    event
-  ) {
+  function handleCategoryClick(event) {
 
-    const button =
-      event.target.closest(
-        ".category-pill"
-      );
+    const button = event.target.closest(".category-pill");
 
+    if (!button) return;
 
-    if (!button) {
-      return;
-    }
+    const category = button.dataset.category;
 
+    if (!category) return;
 
-    const category =
-      button.dataset.category;
+    state.activeCategory = category;
 
-
-    if (!category) {
-      return;
-    }
-
-
-    state.activeCategory =
-      category;
-
-
-    if (
-      elements.categoriesNav
-    ) {
+    if (elements.categoriesNav) {
 
       elements.categoriesNav
-        .querySelectorAll(
-          ".category-pill"
-        )
-        .forEach(
-          item => {
+        .querySelectorAll(".category-pill")
+        .forEach(item => {
 
-            const active =
-              item.dataset.category ===
-              state.activeCategory;
+          const active = item.dataset.category === state.activeCategory;
 
+          item.classList.toggle("active", active);
 
-            item.classList.toggle(
-              "active",
-              active
-            );
-
-
-            item.setAttribute(
-              "aria-pressed",
-              active
-                ? "true"
-                : "false"
-            );
-          }
-        );
+          item.setAttribute("aria-pressed", active ? "true" : "false");
+        });
     }
-
 
     updatePageHeading();
 
@@ -1136,118 +621,48 @@
 
   function updatePageHeading() {
 
-    if (
-      !elements.pageHeading
-    ) {
+    if (!elements.pageHeading) return;
+
+    if (state.searchQuery) {
+
+      elements.pageHeading.textContent = `Search: "${state.searchQuery}"`;
 
       return;
     }
 
+    if (state.activeCategory === "all") {
 
-    if (
-      state.activeCategory ===
-      "all"
-    ) {
-
-      elements.pageHeading.textContent =
-        "All Products";
+      elements.pageHeading.textContent = "All Products";
 
       return;
     }
 
+    const product = state.products.find(
+      item => normalizeCategory(item.category) === state.activeCategory
+    );
 
-    const product =
-      state.products.find(
-        item =>
-          normalizeCategory(
-            item.category
-          ) ===
-          state.activeCategory
-      );
-
-
-    elements.pageHeading.textContent =
-      product
-        ? product.category
-        : capitalize(
-            state.activeCategory
-          );
+    elements.pageHeading.textContent = product ? product.category : capitalize(state.activeCategory);
   }
 
 
   /* ==========================================================================
-     17. FILTER + SORT
+     17. FILTER & SORT
      ========================================================================== */
 
   function applyFiltersAndRender() {
 
-    let result =
-      [...state.products];
+    let result = [...state.products];
 
+    if (state.activeCategory !== "all") {
 
-    if (
-      state.activeCategory !==
-      "all"
-    ) {
-
-      result =
-        result.filter(
-          product =>
-            normalizeCategory(
-              product.category
-            ) ===
-            state.activeCategory
-        );
+      result = result.filter(
+        product => normalizeCategory(product.category) === state.activeCategory
+      );
     }
 
+    result.sort(sortProducts);
 
-    if (
-      state.searchQuery
-    ) {
-
-      const query =
-        state.searchQuery;
-
-
-      result =
-        result.filter(
-          product => {
-
-            const text = [
-
-              product.name,
-
-              product.title,
-
-              product.sku,
-
-              product.category,
-
-              product.description
-
-            ]
-            .map(
-              normalizeText
-            )
-            .join(" ");
-
-
-            return text.includes(
-              query
-            );
-          }
-        );
-    }
-
-
-    result.sort(
-      sortProducts
-    );
-
-
-    state.filteredProducts =
-      result;
-
+    state.filteredProducts = result;
 
     renderProductGrid();
 
@@ -1256,184 +671,79 @@
 
 
   /* ==========================================================================
-     18. SORT
+     18. SORTING LOGIC
      ========================================================================== */
 
-  function sortProducts(
-    a,
-    b
-  ) {
+  function sortProducts(a, b) {
 
-    switch (
-      state.sortBy
-    ) {
+    switch (state.sortBy) {
 
       case "price-low":
-
-        return (
-          Number(a.price) -
-          Number(b.price)
-        );
-
+        return Number(a.price) - Number(b.price);
 
       case "price-high":
-
-        return (
-          Number(b.price) -
-          Number(a.price)
-        );
-
+        return Number(b.price) - Number(a.price);
 
       case "rating":
-
-        return (
-          Number(b.rating) -
-          Number(a.rating)
-        );
-
+        return Number(b.rating) - Number(a.rating);
 
       case "name-az":
-
-        return String(
-          a.name
-        ).localeCompare(
-          String(b.name),
-          undefined,
-          {
-            sensitivity:
-              "base"
-          }
-        );
-
+        return String(a.name).localeCompare(String(b.name), undefined, { sensitivity: "base" });
 
       case "featured":
-
       default:
-
         return 0;
     }
   }
 
 
   /* ==========================================================================
-     19. PRODUCT GRID
+     19. PRODUCT GRID RENDER
      ========================================================================== */
 
   function renderProductGrid() {
 
-    if (
-      !elements.productList
-    ) {
+    if (!elements.productList) return;
+
+    if (state.filteredProducts.length === 0) {
+
+      renderEmptyState("No products match the selected category.");
 
       return;
     }
 
-
-    if (
-      state.filteredProducts.length ===
-      0
-    ) {
-
-      renderEmptyState(
-        state.searchQuery
-          ? "No products match your search."
-          : "No products match the selected category."
-      );
-
-      return;
-    }
-
-
-    elements.productList.innerHTML =
-      state.filteredProducts
-        .map(
-          renderProductCard
-        )
-        .join("");
-
+    elements.productList.innerHTML = state.filteredProducts
+      .map(renderProductCard)
+      .join("");
 
     setLoadingState(false);
   }
 
 
   /* ==========================================================================
-     20. PRODUCT CARD
+     20. PRODUCT CARD TEMPLATE
      ========================================================================== */
 
-  function renderProductCard(
-    product
-  ) {
+  function renderProductCard(product) {
 
-    const id =
-      String(product.id);
+    const safeId = escapeHtml(String(product.id));
 
+    const title = escapeHtml(product.name || "Product");
 
-    const safeId =
-      escapeHtml(id);
+    const category = escapeHtml(product.category || "General");
 
+    const image = escapeHtml(product.image || CONFIG.PLACEHOLDER_IMAGE);
 
-    const title =
-      escapeHtml(
-        product.name ||
-        "Product"
-      );
+    const price = formatPrice(product.price);
 
+    const rating = Number(product.rating) || 0;
 
-    const category =
-      escapeHtml(
-        product.category ||
-        "General"
-      );
-
-
-    const image =
-      escapeHtml(
-        product.image ||
-        CONFIG.PLACEHOLDER_IMAGE
-      );
-
-
-    const price =
-      formatPrice(
-        product.price
-      );
-
-
-    const rating =
-      Number(
-        product.rating
-      ) || 0;
-
-
-    const productUrl =
-      `${CONFIG.PRODUCT_PAGE}?id=${encodeURIComponent(id)}`;
-
-
-    const ratingHTML =
-      rating > 0
-        ? `
-          <div
-            class="product-rating"
-            aria-label="Rating ${rating.toFixed(1)} out of 5"
-          >
-            <span aria-hidden="true">★</span>
-            ${rating.toFixed(1)}
-          </div>
-        `
-        : "";
-
+    const productUrl = product.product_url || `${CONFIG.PRODUCT_PAGE}?id=${encodeURIComponent(safeId)}`;
 
     return `
-      <article
-        class="product-card"
-        data-product-id="${safeId}"
-      >
+      <article class="product-card" data-product-id="${safeId}">
 
-        <a
-          class="product-card-image"
-          href="${escapeHtml(productUrl)}"
-          aria-label="View ${title}"
-        >
+        <a class="product-card-image" href="${escapeHtml(productUrl)}" target="_blank" rel="noopener noreferrer">
 
           <img
             src="${image}"
@@ -1445,37 +755,21 @@
 
         </a>
 
-
         <div class="product-card-body">
 
-          <span class="product-category">
-            ${category}
-          </span>
-
+          <span class="product-category">${category}</span>
 
           <h3 class="product-title">
-
-            <a
-              href="${escapeHtml(productUrl)}"
-            >
-              ${title}
-            </a>
-
+            <a href="${escapeHtml(productUrl)}" target="_blank" rel="noopener noreferrer">${title}</a>
           </h3>
 
-
-          ${ratingHTML}
-
+          <div class="product-rating" aria-label="Rating ${rating.toFixed(1)} out of 5">
+            <span aria-hidden="true">★</span> ${rating.toFixed(1)}
+          </div>
 
           <div class="product-card-footer">
 
-            <span
-              class="product-price"
-              aria-label="Price ${escapeHtml(price)}"
-            >
-              ${escapeHtml(price)}
-            </span>
-
+            <span class="product-price">${escapeHtml(price)}</span>
 
             <button
               type="button"
@@ -1496,546 +790,219 @@
 
 
   /* ==========================================================================
-     21. GRID CLICK
+     21. GRID CLICK & ADD TO CART
      ========================================================================== */
 
-  function handleProductGridClick(
-    event
-  ) {
+  function handleProductGridClick(event) {
 
-    const button =
-      event.target.closest(
-        ".add-to-cart-btn"
-      );
+    const button = event.target.closest(".add-to-cart-btn");
 
-
-    if (!button) {
-      return;
-    }
-
+    if (!button) return;
 
     event.preventDefault();
 
     event.stopPropagation();
 
+    const productId = button.dataset.productId;
 
-    const productId =
-      button.dataset.productId;
+    if (!productId) return;
 
-
-    if (!productId) {
-      return;
-    }
-
-
-    addProductToCart(
-      productId,
-      button
-    );
+    addProductToCart(productId, button);
   }
 
 
-  /* ==========================================================================
-     22. ADD TO CART
-     ========================================================================== */
+  function addProductToCart(productId, button) {
 
-  function addProductToCart(
-    productId,
-    button
-  ) {
+    const product = state.products.find(
+      item => String(item.id) === String(productId)
+    );
 
-    const product =
-      state.products.find(
-        item =>
-          String(item.id) ===
-          String(productId)
-      );
+    if (!product) return;
 
+    if (typeof window.addToCart === "function") {
 
-    if (!product) {
-
-      console.error(
-        "[PRASUN SHOP] Product not found:",
-        productId
-      );
-
-      return;
-    }
-
-
-    if (
-      typeof window.addToCart ===
-      "function"
-    ) {
-
-      window.addToCart(
-        product
-      );
+      window.addToCart(product);
 
     } else {
 
       document.dispatchEvent(
-        new CustomEvent(
-          "cart:add",
-          {
-            detail:
-              product
-          }
-        )
+        new CustomEvent("cart:add", { detail: product })
       );
     }
-
 
     if (button) {
 
-      const originalText =
-        button.textContent;
+      const originalText = button.textContent;
 
+      button.disabled = true;
 
-      button.disabled =
-        true;
+      button.textContent = "Added";
 
-      button.textContent =
-        "Added";
+      window.setTimeout(() => {
 
+        button.disabled = false;
 
-      window.setTimeout(
-        () => {
+        button.textContent = originalText;
 
-          button.disabled =
-            false;
-
-          button.textContent =
-            originalText;
-
-        },
-        900
-      );
+      }, 900);
     }
 
-
-    announceToScreenReader(
-      `${product.name} added to cart.`
-    );
+    announceToScreenReader(`${product.name} added to cart.`);
   }
 
 
   /* ==========================================================================
-     23. LOADING
+     22. UI STATES (LOADING, EMPTY, ERROR)
      ========================================================================== */
 
   function showLoadingState() {
 
-    if (
-      !elements.productList
-    ) {
-
-      return;
-    }
-
+    if (!elements.productList) return;
 
     elements.productList.innerHTML = `
-      <div
-        class="product-status-card products-empty"
-        role="status"
-      >
-
-        <div
-          class="spinner"
-          aria-hidden="true"
-        ></div>
-
-        <h3>
-          Loading products...
-        </h3>
-
-        <p>
-          Please wait while products are loaded.
-        </p>
-
+      <div class="product-status-card products-empty" role="status">
+        <div class="spinner" aria-hidden="true"></div>
+        <h3>Loading products...</h3>
+        <p>Please wait while live products are retrieved.</p>
       </div>
     `;
 
-
-    if (
-      elements.resultsCount
-    ) {
-
-      elements.resultsCount.textContent =
-        "Loading products...";
+    if (elements.resultsCount) {
+      elements.resultsCount.textContent = "Searching catalog...";
     }
   }
 
 
-  function setLoadingState(
-    isLoading
-  ) {
+  function setLoadingState(isLoading) {
 
-    if (
-      !elements.productList
-    ) {
+    if (!elements.productList) return;
 
-      return;
-    }
-
-
-    elements.productList.setAttribute(
-      "aria-busy",
-      isLoading
-        ? "true"
-        : "false"
-    );
+    elements.productList.setAttribute("aria-busy", isLoading ? "true" : "false");
   }
 
 
-  /* ==========================================================================
-     24. EMPTY
-     ========================================================================== */
+  function renderEmptyState(message) {
 
-  function renderEmptyState(
-    message
-  ) {
-
-    if (
-      !elements.productList
-    ) {
-
-      return;
-    }
-
+    if (!elements.productList) return;
 
     elements.productList.innerHTML = `
-      <div
-        class="product-status-card products-empty"
-        role="status"
-      >
-
-        <h3>
-          No Products Found
-        </h3>
-
-        <p>
-          ${escapeHtml(message)}
-        </p>
-
+      <div class="product-status-card products-empty" role="status">
+        <h3>No Products Found</h3>
+        <p>${escapeHtml(message)}</p>
       </div>
     `;
 
-
-    if (
-      elements.resultsCount
-    ) {
-
-      elements.resultsCount.textContent =
-        "0 products";
+    if (elements.resultsCount) {
+      elements.resultsCount.textContent = "0 products found";
     }
-
 
     setLoadingState(false);
 
-    announceToScreenReader(
-      message
-    );
+    announceToScreenReader(message);
   }
 
 
-  /* ==========================================================================
-     25. ERROR
-     ========================================================================== */
+  function renderErrorState(message) {
 
-  function renderErrorState(
-    message
-  ) {
-
-    if (
-      !elements.productList
-    ) {
-
-      return;
-    }
-
+    if (!elements.productList) return;
 
     elements.productList.innerHTML = `
-      <div
-        class="product-status-card products-error"
-        role="alert"
-      >
-
-        <h3>
-          Unable to Load Products
-        </h3>
-
-        <p>
-          ${escapeHtml(message)}
-        </p>
-
-        <button
-          type="button"
-          class="button"
-          data-action="retry-products"
-        >
-          Try Again
-        </button>
-
+      <div class="product-status-card products-error" role="alert">
+        <h3>Unable to Load Products</h3>
+        <p>${escapeHtml(message)}</p>
+        <button type="button" class="button" data-action="retry-products">Try Again</button>
       </div>
     `;
 
-
-    if (
-      elements.resultsCount
-    ) {
-
-      elements.resultsCount.textContent =
-        "Unable to load products";
+    if (elements.resultsCount) {
+      elements.resultsCount.textContent = "Unable to load products";
     }
-
 
     setLoadingState(false);
 
-
-    announceToScreenReader(
-      "Unable to load products."
-    );
-
-
-    const retry =
-      elements.productList.querySelector(
-        '[data-action="retry-products"]'
-      );
-
+    const retry = elements.productList.querySelector('[data-action="retry-products"]');
 
     if (retry) {
-
-      retry.addEventListener(
-        "click",
-        loadProducts,
-        {
-          once: true
-        }
-      );
+      retry.addEventListener("click", () => loadProducts(), { once: true });
     }
   }
 
-
-  /* ==========================================================================
-     26. RESULTS COUNT
-     ========================================================================== */
 
   function updateResultsCount() {
 
-    if (
-      !elements.resultsCount
-    ) {
+    if (!elements.resultsCount) return;
 
-      return;
-    }
+    const count = state.filteredProducts.length;
 
+    const text = `${count} ${count === 1 ? "product" : "products"} found`;
 
-    const count =
-      state.filteredProducts.length;
+    elements.resultsCount.textContent = text;
 
-
-    const text =
-      `${count} ${
-        count === 1
-          ? "product"
-          : "products"
-      } found`;
-
-
-    elements.resultsCount.textContent =
-      text;
-
-
-    announceToScreenReader(
-      text
-    );
+    announceToScreenReader(text);
   }
 
 
   /* ==========================================================================
-     27. PRICE
+     23. UTILITIES
      ========================================================================== */
 
-  function formatPrice(
-    amount
-  ) {
+  function formatPrice(amount) {
 
-    const value =
-      Number(amount);
+    const value = Number(amount);
 
+    if (!Number.isFinite(value)) return "$0.00";
 
-    if (
-      !Number.isFinite(value)
-    ) {
-
-      return "$0.00";
-    }
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
+  }
 
 
-    return new Intl.NumberFormat(
-      "en-US",
-      {
-        style:
-          "currency",
+  function normalizeCategory(value) {
 
-        currency:
-          "USD"
-      }
-    ).format(value);
+    return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+  }
+
+
+  function capitalize(value) {
+
+    const text = String(value || "").trim();
+
+    return text ? text.charAt(0).toUpperCase() + text.slice(1) : "";
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+
+  function announceToScreenReader(message) {
+
+    if (!elements.liveRegion) return;
+
+    elements.liveRegion.textContent = "";
+
+    window.setTimeout(() => {
+      elements.liveRegion.textContent = String(message || "");
+    }, 30);
   }
 
 
   /* ==========================================================================
-     28. TEXT
-     ========================================================================== */
-
-  function normalizeText(
-    value
-  ) {
-
-    return String(
-      value ?? ""
-    )
-      .trim()
-      .toLowerCase();
-  }
-
-
-  function normalizeCategory(
-    value
-  ) {
-
-    return normalizeText(
-      value
-    )
-      .replace(
-        /\s+/g,
-        " "
-      );
-  }
-
-
-  function capitalize(
-    value
-  ) {
-
-    const text =
-      String(
-        value || ""
-      ).trim();
-
-
-    if (!text) {
-      return "";
-    }
-
-
-    return (
-      text.charAt(0)
-        .toUpperCase() +
-      text.slice(1)
-    );
-  }
-
-
-  /* ==========================================================================
-     29. ESCAPE
-     ========================================================================== */
-
-  function escapeHtml(
-    value
-  ) {
-
-    return String(
-      value ?? ""
-    )
-      .replace(
-        /&/g,
-        "&amp;"
-      )
-      .replace(
-        /</g,
-        "&lt;"
-      )
-      .replace(
-        />/g,
-        "&gt;"
-      )
-      .replace(
-        /"/g,
-        "&quot;"
-      )
-      .replace(
-        /'/g,
-        "&#039;"
-      );
-  }
-
-
-  /* ==========================================================================
-     30. ACCESSIBILITY
-     ========================================================================== */
-
-  function announceToScreenReader(
-    message
-  ) {
-
-    if (
-      !elements.liveRegion
-    ) {
-
-      return;
-    }
-
-
-    elements.liveRegion.textContent =
-      "";
-
-
-    window.setTimeout(
-      () => {
-
-        elements.liveRegion.textContent =
-          String(
-            message || ""
-          );
-
-      },
-      30
-    );
-  }
-
-
-  /* ==========================================================================
-     31. PUBLIC API
+     24. PUBLIC API
      ========================================================================== */
 
   window.PrasunProducts = {
-
-    reload:
-      loadProducts,
-
-    getProducts:
-      () =>
-        [...state.products],
-
-    getFilteredProducts:
-      () =>
-        [...state.filteredProducts],
-
-    getProductById:
-      id =>
-        state.products.find(
-          product =>
-            String(product.id) ===
-            String(id)
-        ) || null,
-
-    getApiBase:
-      () =>
-        CONFIG.API_BASE
+    reload: loadProducts,
+    getProducts: () => [...state.products],
+    getFilteredProducts: () => [...state.filteredProducts],
+    getProductById: id => state.products.find(product => String(product.id) === String(id)) || null,
+    getApiBase: () => CONFIG.API_BASE
   };
-
 
 })();
