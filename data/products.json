@@ -1,13 +1,14 @@
 [
   {
     "id": "001",
-    "aliexpress_id": "1005007000000001",
-    "sku": "AE-SOLAR-SQUARE-01",
+    "storeSku": "AE-SOLAR-SQUARE-01",
+    "cjSku": "",
+    "cjVid": "",
     "name": "Solar Square Outdoor Lawn & Pathway Light",
     "category": "Solar Lighting",
     "price": 14.99,
     "rating": 4.8,
-    "image": "PASTE_IMAGE_ADDRESS_1",
+    "image": "",
     "description": "Eco-friendly solar-powered square lawn light designed for pathways, gardens, and patios.",
     "features": [
       "Solar powered",
@@ -17,17 +18,20 @@
     "specifications": {
       "Power": "Solar",
       "Application": "Garden / Pathway"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "002",
-    "aliexpress_id": "1005007000000002",
-    "sku": "AE-WATCH-DZ09-02",
+    "storeSku": "AE-WATCH-DZ09-02",
+    "cjSku": "",
+    "cjVid": "",
     "name": "Sports DZ09 Smart Watch Phone with SIM Card Slot",
     "category": "Smart Tech",
     "price": 24.99,
     "rating": 4.7,
-    "image": "PASTE_IMAGE_ADDRESS_2",
+    "image": "",
     "description": "Multifunctional smart watch supporting SIM card calls, fitness tracking, and media playback.",
     "features": [
       "SIM/TF card support",
@@ -37,17 +41,20 @@
     "specifications": {
       "Display": "1.54 inch Touchscreen",
       "Compatibility": "Android & iOS"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "003",
-    "aliexpress_id": "1005007000000003",
-    "sku": "AE-CAM-BULB-03",
+    "storeSku": "AE-CAM-BULB-03",
+    "cjSku": "",
+    "cjVid": "",
     "name": "1080P E27 Light Bulb WiFi Security Camera with 4X Zoom",
     "category": "Security Cameras",
     "price": 29.99,
     "rating": 4.9,
-    "image": "PASTE_IMAGE_ADDRESS_3",
+    "image": "",
     "description": "E27 socket smart security camera featuring 360-degree rotation, night vision, and motion alarms.",
     "features": [
       "E27 socket easy setup",
@@ -57,17 +64,20 @@
     "specifications": {
       "Socket": "E27",
       "Connectivity": "2.4G/5G WiFi"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "004",
-    "aliexpress_id": "1005007000000004",
-    "sku": "AE-SOLAR-WALL-04",
+    "storeSku": "AE-SOLAR-WALL-04",
+    "cjSku": "",
+    "cjVid": "",
     "name": "Outdoor LED Solar Motion Sensor Wall Light",
     "category": "Solar Lighting",
     "price": 16.5,
     "rating": 4.8,
-    "image": "PASTE_IMAGE_ADDRESS_4",
+    "image": "",
     "description": "High-efficiency solar wall lamp featuring PIR motion sensing and durable weatherproofing.",
     "features": [
       "Motion sensor detection",
@@ -77,17 +87,20 @@
     "specifications": {
       "Mounting": "Wall Mount",
       "Sensor Range": "3-5 meters"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "005",
-    "aliexpress_id": "1005007000000005",
-    "sku": "AE-LAPTOP-156-05",
+    "storeSku": "AE-LAPTOP-156-05",
+    "cjSku": "",
+    "cjVid": "",
     "name": "15.6-Inch 14th Gen Core Ultra-Thin Portable Laptop",
     "category": "Laptops & Computers",
     "price": 499.99,
     "rating": 4.9,
-    "image": "PASTE_IMAGE_ADDRESS_5",
+    "image": "",
     "description": "High-performance ultra-thin laptop designed for productivity, office tasks, and multimedia.",
     "features": [
       "15.6 inch FHD screen",
@@ -97,17 +110,20 @@
     "specifications": {
       "Screen Size": "15.6 Inch",
       "OS": "Windows 11 Compatible"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "006",
-    "aliexpress_id": "1005007000000006",
-    "sku": "AE-WIFI-EXTEND-06",
+    "storeSku": "AE-WIFI-EXTEND-06",
+    "cjSku": "",
+    "cjVid": "",
     "name": "High-Speed WiFi Signal Booster & Network Range Extender",
     "category": "Networking",
     "price": 19.99,
     "rating": 4.6,
-    "image": "PASTE_IMAGE_ADDRESS_6",
+    "image": "",
     "description": "Boost wireless signal coverage and eliminate dead zones across homes and offices.",
     "features": [
       "300Mbps/1200Mbps speeds",
@@ -117,17 +133,20 @@
     "specifications": {
       "Coverage": "Up to 1500 sq ft",
       "Plug Type": "US/EU/UK"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "007",
-    "aliexpress_id": "1005007000000007",
-    "sku": "AE-SOLAR-CAM-07",
+    "storeSku": "AE-SOLAR-CAM-07",
+    "cjSku": "",
+    "cjVid": "",
     "name": "Wireless Solar Rechargeable Battery Outdoor Security Camera",
     "category": "Security Cameras",
     "price": 59.99,
     "rating": 4.9,
-    "image": "PASTE_IMAGE_ADDRESS_7",
+    "image": "",
     "description": "100% wire-free outdoor camera powered continuously by an integrated solar charging panel.",
     "features": [
       "Solar rechargeable battery",
@@ -137,17 +156,20 @@
     "specifications": {
       "Resolution": "1080P HD",
       "Power": "Solar Panel + Rechargeable Battery"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "008",
-    "aliexpress_id": "1005007000000008",
-    "sku": "AE-POCKET-CAM-08",
+    "storeSku": "AE-POCKET-CAM-08",
+    "cjSku": "",
+    "cjVid": "",
     "name": "4K HD Anti-Shake Mini Pocket Sports Action Camera",
     "category": "Cameras",
     "price": 45.0,
     "rating": 4.7,
-    "image": "PASTE_IMAGE_ADDRESS_8",
+    "image": "",
     "description": "Compact anti-shake pocket camera ideal for vlogging, travel videos, and sports recording.",
     "features": [
       "4K HD resolution",
@@ -157,17 +179,20 @@
     "specifications": {
       "Video Resolution": "4K",
       "Storage": "MicroSD Support"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "009",
-    "aliexpress_id": "1005007000000009",
-    "sku": "AE-LOWPOWER-CAM-09",
+    "storeSku": "AE-LOWPOWER-CAM-09",
+    "cjSku": "",
+    "cjVid": "",
     "name": "Low-Power Outdoor Solar Surveillance Camera System",
     "category": "Security Cameras",
     "price": 64.99,
     "rating": 4.8,
-    "image": "PASTE_IMAGE_ADDRESS_9",
+    "image": "",
     "description": "Ultra low-power standby solar security camera with remote app viewing and instant alerts.",
     "features": [
       "Low power consumption mode",
@@ -177,17 +202,20 @@
     "specifications": {
       "Connectivity": "WiFi/4G Options",
       "Waterproof": "IP66"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "010",
-    "aliexpress_id": "1005007000000010",
-    "sku": "AE-ACTION-CAM-10",
+    "storeSku": "AE-ACTION-CAM-10",
+    "cjSku": "",
+    "cjVid": "",
     "name": "4K 30FPS Waterproof Outdoor Action Sports & Diving Camera",
     "category": "Cameras",
     "price": 38.99,
     "rating": 4.8,
-    "image": "PASTE_IMAGE_ADDRESS_10",
+    "image": "",
     "description": "Rugged waterproof action camera designed for diving, helmet mounting, and extreme outdoor sports.",
     "features": [
       "4K 30FPS video",
@@ -197,17 +225,20 @@
     "specifications": {
       "Waterproof Depth": "30 meters",
       "FPS": "30FPS at 4K"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "011",
-    "aliexpress_id": "1005007000000011",
-    "sku": "AE-STREET-LIGHT-11",
+    "storeSku": "AE-STREET-LIGHT-11",
+    "cjSku": "",
+    "cjVid": "",
     "name": "Commercial Heavy-Duty Solar Street Light",
     "category": "Solar Lighting",
     "price": 42.5,
     "rating": 4.9,
-    "image": "PASTE_IMAGE_ADDRESS_11",
+    "image": "",
     "description": "Bright wide-area outdoor solar street light suited for driveways, yards, and rural roads.",
     "features": [
       "High lumen brightness",
@@ -217,17 +248,20 @@
     "specifications": {
       "Illumination Area": "Wide Coverage",
       "Control": "Remote & Auto"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "012",
-    "aliexpress_id": "1005007000000012",
-    "sku": "AE-TUNGSTEN-LAMP-12",
+    "storeSku": "AE-TUNGSTEN-LAMP-12",
+    "cjSku": "",
+    "cjVid": "",
     "name": "Outdoor Vintage Tungsten Solar Garden Wall Lamp",
     "category": "Solar Lighting",
     "price": 18.99,
     "rating": 4.7,
-    "image": "PASTE_IMAGE_ADDRESS_12",
+    "image": "",
     "description": "Decorative warm-glow tungsten style solar wall lamp designed for gardens and patio fences.",
     "features": [
       "Warm tungsten bulb effect",
@@ -237,17 +271,20 @@
     "specifications": {
       "Light Tone": "Warm White",
       "Mounting": "Wall Mount"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "013",
-    "aliexpress_id": "1005007000000013",
-    "sku": "AE-STAIR-LIGHT-13",
+    "storeSku": "AE-STAIR-LIGHT-13",
+    "cjSku": "",
+    "cjVid": "",
     "name": "6-LED Solar Stair & Step Outdoor Accent Light",
     "category": "Solar Lighting",
     "price": 12.99,
     "rating": 4.8,
-    "image": "PASTE_IMAGE_ADDRESS_13",
+    "image": "",
     "description": "Compact 6-LED solar step light for stairways, outdoor steps, and deck corners.",
     "features": [
       "6 high-brightness LEDs",
@@ -257,17 +294,20 @@
     "specifications": {
       "LED Count": "6 LEDs",
       "Application": "Stairs / Decks"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "014",
-    "aliexpress_id": "1005007000000014",
-    "sku": "AE-GARDEN-SENSOR-14",
+    "storeSku": "AE-GARDEN-SENSOR-14",
+    "cjSku": "",
+    "cjVid": "",
     "name": "Solar Outdoor Garden Lamp with PIR Sensor",
     "category": "Solar Lighting",
     "price": 21.99,
     "rating": 4.7,
-    "image": "PASTE_IMAGE_ADDRESS_14",
+    "image": "",
     "description": "Reliable outdoor garden sensor light offering multiple brightness levels and energy saving modes.",
     "features": [
       "PIR motion detection",
@@ -277,17 +317,20 @@
     "specifications": {
       "Sensor Angle": "120 Degrees",
       "Power Source": "Solar Panel"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "015",
-    "aliexpress_id": "1005007000000015",
-    "sku": "AE-4IN1-CHARGER-15",
+    "storeSku": "AE-4IN1-CHARGER-15",
+    "cjSku": "",
+    "cjVid": "",
     "name": "4-in-1 Magnetic Wireless Fast Charging Station with Atmosphere Light",
     "category": "Charging & Power",
     "price": 34.99,
     "rating": 4.9,
-    "image": "PASTE_IMAGE_ADDRESS_15",
+    "image": "",
     "description": "All-in-one desk charging dock for iPhone, Apple Watch, AirPods, and built-in ambient lighting.",
     "features": [
       "Simultaneous 4-device charging",
@@ -297,17 +340,20 @@
     "specifications": {
       "Max Output": "15W",
       "Compatibility": "Qi-enabled devices"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "016",
-    "aliexpress_id": "1005007000000016",
-    "sku": "AE-15W-MAGSAFE-16",
+    "storeSku": "AE-15W-MAGSAFE-16",
+    "cjSku": "",
+    "cjVid": "",
     "name": "15W Magnetic Fast Wireless Charger for iPhone Series",
     "category": "Charging & Power",
     "price": 19.99,
     "rating": 4.9,
-    "image": "PASTE_IMAGE_ADDRESS_16",
+    "image": "",
     "description": "Slim magnetic fast charger compatible with iPhone 12 through iPhone 17 series models.",
     "features": [
       "Strong magnetic hold",
@@ -317,17 +363,20 @@
     "specifications": {
       "Charging Power": "15W / 10W / 7.5W / 5W",
       "Connector": "USB-C"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "017",
-    "aliexpress_id": "1005007000000017",
-    "sku": "AE-EARBUDS-SPORT-17",
+    "storeSku": "AE-EARBUDS-SPORT-17",
+    "cjSku": "",
+    "cjVid": "",
     "name": "In-Ear Noise-Canceling Sports Wireless Bluetooth Headset",
     "category": "Audio",
     "price": 27.99,
     "rating": 4.8,
-    "image": "PASTE_IMAGE_ADDRESS_17",
+    "image": "",
     "description": "Ergonomic sports earbud system featuring noise cancellation, deep bass, and sweat protection.",
     "features": [
       "Active Noise Cancellation",
@@ -337,17 +386,20 @@
     "specifications": {
       "Playtime": "5-7 Hours",
       "Bluetooth": "V5.3"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "018",
-    "aliexpress_id": "1005007000000018",
-    "sku": "AE-118LED-SOLAR-18",
+    "storeSku": "AE-118LED-SOLAR-18",
+    "cjSku": "",
+    "cjVid": "",
     "name": "118-LED PIR Motion Sensor Outdoor Solar Light",
     "category": "Solar Lighting",
     "price": 22.5,
     "rating": 4.9,
-    "image": "PASTE_IMAGE_ADDRESS_18",
+    "image": "",
     "description": "Ultra-bright 118 LED solar flood lamp providing wide-angle illumination for gardens and patios.",
     "features": [
       "118 high-power LEDs",
@@ -357,46 +409,54 @@
     "specifications": {
       "LED Count": "118 LEDs",
       "Angle": "270 Degrees"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "019",
-    "aliexpress_id": "1005007000000019",
-    "sku": "AE-FLOOD-LIGHT-19",
+    "storeSku": "AE-FLOOD-LIGHT-19",
+    "cjSku": "",
+    "cjVid": "",
     "name": "High-Output Outdoor Solar Flood Light System",
     "category": "Solar Lighting",
     "price": 39.99,
     "rating": 4.8,
-    "image": "PASTE_IMAGE_ADDRESS_19",
-    "description": "Zero-electricity-cost solar floodlight built for yard, roof, balcony, and garden security.",
+    "image": "",
+    "description": "Solar floodlight designed for yards, roofs, balconies, gardens, and outdoor security.",
     "features": [
-      "Zero electric power consumption",
       "Remote control included",
-      "Heavy-duty waterproof shell"
+      "Heavy-duty waterproof shell",
+      "High-capacity rechargeable battery"
     ],
     "specifications": {
       "Mounting": "Wall/Pole Mount",
       "Battery": "High Capacity Lithium"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   },
   {
     "id": "020",
-    "aliexpress_id": "1005007000000020",
-    "sku": "AE-SOLAR-PANEL-20",
+    "storeSku": "AE-SOLAR-PANEL-20",
+    "cjSku": "",
+    "cjVid": "",
     "name": "13W 5V Portable Flexible USB Outdoor Solar Charger",
     "category": "Portable Power",
     "price": 26.99,
     "rating": 4.7,
-    "image": "PASTE_IMAGE_ADDRESS_20",
+    "image": "",
     "description": "Foldable and flexible USB solar charging board designed for camping, hiking, and phone emergencies.",
     "features": [
-      "13W solar panel efficiency",
+      "13W solar panel",
       "Direct USB charging output",
       "Ultra-lightweight flexible design"
     ],
     "specifications": {
       "Output Voltage": "5V USB",
       "Power": "13W"
-    }
+    },
+    "sourceCountryCode": "CN",
+    "active": true
   }
 ]
