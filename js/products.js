@@ -4,16 +4,15 @@
  * js/products.js
  * ============================================================================
  *
- * Standalone storefront product manager with Live CJ API Search.
+ * Sourced Storefront Product Manager with Live Worker Search API.
  *
  * Features:
- * - Direct Cloudflare Worker API search (?q=keyword)
- * - Strict Active-Only Product Filtering (excludes delisted/removed supplier items)
- * - Internal Storefront Routing (routes directly to /product.html?id=...)
- * - Input debouncing (400ms)
- * - Fallback image handling & dynamic category pills
- * - Client-side sorting (Price, Rating, Name)
- * - Accessible live region updates & add-to-cart integration
+ * - Live backend integration with Cloudflare Worker API (/api/products?q=...)
+ * - Pre-configured targeted categories (Solar Lights, Consumer Electronics, etc.)
+ * - Strict local store routing to prevent external CJ redirects (/product.html?id=...)
+ * - Debounced input handling for smooth search queries (400ms)
+ * - Sorting options (Price, Rating, Name)
+ * - Fallback image handling and accessible screen reader notifications
  * ============================================================================
  */
 
@@ -32,18 +31,27 @@
     PRODUCTS_ENDPOINT:
       "/api/products",
 
-    PLACEHOLDER_IMAGE:
-      "/images/placeholder.webp",
-
     PRODUCT_PAGE:
       "/product.html",
 
+    PLACEHOLDER_IMAGE:
+      "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=500&auto=format&fit=crop",
+
     REQUEST_TIMEOUT:
-      20000,
+      15000,
 
     DEBOUNCE_DELAY:
       400
   };
+
+  /* Preset category mapping for high-demand, active CJ niches */
+  const CATEGORY_MAP = [
+    { label: "All Items", query: "" },
+    { label: "Solar Lights", query: "solar light" },
+    { label: "Consumer Electronics", query: "consumer electronics" },
+    { label: "Wireless Chargers", query: "wireless charger" },
+    { label: "Smart Home", query: "smart home led" }
+  ];
 
 
   /* ==========================================================================
@@ -53,7 +61,7 @@
   const state = {
     products: [],
     filteredProducts: [],
-    activeCategory: "all",
+    activeCategoryQuery: "",
     searchQuery: "",
     sortBy: "featured",
     loading: false
@@ -61,7 +69,7 @@
 
 
   /* ==========================================================================
-     3. DOM & TIMERS
+     3. DOM ELEMENTS & TIMERS
      ========================================================================== */
 
   const elements = {
@@ -87,6 +95,7 @@
   function init() {
     cacheDOMElements();
     bindEvents();
+    renderCategoryPills();
     updateClearSearchButton();
     loadProducts();
   }
@@ -140,7 +149,7 @@
 
 
   /* ==========================================================================
-     7. LIVE SEARCH (DEBOUNCED API CALL)
+     7. LIVE SEARCH & DEBOUNCE
      ========================================================================== */
 
   function handleSearchInput(event) {
@@ -149,6 +158,9 @@
 
     window.clearTimeout(searchDebounceTimer);
     searchDebounceTimer = window.setTimeout(() => {
+      // Direct text search overrides category pill selection
+      state.activeCategoryQuery = "";
+      highlightActiveCategoryPill("");
       loadProducts(state.searchQuery);
     }, CONFIG.DEBOUNCE_DELAY);
   }
@@ -157,6 +169,8 @@
     if (event.key === "Enter") {
       event.preventDefault();
       window.clearTimeout(searchDebounceTimer);
+      state.activeCategoryQuery = "";
+      highlightActiveCategoryPill("");
       loadProducts(state.searchQuery);
     }
   }
@@ -168,7 +182,7 @@
     }
     state.searchQuery = "";
     updateClearSearchButton();
-    loadProducts("");
+    loadProducts(state.activeCategoryQuery || "");
   }
 
   function updateClearSearchButton() {
@@ -178,10 +192,10 @@
 
 
   /* ==========================================================================
-     8. LOAD PRODUCTS (SERVER-SIDE API SEARCH)
+     8. FETCH PRODUCTS FROM CLOUDFLARE WORKER
      ========================================================================== */
 
-  async function loadProducts(query = state.searchQuery) {
+  async function loadProducts(query = state.searchQuery || state.activeCategoryQuery) {
     state.loading = true;
     setLoadingState(true);
     showLoadingState();
@@ -210,45 +224,32 @@
         window.clearTimeout(timeout);
       }
 
-      const responseText = await response.text();
-
       if (!response.ok) {
-        let errorData = null;
-        try { errorData = JSON.parse(responseText); } catch { errorData = responseText; }
-        throw new Error(getApiErrorMessage(response.status, errorData));
+        throw new Error(`Server returned HTTP status ${response.status}`);
       }
 
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (jsonError) {
-        throw new Error("The product server returned invalid JSON.");
-      }
-
+      const data = await response.json();
       const rawProducts = extractProducts(data);
 
-      /* Normalizes & strictly filters for active, sellable products */
+      /* Normalize & sanitize active products */
       state.products = rawProducts
         .map(normalizeProduct)
         .filter(product => product !== null && product.id);
 
-      state.activeCategory = "all";
-
       if (state.products.length === 0) {
         renderEmptyState(
           query
-            ? `No available products found matching "${escapeHtml(query)}".`
-            : "No active products are currently available."
+            ? `No available items found matching "${escapeHtml(query)}".`
+            : "No active products available at the moment."
         );
         return;
       }
 
-      renderCategoryPills();
-      updatePageHeading();
+      updatePageHeading(query);
       applyFiltersAndRender();
 
     } catch (error) {
-      console.error("[PRASUN SHOP] Product loading failed:", error);
+      console.error("[PRASUN SHOP] Product load error:", error);
 
       let message = error?.message || "Unable to load products. Please try again.";
       if (error?.name === "AbortError") {
@@ -264,65 +265,21 @@
 
 
   /* ==========================================================================
-     9. EXTRACT PRODUCTS
+     9. EXTRACT & NORMALIZE PRODUCT PAYLOAD
      ========================================================================== */
 
   function extractProducts(data) {
     if (!data) return [];
     if (Array.isArray(data)) return data;
     if (Array.isArray(data.products)) return data.products;
-    if (data.data && Array.isArray(data.data.products)) return data.data.products;
+    if (data.data && Array.isArray(data.data.list)) return data.data.list;
     if (data.data && Array.isArray(data.data)) return data.data;
     return [];
   }
 
-
-  /* ==========================================================================
-     10. API ERROR MESSAGE
-     ========================================================================== */
-
-  function getApiErrorMessage(status, data) {
-    if (data && typeof data === "object") {
-      if (data.message) return String(data.message);
-      if (data.error) return String(data.error);
-    }
-    if (status === 404) return "Products API endpoint was not found.";
-    if (status === 502) return "The product server returned a 502 error.";
-    if (status === 503) return "The product server is temporarily unavailable.";
-    return `Product server error (HTTP ${status}).`;
-  }
-
-
-  /* ==========================================================================
-     11. NORMALIZE & FILTER ACTIVE PRODUCTS
-     ========================================================================== */
-
   function normalizeProduct(product) {
-    if (!product || typeof product !== "object") {
-      return null;
-    }
+    if (!product || typeof product !== "object") return null;
 
-    /* 1. FILTER INACTIVE / DELISTED SUPPLIER STATUS */
-    const status = String(
-      product.productStatus ??
-      product.status ??
-      product.entryStatus ??
-      product.listingStatus ??
-      ""
-    ).toLowerCase();
-
-    if (
-      status.includes("remove") ||
-      status.includes("delist") ||
-      status.includes("disable") ||
-      status.includes("delete") ||
-      status.includes("off") ||
-      status === "0"
-    ) {
-      return null;
-    }
-
-    /* 2. VALIDATE PRODUCT ID */
     const id = String(
       product.id ??
       product.pid ??
@@ -330,9 +287,6 @@
       ""
     ).trim();
 
-    if (!id) return null;
-
-    /* 3. VALIDATE NAME */
     const name = String(
       product.name ??
       product.title ??
@@ -340,23 +294,16 @@
       ""
     ).trim();
 
-    if (!name) return null;
-
-    /* 4. VALIDATE PRICE (> 0) */
     let price = Number.parseFloat(
       String(product.price ?? product.sellPrice ?? 0).replace(/[^0-9.-]/g, "")
     ) || 0;
 
-    if (price <= 0) return null;
+    // Filter out invalid or missing data
+    if (!id || !name || price <= 0) return null;
 
-    const category = String(
-      product.category ??
-      product.categoryName ??
-      "General"
-    );
-
-    const image = getProductImage(product);
-    const rating = getProductRating(product);
+    const category = String(product.category || "General");
+    const image = product.image || product.productImage || CONFIG.PLACEHOLDER_IMAGE;
+    const rating = Number.parseFloat(product.rating) || 4.8;
 
     return {
       ...product,
@@ -368,150 +315,86 @@
       price: Number(price.toFixed(2)),
       category,
       image,
-      rating
+      rating: Number(Math.max(0, Math.min(5, rating)).toFixed(1))
     };
   }
 
 
   /* ==========================================================================
-     12. IMAGE EXTRACTOR
-     ========================================================================== */
-
-  function getProductImage(product) {
-    const candidates = [
-      product.image,
-      product.productImage,
-      product.imageUrl,
-      product.mainImage
-    ];
-
-    for (const img of candidates) {
-      if (typeof img === "string" && img.trim()) {
-        return img.trim();
-      }
-    }
-
-    if (Array.isArray(product.images) && product.images[0]) {
-      return String(product.images[0]);
-    }
-
-    return CONFIG.PLACEHOLDER_IMAGE;
-  }
-
-
-  /* ==========================================================================
-     13. RATING EXTRACTOR
-     ========================================================================== */
-
-  function getProductRating(product) {
-    let rating = Number.parseFloat(product.rating) || 4.8;
-    return Number(Math.max(0, Math.min(5, rating)).toFixed(1));
-  }
-
-
-  /* ==========================================================================
-     14. CATEGORY PILLS
+     10. CATEGORY PILLS RENDER & HANDLING
      ========================================================================== */
 
   function renderCategoryPills() {
     if (!elements.categoriesNav) return;
 
-    const categories = new Map();
-    categories.set("all", "All");
-
-    state.products.forEach(product => {
-      const label = String(product.category || "General").trim();
-      if (!label) return;
-
-      const key = normalizeCategory(label);
-      if (!categories.has(key)) {
-        categories.set(key, label);
-      }
-    });
-
-    elements.categoriesNav.innerHTML = Array.from(categories.entries())
-      .map(([key, label]) => {
-        const active = key === state.activeCategory;
-        return `
-          <button
-            type="button"
-            class="category-pill${active ? " active" : ""}"
-            data-category="${escapeHtml(key)}"
-            aria-pressed="${active ? "true" : "false"}"
-          >
-            ${escapeHtml(label)}
-          </button>
-        `;
-      })
-      .join("");
+    elements.categoriesNav.innerHTML = CATEGORY_MAP.map(item => {
+      const isActive = item.query === state.activeCategoryQuery;
+      return `
+        <button
+          type="button"
+          class="category-pill${isActive ? " active" : ""}"
+          data-query="${escapeHtml(item.query)}"
+          aria-pressed="${isActive ? "true" : "false"}"
+        >
+          ${escapeHtml(item.label)}
+        </button>
+      `;
+    }).join("");
   }
-
-
-  /* ==========================================================================
-     15. CATEGORY CLICK
-     ========================================================================== */
 
   function handleCategoryClick(event) {
     const button = event.target.closest(".category-pill");
     if (!button) return;
 
-    const category = button.dataset.category;
-    if (!category) return;
+    const query = button.dataset.query ?? "";
+    state.activeCategoryQuery = query;
 
-    state.activeCategory = category;
-
-    if (elements.categoriesNav) {
-      elements.categoriesNav
-        .querySelectorAll(".category-pill")
-        .forEach(item => {
-          const active = item.dataset.category === state.activeCategory;
-          item.classList.toggle("active", active);
-          item.setAttribute("aria-pressed", active ? "true" : "false");
-        });
+    /* Clear standard text search input when picking a category pill */
+    if (elements.searchInput) {
+      elements.searchInput.value = "";
+      state.searchQuery = "";
+      updateClearSearchButton();
     }
 
-    updatePageHeading();
-    applyFiltersAndRender();
+    highlightActiveCategoryPill(query);
+    loadProducts(query);
+  }
+
+  function highlightActiveCategoryPill(activeQuery) {
+    if (!elements.categoriesNav) return;
+
+    elements.categoriesNav
+      .querySelectorAll(".category-pill")
+      .forEach(pill => {
+        const isMatch = pill.dataset.query === activeQuery;
+        pill.classList.toggle("active", isMatch);
+        pill.setAttribute("aria-pressed", isMatch ? "true" : "false");
+      });
   }
 
 
   /* ==========================================================================
-     16. PAGE HEADING
+     11. PAGE HEADING & SORTING
      ========================================================================== */
 
-  function updatePageHeading() {
+  function updatePageHeading(query) {
     if (!elements.pageHeading) return;
 
-    if (state.searchQuery) {
-      elements.pageHeading.textContent = `Search: "${state.searchQuery}"`;
+    if (!query) {
+      elements.pageHeading.textContent = "Featured Products";
       return;
     }
 
-    if (state.activeCategory === "all") {
-      elements.pageHeading.textContent = "All Products";
-      return;
+    const matchedCategory = CATEGORY_MAP.find(cat => cat.query === query);
+    if (matchedCategory && matchedCategory.label !== "All Items") {
+      elements.pageHeading.textContent = matchedCategory.label;
+    } else {
+      elements.pageHeading.textContent = `Search: "${query}"`;
     }
-
-    const product = state.products.find(
-      item => normalizeCategory(item.category) === state.activeCategory
-    );
-
-    elements.pageHeading.textContent = product ? product.category : capitalize(state.activeCategory);
   }
-
-
-  /* ==========================================================================
-     17. FILTER & SORT
-     ========================================================================== */
 
   function applyFiltersAndRender() {
     let result = [...state.products];
-
-    if (state.activeCategory !== "all") {
-      result = result.filter(
-        product => normalizeCategory(product.category) === state.activeCategory
-      );
-    }
 
     result.sort(sortProducts);
     state.filteredProducts = result;
@@ -519,11 +402,6 @@
     renderProductGrid();
     updateResultsCount();
   }
-
-
-  /* ==========================================================================
-     18. SORTING LOGIC
-     ========================================================================== */
 
   function sortProducts(a, b) {
     switch (state.sortBy) {
@@ -543,14 +421,14 @@
 
 
   /* ==========================================================================
-     19. PRODUCT GRID RENDER
+     12. RENDER PRODUCT GRID & CARDS
      ========================================================================== */
 
   function renderProductGrid() {
     if (!elements.productList) return;
 
     if (state.filteredProducts.length === 0) {
-      renderEmptyState("No products match the selected category.");
+      renderEmptyState("No products match your current criteria.");
       return;
     }
 
@@ -561,20 +439,15 @@
     setLoadingState(false);
   }
 
-
-  /* ==========================================================================
-     20. PRODUCT CARD TEMPLATE (INTERNAL STORE ROUTING ONLY)
-     ========================================================================== */
-
   function renderProductCard(product) {
     const safeId = escapeHtml(String(product.id));
     const title = escapeHtml(product.name || "Product");
     const category = escapeHtml(product.category || "General");
     const image = escapeHtml(product.image || CONFIG.PLACEHOLDER_IMAGE);
     const price = formatPrice(product.price);
-    const rating = Number(product.rating) || 0;
+    const rating = Number(product.rating) || 4.8;
 
-    /* Force internal product page routing to prevent external dead links */
+    /* Always route directly to local internal product page */
     const localProductUrl = `${CONFIG.PRODUCT_PAGE}?id=${encodeURIComponent(safeId)}`;
 
     return `
@@ -623,7 +496,7 @@
 
 
   /* ==========================================================================
-     21. GRID CLICK & ADD TO CART
+     13. ADD TO CART HANDLER
      ========================================================================== */
 
   function handleProductGridClick(event) {
@@ -636,57 +509,42 @@
     const productId = button.dataset.productId;
     if (!productId) return;
 
-    addProductToCart(productId, button);
-  }
-
-  function addProductToCart(productId, button) {
-    const product = state.products.find(
-      item => String(item.id) === String(productId)
-    );
-
+    const product = state.products.find(item => String(item.id) === String(productId));
     if (!product) return;
 
     if (typeof window.addToCart === "function") {
       window.addToCart(product);
     } else {
-      document.dispatchEvent(
-        new CustomEvent("cart:add", { detail: product })
-      );
+      document.dispatchEvent(new CustomEvent("cart:add", { detail: product }));
     }
 
-    if (button) {
-      const originalText = button.textContent;
-      button.disabled = true;
-      button.textContent = "Added";
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = "Added!";
 
-      window.setTimeout(() => {
-        button.disabled = false;
-        button.textContent = originalText;
-      }, 900);
-    }
+    window.setTimeout(() => {
+      button.disabled = false;
+      button.textContent = originalText;
+    }, 1000);
 
     announceToScreenReader(`${product.name} added to cart.`);
   }
 
 
   /* ==========================================================================
-     22. UI STATES (LOADING, EMPTY, ERROR)
+     14. UI STATES & HELPERS
      ========================================================================== */
 
   function showLoadingState() {
     if (!elements.productList) return;
-
     elements.productList.innerHTML = `
       <div class="product-status-card products-empty" role="status">
         <div class="spinner" aria-hidden="true"></div>
-        <h3>Loading products...</h3>
-        <p>Please wait while available products are retrieved.</p>
+        <h3>Fetching available products...</h3>
+        <p>Connecting to catalog...</p>
       </div>
     `;
-
-    if (elements.resultsCount) {
-      elements.resultsCount.textContent = "Searching catalog...";
-    }
+    if (elements.resultsCount) elements.resultsCount.textContent = "Loading...";
   }
 
   function setLoadingState(isLoading) {
@@ -696,25 +554,18 @@
 
   function renderEmptyState(message) {
     if (!elements.productList) return;
-
     elements.productList.innerHTML = `
       <div class="product-status-card products-empty" role="status">
         <h3>No Products Found</h3>
         <p>${escapeHtml(message)}</p>
       </div>
     `;
-
-    if (elements.resultsCount) {
-      elements.resultsCount.textContent = "0 products found";
-    }
-
+    if (elements.resultsCount) elements.resultsCount.textContent = "0 products found";
     setLoadingState(false);
-    announceToScreenReader(message);
   }
 
   function renderErrorState(message) {
     if (!elements.productList) return;
-
     elements.productList.innerHTML = `
       <div class="product-status-card products-error" role="alert">
         <h3>Unable to Load Products</h3>
@@ -722,47 +573,25 @@
         <button type="button" class="button" data-action="retry-products">Try Again</button>
       </div>
     `;
-
-    if (elements.resultsCount) {
-      elements.resultsCount.textContent = "Unable to load products";
-    }
-
+    if (elements.resultsCount) elements.resultsCount.textContent = "Error loading products";
     setLoadingState(false);
 
-    const retry = elements.productList.querySelector('[data-action="retry-products"]');
-    if (retry) {
-      retry.addEventListener("click", () => loadProducts(), { once: true });
+    const retryBtn = elements.productList.querySelector('[data-action="retry-products"]');
+    if (retryBtn) {
+      retryBtn.addEventListener("click", () => loadProducts(), { once: true });
     }
   }
 
   function updateResultsCount() {
     if (!elements.resultsCount) return;
-
     const count = state.filteredProducts.length;
-    const text = `${count} ${count === 1 ? "product" : "products"} found`;
-
-    elements.resultsCount.textContent = text;
-    announceToScreenReader(text);
+    elements.resultsCount.textContent = `${count} ${count === 1 ? "product" : "products"} available`;
   }
-
-
-  /* ==========================================================================
-     23. UTILITIES
-     ========================================================================== */
 
   function formatPrice(amount) {
-    const value = Number(amount);
-    if (!Number.isFinite(value)) return "$0.00";
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
-  }
-
-  function normalizeCategory(value) {
-    return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
-  }
-
-  function capitalize(value) {
-    const text = String(value || "").trim();
-    return text ? text.charAt(0).toUpperCase() + text.slice(1) : "";
+    const val = Number(amount);
+    if (!Number.isFinite(val)) return "$0.00";
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(val);
   }
 
   function escapeHtml(value) {
@@ -784,15 +613,14 @@
 
 
   /* ==========================================================================
-     24. PUBLIC API
+     15. EXPOSE GLOBAL API
      ========================================================================== */
 
   window.PrasunProducts = {
     reload: loadProducts,
     getProducts: () => [...state.products],
     getFilteredProducts: () => [...state.filteredProducts],
-    getProductById: id => state.products.find(product => String(product.id) === String(id)) || null,
-    getApiBase: () => CONFIG.API_BASE
+    getProductById: id => state.products.find(p => String(p.id) === String(id)) || null
   };
 
 })();
