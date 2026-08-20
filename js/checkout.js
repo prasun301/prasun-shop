@@ -3,31 +3,39 @@
  * PRASUN SHOP — CHECKOUT
  * ============================================================================
  *
- * SUPPLIER:
+ * CURRENT ARCHITECTURE
+ *
+ * Storefront:
+ *     https://shop.prasunbarua.com
+ *
+ * Worker API:
+ *     GET  /api/products
+ *     GET  /api/products/:id
+ *     GET  /api/health
+ *     POST /api/order
+ *
+ * Supplier:
  *     ALIEXPRESS ONLY
  *
  * IMPORTANT:
  *     - No CJ Dropshipping
  *     - No CJ API
- *     - No CJ payment URL
- *     - No CJ order creation
- *     - No CJ credentials in browser
+ *     - No CJ credentials
+ *     - No supplier credentials in browser
+ *     - Browser only submits the customer order to the Worker
+ *     - Worker validates product information before recording the order
  *
- * FLOW:
+ * CART:
+ *     Canonical localStorage key:
+ *         prasun_cart
  *
- *     Cart
- *       ↓
- *     Checkout
- *       ↓
- *     Customer enters shipping information
- *       ↓
- *     PRASUN SHOP Worker
- *       ↓
- *     Order is recorded
- *       ↓
- *     Customer sees order confirmation
+ * Basic cart item structure:
+ *     {
+ *         id,
+ *         quantity
+ *     }
  *
- * AliExpress supplier fulfillment is handled separately.
+ * Richer cart fields such as SKU and variants are also supported.
  *
  * ============================================================================
  */
@@ -36,99 +44,174 @@
 
 (() => {
 
-    /* ========================================================================
+    /* =========================================================================
        CONFIGURATION
-       ======================================================================== */
+       ========================================================================= */
 
-    const CART_KEY = "prasun_cart";
+    const CONFIG = {
 
-    const LEGACY_KEYS = [
-        "prasunShopCart",
-        "cart",
-        "prasun_cart_items"
-    ];
+        API_BASE:
+            "https://shop.prasunbarua.com",
 
-    const PRODUCTS_ENDPOINT =
-        "https://prasun-shop-api.prasun301.workers.dev/api/products";
+        PRODUCTS_ENDPOINT:
+            "/api/products",
 
-    const ORDER_ENDPOINT =
-        "https://prasun-shop-api.prasun301.workers.dev/api/order";
+        ORDER_ENDPOINT:
+            "/api/order",
 
-    const MAX_QUANTITY = 99;
+        CART_KEY:
+            "prasun_cart",
 
-    const REQUEST_TIMEOUT_MS = 15000;
+        LEGACY_CART_KEYS: [
+            "prasunShopCart",
+            "store_cart",
+            "ae_dropship_cart",
+            "cart",
+            "prasun_cart_items"
+        ],
+
+        MAX_QUANTITY:
+            99,
+
+        REQUEST_TIMEOUT:
+            15000
+
+    };
 
 
-    /* ========================================================================
+    /* =========================================================================
        DOM
-       ======================================================================== */
+       ========================================================================= */
 
-    const checkoutForm =
-        document.getElementById("checkout-form");
+    const elements = {
 
-    const orderSummary =
-        document.getElementById("order-summary");
+        checkoutForm:
+            document.getElementById(
+                "checkout-form"
+            ),
 
-    const checkoutError =
-        document.getElementById("checkout-error");
+        orderSummary:
+            document.getElementById(
+                "order-summary"
+            ),
 
-    const checkoutSuccess =
-        document.getElementById("checkout-success");
+        checkoutError:
+            document.getElementById(
+                "checkout-error"
+            ),
 
-    const checkoutStatus =
-        document.getElementById("checkout-status");
+        checkoutSuccess:
+            document.getElementById(
+                "checkout-success"
+            ),
 
-    const checkoutLayout =
-        document.getElementById("checkout-layout");
+        checkoutStatus:
+            document.getElementById(
+                "checkout-status"
+            ),
 
-    const placeOrderButton =
-        document.getElementById("place-order-button");
+        checkoutLayout:
+            document.getElementById(
+                "checkout-layout"
+            ),
 
-    const orderConfirmation =
-        document.getElementById("order-confirmation");
+        placeOrderButton:
+            document.getElementById(
+                "place-order-button"
+            ),
 
-    const confirmationOrderNumber =
-        document.getElementById(
-            "confirmation-order-number"
-        );
+        orderConfirmation:
+            document.getElementById(
+                "order-confirmation"
+            ),
+
+        confirmationOrderNumber:
+            document.getElementById(
+                "confirmation-order-number"
+            ),
+
+        cartCount:
+            document.getElementById(
+                "cart-count"
+            )
+
+    };
 
 
-    /* ========================================================================
+    /* =========================================================================
+       STATE
+       ========================================================================= */
+
+    let productMap =
+        new Map();
+
+    let productsPromise =
+        null;
+
+
+    /* =========================================================================
        FORMATTERS
-       ======================================================================== */
+       ========================================================================= */
 
     const currencyFormatter =
         new Intl.NumberFormat(
             "en-US",
             {
-                style: "currency",
-                currency: "USD",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                style:
+                    "currency",
+
+                currency:
+                    "USD",
+
+                minimumFractionDigits:
+                    2,
+
+                maximumFractionDigits:
+                    2
             }
         );
 
 
     function formatPrice(value) {
 
-        const number = Number(value);
+        const number =
+            Number(value);
 
-        return Number.isFinite(number)
-            ? currencyFormatter.format(number)
+
+        return Number.isFinite(
+            number
+        )
+
+            ? currencyFormatter.format(
+                number
+            )
+
             : "$0.00";
+
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        HTML ESCAPING
-       ======================================================================== */
+       ========================================================================= */
 
     const ESCAPE_MAP = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
+
+        "&":
+            "&amp;",
+
+        "<":
+            "&lt;",
+
+        ">":
+            "&gt;",
+
+        '"':
+            "&quot;",
+
+        "'":
+            "&#039;"
+
     };
 
 
@@ -138,52 +221,83 @@
             value === null ||
             value === undefined
         ) {
+
             return "";
+
         }
 
-        return String(value).replace(
+
+        return String(
+            value
+        ).replace(
             /[&<>"']/g,
             character =>
-                ESCAPE_MAP[character]
+                ESCAPE_MAP[
+                    character
+                ]
         );
+
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        CART
-       ======================================================================== */
+       ========================================================================= */
 
-    function normalizeCartItem(item) {
+    function normalizeCartItem(
+        item
+    ) {
 
         if (
             !item ||
             item.id === undefined ||
             item.id === null
         ) {
+
             return null;
+
         }
 
+
         const quantity =
-            Number(item.quantity);
+            Number(
+                item.quantity
+            );
+
+
+        const normalizedQuantity =
+            Number.isFinite(
+                quantity
+            ) &&
+            quantity > 0
+
+                ? Math.min(
+                    CONFIG.MAX_QUANTITY,
+                    Math.floor(
+                        quantity
+                    )
+                )
+
+                : 1;
+
 
         return {
 
             id:
-                String(item.id),
+                String(
+                    item.id
+                ),
 
             quantity:
-                Number.isFinite(quantity) &&
-                quantity > 0
-                    ? Math.min(
-                        MAX_QUANTITY,
-                        Math.floor(quantity)
-                    )
-                    : 1,
+                normalizedQuantity,
 
             sku:
-                String(item.sku || ""),
+                String(
+                    item.sku ||
+                    ""
+                ),
 
-            aliexpressId:
+            aliexpress_id:
                 String(
                     item.aliexpress_id ||
                     item.aliexpressId ||
@@ -201,28 +315,47 @@
                     item.variantOptions ||
                     ""
                 )
+
         };
+
     }
 
 
-    function parseCart(raw) {
+    function parseCart(
+        raw
+    ) {
 
         if (!raw) {
             return [];
         }
 
+
         try {
 
             const parsed =
-                JSON.parse(raw);
+                JSON.parse(
+                    raw
+                );
 
-            if (!Array.isArray(parsed)) {
+
+            if (
+                !Array.isArray(
+                    parsed
+                )
+            ) {
+
                 return [];
+
             }
 
+
             return parsed
-                .map(normalizeCartItem)
-                .filter(Boolean);
+                .map(
+                    normalizeCartItem
+                )
+                .filter(
+                    Boolean
+                );
 
         } catch (error) {
 
@@ -232,7 +365,9 @@
             );
 
             return [];
+
         }
+
     }
 
 
@@ -240,46 +375,90 @@
 
         try {
 
+            /*
+             * Canonical cart.
+             */
+
             const primary =
                 localStorage.getItem(
-                    CART_KEY
+                    CONFIG.CART_KEY
                 );
+
 
             if (primary) {
 
-                return parseCart(
-                    primary
-                );
+                const cart =
+                    parseCart(
+                        primary
+                    );
+
+
+                if (cart.length) {
+
+                    return cart;
+
+                }
+
             }
 
 
+            /*
+             * Legacy compatibility.
+             */
+
             for (
-                const key of LEGACY_KEYS
+                const key of
+                CONFIG.LEGACY_CART_KEYS
             ) {
 
-                const legacy =
+                if (
+                    key ===
+                    CONFIG.CART_KEY
+                ) {
+
+                    continue;
+
+                }
+
+
+                const raw =
                     localStorage.getItem(
                         key
                     );
 
-                if (!legacy) {
+
+                if (!raw) {
                     continue;
                 }
 
+
                 const cart =
                     parseCart(
-                        legacy
+                        raw
                     );
 
-                if (cart.length) {
+
+                if (
+                    cart.length
+                ) {
+
+                    /*
+                     * Migrate to canonical
+                     * prasun_cart.
+                     */
 
                     localStorage.setItem(
-                        CART_KEY,
-                        JSON.stringify(cart)
+                        CONFIG.CART_KEY,
+                        JSON.stringify(
+                            cart
+                        )
                     );
 
+
                     return cart;
+
                 }
+
             }
 
 
@@ -293,7 +472,9 @@
             );
 
             return [];
+
         }
+
     }
 
 
@@ -302,14 +483,17 @@
         try {
 
             localStorage.removeItem(
-                CART_KEY
+                CONFIG.CART_KEY
             );
 
-            LEGACY_KEYS.forEach(
+
+            CONFIG.LEGACY_CART_KEYS.forEach(
                 key => {
+
                     localStorage.removeItem(
                         key
                     );
+
                 }
             );
 
@@ -319,22 +503,68 @@
                 "[PRASUN SHOP] Cart clear error:",
                 error
             );
+
         }
+
     }
 
 
-    /* ========================================================================
-       PRODUCT CACHE
-       ======================================================================== */
+    /* =========================================================================
+       CART COUNT
+       ========================================================================= */
 
-    let productMap = new Map();
+    function updateCartCount() {
 
-    let productsPromise = null;
+        if (
+            !elements.cartCount
+        ) {
+
+            return;
+
+        }
 
 
-    /* ========================================================================
+        const cart =
+            getCart();
+
+
+        const count =
+            cart.reduce(
+                (
+                    total,
+                    item
+                ) => {
+
+                    return (
+                        total +
+                        Math.max(
+                            1,
+                            Number(
+                                item.quantity
+                            ) || 1
+                        )
+                    );
+
+                },
+                0
+            );
+
+
+        elements.cartCount.textContent =
+            String(
+                count
+            );
+
+
+        elements.cartCount.hidden =
+            count <= 0;
+
+    }
+
+
+    /* =========================================================================
        FETCH WITH TIMEOUT
-       ======================================================================== */
+       ========================================================================= */
 
     async function fetchWithTimeout(
         resource,
@@ -344,33 +574,44 @@
         const controller =
             new AbortController();
 
+
         const timeout =
             Number(
                 options.timeout ||
-                REQUEST_TIMEOUT_MS
+                CONFIG.REQUEST_TIMEOUT
             );
+
 
         const timer =
             setTimeout(
                 () => {
+
                     controller.abort();
+
                 },
                 timeout
             );
 
+
         try {
 
-            const response =
-                await fetch(
-                    resource,
-                    {
-                        ...options,
-                        signal:
-                            controller.signal
-                    }
-                );
+            const fetchOptions =
+                {
+                    ...options
+                };
 
-            return response;
+
+            delete fetchOptions.timeout;
+
+
+            fetchOptions.signal =
+                controller.signal;
+
+
+            return await fetch(
+                resource,
+                fetchOptions
+            );
 
         } catch (error) {
 
@@ -382,30 +623,58 @@
                 throw new Error(
                     "The request timed out. Please check your internet connection and try again."
                 );
+
             }
+
 
             throw error;
 
         } finally {
 
-            clearTimeout(timer);
+            clearTimeout(
+                timer
+            );
+
         }
+
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        LOAD PRODUCTS
-       ======================================================================== */
+       ========================================================================= */
 
     async function fetchProducts() {
 
-        if (productMap.size > 0) {
+        if (
+            productMap.size > 0
+        ) {
+
             return productMap;
+
         }
 
-        if (productsPromise) {
+
+        if (
+            productsPromise
+        ) {
+
             return productsPromise;
+
         }
+
+
+        const endpoint =
+            new URL(
+                CONFIG.PRODUCTS_ENDPOINT,
+                CONFIG.API_BASE
+            );
+
+
+        endpoint.searchParams.set(
+            "limit",
+            "100"
+        );
 
 
         productsPromise =
@@ -413,12 +682,22 @@
 
                 try {
 
+                    console.log(
+                        "[PRASUN SHOP] Loading products:",
+                        endpoint.toString()
+                    );
+
+
                     const response =
                         await fetchWithTimeout(
-                            PRODUCTS_ENDPOINT,
+                            endpoint.toString(),
                             {
-                                method: "GET",
-                                cache: "no-store",
+                                method:
+                                    "GET",
+
+                                cache:
+                                    "no-store",
+
                                 headers: {
                                     Accept:
                                         "application/json"
@@ -427,26 +706,108 @@
                         );
 
 
-                    if (!response.ok) {
+                    const responseText =
+                        await response.text();
+
+
+                    if (
+                        !response.ok
+                    ) {
 
                         throw new Error(
-                            `Products server returned HTTP ${response.status}.`
+                            `Products API returned HTTP ${response.status}.`
                         );
+
                     }
 
 
-                    const data =
-                        await response.json();
+                    if (
+                        !responseText.trim()
+                    ) {
+
+                        throw new Error(
+                            "Products API returned an empty response."
+                        );
+
+                    }
+
+
+                    let data;
+
+
+                    try {
+
+                        data =
+                            JSON.parse(
+                                responseText
+                            );
+
+                    } catch (error) {
+
+                        console.error(
+                            "[PRASUN SHOP] Products API invalid JSON:",
+                            responseText.slice(
+                                0,
+                                500
+                            )
+                        );
+
+                        throw new Error(
+                            "Products API returned invalid JSON."
+                        );
+
+                    }
+
+
+                    /*
+                     * Current Worker format:
+                     *
+                     * {
+                     *     success: true,
+                     *     products: [...]
+                     * }
+                     */
+
+                    if (
+                        data &&
+                        typeof data ===
+                            "object" &&
+                        data.success === false
+                    ) {
+
+                        throw new Error(
+                            data.error ||
+                            "Products API returned success=false."
+                        );
+
+                    }
 
 
                     const products =
-                        Array.isArray(data)
+                        Array.isArray(
+                            data
+                        )
+
                             ? data
+
                             : Array.isArray(
                                 data?.products
                             )
+
                                 ? data.products
+
                                 : [];
+
+
+                    if (
+                        !products.length
+                    ) {
+
+                        throw new Error(
+                            "No products were returned by the Products API."
+                        );
+
+                    }
 
 
                     productMap =
@@ -454,21 +815,39 @@
 
 
                     products
-                        .filter(Boolean)
-                        .forEach(product => {
+                        .filter(
+                            Boolean
+                        )
+                        .forEach(
+                            product => {
 
-                            if (
-                                product.id ===
-                                undefined
-                            ) {
-                                return;
+                                if (
+                                    product.id ===
+                                    undefined ||
+                                    product.id ===
+                                    null
+                                ) {
+
+                                    return;
+
+                                }
+
+
+                                productMap.set(
+                                    String(
+                                        product.id
+                                    ),
+                                    product
+                                );
+
                             }
+                        );
 
-                            productMap.set(
-                                String(product.id),
-                                product
-                            );
-                        });
+
+                    console.log(
+                        "[PRASUN SHOP] Products loaded:",
+                        productMap.size
+                    );
 
 
                     return productMap;
@@ -479,136 +858,206 @@
                         null;
 
                     throw error;
+
                 }
 
             })();
 
 
         return productsPromise;
+
     }
 
 
-    /* ========================================================================
-       ERROR / STATUS UI
-       ======================================================================== */
+    /* =========================================================================
+       UI STATUS
+       ========================================================================= */
 
-    function showError(message) {
+    function showError(
+        message
+    ) {
 
-        if (!checkoutError) {
-            alert(message);
+        if (
+            !elements.checkoutError
+        ) {
+
+            alert(
+                message
+            );
+
             return;
+
         }
 
-        checkoutError.textContent =
+
+        elements.checkoutError.textContent =
             message;
 
-        checkoutError.classList.add(
+
+        elements.checkoutError.classList.add(
             "visible"
         );
 
-        checkoutError.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest"
+
+        elements.checkoutError.scrollIntoView({
+            behavior:
+                "smooth",
+
+            block:
+                "nearest"
         });
+
     }
 
 
     function hideError() {
 
-        if (!checkoutError) {
+        if (
+            !elements.checkoutError
+        ) {
+
             return;
+
         }
 
-        checkoutError.textContent = "";
 
-        checkoutError.classList.remove(
+        elements.checkoutError.textContent =
+            "";
+
+
+        elements.checkoutError.classList.remove(
             "visible"
         );
+
     }
 
 
-    function showSuccess(message) {
+    function showSuccess(
+        message
+    ) {
 
-        if (!checkoutSuccess) {
+        if (
+            !elements.checkoutSuccess
+        ) {
+
             return;
+
         }
 
-        checkoutSuccess.textContent =
+
+        elements.checkoutSuccess.textContent =
             message;
 
-        checkoutSuccess.classList.add(
+
+        elements.checkoutSuccess.classList.add(
             "visible"
         );
+
     }
 
 
     function hideSuccess() {
 
-        if (!checkoutSuccess) {
+        if (
+            !elements.checkoutSuccess
+        ) {
+
             return;
+
         }
 
-        checkoutSuccess.textContent = "";
 
-        checkoutSuccess.classList.remove(
+        elements.checkoutSuccess.textContent =
+            "";
+
+
+        elements.checkoutSuccess.classList.remove(
             "visible"
         );
+
     }
 
 
-    function setStatus(message) {
+    function setStatus(
+        message
+    ) {
 
-        if (!checkoutStatus) {
+        if (
+            !elements.checkoutStatus
+        ) {
+
             return;
+
         }
 
-        checkoutStatus.textContent =
+
+        elements.checkoutStatus.textContent =
             message || "";
+
     }
 
 
-    /* ========================================================================
-       FORM VALIDATION
-       ======================================================================== */
+    /* =========================================================================
+       FORM HELPERS
+       ========================================================================= */
 
-    function getField(id) {
+    function getField(
+        id
+    ) {
 
-        return document.getElementById(id);
+        return document.getElementById(
+            id
+        );
+
     }
 
 
-    function markInvalid(field) {
+    function markInvalid(
+        field
+    ) {
 
         if (!field) {
             return;
         }
+
 
         field.classList.add(
             "invalid"
         );
 
+
         field.setAttribute(
             "aria-invalid",
             "true"
         );
+
     }
 
 
-    function clearInvalid(field) {
+    function clearInvalid(
+        field
+    ) {
 
         if (!field) {
             return;
         }
 
+
         field.classList.remove(
             "invalid"
         );
 
+
         field.removeAttribute(
             "aria-invalid"
         );
+
     }
 
+
+    /* =========================================================================
+       FORM VALIDATION
+       ========================================================================= */
 
     function validateForm() {
 
@@ -662,60 +1111,87 @@
             province,
             city,
             address
-        ].forEach(clearInvalid);
+        ].forEach(
+            clearInvalid
+        );
 
 
         const nameValue =
-            name?.value.trim() || "";
+            name?.value.trim() ||
+            "";
+
 
         const emailValue =
-            email?.value.trim() || "";
+            email?.value.trim() ||
+            "";
+
 
         const phoneValue =
-            phone?.value.trim() || "";
+            phone?.value.trim() ||
+            "";
+
 
         const countryValue =
-            country?.value.trim() || "";
+            country?.value.trim() ||
+            "";
+
 
         const countryCodeValue =
             countryCode?.value
                 .trim()
-                .toUpperCase() || "";
+                .toUpperCase() ||
+            "";
+
 
         const provinceValue =
-            province?.value.trim() || "";
+            province?.value.trim() ||
+            "";
+
 
         const cityValue =
-            city?.value.trim() || "";
+            city?.value.trim() ||
+            "";
+
 
         const addressValue =
-            address?.value.trim() || "";
+            address?.value.trim() ||
+            "";
 
 
-        if (!nameValue) {
+        if (
+            !nameValue
+        ) {
 
-            markInvalid(name);
+            markInvalid(
+                name
+            );
 
             name?.focus();
 
             throw new Error(
                 "Please enter your full name."
             );
+
         }
 
 
         if (
             !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-                .test(emailValue)
+                .test(
+                    emailValue
+                )
         ) {
 
-            markInvalid(email);
+            markInvalid(
+                email
+            );
 
             email?.focus();
 
             throw new Error(
                 "Please enter a valid email address."
             );
+
         }
 
 
@@ -723,76 +1199,104 @@
             phoneValue.length < 5
         ) {
 
-            markInvalid(phone);
+            markInvalid(
+                phone
+            );
 
             phone?.focus();
 
             throw new Error(
                 "Please enter a valid phone number."
             );
+
         }
 
 
-        if (!countryValue) {
+        if (
+            !countryValue
+        ) {
 
-            markInvalid(country);
+            markInvalid(
+                country
+            );
 
             country?.focus();
 
             throw new Error(
                 "Please enter your country."
             );
+
         }
 
 
         if (
             !/^[A-Z]{2}$/
-                .test(countryCodeValue)
+                .test(
+                    countryCodeValue
+                )
         ) {
 
-            markInvalid(countryCode);
+            markInvalid(
+                countryCode
+            );
 
             countryCode?.focus();
 
             throw new Error(
                 "Please enter a valid two-letter country code, such as US."
             );
+
         }
 
 
-        if (!provinceValue) {
+        if (
+            !provinceValue
+        ) {
 
-            markInvalid(province);
+            markInvalid(
+                province
+            );
 
             province?.focus();
 
             throw new Error(
                 "Please enter your state or province."
             );
+
         }
 
 
-        if (!cityValue) {
+        if (
+            !cityValue
+        ) {
 
-            markInvalid(city);
+            markInvalid(
+                city
+            );
 
             city?.focus();
 
             throw new Error(
                 "Please enter your city."
             );
+
         }
 
 
-        if (!addressValue) {
+        if (
+            !addressValue
+        ) {
 
-            markInvalid(address);
+            markInvalid(
+                address
+            );
 
             address?.focus();
 
             throw new Error(
                 "Please enter your shipping address."
             );
+
         }
 
 
@@ -822,12 +1326,14 @@
             zip:
                 getField(
                     "shipping-zip"
-                )?.value.trim() || "",
+                )?.value.trim() ||
+                "",
 
             county:
                 getField(
                     "shipping-county"
-                )?.value.trim() || "",
+                )?.value.trim() ||
+                "",
 
             address:
                 addressValue,
@@ -835,32 +1341,42 @@
             address2:
                 getField(
                     "shipping-address2"
-                )?.value.trim() || "",
+                )?.value.trim() ||
+                "",
 
             remark:
                 getField(
                     "order-note"
-                )?.value.trim() || ""
+                )?.value.trim() ||
+                ""
+
         };
+
     }
 
 
-    /* ========================================================================
-       RENDER EMPTY CART
-       ======================================================================== */
+    /* =========================================================================
+       EMPTY CART
+       ========================================================================= */
 
     function renderEmptySummary() {
 
-        if (!orderSummary) {
+        if (
+            !elements.orderSummary
+        ) {
+
             return;
+
         }
 
-        orderSummary.setAttribute(
+
+        elements.orderSummary.setAttribute(
             "aria-busy",
             "false"
         );
 
-        orderSummary.innerHTML = `
+
+        elements.orderSummary.innerHTML = `
 
             <div class="empty-checkout">
 
@@ -879,21 +1395,36 @@
             </div>
 
         `;
+
+
+        if (
+            elements.placeOrderButton
+        ) {
+
+            elements.placeOrderButton.disabled =
+                true;
+
+        }
+
     }
 
 
-    /* ========================================================================
-       RENDER ORDER SUMMARY
-       ======================================================================== */
+    /* =========================================================================
+       CHECKOUT SUMMARY
+       ========================================================================= */
 
     async function loadCheckoutSummary() {
 
-        if (!orderSummary) {
+        if (
+            !elements.orderSummary
+        ) {
+
             return;
+
         }
 
 
-        orderSummary.setAttribute(
+        elements.orderSummary.setAttribute(
             "aria-busy",
             "true"
         );
@@ -903,16 +1434,14 @@
             getCart();
 
 
-        if (!cart.length) {
+        if (
+            !cart.length
+        ) {
 
             renderEmptySummary();
 
-            if (placeOrderButton) {
-                placeOrderButton.disabled =
-                    true;
-            }
-
             return;
+
         }
 
 
@@ -921,9 +1450,12 @@
             await fetchProducts();
 
 
-            let subtotal = 0;
+            let subtotal =
+                0;
 
-            const validItems = [];
+
+            const validItems =
+                [];
 
 
             for (
@@ -932,17 +1464,23 @@
 
                 const product =
                     productMap.get(
-                        String(item.id)
+                        String(
+                            item.id
+                        )
                     );
 
 
-                if (!product) {
+                if (
+                    !product
+                ) {
+
                     console.warn(
                         "[PRASUN SHOP] Product not found:",
                         item.id
                     );
 
                     continue;
+
                 }
 
 
@@ -953,16 +1491,21 @@
 
 
                 if (
-                    !Number.isFinite(price) ||
+                    !Number.isFinite(
+                        price
+                    ) ||
                     price < 0
                 ) {
+
                     continue;
+
                 }
 
 
                 const quantity =
                     Math.min(
-                        MAX_QUANTITY,
+                        CONFIG.MAX_QUANTITY,
+
                         Math.max(
                             1,
                             Math.floor(
@@ -975,7 +1518,8 @@
 
 
                 const lineTotal =
-                    price * quantity;
+                    price *
+                    quantity;
 
 
                 subtotal +=
@@ -993,38 +1537,41 @@
                     price,
 
                     lineTotal
+
                 });
+
             }
 
 
-            if (!validItems.length) {
+            if (
+                !validItems.length
+            ) {
 
                 renderEmptySummary();
 
-                if (placeOrderButton) {
-                    placeOrderButton.disabled =
-                        true;
-                }
-
                 return;
+
             }
 
 
-            if (placeOrderButton) {
-                placeOrderButton.disabled =
+            if (
+                elements.placeOrderButton
+            ) {
+
+                elements.placeOrderButton.disabled =
                     false;
+
             }
 
 
-            let html = "";
+            let html =
+                "";
 
 
             validItems.forEach(
                 ({
-                    item,
                     product,
                     quantity,
-                    price,
                     lineTotal
                 }) => {
 
@@ -1048,7 +1595,9 @@
 
                             ${
                                 image
+
                                     ? `
+
                                         <img
                                             src="${image}"
                                             alt="${name}"
@@ -1056,12 +1605,16 @@
                                             loading="lazy"
                                             decoding="async"
                                         >
+
                                       `
+
                                     : `
+
                                         <div
                                             class="summary-item-image"
                                             aria-hidden="true"
                                         ></div>
+
                                       `
                             }
 
@@ -1080,14 +1633,17 @@
 
 
                             <div class="summary-item-price">
+
                                 ${formatPrice(
                                     lineTotal
                                 )}
+
                             </div>
 
                         </div>
 
                     `;
+
                 }
             );
 
@@ -1095,6 +1651,7 @@
             html += `
 
                 <div class="summary-row">
+
                     <span>
                         Subtotal
                     </span>
@@ -1104,10 +1661,12 @@
                             subtotal
                         )}
                     </strong>
+
                 </div>
 
 
                 <div class="summary-row">
+
                     <span>
                         Shipping
                     </span>
@@ -1115,10 +1674,12 @@
                     <strong>
                         Calculated after order
                     </strong>
+
                 </div>
 
 
                 <div class="summary-total">
+
                     <span>
                         Store Total
                     </span>
@@ -1128,20 +1689,20 @@
                             subtotal
                         )}
                     </span>
+
                 </div>
 
             `;
 
 
-            orderSummary.innerHTML =
+            elements.orderSummary.innerHTML =
                 html;
 
 
-            orderSummary.setAttribute(
+            elements.orderSummary.setAttribute(
                 "aria-busy",
                 "false"
             );
-
 
         } catch (error) {
 
@@ -1151,13 +1712,13 @@
             );
 
 
-            orderSummary.setAttribute(
+            elements.orderSummary.setAttribute(
                 "aria-busy",
                 "false"
             );
 
 
-            orderSummary.innerHTML = `
+            elements.orderSummary.innerHTML = `
 
                 <div class="empty-checkout">
 
@@ -1168,15 +1729,6 @@
                     <button
                         type="button"
                         id="retry-summary-button"
-                        style="
-                            border:0;
-                            padding:10px 16px;
-                            border-radius:9px;
-                            background:#2563eb;
-                            color:#fff;
-                            font-weight:700;
-                            cursor:pointer;
-                        "
                     >
                         Retry
                     </button>
@@ -1186,25 +1738,27 @@
             `;
 
 
-            const retryButton =
-                document.getElementById(
+            document
+                .getElementById(
                     "retry-summary-button"
+                )
+                ?.addEventListener(
+                    "click",
+                    () => {
+
+                        loadCheckoutSummary();
+
+                    }
                 );
 
-
-            retryButton?.addEventListener(
-                "click",
-                () => {
-                    loadCheckoutSummary();
-                }
-            );
         }
+
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        BUILD ORDER ITEMS
-       ======================================================================== */
+       ========================================================================= */
 
     async function buildOrderItems() {
 
@@ -1215,47 +1769,42 @@
             getCart();
 
 
-        if (!cart.length) {
+        if (
+            !cart.length
+        ) {
 
             throw new Error(
                 "Your cart is empty."
             );
+
         }
 
 
-        const items = [];
+        const items =
+            [];
 
 
         for (
-            const item of cart
+            const cartItem of cart
         ) {
 
             const product =
                 productMap.get(
-                    String(item.id)
-                );
-
-
-            if (!product) {
-
-                throw new Error(
-                    `Product "${item.id}" is no longer available.`
-                );
-            }
-
-
-            const quantity =
-                Math.min(
-                    MAX_QUANTITY,
-                    Math.max(
-                        1,
-                        Math.floor(
-                            Number(
-                                item.quantity
-                            ) || 1
-                        )
+                    String(
+                        cartItem.id
                     )
                 );
+
+
+            if (
+                !product
+            ) {
+
+                throw new Error(
+                    `Product "${cartItem.id}" is no longer available.`
+                );
+
+            }
 
 
             const price =
@@ -1265,24 +1814,45 @@
 
 
             if (
-                !Number.isFinite(price) ||
+                !Number.isFinite(
+                    price
+                ) ||
                 price < 0
             ) {
 
                 throw new Error(
                     `Invalid price for "${product.name}".`
                 );
+
             }
+
+
+            const quantity =
+                Math.min(
+                    CONFIG.MAX_QUANTITY,
+
+                    Math.max(
+                        1,
+                        Math.floor(
+                            Number(
+                                cartItem.quantity
+                            ) || 1
+                        )
+                    )
+                );
 
 
             items.push({
 
                 id:
-                    String(product.id),
+                    String(
+                        product.id
+                    ),
 
                 sku:
                     String(
                         product.sku ||
+                        cartItem.sku ||
                         ""
                     ),
 
@@ -1290,7 +1860,7 @@
                     String(
                         product.aliexpress_id ||
                         product.aliexpressId ||
-                        item.aliexpressId ||
+                        cartItem.aliexpress_id ||
                         ""
                     ),
 
@@ -1300,9 +1870,11 @@
                         "Product"
                     ),
 
-                price,
+                price:
+                    price,
 
-                quantity,
+                quantity:
+                    quantity,
 
                 image:
                     String(
@@ -1312,47 +1884,69 @@
 
                 variantSku:
                     String(
-                        item.variantSku ||
+                        cartItem.variantSku ||
                         ""
                     ),
 
                 variantOptions:
                     String(
-                        item.variantOptions ||
+                        cartItem.variantOptions ||
                         ""
                     )
+
             });
+
         }
 
 
-        if (!items.length) {
+        if (
+            !items.length
+        ) {
 
             throw new Error(
                 "No valid products were found in your cart."
             );
+
         }
 
 
         return items;
+
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        SUBMIT ORDER
-       ======================================================================== */
+       ========================================================================= */
 
     async function submitOrder() {
 
         hideError();
+
         hideSuccess();
-        setStatus("");
+
+        setStatus(
+            ""
+        );
 
 
         if (
-            !checkoutForm ||
-            !placeOrderButton
+            !elements.checkoutForm ||
+            !elements.placeOrderButton
         ) {
+
             return;
+
+        }
+
+
+        if (
+            elements.placeOrderButton.dataset.processing ===
+            "true"
+        ) {
+
+            return;
+
         }
 
 
@@ -1360,21 +1954,16 @@
             getCart();
 
 
-        if (!cart.length) {
+        if (
+            !cart.length
+        ) {
 
             showError(
                 "Your cart is empty. Please return to the shop."
             );
 
             return;
-        }
 
-
-        if (
-            placeOrderButton.dataset.processing ===
-            "true"
-        ) {
-            return;
         }
 
 
@@ -1394,24 +1983,42 @@
             );
 
             return;
+
         }
 
 
         const originalText =
-            placeOrderButton.textContent;
+            elements.placeOrderButton.textContent;
 
 
-        placeOrderButton.dataset.processing =
+        elements.placeOrderButton.dataset.processing =
             "true";
 
-        placeOrderButton.disabled =
+
+        elements.placeOrderButton.disabled =
             true;
 
-        placeOrderButton.textContent =
+
+        elements.placeOrderButton.textContent =
             "Preparing Order...";
 
 
         try {
+
+            /*
+             * Re-fetch products immediately before
+             * order submission.
+             *
+             * This prevents stale browser prices from
+             * becoming the basis of the order.
+             */
+
+            productMap =
+                new Map();
+
+            productsPromise =
+                null;
+
 
             const items =
                 await buildOrderItems();
@@ -1422,36 +2029,74 @@
                     (
                         total,
                         item
-                    ) =>
-                        total +
-                        (
-                            Number(
-                                item.price
-                            ) *
-                            Number(
-                                item.quantity
+                    ) => {
+
+                        return (
+                            total +
+                            (
+                                Number(
+                                    item.price
+                                ) *
+                                Number(
+                                    item.quantity
+                                )
                             )
-                        ),
+                        );
+
+                    },
                     0
                 );
 
 
-            setStatus(
-                "Submitting your order..."
-            );
+            /*
+             * Compatibility cart.
+             *
+             * The canonical cart baseline is:
+             *
+             *     { id, quantity }
+             *
+             * Additional product references are included
+             * where available.
+             */
+
+            const cartItems =
+                items.map(
+                    item => ({
+
+                        id:
+                            item.id,
+
+                        quantity:
+                            item.quantity,
+
+                        sku:
+                            item.sku,
+
+                        aliexpress_id:
+                            item.aliexpress_id,
+
+                        variantSku:
+                            item.variantSku,
+
+                        variantOptions:
+                            item.variantOptions
+
+                    })
+                );
 
 
             /*
-             * IMPORTANT:
+             * Current Worker order payload.
              *
-             * The browser sends product IDs and product
-             * references only.
+             * The Worker MUST remain authoritative for:
              *
-             * The Worker should validate prices and product
-             * data again before storing the order.
+             *     - product existence
+             *     - price
+             *     - quantity limits
+             *     - subtotal
+             *     - order number
              *
-             * Never trust the browser's subtotal or price
-             * as the authoritative value.
+             * The browser subtotal is informational only.
              */
 
             const payload = {
@@ -1466,6 +2111,7 @@
 
                     phone:
                         customer.phone
+
                 },
 
 
@@ -1494,6 +2140,7 @@
 
                     address2:
                         customer.address2
+
                 },
 
 
@@ -1501,37 +2148,99 @@
                     customer.remark,
 
 
-                items,
+                /*
+                 * Preferred current structure.
+                 */
+
+                items:
+
+
+                    items,
 
 
                 /*
-                 * Informational browser-side subtotal.
-                 *
-                 * Worker MUST recalculate this.
+                 * Compatibility structure for the
+                 * current Worker/order handling.
                  */
 
-                subtotal
+                cart:
+
+
+                    cartItems,
+
+
+                /*
+                 * Informational only.
+                 *
+                 * Worker must recalculate.
+                 */
+
+                subtotal:
+
+
+                    Number(
+                        subtotal.toFixed(
+                            2
+                        )
+                    ),
+
+
+                currency:
+                    "USD",
+
+                source:
+                    "PRASUN SHOP"
+
             };
+
+
+            console.log(
+                "[PRASUN SHOP] Submitting order:",
+                {
+                    itemCount:
+                        items.length,
+
+                    subtotal:
+                        payload.subtotal
+                }
+            );
+
+
+            setStatus(
+                "Submitting your order..."
+            );
+
+
+            const orderURL =
+                new URL(
+                    CONFIG.ORDER_ENDPOINT,
+                    CONFIG.API_BASE
+                );
 
 
             const response =
                 await fetchWithTimeout(
-                    ORDER_ENDPOINT,
+                    orderURL.toString(),
                     {
-                        method: "POST",
+
+                        method:
+                            "POST",
 
                         headers: {
+
                             "Content-Type":
                                 "application/json",
 
                             Accept:
                                 "application/json"
+
                         },
 
                         body:
                             JSON.stringify(
                                 payload
                             )
+
                     }
                 );
 
@@ -1540,7 +2249,8 @@
                 await response.text();
 
 
-            let data = null;
+            let data =
+                null;
 
 
             try {
@@ -1554,19 +2264,26 @@
 
             } catch (error) {
 
-                console.warn(
-                    "[PRASUN SHOP] Invalid JSON response:",
-                    error
+                console.error(
+                    "[PRASUN SHOP] Order API invalid JSON:",
+                    responseText.slice(
+                        0,
+                        500
+                    )
                 );
+
             }
 
 
-            if (!response.ok) {
+            if (
+                !response.ok
+            ) {
 
                 throw new Error(
                     data?.error ||
-                    `Order server returned HTTP ${response.status}.`
+                    `Order API returned HTTP ${response.status}.`
                 );
+
             }
 
 
@@ -1579,27 +2296,46 @@
                     data?.error ||
                     "The order could not be completed."
                 );
+
             }
 
 
             /*
+             * Worker may return either:
+             *
+             * orderNumber
+             *
+             * or
+             *
+             * orderId
+             */
+
+            const orderNumber =
+                String(
+                    data.orderNumber ||
+                    data.orderId ||
+                    "Order received"
+                );
+
+
+            /*
              * Store only non-sensitive confirmation
-             * information in sessionStorage.
+             * information.
              */
 
             try {
 
                 sessionStorage.setItem(
                     "prasun_order_confirmation",
+
                     JSON.stringify({
 
                         orderNumber:
-                            data.orderNumber ||
-                            data.orderId ||
-                            "",
+                            orderNumber,
 
                         createdAt:
                             Date.now()
+
                     })
                 );
 
@@ -1607,10 +2343,15 @@
 
 
             /*
-             * Order has been accepted by the Worker.
+             * Order successfully accepted.
+             *
+             * Only now clear the cart.
              */
 
             clearCart();
+
+
+            updateCartCount();
 
 
             window.dispatchEvent(
@@ -1625,50 +2366,61 @@
             );
 
 
-            const orderNumber =
-                String(
-                    data.orderNumber ||
-                    data.orderId ||
-                    "Order received"
-                );
-
+            /*
+             * Show order number.
+             */
 
             if (
-                confirmationOrderNumber
+                elements.confirmationOrderNumber
             ) {
 
-                confirmationOrderNumber.textContent =
+                elements.confirmationOrderNumber.textContent =
                     `Order #: ${orderNumber}`;
+
             }
 
 
+            /*
+             * Hide checkout form.
+             */
+
+            elements.checkoutForm.style.display =
+                "none";
+
+
+            /*
+             * Hide checkout layout if
+             * the page contains one.
+             */
+
             if (
-                checkoutForm
+                elements.checkoutLayout
             ) {
 
-                checkoutForm.style.display =
+                elements.checkoutLayout.style.display =
                     "none";
+
             }
 
 
+            /*
+             * Show confirmation.
+             */
+
             if (
-                orderConfirmation
+                elements.orderConfirmation
             ) {
 
-                orderConfirmation.classList.add(
+                elements.orderConfirmation.classList.add(
                     "visible"
                 );
+
             }
 
 
-            if (
-                checkoutSuccess
-            ) {
-
-                showSuccess(
-                    "Your order has been successfully received."
-                );
-            }
+            showSuccess(
+                "Your order has been successfully received."
+            );
 
 
             setStatus(
@@ -1677,10 +2429,10 @@
 
 
             /*
-             * Prevent accidental second submission.
+             * Prevent duplicate submission.
              */
 
-            placeOrderButton.dataset.processing =
+            elements.placeOrderButton.dataset.processing =
                 "false";
 
 
@@ -1698,67 +2450,88 @@
             );
 
 
-            placeOrderButton.disabled =
+            elements.placeOrderButton.disabled =
                 false;
 
-            placeOrderButton.textContent =
+
+            elements.placeOrderButton.textContent =
                 originalText;
 
-            placeOrderButton.dataset.processing =
+
+            elements.placeOrderButton.dataset.processing =
                 "false";
 
 
             setStatus(
                 ""
             );
+
         }
+
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        FORM EVENTS
-       ======================================================================== */
+       ========================================================================= */
 
-    if (checkoutForm) {
+    if (
+        elements.checkoutForm
+    ) {
 
-        checkoutForm.addEventListener(
+        elements.checkoutForm.addEventListener(
             "submit",
             event => {
 
                 event.preventDefault();
 
                 submitOrder();
+
             }
         );
 
 
-        checkoutForm
+        elements.checkoutForm
             .querySelectorAll(
                 "input, select, textarea"
             )
-            .forEach(field => {
+            .forEach(
+                field => {
 
-                field.addEventListener(
-                    "input",
-                    () => {
-                        clearInvalid(field);
-                        hideError();
-                    }
-                );
+                    field.addEventListener(
+                        "input",
+                        () => {
 
-                field.addEventListener(
-                    "change",
-                    () => {
-                        clearInvalid(field);
-                    }
-                );
-            });
+                            clearInvalid(
+                                field
+                            );
+
+                            hideError();
+
+                        }
+                    );
+
+
+                    field.addEventListener(
+                        "change",
+                        () => {
+
+                            clearInvalid(
+                                field
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        COUNTRY CODE NORMALIZATION
-       ======================================================================== */
+       ========================================================================= */
 
     const countryCodeInput =
         document.getElementById(
@@ -1766,7 +2539,9 @@
         );
 
 
-    if (countryCodeInput) {
+    if (
+        countryCodeInput
+    ) {
 
         countryCodeInput.addEventListener(
             "input",
@@ -1778,71 +2553,31 @@
                             /[^a-zA-Z]/g,
                             ""
                         )
-                        .slice(0, 2)
+                        .slice(
+                            0,
+                            2
+                        )
                         .toUpperCase();
+
             }
         );
+
     }
 
 
-    /* ========================================================================
-       CART COUNT
-       ======================================================================== */
-
-    function updateCartCount() {
-
-        const countElement =
-            document.getElementById(
-                "cart-count"
-            );
-
-
-        if (!countElement) {
-            return;
-        }
-
-
-        const cart =
-            getCart();
-
-
-        const count =
-            cart.reduce(
-                (
-                    total,
-                    item
-                ) =>
-                    total +
-                    Math.max(
-                        1,
-                        Number(
-                            item.quantity
-                        ) || 1
-                    ),
-                0
-            );
-
-
-        countElement.textContent =
-            String(count);
-
-
-        countElement.hidden =
-            count <= 0;
-    }
-
-
-    /* ========================================================================
-       STORAGE SYNC
-       ======================================================================== */
+    /* =========================================================================
+       STORAGE / CART EVENTS
+       ========================================================================= */
 
     window.addEventListener(
         "storage",
         event => {
 
             if (
-                event.key === CART_KEY ||
-                LEGACY_KEYS.includes(
+                event.key ===
+                    CONFIG.CART_KEY ||
+
+                CONFIG.LEGACY_CART_KEYS.includes(
                     event.key
                 )
             ) {
@@ -1850,7 +2585,9 @@
                 updateCartCount();
 
                 loadCheckoutSummary();
+
             }
+
         }
     );
 
@@ -1862,16 +2599,18 @@
             updateCartCount();
 
             loadCheckoutSummary();
+
         }
     );
 
 
-    /* ========================================================================
+    /* =========================================================================
        INITIALIZATION
-       ======================================================================== */
+       ========================================================================= */
 
     updateCartCount();
 
     loadCheckoutSummary();
+
 
 })();
