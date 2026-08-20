@@ -3,33 +3,31 @@
  * PRASUN SHOP — CHECKOUT
  * ============================================================================
  *
- * Browser flow:
- *
- * Cart
- *   ↓
- * Checkout
- *   ↓
- * Validate customer information
- *   ↓
- * Send product IDs + quantities
- *   ↓
- * PRASUN SHOP Worker
- *   ↓
- * Server-side catalog validation
- *   ↓
- * CJ shipping calculation
- *   ↓
- * CJ createOrderV2
- *   ↓
- * cjPayUrl
- *   ↓
- * CJ payment page
+ * SUPPLIER:
+ *     ALIEXPRESS ONLY
  *
  * IMPORTANT:
+ *     - No CJ Dropshipping
+ *     - No CJ API
+ *     - No CJ payment URL
+ *     - No CJ order creation
+ *     - No CJ credentials in browser
  *
- * The browser NEVER receives the CJ API token.
+ * FLOW:
  *
- * The browser also does NOT send product prices to the Worker.
+ *     Cart
+ *       ↓
+ *     Checkout
+ *       ↓
+ *     Customer enters shipping information
+ *       ↓
+ *     PRASUN SHOP Worker
+ *       ↓
+ *     Order is recorded
+ *       ↓
+ *     Customer sees order confirmation
+ *
+ * AliExpress supplier fulfillment is handled separately.
  *
  * ============================================================================
  */
@@ -39,11 +37,10 @@
 (() => {
 
     /* ========================================================================
-       CONFIG
+       CONFIGURATION
        ======================================================================== */
 
-    const CART_KEY =
-        "prasun_cart";
+    const CART_KEY = "prasun_cart";
 
     const LEGACY_KEYS = [
         "prasunShopCart",
@@ -51,20 +48,15 @@
         "prasun_cart_items"
     ];
 
-    const API_BASE =
-        "https://prasun-shop-api.prasun301.workers.dev";
-
     const PRODUCTS_ENDPOINT =
-        `${API_BASE}/api/products`;
+        "https://prasun-shop-api.prasun301.workers.dev/api/products";
 
     const ORDER_ENDPOINT =
-        `${API_BASE}/api/order`;
+        "https://prasun-shop-api.prasun301.workers.dev/api/order";
 
-    const MAX_QUANTITY =
-        99;
+    const MAX_QUANTITY = 99;
 
-    const REQUEST_TIMEOUT_MS =
-        20000;
+    const REQUEST_TIMEOUT_MS = 15000;
 
 
     /* ========================================================================
@@ -72,28 +64,32 @@
        ======================================================================== */
 
     const checkoutForm =
-        document.getElementById(
-            "checkout-form"
-        );
+        document.getElementById("checkout-form");
 
     const orderSummary =
-        document.getElementById(
-            "order-summary"
-        );
+        document.getElementById("order-summary");
 
     const checkoutError =
-        document.getElementById(
-            "checkout-error"
-        );
+        document.getElementById("checkout-error");
+
+    const checkoutSuccess =
+        document.getElementById("checkout-success");
 
     const checkoutStatus =
-        document.getElementById(
-            "checkout-status"
-        );
+        document.getElementById("checkout-status");
 
-    const cartCount =
+    const checkoutLayout =
+        document.getElementById("checkout-layout");
+
+    const placeOrderButton =
+        document.getElementById("place-order-button");
+
+    const orderConfirmation =
+        document.getElementById("order-confirmation");
+
+    const confirmationOrderNumber =
         document.getElementById(
-            "cart-count"
+            "confirmation-order-number"
         );
 
 
@@ -105,34 +101,20 @@
         new Intl.NumberFormat(
             "en-US",
             {
-                style:
-                    "currency",
-
-                currency:
-                    "USD",
-
-                minimumFractionDigits:
-                    2,
-
-                maximumFractionDigits:
-                    2
+                style: "currency",
+                currency: "USD",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             }
         );
 
 
-    function formatPrice(
-        value
-    ) {
+    function formatPrice(value) {
 
-        const number =
-            Number(value);
+        const number = Number(value);
 
-        return Number.isFinite(
-            number
-        )
-            ? currencyFormatter.format(
-                number
-            )
+        return Number.isFinite(number)
+            ? currencyFormatter.format(number)
             : "$0.00";
     }
 
@@ -142,101 +124,28 @@
        ======================================================================== */
 
     const ESCAPE_MAP = {
-
-        "&":
-            "&amp;",
-
-        "<":
-            "&lt;",
-
-        ">":
-            "&gt;",
-
-        '"':
-            "&quot;",
-
-        "'":
-            "&#039;"
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
     };
 
 
-    function escapeHTML(
-        value
-    ) {
+    function escapeHTML(value) {
 
         if (
             value === null ||
             value === undefined
         ) {
-
             return "";
         }
 
-
-        return String(
-            value
-        ).replace(
+        return String(value).replace(
             /[&<>"']/g,
             character =>
-                ESCAPE_MAP[
-                    character
-                ]
+                ESCAPE_MAP[character]
         );
-    }
-
-
-    /* ========================================================================
-       REQUEST TIMEOUT
-       ======================================================================== */
-
-    async function fetchWithTimeout(
-        resource,
-        options = {}
-    ) {
-
-        const controller =
-            new AbortController();
-
-        const timer =
-            setTimeout(
-                () =>
-                    controller.abort(),
-                REQUEST_TIMEOUT_MS
-            );
-
-
-        try {
-
-            return await fetch(
-                resource,
-                {
-                    ...options,
-
-                    signal:
-                        controller.signal
-                }
-            );
-
-        } catch (error) {
-
-            if (
-                error?.name ===
-                "AbortError"
-            ) {
-
-                throw new Error(
-                    "The request timed out. Please check your connection and try again."
-                );
-            }
-
-            throw error;
-
-        } finally {
-
-            clearTimeout(
-                timer
-            );
-        }
     }
 
 
@@ -244,95 +153,75 @@
        CART
        ======================================================================== */
 
-    function normalizeCartItem(
-        item
-    ) {
+    function normalizeCartItem(item) {
 
         if (
             !item ||
-            item.id ===
-                undefined ||
-            item.id ===
-                null
+            item.id === undefined ||
+            item.id === null
         ) {
-
             return null;
         }
 
-
         const quantity =
-            Number(
-                item.quantity
-            );
-
+            Number(item.quantity);
 
         return {
 
             id:
-                String(
-                    item.id
-                ),
+                String(item.id),
 
             quantity:
-                Number.isInteger(
-                    quantity
-                ) &&
+                Number.isFinite(quantity) &&
                 quantity > 0
                     ? Math.min(
                         MAX_QUANTITY,
-                        quantity
+                        Math.floor(quantity)
                     )
                     : 1,
 
-            /*
-             * Preserve variant metadata.
-             * The Worker does not trust CJ identifiers
-             * from the browser.
-             */
+            sku:
+                String(item.sku || ""),
+
+            aliexpressId:
+                String(
+                    item.aliexpress_id ||
+                    item.aliexpressId ||
+                    ""
+                ),
+
+            variantSku:
+                String(
+                    item.variantSku ||
+                    ""
+                ),
 
             variantOptions:
                 String(
                     item.variantOptions ||
                     ""
-                ).slice(
-                    0,
-                    200
                 )
         };
     }
 
 
-    function parseCart(
-        raw
-    ) {
+    function parseCart(raw) {
 
         if (!raw) {
             return [];
         }
 
-
         try {
 
             const parsed =
-                JSON.parse(
-                    raw
-                );
+                JSON.parse(raw);
 
-
-            if (
-                !Array.isArray(
-                    parsed
-                )
-            ) {
-
+            if (!Array.isArray(parsed)) {
                 return [];
             }
 
-
             return parsed
-                .map(
-                    normalizeCartItem
-                )
+                .map(normalizeCartItem)
                 .filter(Boolean);
 
         } catch (error) {
@@ -356,10 +245,7 @@
                     CART_KEY
                 );
 
-
-            if (
-                primary
-            ) {
+            if (primary) {
 
                 return parseCart(
                     primary
@@ -368,8 +254,7 @@
 
 
             for (
-                const key
-                of LEGACY_KEYS
+                const key of LEGACY_KEYS
             ) {
 
                 const legacy =
@@ -377,31 +262,23 @@
                         key
                     );
 
+                if (!legacy) {
+                    continue;
+                }
 
-                if (
-                    legacy
-                ) {
+                const cart =
+                    parseCart(
+                        legacy
+                    );
 
-                    const cart =
-                        parseCart(
-                            legacy
-                        );
+                if (cart.length) {
 
+                    localStorage.setItem(
+                        CART_KEY,
+                        JSON.stringify(cart)
+                    );
 
-                    if (
-                        cart.length
-                    ) {
-
-                        localStorage.setItem(
-                            CART_KEY,
-                            JSON.stringify(
-                                cart
-                            )
-                        );
-
-
-                        return cart;
-                    }
+                    return cart;
                 }
             }
 
@@ -428,134 +305,20 @@
                 CART_KEY
             );
 
-
             LEGACY_KEYS.forEach(
                 key => {
-
                     localStorage.removeItem(
                         key
                     );
-
                 }
             );
 
         } catch (error) {
 
             console.error(
-                "[PRASUN SHOP] Could not clear cart:",
+                "[PRASUN SHOP] Cart clear error:",
                 error
             );
-        }
-    }
-
-
-    /* ========================================================================
-       CART COUNT
-       ======================================================================== */
-
-    function updateCartCount(
-        cart
-    ) {
-
-        if (
-            !cartCount
-        ) {
-
-            return;
-        }
-
-
-        const count =
-            cart.reduce(
-                (
-                    total,
-                    item
-                ) =>
-                    total +
-                    (
-                        Number(
-                            item.quantity
-                        ) || 0
-                    ),
-                0
-            );
-
-
-        cartCount.textContent =
-            String(
-                count
-            );
-
-
-        cartCount.hidden =
-            count <= 0;
-    }
-
-
-    /* ========================================================================
-       ERROR UI
-       ======================================================================== */
-
-    function showError(
-        message
-    ) {
-
-        if (
-            checkoutError
-        ) {
-
-            checkoutError.textContent =
-                message;
-
-            checkoutError.classList.add(
-                "visible"
-            );
-
-
-            checkoutError.scrollIntoView({
-                behavior:
-                    "smooth",
-
-                block:
-                    "nearest"
-            });
-
-            return;
-        }
-
-
-        alert(
-            message
-        );
-    }
-
-
-    function hideError() {
-
-        if (
-            checkoutError
-        ) {
-
-            checkoutError.textContent =
-                "";
-
-            checkoutError.classList.remove(
-                "visible"
-            );
-        }
-    }
-
-
-    function setStatus(
-        message
-    ) {
-
-        if (
-            checkoutStatus
-        ) {
-
-            checkoutStatus.textContent =
-                message;
         }
     }
 
@@ -564,199 +327,590 @@
        PRODUCT CACHE
        ======================================================================== */
 
-    let productMap =
-        new Map();
+    let productMap = new Map();
 
-    let productFetchPromise =
-        null;
+    let productsPromise = null;
 
 
-    async function fetchProducts() {
+    /* ========================================================================
+       FETCH WITH TIMEOUT
+       ======================================================================== */
 
-        if (
-            productMap.size
-        ) {
+    async function fetchWithTimeout(
+        resource,
+        options = {}
+    ) {
 
-            return productMap;
-        }
+        const controller =
+            new AbortController();
 
+        const timeout =
+            Number(
+                options.timeout ||
+                REQUEST_TIMEOUT_MS
+            );
 
-        if (
-            productFetchPromise
-        ) {
+        const timer =
+            setTimeout(
+                () => {
+                    controller.abort();
+                },
+                timeout
+            );
 
-            return productFetchPromise;
-        }
+        try {
 
-
-        productFetchPromise =
-            (async () => {
-
-                const response =
-                    await fetchWithTimeout(
-                        PRODUCTS_ENDPOINT,
-                        {
-                            method:
-                                "GET",
-
-                            cache:
-                                "no-store",
-
-                            headers: {
-                                "Accept":
-                                    "application/json"
-                            }
-                        }
-                    );
-
-
-                const text =
-                    await response.text();
-
-
-                let data;
-
-                try {
-
-                    data =
-                        JSON.parse(
-                            text
-                        );
-
-                } catch {
-
-                    throw new Error(
-                        "The product server returned invalid data."
-                    );
-                }
-
-
-                if (
-                    !response.ok
-                ) {
-
-                    throw new Error(
-                        data?.error ||
-                        `Products server returned HTTP ${response.status}.`
-                    );
-                }
-
-
-                const products =
-                    Array.isArray(
-                        data
-                    )
-                        ? data
-                        : Array.isArray(
-                            data?.products
-                        )
-                            ? data.products
-                            : [];
-
-
-                productMap =
-                    new Map(
-                        products
-                            .filter(Boolean)
-                            .map(
-                                product => [
-                                    String(
-                                        product.id
-                                    ),
-                                    product
-                                ]
-                            )
-                    );
-
-
-                return productMap;
-
-            })()
-                .catch(
-                    error => {
-
-                        productFetchPromise =
-                            null;
-
-                        throw error;
+            const response =
+                await fetch(
+                    resource,
+                    {
+                        ...options,
+                        signal:
+                            controller.signal
                     }
                 );
 
+            return response;
 
-        return productFetchPromise;
-    }
+        } catch (error) {
 
+            if (
+                error?.name ===
+                "AbortError"
+            ) {
 
-    /* ========================================================================
-       EMPTY CART
-       ======================================================================== */
+                throw new Error(
+                    "The request timed out. Please check your internet connection and try again."
+                );
+            }
 
-    function renderEmptyCheckout() {
+            throw error;
 
-        if (
-            orderSummary
-        ) {
+        } finally {
 
-            orderSummary.innerHTML = `
-
-                <div class="empty-checkout">
-
-                    <h2>
-                        Your cart is empty
-                    </h2>
-
-                    <p>
-                        Add products to your cart before continuing to checkout.
-                    </p>
-
-                    <a href="/">
-                        Continue Shopping
-                    </a>
-
-                </div>
-
-            `;
-        }
-
-
-        if (
-            checkoutForm
-        ) {
-
-            checkoutForm.style.display =
-                "none";
+            clearTimeout(timer);
         }
     }
 
 
     /* ========================================================================
-       ORDER SUMMARY
+       LOAD PRODUCTS
        ======================================================================== */
 
-    async function renderSummary() {
+    async function fetchProducts() {
 
-        if (
-            !orderSummary
-        ) {
+        if (productMap.size > 0) {
+            return productMap;
+        }
 
+        if (productsPromise) {
+            return productsPromise;
+        }
+
+
+        productsPromise =
+            (async () => {
+
+                try {
+
+                    const response =
+                        await fetchWithTimeout(
+                            PRODUCTS_ENDPOINT,
+                            {
+                                method: "GET",
+                                cache: "no-store",
+                                headers: {
+                                    Accept:
+                                        "application/json"
+                                }
+                            }
+                        );
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            `Products server returned HTTP ${response.status}.`
+                        );
+                    }
+
+
+                    const data =
+                        await response.json();
+
+
+                    const products =
+                        Array.isArray(data)
+                            ? data
+                            : Array.isArray(
+                                data?.products
+                            )
+                                ? data.products
+                                : [];
+
+
+                    productMap =
+                        new Map();
+
+
+                    products
+                        .filter(Boolean)
+                        .forEach(product => {
+
+                            if (
+                                product.id ===
+                                undefined
+                            ) {
+                                return;
+                            }
+
+                            productMap.set(
+                                String(product.id),
+                                product
+                            );
+                        });
+
+
+                    return productMap;
+
+                } catch (error) {
+
+                    productsPromise =
+                        null;
+
+                    throw error;
+                }
+
+            })();
+
+
+        return productsPromise;
+    }
+
+
+    /* ========================================================================
+       ERROR / STATUS UI
+       ======================================================================== */
+
+    function showError(message) {
+
+        if (!checkoutError) {
+            alert(message);
             return;
         }
+
+        checkoutError.textContent =
+            message;
+
+        checkoutError.classList.add(
+            "visible"
+        );
+
+        checkoutError.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest"
+        });
+    }
+
+
+    function hideError() {
+
+        if (!checkoutError) {
+            return;
+        }
+
+        checkoutError.textContent = "";
+
+        checkoutError.classList.remove(
+            "visible"
+        );
+    }
+
+
+    function showSuccess(message) {
+
+        if (!checkoutSuccess) {
+            return;
+        }
+
+        checkoutSuccess.textContent =
+            message;
+
+        checkoutSuccess.classList.add(
+            "visible"
+        );
+    }
+
+
+    function hideSuccess() {
+
+        if (!checkoutSuccess) {
+            return;
+        }
+
+        checkoutSuccess.textContent = "";
+
+        checkoutSuccess.classList.remove(
+            "visible"
+        );
+    }
+
+
+    function setStatus(message) {
+
+        if (!checkoutStatus) {
+            return;
+        }
+
+        checkoutStatus.textContent =
+            message || "";
+    }
+
+
+    /* ========================================================================
+       FORM VALIDATION
+       ======================================================================== */
+
+    function getField(id) {
+
+        return document.getElementById(id);
+    }
+
+
+    function markInvalid(field) {
+
+        if (!field) {
+            return;
+        }
+
+        field.classList.add(
+            "invalid"
+        );
+
+        field.setAttribute(
+            "aria-invalid",
+            "true"
+        );
+    }
+
+
+    function clearInvalid(field) {
+
+        if (!field) {
+            return;
+        }
+
+        field.classList.remove(
+            "invalid"
+        );
+
+        field.removeAttribute(
+            "aria-invalid"
+        );
+    }
+
+
+    function validateForm() {
+
+        const name =
+            getField(
+                "customer-name"
+            );
+
+        const email =
+            getField(
+                "customer-email"
+            );
+
+        const phone =
+            getField(
+                "customer-phone"
+            );
+
+        const country =
+            getField(
+                "shipping-country"
+            );
+
+        const countryCode =
+            getField(
+                "shipping-country-code"
+            );
+
+        const province =
+            getField(
+                "shipping-province"
+            );
+
+        const city =
+            getField(
+                "shipping-city"
+            );
+
+        const address =
+            getField(
+                "shipping-address"
+            );
+
+
+        [
+            name,
+            email,
+            phone,
+            country,
+            countryCode,
+            province,
+            city,
+            address
+        ].forEach(clearInvalid);
+
+
+        const nameValue =
+            name?.value.trim() || "";
+
+        const emailValue =
+            email?.value.trim() || "";
+
+        const phoneValue =
+            phone?.value.trim() || "";
+
+        const countryValue =
+            country?.value.trim() || "";
+
+        const countryCodeValue =
+            countryCode?.value
+                .trim()
+                .toUpperCase() || "";
+
+        const provinceValue =
+            province?.value.trim() || "";
+
+        const cityValue =
+            city?.value.trim() || "";
+
+        const addressValue =
+            address?.value.trim() || "";
+
+
+        if (!nameValue) {
+
+            markInvalid(name);
+
+            name?.focus();
+
+            throw new Error(
+                "Please enter your full name."
+            );
+        }
+
+
+        if (
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+                .test(emailValue)
+        ) {
+
+            markInvalid(email);
+
+            email?.focus();
+
+            throw new Error(
+                "Please enter a valid email address."
+            );
+        }
+
+
+        if (
+            phoneValue.length < 5
+        ) {
+
+            markInvalid(phone);
+
+            phone?.focus();
+
+            throw new Error(
+                "Please enter a valid phone number."
+            );
+        }
+
+
+        if (!countryValue) {
+
+            markInvalid(country);
+
+            country?.focus();
+
+            throw new Error(
+                "Please enter your country."
+            );
+        }
+
+
+        if (
+            !/^[A-Z]{2}$/
+                .test(countryCodeValue)
+        ) {
+
+            markInvalid(countryCode);
+
+            countryCode?.focus();
+
+            throw new Error(
+                "Please enter a valid two-letter country code, such as US."
+            );
+        }
+
+
+        if (!provinceValue) {
+
+            markInvalid(province);
+
+            province?.focus();
+
+            throw new Error(
+                "Please enter your state or province."
+            );
+        }
+
+
+        if (!cityValue) {
+
+            markInvalid(city);
+
+            city?.focus();
+
+            throw new Error(
+                "Please enter your city."
+            );
+        }
+
+
+        if (!addressValue) {
+
+            markInvalid(address);
+
+            address?.focus();
+
+            throw new Error(
+                "Please enter your shipping address."
+            );
+        }
+
+
+        return {
+
+            customerName:
+                nameValue,
+
+            email:
+                emailValue,
+
+            phone:
+                phoneValue,
+
+            country:
+                countryValue,
+
+            countryCode:
+                countryCodeValue,
+
+            province:
+                provinceValue,
+
+            city:
+                cityValue,
+
+            zip:
+                getField(
+                    "shipping-zip"
+                )?.value.trim() || "",
+
+            county:
+                getField(
+                    "shipping-county"
+                )?.value.trim() || "",
+
+            address:
+                addressValue,
+
+            address2:
+                getField(
+                    "shipping-address2"
+                )?.value.trim() || "",
+
+            remark:
+                getField(
+                    "order-note"
+                )?.value.trim() || ""
+        };
+    }
+
+
+    /* ========================================================================
+       RENDER EMPTY CART
+       ======================================================================== */
+
+    function renderEmptySummary() {
+
+        if (!orderSummary) {
+            return;
+        }
+
+        orderSummary.setAttribute(
+            "aria-busy",
+            "false"
+        );
+
+        orderSummary.innerHTML = `
+
+            <div class="empty-checkout">
+
+                <h2>
+                    Your cart is empty
+                </h2>
+
+                <p>
+                    Add products to your cart before checking out.
+                </p>
+
+                <a href="/">
+                    Continue Shopping
+                </a>
+
+            </div>
+
+        `;
+    }
+
+
+    /* ========================================================================
+       RENDER ORDER SUMMARY
+       ======================================================================== */
+
+    async function loadCheckoutSummary() {
+
+        if (!orderSummary) {
+            return;
+        }
+
+
+        orderSummary.setAttribute(
+            "aria-busy",
+            "true"
+        );
 
 
         const cart =
             getCart();
 
 
-        updateCartCount(
-            cart
-        );
+        if (!cart.length) {
 
+            renderEmptySummary();
 
-        if (
-            !cart.length
-        ) {
-
-            renderEmptyCheckout();
+            if (placeOrderButton) {
+                placeOrderButton.disabled =
+                    true;
+            }
 
             return;
         }
@@ -767,32 +921,26 @@
             await fetchProducts();
 
 
-            let total =
-                0;
+            let subtotal = 0;
 
-            let validCount =
-                0;
-
-
-            let html = "";
+            const validItems = [];
 
 
             for (
-                const item
-                of cart
+                const item of cart
             ) {
 
                 const product =
                     productMap.get(
-                        String(
-                            item.id
-                        )
+                        String(item.id)
                     );
 
 
-                if (
-                    !product
-                ) {
+                if (!product) {
+                    console.warn(
+                        "[PRASUN SHOP] Product not found:",
+                        item.id
+                    );
 
                     continue;
                 }
@@ -805,12 +953,9 @@
 
 
                 if (
-                    !Number.isFinite(
-                        price
-                    ) ||
+                    !Number.isFinite(price) ||
                     price < 0
                 ) {
-
                     continue;
                 }
 
@@ -820,118 +965,169 @@
                         MAX_QUANTITY,
                         Math.max(
                             1,
-                            Number(
-                                item.quantity
-                            ) || 1
+                            Math.floor(
+                                Number(
+                                    item.quantity
+                                ) || 1
+                            )
                         )
                     );
 
 
-                const subtotal =
-                    price *
-                    quantity;
+                const lineTotal =
+                    price * quantity;
 
 
-                total +=
-                    subtotal;
-
-                validCount++;
+                subtotal +=
+                    lineTotal;
 
 
-                const image =
-                    escapeHTML(
-                        product.image ||
-                        ""
-                    );
+                validItems.push({
 
+                    item,
 
-                const name =
-                    escapeHTML(
-                        product.name ||
-                        "Product"
-                    );
+                    product,
 
+                    quantity,
 
-                html += `
+                    price,
 
-                    <div class="summary-item">
-
-                        ${
-                            image
-                                ? `
-                                    <img
-                                        class="summary-item-image"
-                                        src="${image}"
-                                        alt="${name}"
-                                        loading="lazy"
-                                        decoding="async"
-                                    >
-                                  `
-                                : `
-                                    <div
-                                        class="summary-item-image"
-                                        aria-hidden="true"
-                                    ></div>
-                                  `
-                        }
-
-                        <div class="summary-item-info">
-
-                            <p class="summary-item-name">
-                                ${name}
-                            </p>
-
-                            <p class="summary-item-meta">
-                                Qty: ${quantity}
-                            </p>
-
-                        </div>
-
-                        <div class="summary-item-price">
-
-                            ${formatPrice(
-                                subtotal
-                            )}
-
-                        </div>
-
-                    </div>
-
-                `;
+                    lineTotal
+                });
             }
 
 
-            if (
-                !validCount
-            ) {
+            if (!validItems.length) {
 
-                renderEmptyCheckout();
+                renderEmptySummary();
+
+                if (placeOrderButton) {
+                    placeOrderButton.disabled =
+                        true;
+                }
 
                 return;
             }
 
 
+            if (placeOrderButton) {
+                placeOrderButton.disabled =
+                    false;
+            }
+
+
+            let html = "";
+
+
+            validItems.forEach(
+                ({
+                    item,
+                    product,
+                    quantity,
+                    price,
+                    lineTotal
+                }) => {
+
+                    const name =
+                        escapeHTML(
+                            product.name ||
+                            "Product"
+                        );
+
+
+                    const image =
+                        escapeHTML(
+                            product.image ||
+                            ""
+                        );
+
+
+                    html += `
+
+                        <div class="summary-item">
+
+                            ${
+                                image
+                                    ? `
+                                        <img
+                                            src="${image}"
+                                            alt="${name}"
+                                            class="summary-item-image"
+                                            loading="lazy"
+                                            decoding="async"
+                                        >
+                                      `
+                                    : `
+                                        <div
+                                            class="summary-item-image"
+                                            aria-hidden="true"
+                                        ></div>
+                                      `
+                            }
+
+
+                            <div class="summary-item-info">
+
+                                <p class="summary-item-name">
+                                    ${name}
+                                </p>
+
+                                <p class="summary-item-meta">
+                                    Qty: ${quantity}
+                                </p>
+
+                            </div>
+
+
+                            <div class="summary-item-price">
+                                ${formatPrice(
+                                    lineTotal
+                                )}
+                            </div>
+
+                        </div>
+
+                    `;
+                }
+            );
+
+
             html += `
 
-                <div class="summary-total">
+                <div class="summary-row">
+                    <span>
+                        Subtotal
+                    </span>
 
+                    <strong>
+                        ${formatPrice(
+                            subtotal
+                        )}
+                    </strong>
+                </div>
+
+
+                <div class="summary-row">
+                    <span>
+                        Shipping
+                    </span>
+
+                    <strong>
+                        Calculated after order
+                    </strong>
+                </div>
+
+
+                <div class="summary-total">
                     <span>
                         Store Total
                     </span>
 
                     <span>
                         ${formatPrice(
-                            total
+                            subtotal
                         )}
                     </span>
-
-                </div>
-
-                <div
-                    class="checkout-status"
-                    style="text-align:left;margin-top:10px;"
-                >
-                    Final CJ shipping and payable amount are calculated during checkout.
                 </div>
 
             `;
@@ -946,11 +1142,18 @@
                 "false"
             );
 
+
         } catch (error) {
 
             console.error(
-                "[PRASUN SHOP] Summary error:",
+                "[PRASUN SHOP] Checkout summary error:",
                 error
+            );
+
+
+            orderSummary.setAttribute(
+                "aria-busy",
+                "false"
             );
 
 
@@ -958,23 +1161,17 @@
 
                 <div class="empty-checkout">
 
-                    <h2>
-                        Unable to load order
-                    </h2>
-
                     <p>
-                        ${escapeHTML(
-                            error.message
-                        )}
+                        Unable to load your order summary.
                     </p>
 
                     <button
                         type="button"
-                        id="retry-summary"
+                        id="retry-summary-button"
                         style="
                             border:0;
-                            border-radius:10px;
-                            padding:11px 18px;
+                            padding:10px 16px;
+                            border-radius:9px;
                             background:#2563eb;
                             color:#fff;
                             font-weight:700;
@@ -989,291 +1186,154 @@
             `;
 
 
-            const retry =
+            const retryButton =
                 document.getElementById(
-                    "retry-summary"
+                    "retry-summary-button"
+                );
+
+
+            retryButton?.addEventListener(
+                "click",
+                () => {
+                    loadCheckoutSummary();
+                }
+            );
+        }
+    }
+
+
+    /* ========================================================================
+       BUILD ORDER ITEMS
+       ======================================================================== */
+
+    async function buildOrderItems() {
+
+        await fetchProducts();
+
+
+        const cart =
+            getCart();
+
+
+        if (!cart.length) {
+
+            throw new Error(
+                "Your cart is empty."
+            );
+        }
+
+
+        const items = [];
+
+
+        for (
+            const item of cart
+        ) {
+
+            const product =
+                productMap.get(
+                    String(item.id)
+                );
+
+
+            if (!product) {
+
+                throw new Error(
+                    `Product "${item.id}" is no longer available.`
+                );
+            }
+
+
+            const quantity =
+                Math.min(
+                    MAX_QUANTITY,
+                    Math.max(
+                        1,
+                        Math.floor(
+                            Number(
+                                item.quantity
+                            ) || 1
+                        )
+                    )
+                );
+
+
+            const price =
+                Number(
+                    product.price
                 );
 
 
             if (
-                retry
+                !Number.isFinite(price) ||
+                price < 0
             ) {
 
-                retry.addEventListener(
-                    "click",
-                    renderSummary
+                throw new Error(
+                    `Invalid price for "${product.name}".`
                 );
             }
-        }
-    }
 
 
-    /* ========================================================================
-       FORM VALIDATION
-       ======================================================================== */
-
-    function getFormData() {
-
-        const formData =
-            new FormData(
-                checkoutForm
-            );
-
-
-        const customerName =
-            String(
-                formData.get(
-                    "name"
-                ) || ""
-            ).trim();
-
-
-        const email =
-            String(
-                formData.get(
-                    "email"
-                ) || ""
-            ).trim();
-
-
-        const phone =
-            String(
-                formData.get(
-                    "phone"
-                ) || ""
-            ).trim();
-
-
-        const country =
-            String(
-                formData.get(
-                    "country"
-                ) || ""
-            ).trim();
-
-
-        const countryCode =
-            String(
-                formData.get(
-                    "countryCode"
-                ) || ""
-            )
-                .trim()
-                .toUpperCase();
-
-
-        const province =
-            String(
-                formData.get(
-                    "province"
-                ) || ""
-            ).trim();
-
-
-        const city =
-            String(
-                formData.get(
-                    "city"
-                ) || ""
-            ).trim();
-
-
-        const zip =
-            String(
-                formData.get(
-                    "zip"
-                ) || ""
-            ).trim();
-
-
-        const county =
-            String(
-                formData.get(
-                    "county"
-                ) || ""
-            ).trim();
-
-
-        const address =
-            String(
-                formData.get(
-                    "address"
-                ) || ""
-            ).trim();
-
-
-        const address2 =
-            String(
-                formData.get(
-                    "address2"
-                ) || ""
-            ).trim();
-
-
-        const remark =
-            String(
-                formData.get(
-                    "remark"
-                ) || ""
-            ).trim();
-
-
-        if (
-            !customerName
-        ) {
-
-            throw new Error(
-                "Please enter your full name."
-            );
-        }
-
-
-        if (
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-                email
-            )
-        ) {
-
-            throw new Error(
-                "Please enter a valid email address."
-            );
-        }
-
-
-        if (
-            !phone
-        ) {
-
-            throw new Error(
-                "Please enter your phone number."
-            );
-        }
-
-
-        if (
-            !country
-        ) {
-
-            throw new Error(
-                "Please enter your country."
-            );
-        }
-
-
-        if (
-            !/^[A-Z]{2}$/.test(
-                countryCode
-            )
-        ) {
-
-            throw new Error(
-                "Please enter a valid two-letter country code."
-            );
-        }
-
-
-        if (
-            !province
-        ) {
-
-            throw new Error(
-                "Please enter your state/province."
-            );
-        }
-
-
-        if (
-            !city
-        ) {
-
-            throw new Error(
-                "Please enter your city."
-            );
-        }
-
-
-        if (
-            !address
-        ) {
-
-            throw new Error(
-                "Please enter your shipping address."
-            );
-        }
-
-
-        return {
-
-            customerName,
-
-            email,
-
-            phone,
-
-            shippingCountry:
-                country,
-
-            shippingCountryCode:
-                countryCode,
-
-            shippingProvince:
-                province,
-
-            shippingCity:
-                city,
-
-            shippingZip:
-                zip,
-
-            shippingCounty:
-                county,
-
-            address,
-
-            address2,
-
-            remark
-        };
-    }
-
-
-    /* ========================================================================
-       BUILD SERVER CART
-       ======================================================================== */
-
-    function buildServerCart() {
-
-        return getCart().map(
-            item => ({
+            items.push({
 
                 id:
+                    String(product.id),
+
+                sku:
                     String(
-                        item.id
+                        product.sku ||
+                        ""
                     ),
 
-                quantity:
-                    Math.min(
-                        MAX_QUANTITY,
-                        Math.max(
-                            1,
-                            Math.floor(
-                                Number(
-                                    item.quantity
-                                ) || 1
-                            )
-                        )
+                aliexpress_id:
+                    String(
+                        product.aliexpress_id ||
+                        product.aliexpressId ||
+                        item.aliexpressId ||
+                        ""
+                    ),
+
+                name:
+                    String(
+                        product.name ||
+                        "Product"
+                    ),
+
+                price,
+
+                quantity,
+
+                image:
+                    String(
+                        product.image ||
+                        ""
+                    ),
+
+                variantSku:
+                    String(
+                        item.variantSku ||
+                        ""
                     ),
 
                 variantOptions:
                     String(
                         item.variantOptions ||
                         ""
-                    ).slice(
-                        0,
-                        200
                     )
-            })
-        );
+            });
+        }
+
+
+        if (!items.length) {
+
+            throw new Error(
+                "No valid products were found in your cart."
+            );
+        }
+
+
+        return items;
     }
 
 
@@ -1281,27 +1341,26 @@
        SUBMIT ORDER
        ======================================================================== */
 
-    async function submitOrder(
-        event
-    ) {
-
-        event.preventDefault();
+    async function submitOrder() {
 
         hideError();
+        hideSuccess();
+        setStatus("");
+
+
+        if (
+            !checkoutForm ||
+            !placeOrderButton
+        ) {
+            return;
+        }
 
 
         const cart =
             getCart();
 
 
-        updateCartCount(
-            cart
-        );
-
-
-        if (
-            !cart.length
-        ) {
+        if (!cart.length) {
 
             showError(
                 "Your cart is empty. Please return to the shop."
@@ -1311,139 +1370,147 @@
         }
 
 
-        let form;
-
-        try {
-
-            form =
-                getFormData();
-
-        } catch (error) {
-
-            showError(
-                error.message
-            );
-
+        if (
+            placeOrderButton.dataset.processing ===
+            "true"
+        ) {
             return;
         }
 
 
-        const submitButton =
-            document.getElementById(
-                "place-order-button"
+        let customer;
+
+
+        try {
+
+            customer =
+                validateForm();
+
+        } catch (error) {
+
+            showError(
+                error?.message ||
+                "Please check your information."
             );
-
-
-        if (
-            !submitButton ||
-            submitButton.dataset.processing ===
-                "true"
-        ) {
 
             return;
         }
 
 
         const originalText =
-            submitButton.textContent;
+            placeOrderButton.textContent;
 
 
-        submitButton.dataset.processing =
+        placeOrderButton.dataset.processing =
             "true";
 
-        submitButton.disabled =
+        placeOrderButton.disabled =
             true;
 
-        submitButton.textContent =
+        placeOrderButton.textContent =
             "Preparing Order...";
-
-
-        setStatus(
-            "Validating your order..."
-        );
 
 
         try {
 
-            /*
-             * Ensure product IDs exist locally.
-             */
-
-            await fetchProducts();
+            const items =
+                await buildOrderItems();
 
 
-            for (
-                const item
-                of cart
-            ) {
-
-                if (
-                    !productMap.has(
-                        String(
-                            item.id
-                        )
-                    )
-                ) {
-
-                    throw new Error(
-                        `Product ${item.id} is no longer available.`
-                    );
-                }
-            }
+            const subtotal =
+                items.reduce(
+                    (
+                        total,
+                        item
+                    ) =>
+                        total +
+                        (
+                            Number(
+                                item.price
+                            ) *
+                            Number(
+                                item.quantity
+                            )
+                        ),
+                    0
+                );
 
 
             setStatus(
-                "Calculating shipping and creating your CJ order..."
+                "Submitting your order..."
             );
 
 
-            const requestBody = {
+            /*
+             * IMPORTANT:
+             *
+             * The browser sends product IDs and product
+             * references only.
+             *
+             * The Worker should validate prices and product
+             * data again before storing the order.
+             *
+             * Never trust the browser's subtotal or price
+             * as the authoritative value.
+             */
 
-                customerName:
-                    form.customerName,
+            const payload = {
 
-                email:
-                    form.email,
+                customer: {
 
-                phone:
-                    form.phone,
+                    name:
+                        customer.customerName,
 
-                address:
-                    form.address,
+                    email:
+                        customer.email,
 
-                address2:
-                    form.address2,
+                    phone:
+                        customer.phone
+                },
 
-                shippingCity:
-                    form.shippingCity,
 
-                shippingProvince:
-                    form.shippingProvince,
+                shipping: {
 
-                shippingCountry:
-                    form.shippingCountry,
+                    country:
+                        customer.country,
 
-                shippingCountryCode:
-                    form.shippingCountryCode,
+                    countryCode:
+                        customer.countryCode,
 
-                shippingZip:
-                    form.shippingZip,
+                    province:
+                        customer.province,
 
-                shippingCounty:
-                    form.shippingCounty,
+                    city:
+                        customer.city,
+
+                    zip:
+                        customer.zip,
+
+                    county:
+                        customer.county,
+
+                    address:
+                        customer.address,
+
+                    address2:
+                        customer.address2
+                },
+
 
                 remark:
-                    form.remark,
+                    customer.remark,
+
+
+                items,
+
 
                 /*
-                 * Only IDs and quantities are sent.
+                 * Informational browser-side subtotal.
                  *
-                 * Product price/CJ SKU/CJ VID are
-                 * resolved by the Worker.
+                 * Worker MUST recalculate this.
                  */
 
-                cart:
-                    buildServerCart()
+                subtotal
             };
 
 
@@ -1451,52 +1518,50 @@
                 await fetchWithTimeout(
                     ORDER_ENDPOINT,
                     {
-                        method:
-                            "POST",
+                        method: "POST",
 
                         headers: {
                             "Content-Type":
                                 "application/json",
 
-                            "Accept":
+                            Accept:
                                 "application/json"
                         },
 
                         body:
                             JSON.stringify(
-                                requestBody
+                                payload
                             )
                     }
                 );
 
 
-            const text =
+            const responseText =
                 await response.text();
 
 
-            let data =
-                null;
+            let data = null;
 
 
             try {
 
                 data =
-                    text
+                    responseText
                         ? JSON.parse(
-                            text
+                            responseText
                         )
                         : null;
 
-            } catch {
+            } catch (error) {
 
-                data =
-                    null;
+                console.warn(
+                    "[PRASUN SHOP] Invalid JSON response:",
+                    error
+                );
             }
 
 
-            if (
-                !response.ok
-            ) {
+            if (!response.ok) {
 
                 throw new Error(
                     data?.error ||
@@ -1506,62 +1571,31 @@
 
 
             if (
-                !data?.success
+                !data ||
+                data.success !== true
             ) {
 
                 throw new Error(
                     data?.error ||
-                    "CJ could not create the order."
-                );
-            }
-
-
-            if (
-                !data.cjPayUrl
-            ) {
-
-                throw new Error(
-                    "CJ created the order but did not return a payment page."
+                    "The order could not be completed."
                 );
             }
 
 
             /*
-             * Store temporary order information.
+             * Store only non-sensitive confirmation
+             * information in sessionStorage.
              */
 
             try {
 
                 sessionStorage.setItem(
-                    "prasun_pending_cj_order",
+                    "prasun_order_confirmation",
                     JSON.stringify({
 
                         orderNumber:
                             data.orderNumber ||
-                            "",
-
-                        cjOrderId:
-                            data.cjOrderId ||
-                            "",
-
-                        shipmentOrderId:
-                            data.shipmentOrderId ||
-                            "",
-
-                        cjOrderAmount:
-                            data.cjOrderAmount ||
-                            0,
-
-                        shippingCost:
-                            data.shippingCost ||
-                            0,
-
-                        shippingMethod:
-                            data.shippingMethod ||
-                            "",
-
-                        shippingEstimate:
-                            data.shippingEstimate ||
+                            data.orderId ||
                             "",
 
                         createdAt:
@@ -1569,28 +1603,14 @@
                     })
                 );
 
-            } catch (error) {
-
-                console.warn(
-                    "[PRASUN SHOP] Session storage unavailable:",
-                    error
-                );
-            }
+            } catch (_) {}
 
 
             /*
-             * CJ order now exists.
-             *
-             * Clear the cart only after CJ
-             * successfully created the order.
+             * Order has been accepted by the Worker.
              */
 
             clearCart();
-
-
-            updateCartCount(
-                []
-            );
 
 
             window.dispatchEvent(
@@ -1605,35 +1625,50 @@
             );
 
 
-            setStatus(
-                "Order created. Redirecting to CJ payment..."
-            );
+            const orderNumber =
+                String(
+                    data.orderNumber ||
+                    data.orderId ||
+                    "Order received"
+                );
 
 
-            submitButton.textContent =
-                "Redirecting to Payment...";
+            if (
+                confirmationOrderNumber
+            ) {
+
+                confirmationOrderNumber.textContent =
+                    `Order #: ${orderNumber}`;
+            }
 
 
-            /*
-             * Redirect to CJ.
-             */
+            if (
+                checkoutForm
+            ) {
 
-            window.location.assign(
-                data.cjPayUrl
-            );
-
-        } catch (error) {
-
-            console.error(
-                "[PRASUN SHOP] Checkout error:",
-                error
-            );
+                checkoutForm.style.display =
+                    "none";
+            }
 
 
-            showError(
-                error?.message ||
-                "Unable to create the order. Please try again."
-            );
+            if (
+                orderConfirmation
+            ) {
+
+                orderConfirmation.classList.add(
+                    "visible"
+                );
+            }
+
+
+            if (
+                checkoutSuccess
+            ) {
+
+                showSuccess(
+                    "Your order has been successfully received."
+                );
+            }
 
 
             setStatus(
@@ -1641,46 +1676,180 @@
             );
 
 
-            submitButton.disabled =
+            /*
+             * Prevent accidental second submission.
+             */
+
+            placeOrderButton.dataset.processing =
+                "false";
+
+
+        } catch (error) {
+
+            console.error(
+                "[PRASUN SHOP] Order submission error:",
+                error
+            );
+
+
+            showError(
+                error?.message ||
+                "Unable to place your order. Please try again."
+            );
+
+
+            placeOrderButton.disabled =
                 false;
 
-            submitButton.textContent =
+            placeOrderButton.textContent =
                 originalText;
 
-            submitButton.dataset.processing =
+            placeOrderButton.dataset.processing =
                 "false";
+
+
+            setStatus(
+                ""
+            );
         }
     }
 
 
     /* ========================================================================
-       EVENT LISTENERS
+       FORM EVENTS
        ======================================================================== */
 
-    if (
-        checkoutForm
-    ) {
+    if (checkoutForm) {
 
         checkoutForm.addEventListener(
             "submit",
-            submitOrder
+            event => {
+
+                event.preventDefault();
+
+                submitOrder();
+            }
+        );
+
+
+        checkoutForm
+            .querySelectorAll(
+                "input, select, textarea"
+            )
+            .forEach(field => {
+
+                field.addEventListener(
+                    "input",
+                    () => {
+                        clearInvalid(field);
+                        hideError();
+                    }
+                );
+
+                field.addEventListener(
+                    "change",
+                    () => {
+                        clearInvalid(field);
+                    }
+                );
+            });
+    }
+
+
+    /* ========================================================================
+       COUNTRY CODE NORMALIZATION
+       ======================================================================== */
+
+    const countryCodeInput =
+        document.getElementById(
+            "shipping-country-code"
+        );
+
+
+    if (countryCodeInput) {
+
+        countryCodeInput.addEventListener(
+            "input",
+            () => {
+
+                countryCodeInput.value =
+                    countryCodeInput.value
+                        .replace(
+                            /[^a-zA-Z]/g,
+                            ""
+                        )
+                        .slice(0, 2)
+                        .toUpperCase();
+            }
         );
     }
 
+
+    /* ========================================================================
+       CART COUNT
+       ======================================================================== */
+
+    function updateCartCount() {
+
+        const countElement =
+            document.getElementById(
+                "cart-count"
+            );
+
+
+        if (!countElement) {
+            return;
+        }
+
+
+        const cart =
+            getCart();
+
+
+        const count =
+            cart.reduce(
+                (
+                    total,
+                    item
+                ) =>
+                    total +
+                    Math.max(
+                        1,
+                        Number(
+                            item.quantity
+                        ) || 1
+                    ),
+                0
+            );
+
+
+        countElement.textContent =
+            String(count);
+
+
+        countElement.hidden =
+            count <= 0;
+    }
+
+
+    /* ========================================================================
+       STORAGE SYNC
+       ======================================================================== */
 
     window.addEventListener(
         "storage",
         event => {
 
             if (
-                event.key ===
-                    CART_KEY ||
+                event.key === CART_KEY ||
                 LEGACY_KEYS.includes(
                     event.key
                 )
             ) {
 
-                renderSummary();
+                updateCartCount();
+
+                loadCheckoutSummary();
             }
         }
     );
@@ -1690,24 +1859,19 @@
         "prasunCartUpdated",
         () => {
 
-            renderSummary();
+            updateCartCount();
+
+            loadCheckoutSummary();
         }
     );
 
 
     /* ========================================================================
-       INITIALIZE
+       INITIALIZATION
        ======================================================================== */
 
-    const initialCart =
-        getCart();
+    updateCartCount();
 
-
-    updateCartCount(
-        initialCart
-    );
-
-
-    renderSummary();
+    loadCheckoutSummary();
 
 })();
