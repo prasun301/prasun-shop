@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
+    <!-- ================================================================
+         META
+         ================================================================ -->
+
     <meta charset="UTF-8">
 
     <meta
@@ -12,7 +18,7 @@
 
     <meta
         name="description"
-        content="Secure checkout for PRASUN SHOP."
+        content="Secure checkout for PRASUN SHOP. Enter your shipping information to submit your order."
     >
 
     <meta
@@ -30,19 +36,53 @@
         href="https://shop.prasunbarua.com/checkout.html"
     >
 
+
+    <!-- ================================================================
+         STYLESHEET
+         ================================================================ -->
+
     <link
         rel="stylesheet"
         href="/css/style.css?v=20260820-01"
     >
 
+
+    <!-- ================================================================
+         CHECKOUT PAGE STYLES
+         ================================================================ -->
+
     <style>
-        /* ================================================================
-           CHECKOUT PAGE
-           ================================================================ */
+
+        /* ==============================================================
+           ACCESSIBILITY
+           ============================================================== */
+
+        .visually-hidden {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            clip-path: inset(50%) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+        }
+
+
+        /* ==============================================================
+           PAGE
+           ============================================================== */
 
         .checkout-page {
-            width: min(1200px, calc(100% - 32px));
+            width: min(
+                1200px,
+                calc(100% - 32px)
+            );
+
             margin: 0 auto;
+
             padding: 42px 0 72px;
         }
 
@@ -52,39 +92,89 @@
 
         .checkout-title {
             margin: 0 0 8px;
+
             color: #0f172a;
-            font-size: clamp(1.75rem, 3vw, 2.35rem);
+
+            font-size:
+                clamp(
+                    1.75rem,
+                    3vw,
+                    2.35rem
+                );
+
             font-weight: 800;
+
+            line-height: 1.15;
+
             letter-spacing: -0.03em;
         }
 
         .checkout-subtitle {
             margin: 0;
+
             color: #64748b;
+
+            font-size: 0.96rem;
+
             line-height: 1.6;
         }
 
+
+        /* ==============================================================
+           LAYOUT
+           ============================================================== */
+
         .checkout-layout {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 380px;
-            gap: 24px;
+
+            grid-template-columns:
+                minmax(0, 1fr)
+                380px;
+
             align-items: start;
+
+            gap: 24px;
         }
+
+
+        /* ==============================================================
+           CARDS
+           ============================================================== */
 
         .checkout-card {
             background: #ffffff;
-            border: 1px solid #e2e8f0;
+
+            border:
+                1px solid #e2e8f0;
+
             border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.05);
+
+            box-shadow:
+                0 8px 30px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.05
+                );
+
             padding: 24px;
         }
 
         .checkout-card h2 {
             margin: 0 0 22px;
+
             color: #0f172a;
+
             font-size: 1.15rem;
+
             font-weight: 800;
         }
+
+
+        /* ==============================================================
+           FORM SECTIONS
+           ============================================================== */
 
         .checkout-section {
             margin-bottom: 28px;
@@ -96,20 +186,31 @@
 
         .checkout-section-title {
             margin: 0 0 14px;
+
             color: #334155;
+
             font-size: 0.95rem;
+
             font-weight: 800;
         }
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
             gap: 15px;
         }
 
         .form-field {
             display: flex;
+
             flex-direction: column;
+
             gap: 7px;
         }
 
@@ -119,31 +220,57 @@
 
         .form-field label {
             color: #334155;
+
             font-size: 0.82rem;
+
             font-weight: 700;
         }
+
+        .required {
+            color: #dc2626;
+        }
+
+
+        /* ==============================================================
+           FORM CONTROLS
+           ============================================================== */
 
         .form-field input,
         .form-field select,
         .form-field textarea {
             width: 100%;
+
             min-height: 46px;
-            box-sizing: border-box;
-            padding: 11px 13px;
-            border: 1px solid #cbd5e1;
+
+            padding:
+                11px 13px;
+
+            border:
+                1px solid #cbd5e1;
+
             border-radius: 10px;
+
             background: #ffffff;
+
             color: #0f172a;
+
             font-family: inherit;
+
             font-size: 0.9rem;
+
             outline: none;
+
             transition:
-                border-color 0.15s ease,
-                box-shadow 0.15s ease;
+                border-color
+                0.15s ease,
+
+                box-shadow
+                0.15s ease;
         }
 
         .form-field textarea {
             min-height: 92px;
+
             resize: vertical;
         }
 
@@ -151,28 +278,56 @@
         .form-field select:focus,
         .form-field textarea:focus {
             border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    37,
+                    99,
+                    235,
+                    0.12
+                );
         }
 
         .form-field input.invalid,
         .form-field select.invalid,
         .form-field textarea.invalid {
             border-color: #dc2626;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    220,
+                    38,
+                    38,
+                    0.08
+                );
         }
 
-        .required {
-            color: #dc2626;
-        }
+
+        /* ==============================================================
+           ERROR / SUCCESS
+           ============================================================== */
 
         .checkout-error {
             display: none;
+
             margin-bottom: 20px;
-            padding: 13px 15px;
-            border: 1px solid #fecaca;
+
+            padding:
+                13px 15px;
+
+            border:
+                1px solid #fecaca;
+
             border-radius: 10px;
+
             background: #fef2f2;
+
             color: #b91c1c;
+
             font-size: 0.85rem;
+
             line-height: 1.5;
         }
 
@@ -182,13 +337,23 @@
 
         .checkout-success {
             display: none;
+
             margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #bbf7d0;
+
+            padding:
+                15px;
+
+            border:
+                1px solid #bbf7d0;
+
             border-radius: 10px;
+
             background: #f0fdf4;
+
             color: #166534;
+
             font-size: 0.85rem;
+
             line-height: 1.5;
         }
 
@@ -196,24 +361,46 @@
             display: block;
         }
 
+
+        /* ==============================================================
+           CHECKOUT STATUS
+           ============================================================== */
+
         .checkout-status {
             margin-top: 14px;
+
             color: #64748b;
+
             font-size: 0.78rem;
+
             line-height: 1.5;
+
             text-align: center;
         }
 
+
+        /* ==============================================================
+           ORDER SUMMARY
+           ============================================================== */
+
         .order-summary {
             position: sticky;
+
             top: 96px;
         }
 
         .summary-item {
             display: flex;
+
+            align-items: flex-start;
+
             gap: 12px;
-            padding: 13px 0;
-            border-bottom: 1px solid #f1f5f9;
+
+            padding:
+                13px 0;
+
+            border-bottom:
+                1px solid #f1f5f9;
         }
 
         .summary-item:last-child {
@@ -222,45 +409,76 @@
 
         .summary-item-image {
             width: 58px;
+
             height: 58px;
-            flex: 0 0 58px;
+
+            flex:
+                0 0 58px;
+
             object-fit: contain;
-            border: 1px solid #e2e8f0;
+
+            border:
+                1px solid #e2e8f0;
+
             border-radius: 10px;
+
             background: #f8fafc;
         }
 
         .summary-item-info {
             min-width: 0;
+
             flex: 1;
         }
 
         .summary-item-name {
             margin: 0 0 4px;
+
             color: #0f172a;
+
             font-size: 0.84rem;
+
             font-weight: 700;
+
             line-height: 1.35;
+
+            overflow-wrap: anywhere;
         }
 
         .summary-item-meta {
             color: #64748b;
+
             font-size: 0.74rem;
+
+            line-height: 1.4;
         }
 
         .summary-item-price {
-            flex: 0 0 auto;
+            flex:
+                0 0 auto;
+
             color: #0f172a;
+
             font-size: 0.84rem;
+
             font-weight: 800;
+
+            white-space: nowrap;
         }
 
         .summary-row {
             display: flex;
+
+            align-items: center;
+
             justify-content: space-between;
+
             gap: 20px;
+
             margin-top: 8px;
+
             color: #64748b;
+
             font-size: 0.82rem;
         }
 
@@ -270,31 +488,62 @@
 
         .summary-total {
             display: flex;
+
+            align-items: center;
+
             justify-content: space-between;
+
             gap: 20px;
+
             margin-top: 18px;
+
             padding-top: 18px;
-            border-top: 1px solid #e2e8f0;
+
+            border-top:
+                1px solid #e2e8f0;
+
             color: #0f172a;
+
             font-size: 1.05rem;
+
             font-weight: 800;
         }
 
+
+        /* ==============================================================
+           PLACE ORDER
+           ============================================================== */
+
         #place-order-button {
             width: 100%;
+
             min-height: 48px;
+
             margin-top: 22px;
-            padding: 0 18px;
+
+            padding:
+                0 18px;
+
             border: 0;
+
             border-radius: 10px;
+
             background: #2563eb;
+
             color: #ffffff;
+
             font-size: 0.92rem;
+
             font-weight: 800;
+
             cursor: pointer;
+
             transition:
-                background 0.15s ease,
-                opacity 0.15s ease;
+                background
+                0.15s ease,
+
+                opacity
+                0.15s ease;
         }
 
         #place-order-button:hover:not(:disabled) {
@@ -303,16 +552,41 @@
 
         #place-order-button:disabled {
             background: #cbd5e1;
+
             color: #64748b;
+
             cursor: not-allowed;
         }
 
+        #place-order-button:focus-visible {
+            outline:
+                3px solid
+                rgba(
+                    37,
+                    99,
+                    235,
+                    0.25
+                );
+
+            outline-offset: 2px;
+        }
+
+
+        /* ==============================================================
+           BACK TO CART
+           ============================================================== */
+
         .back-to-cart {
             display: inline-flex;
+
             margin-top: 14px;
+
             color: #2563eb;
+
             font-size: 0.82rem;
+
             font-weight: 700;
+
             text-decoration: none;
         }
 
@@ -320,40 +594,75 @@
             text-decoration: underline;
         }
 
+
+        /* ==============================================================
+           EMPTY CHECKOUT
+           ============================================================== */
+
         .empty-checkout {
-            padding: 55px 20px;
+            padding:
+                55px 20px;
+
             text-align: center;
         }
 
         .empty-checkout h2 {
             margin: 0 0 8px;
+
             color: #0f172a;
+
             font-size: 1.25rem;
+
             font-weight: 800;
         }
 
         .empty-checkout p {
-            margin: 0 0 20px;
+            margin:
+                0 0 20px;
+
             color: #64748b;
+
             line-height: 1.6;
         }
 
         .empty-checkout a {
             display: inline-flex;
+
             min-height: 44px;
+
             align-items: center;
+
             justify-content: center;
-            padding: 0 18px;
+
+            padding:
+                0 18px;
+
             border-radius: 10px;
+
             background: #2563eb;
+
             color: #ffffff;
+
             font-weight: 700;
+
             text-decoration: none;
         }
 
+        .empty-checkout a:hover {
+            background: #1d4ed8;
+        }
+
+
+        /* ==============================================================
+           ORDER CONFIRMATION
+           ============================================================== */
+
         .order-confirmation {
             display: none;
-            padding: 36px 24px;
+
+            padding:
+                36px 24px;
+
             text-align: center;
         }
 
@@ -363,55 +672,106 @@
 
         .confirmation-icon {
             width: 58px;
+
             height: 58px;
-            margin: 0 auto 16px;
+
+            margin:
+                0 auto 16px;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             border-radius: 50%;
+
             background: #dcfce7;
+
             color: #15803d;
+
             font-size: 1.6rem;
+
             font-weight: 800;
         }
 
         .order-confirmation h2 {
-            margin: 0 0 8px;
+            margin:
+                0 0 8px;
+
+            color: #0f172a;
+
+            font-size: 1.3rem;
+
+            font-weight: 800;
         }
 
         .order-confirmation p {
-            margin: 0 auto 20px;
             max-width: 520px;
+
+            margin:
+                0 auto 20px;
+
             color: #64748b;
+
             line-height: 1.6;
         }
 
         .order-number {
             display: inline-block;
+
             margin-bottom: 20px;
-            padding: 9px 13px;
+
+            padding:
+                9px 13px;
+
             border-radius: 8px;
+
             background: #f8fafc;
+
             color: #0f172a;
+
             font-size: 0.85rem;
+
             font-weight: 800;
         }
 
         .continue-shopping {
             display: inline-flex;
+
             min-height: 44px;
+
             align-items: center;
+
             justify-content: center;
-            padding: 0 18px;
+
+            padding:
+                0 18px;
+
             border-radius: 10px;
+
             background: #2563eb;
+
             color: #ffffff;
+
             font-size: 0.85rem;
+
             font-weight: 700;
+
             text-decoration: none;
         }
 
+        .continue-shopping:hover {
+            background: #1d4ed8;
+        }
+
+
+        /* ==============================================================
+           RESPONSIVE
+           ============================================================== */
+
         @media (max-width: 900px) {
+
             .checkout-layout {
                 grid-template-columns: 1fr;
             }
@@ -419,16 +779,24 @@
             .order-summary {
                 position: static;
             }
+
         }
 
+
         @media (max-width: 640px) {
+
             .checkout-page {
-                width: calc(100% - 24px);
-                padding: 28px 0 50px;
+                width:
+                    calc(100% - 24px);
+
+                padding:
+                    28px 0 50px;
             }
 
             .checkout-card {
                 padding: 17px;
+
+                border-radius: 14px;
             }
 
             .form-grid {
@@ -438,489 +806,662 @@
             .form-field.full {
                 grid-column: auto;
             }
+
+            .summary-item {
+                gap: 10px;
+            }
+
+            .summary-item-image {
+                width: 52px;
+
+                height: 52px;
+
+                flex-basis: 52px;
+            }
+
         }
+
+
+        /* ==============================================================
+           REDUCED MOTION
+           ============================================================== */
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                scroll-behavior:
+                    auto !important;
+
+                transition:
+                    none !important;
+
+                animation:
+                    none !important;
+            }
+
+        }
+
     </style>
+
 </head>
+
 
 <body>
 
-<header class="header">
-    <div class="header-container">
 
-        <a
-            href="/"
-            class="logo"
-            aria-label="PRASUN SHOP Homepage"
-        >
-            <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-            >
-                <path d="M3 9l9-6 9 6"></path>
-                <path d="M5 10v10h14V10"></path>
-                <path d="M9 20v-6h6v6"></path>
-            </svg>
+    <!-- ================================================================
+         HEADER
+         ================================================================ -->
 
-            <span>PRASUN SHOP</span>
-        </a>
+    <header class="site-header">
 
-        <nav
-            class="nav-links"
-            aria-label="Main navigation"
-        >
-            <a href="/">Shop</a>
+        <div class="container">
 
             <a
-                href="/cart.html"
-                aria-label="View Shopping Cart"
+                href="/"
+                class="site-logo logo"
+                aria-label="PRASUN SHOP Homepage"
             >
-                Cart
-                <span
-                    id="cart-count"
-                    class="cart-count"
-                    hidden
+
+                <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
                 >
-                    0
+
+                    <path d="M3 9l9-6 9 6"></path>
+
+                    <path d="M5 10v10h14V10"></path>
+
+                    <path d="M9 20v-6h6v6"></path>
+
+                </svg>
+
+                <span>
+                    PRASUN SHOP
                 </span>
+
             </a>
 
-            <a href="/about.html">About</a>
 
-            <a href="/contact.html">Contact</a>
-        </nav>
-
-    </div>
-</header>
-
-
-<main
-    class="checkout-page"
-    id="main-content"
->
-
-    <header class="checkout-header">
-        <h1 class="checkout-title">
-            Checkout
-        </h1>
-
-        <p class="checkout-subtitle">
-            Enter your delivery information to place your order.
-        </p>
-    </header>
-
-
-    <div
-        id="checkout-error"
-        class="checkout-error"
-        role="alert"
-        aria-live="assertive"
-    ></div>
-
-
-    <div
-        id="checkout-success"
-        class="checkout-success"
-        role="status"
-        aria-live="polite"
-    ></div>
-
-
-    <div
-        class="checkout-layout"
-        id="checkout-layout"
-    >
-
-        <!-- ============================================================
-             CUSTOMER INFORMATION
-             ============================================================ -->
-
-        <section class="checkout-card">
-
-            <h2>
-                Shipping Information
-            </h2>
-
-            <form
-                id="checkout-form"
-                novalidate
+            <nav
+                class="nav-links"
+                aria-label="Main navigation"
             >
-
-                <div class="checkout-section">
-
-                    <h3 class="checkout-section-title">
-                        Contact Information
-                    </h3>
-
-                    <div class="form-grid">
-
-                        <div class="form-field full">
-                            <label for="customer-name">
-                                Full Name
-                                <span class="required">*</span>
-                            </label>
-
-                            <input
-                                id="customer-name"
-                                name="name"
-                                type="text"
-                                autocomplete="name"
-                                maxlength="100"
-                                required
-                            >
-                        </div>
-
-
-                        <div class="form-field">
-                            <label for="customer-email">
-                                Email
-                                <span class="required">*</span>
-                            </label>
-
-                            <input
-                                id="customer-email"
-                                name="email"
-                                type="email"
-                                autocomplete="email"
-                                maxlength="120"
-                                required
-                            >
-                        </div>
-
-
-                        <div class="form-field">
-                            <label for="customer-phone">
-                                Phone
-                                <span class="required">*</span>
-                            </label>
-
-                            <input
-                                id="customer-phone"
-                                name="phone"
-                                type="tel"
-                                autocomplete="tel"
-                                maxlength="30"
-                                required
-                            >
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="checkout-section">
-
-                    <h3 class="checkout-section-title">
-                        Delivery Address
-                    </h3>
-
-                    <div class="form-grid">
-
-                        <div class="form-field">
-                            <label for="shipping-country">
-                                Country
-                                <span class="required">*</span>
-                            </label>
-
-                            <input
-                                id="shipping-country"
-                                name="country"
-                                type="text"
-                                value="United States"
-                                maxlength="80"
-                                autocomplete="country-name"
-                                required
-                            >
-                        </div>
-
-
-                        <div class="form-field">
-                            <label for="shipping-country-code">
-                                Country Code
-                                <span class="required">*</span>
-                            </label>
-
-                            <input
-                                id="shipping-country-code"
-                                name="countryCode"
-                                type="text"
-                                value="US"
-                                maxlength="2"
-                                minlength="2"
-                                autocomplete="country"
-                                required
-                            >
-                        </div>
-
-
-                        <div class="form-field">
-                            <label for="shipping-province">
-                                State / Province
-                                <span class="required">*</span>
-                            </label>
-
-                            <input
-                                id="shipping-province"
-                                name="province"
-                                type="text"
-                                maxlength="100"
-                                autocomplete="address-level1"
-                                required
-                            >
-                        </div>
-
-
-                        <div class="form-field">
-                            <label for="shipping-city">
-                                City
-                                <span class="required">*</span>
-                            </label>
-
-                            <input
-                                id="shipping-city"
-                                name="city"
-                                type="text"
-                                maxlength="100"
-                                autocomplete="address-level2"
-                                required
-                            >
-                        </div>
-
-
-                        <div class="form-field">
-                            <label for="shipping-zip">
-                                ZIP / Postal Code
-                            </label>
-
-                            <input
-                                id="shipping-zip"
-                                name="zip"
-                                type="text"
-                                maxlength="30"
-                                autocomplete="postal-code"
-                            >
-                        </div>
-
-
-                        <div class="form-field">
-                            <label for="shipping-county">
-                                County
-                            </label>
-
-                            <input
-                                id="shipping-county"
-                                name="county"
-                                type="text"
-                                maxlength="100"
-                                autocomplete="address-level2"
-                            >
-                        </div>
-
-
-                        <div class="form-field full">
-                            <label for="shipping-address">
-                                Address
-                                <span class="required">*</span>
-                            </label>
-
-                            <textarea
-                                id="shipping-address"
-                                name="address"
-                                maxlength="500"
-                                autocomplete="street-address"
-                                required
-                            ></textarea>
-                        </div>
-
-
-                        <div class="form-field full">
-                            <label for="shipping-address2">
-                                Apartment / Unit / Additional Address
-                            </label>
-
-                            <input
-                                id="shipping-address2"
-                                name="address2"
-                                type="text"
-                                maxlength="300"
-                                autocomplete="address-line2"
-                            >
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="checkout-section">
-
-                    <h3 class="checkout-section-title">
-                        Order Note
-                    </h3>
-
-                    <div class="form-field">
-
-                        <label for="order-note">
-                            Optional note
-                        </label>
-
-                        <textarea
-                            id="order-note"
-                            name="remark"
-                            maxlength="500"
-                            placeholder="Optional delivery or order note."
-                        ></textarea>
-
-                    </div>
-
-                </div>
-
-
-                <button
-                    type="submit"
-                    id="place-order-button"
-                >
-                    Place Order
-                </button>
-
-
-                <div
-                    id="checkout-status"
-                    class="checkout-status"
-                    aria-live="polite"
-                ></div>
-
-
-                <a
-                    href="/cart.html"
-                    class="back-to-cart"
-                >
-                    ← Back to Cart
-                </a>
-
-            </form>
-
-
-            <!-- ============================================================
-                 SUCCESS
-                 ============================================================ -->
-
-            <div
-                id="order-confirmation"
-                class="order-confirmation"
-            >
-
-                <div class="confirmation-icon">
-                    ✓
-                </div>
-
-                <h2>
-                    Order Received
-                </h2>
-
-                <p>
-                    Thank you for your order. We have received your order
-                    information and will process it for delivery.
-                </p>
-
-                <div
-                    id="confirmation-order-number"
-                    class="order-number"
-                ></div>
-
-                <br>
 
                 <a
                     href="/"
-                    class="continue-shopping"
+                    class="nav-link"
                 >
-                    Continue Shopping
+                    Shop
                 </a>
 
-            </div>
+                <a
+                    href="/cart.html"
+                    class="cart-link"
+                    aria-label="View Shopping Cart"
+                >
+                    Cart
 
-        </section>
+                    <span
+                        id="cart-count"
+                        class="cart-count"
+                        hidden
+                        aria-label="0 items in cart"
+                    >
+                        0
+                    </span>
+                </a>
+
+                <a
+                    href="/about.html"
+                    class="nav-link"
+                >
+                    About
+                </a>
+
+                <a
+                    href="/contact.html"
+                    class="nav-link"
+                >
+                    Contact
+                </a>
+
+            </nav>
+
+        </div>
+
+    </header>
 
 
-        <!-- ================================================================
-             ORDER SUMMARY
-             ================================================================ -->
+    <!-- ================================================================
+         MAIN CHECKOUT
+         ================================================================ -->
 
-        <aside
-            class="checkout-card order-summary"
+    <main
+        class="checkout-page"
+        id="main-content"
+    >
+
+        <header class="checkout-header">
+
+            <h1 class="checkout-title">
+                Checkout
+            </h1>
+
+            <p class="checkout-subtitle">
+                Enter your delivery information to submit your order.
+            </p>
+
+        </header>
+
+
+        <!-- ============================================================
+             GLOBAL ERROR
+             ============================================================ -->
+
+        <div
+            id="checkout-error"
+            class="checkout-error"
+            role="alert"
+            aria-live="assertive"
+        ></div>
+
+
+        <!-- ============================================================
+             GLOBAL SUCCESS
+             ============================================================ -->
+
+        <div
+            id="checkout-success"
+            class="checkout-success"
+            role="status"
+            aria-live="polite"
+        ></div>
+
+
+        <div
+            class="checkout-layout"
+            id="checkout-layout"
         >
 
-            <h2>
-                Your Order
-            </h2>
 
-            <div
-                id="order-summary"
-                aria-live="polite"
-                aria-busy="true"
+            <!-- ========================================================
+                 CUSTOMER / SHIPPING FORM
+                 ======================================================== -->
+
+            <section
+                class="checkout-card"
+                aria-labelledby="shipping-information-heading"
             >
-                <div class="checkout-status">
-                    Loading order...
+
+                <h2 id="shipping-information-heading">
+                    Shipping Information
+                </h2>
+
+
+                <form
+                    id="checkout-form"
+                    novalidate
+                >
+
+
+                    <!-- ==================================================
+                         CONTACT
+                         ================================================== -->
+
+                    <div class="checkout-section">
+
+                        <h3 class="checkout-section-title">
+                            Contact Information
+                        </h3>
+
+                        <div class="form-grid">
+
+
+                            <div class="form-field full">
+
+                                <label for="customer-name">
+                                    Full Name
+                                    <span
+                                        class="required"
+                                        aria-hidden="true"
+                                    >*</span>
+                                </label>
+
+                                <input
+                                    id="customer-name"
+                                    name="name"
+                                    type="text"
+                                    autocomplete="name"
+                                    maxlength="100"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-field">
+
+                                <label for="customer-email">
+                                    Email
+                                    <span
+                                        class="required"
+                                        aria-hidden="true"
+                                    >*</span>
+                                </label>
+
+                                <input
+                                    id="customer-email"
+                                    name="email"
+                                    type="email"
+                                    autocomplete="email"
+                                    maxlength="120"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-field">
+
+                                <label for="customer-phone">
+                                    Phone
+                                    <span
+                                        class="required"
+                                        aria-hidden="true"
+                                    >*</span>
+                                </label>
+
+                                <input
+                                    id="customer-phone"
+                                    name="phone"
+                                    type="tel"
+                                    autocomplete="tel"
+                                    maxlength="30"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ==================================================
+                         SHIPPING ADDRESS
+                         ================================================== -->
+
+                    <div class="checkout-section">
+
+                        <h3 class="checkout-section-title">
+                            Delivery Address
+                        </h3>
+
+                        <div class="form-grid">
+
+
+                            <div class="form-field">
+
+                                <label for="shipping-country">
+                                    Country
+                                    <span
+                                        class="required"
+                                        aria-hidden="true"
+                                    >*</span>
+                                </label>
+
+                                <input
+                                    id="shipping-country"
+                                    name="country"
+                                    type="text"
+                                    maxlength="80"
+                                    autocomplete="country-name"
+                                    placeholder="United States"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-field">
+
+                                <label for="shipping-country-code">
+                                    Country Code
+                                    <span
+                                        class="required"
+                                        aria-hidden="true"
+                                    >*</span>
+                                </label>
+
+                                <input
+                                    id="shipping-country-code"
+                                    name="countryCode"
+                                    type="text"
+                                    maxlength="2"
+                                    minlength="2"
+                                    autocomplete="country"
+                                    placeholder="US"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-field">
+
+                                <label for="shipping-province">
+                                    State / Province
+                                    <span
+                                        class="required"
+                                        aria-hidden="true"
+                                    >*</span>
+                                </label>
+
+                                <input
+                                    id="shipping-province"
+                                    name="province"
+                                    type="text"
+                                    maxlength="100"
+                                    autocomplete="address-level1"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-field">
+
+                                <label for="shipping-city">
+                                    City
+                                    <span
+                                        class="required"
+                                        aria-hidden="true"
+                                    >*</span>
+                                </label>
+
+                                <input
+                                    id="shipping-city"
+                                    name="city"
+                                    type="text"
+                                    maxlength="100"
+                                    autocomplete="address-level2"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-field">
+
+                                <label for="shipping-zip">
+                                    ZIP / Postal Code
+                                </label>
+
+                                <input
+                                    id="shipping-zip"
+                                    name="zip"
+                                    type="text"
+                                    maxlength="30"
+                                    autocomplete="postal-code"
+                                >
+
+                            </div>
+
+
+                            <div class="form-field">
+
+                                <label for="shipping-county">
+                                    County
+                                </label>
+
+                                <input
+                                    id="shipping-county"
+                                    name="county"
+                                    type="text"
+                                    maxlength="100"
+                                >
+
+                            </div>
+
+
+                            <div class="form-field full">
+
+                                <label for="shipping-address">
+                                    Address
+                                    <span
+                                        class="required"
+                                        aria-hidden="true"
+                                    >*</span>
+                                </label>
+
+                                <textarea
+                                    id="shipping-address"
+                                    name="address"
+                                    maxlength="500"
+                                    autocomplete="street-address"
+                                    required
+                                ></textarea>
+
+                            </div>
+
+
+                            <div class="form-field full">
+
+                                <label for="shipping-address2">
+                                    Apartment / Unit / Additional Address
+                                </label>
+
+                                <input
+                                    id="shipping-address2"
+                                    name="address2"
+                                    type="text"
+                                    maxlength="300"
+                                    autocomplete="address-line2"
+                                >
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ==================================================
+                         ORDER NOTE
+                         ================================================== -->
+
+                    <div class="checkout-section">
+
+                        <h3 class="checkout-section-title">
+                            Order Note
+                        </h3>
+
+                        <div class="form-field">
+
+                            <label for="order-note">
+                                Optional note
+                            </label>
+
+                            <textarea
+                                id="order-note"
+                                name="remark"
+                                maxlength="500"
+                                placeholder="Optional delivery or order note."
+                            ></textarea>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ==================================================
+                         SUBMIT
+                         ================================================== -->
+
+                    <button
+                        type="submit"
+                        id="place-order-button"
+                    >
+                        Place Order
+                    </button>
+
+
+                    <div
+                        id="checkout-status"
+                        class="checkout-status"
+                        aria-live="polite"
+                    ></div>
+
+
+                    <a
+                        href="/cart.html"
+                        class="back-to-cart"
+                    >
+                        ← Back to Cart
+                    </a>
+
+                </form>
+
+
+                <!-- ======================================================
+                     ORDER CONFIRMATION
+                     ====================================================== -->
+
+                <div
+                    id="order-confirmation"
+                    class="order-confirmation"
+                    role="status"
+                    aria-live="polite"
+                >
+
+                    <div class="confirmation-icon">
+                        ✓
+                    </div>
+
+                    <h2>
+                        Order Received
+                    </h2>
+
+                    <p>
+                        Thank you for your order. We have received your
+                        order information and will process it for delivery.
+                    </p>
+
+                    <div
+                        id="confirmation-order-number"
+                        class="order-number"
+                    ></div>
+
+                    <br>
+
+                    <a
+                        href="/"
+                        class="continue-shopping"
+                    >
+                        Continue Shopping
+                    </a>
+
                 </div>
-            </div>
 
-        </aside>
-
-    </div>
-
-</main>
+            </section>
 
 
-<footer class="footer">
+            <!-- ========================================================
+                 ORDER SUMMARY
+                 ======================================================== -->
 
-    <div class="footer-links">
+            <aside
+                class="checkout-card order-summary"
+                aria-labelledby="order-summary-heading"
+            >
 
-        <a href="/privacy.html">
-            Privacy Policy
-        </a>
+                <h2 id="order-summary-heading">
+                    Your Order
+                </h2>
 
-        <a href="/terms.html">
-            Terms of Service
-        </a>
+                <div
+                    id="order-summary"
+                    aria-live="polite"
+                    aria-busy="true"
+                >
 
-        <a href="/refund.html">
-            Refund Policy
-        </a>
+                    <div class="checkout-status">
+                        Loading order...
+                    </div>
 
-        <a href="/contact.html">
-            Contact
-        </a>
+                </div>
 
-    </div>
+            </aside>
 
-    <p>
-        &copy; 2026 PRASUN SHOP by
+        </div>
 
-        <a
-            href="https://prasunbarua.com"
-            target="_blank"
-            rel="noopener noreferrer"
-        >
-            Prasun Barua
-        </a>.
-
-        All rights reserved.
-    </p>
-
-</footer>
+    </main>
 
 
-<script
-    src="/js/checkout.js?v=20260820-01"
-    defer
-></script>
+    <!-- ================================================================
+         FOOTER
+         ================================================================ -->
+
+    <footer class="footer">
+
+        <div class="footer-links">
+
+            <a href="/privacy.html">
+                Privacy Policy
+            </a>
+
+            <a href="/terms.html">
+                Terms of Service
+            </a>
+
+            <a href="/refund.html">
+                Refund Policy
+            </a>
+
+            <a href="/contact.html">
+                Contact
+            </a>
+
+        </div>
+
+        <p>
+
+            &copy; 2026 PRASUN SHOP by
+
+            <a
+                href="https://prasunbarua.com"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                Prasun Barua
+            </a>.
+
+            All rights reserved.
+
+        </p>
+
+    </footer>
+
+
+    <!-- ================================================================
+         CHECKOUT JAVASCRIPT
+         ================================================================ -->
+
+    <script
+        src="/js/checkout.js?v=20260820-01"
+        defer
+    ></script>
 
 </body>
+
 </html>
