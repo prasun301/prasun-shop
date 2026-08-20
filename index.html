@@ -2,11 +2,6 @@
 <html lang="en">
 
 <head>
-
-  <!-- ======================================================================
-       DOCUMENT META
-       ====================================================================== -->
-
   <meta charset="UTF-8">
 
   <meta
@@ -14,11 +9,11 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>PRASUN SHOP — Quality Physical Products</title>
+  <title>PRASUN SHOP — Quality Products</title>
 
   <meta
     name="description"
-    content="Shop selected physical products at PRASUN SHOP, including useful electronics, smart devices, accessories, and everyday products with convenient online ordering."
+    content="Shop useful electronics, smart devices, accessories and everyday products at PRASUN SHOP."
   >
 
   <meta
@@ -36,11 +31,12 @@
     href="https://shop.prasunbarua.com/"
   >
 
+  <link
+    rel="icon"
+    href="/favicon.ico"
+  >
 
-  <!-- ======================================================================
-       GOOGLE ANALYTICS
-       ====================================================================== -->
-
+  <!-- Google Analytics -->
   <script
     async
     src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"
@@ -55,155 +51,49 @@
 
     gtag("js", new Date());
 
-    gtag(
-      "config",
-      "G-D9F2VQ4247"
-    );
+    gtag("config", "G-D9F2VQ4247");
   </script>
 
-
-  <!-- ======================================================================
-       FAVICON
-       ====================================================================== -->
-
-  <link
-    rel="icon"
-    href="/favicon.ico"
-    sizes="any"
-  >
-
-  <link
-    rel="icon"
-    href="/icon.svg"
-    type="image/svg+xml"
-  >
-
-  <link
-    rel="apple-touch-icon"
-    href="/apple-touch-icon.png"
-  >
-
-
-  <!-- ======================================================================
-       MAIN STYLESHEET
-       ====================================================================== -->
-
+  <!-- Main CSS -->
   <link
     rel="stylesheet"
-    href="/css/style.css?v=20260820-01"
+    href="/css/style.css?v=20260820-02"
   >
 
-
-  <!-- ======================================================================
-       GOOGLE FONTS + PAGE-SPECIFIC STYLES
-       ====================================================================== -->
-
-  <style>
-
-    /*
-     * ================================================================
-     * FONT SYSTEM
-     * ================================================================
-     */
-
-    @import url(
-      'https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;600&family=Fira+Sans:ital,wght@0,400..800;1,400..800&family=Inter:wght@400..800&family=Noto+Sans:ital,wght@0,400..800;1,400..800&display=swap'
-    );
-
-
-    /* ================================================================
-       GLOBAL PAGE FONT
-       ================================================================ */
-
-    html,
-    body {
-
-      max-width: 100%;
-
-      overflow-x: hidden;
-
-      font-family:
-        'Inter',
-        'Noto Sans',
-        'Fira Sans',
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        sans-serif;
-    }
-
-
-    /* ================================================================
-       FORM / CONTROL FONT
-       ================================================================ */
-
-    input,
-    select,
-    button,
-    code {
-
-      font-family:
-        'Fira Mono',
-        monospace,
-        sans-serif;
-    }
-
-
-    /* ================================================================
-       ACCESSIBILITY
-       ================================================================ */
-
-    .visually-hidden {
-
-      position: absolute !important;
-
-      width: 1px !important;
-      height: 1px !important;
-
-      padding: 0 !important;
-      margin: -1px !important;
-
-      overflow: hidden !important;
-
-      clip: rect(0, 0, 0, 0) !important;
-      clip-path: inset(50%) !important;
-
-      white-space: nowrap !important;
-
-      border: 0 !important;
-    }
-
-  </style>
-
-
-  <!-- ======================================================================
-       GOOGLE ADSENSE
-       ====================================================================== -->
-
+  <!-- Google AdSense -->
   <script
     async
     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168"
     crossorigin="anonymous"
   ></script>
 
+  <style>
+    .visually-hidden {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      clip-path: inset(50%) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+  </style>
+
 </head>
 
 
 <body>
 
-
-  <!-- ======================================================================
+  <!-- ==============================================================
        HEADER
-       ====================================================================== -->
+       ============================================================== -->
 
   <header class="site-header">
 
     <div class="container">
-
-
-      <!-- ==============================================================
-           LOGO
-           ============================================================== -->
 
       <a
         href="/"
@@ -231,16 +121,10 @@
 
         </svg>
 
-        <span>
-          PRASUN SHOP
-        </span>
+        <span>PRASUN SHOP</span>
 
       </a>
 
-
-      <!-- ==============================================================
-           NAVIGATION
-           ============================================================== -->
 
       <nav
         class="nav-links"
@@ -255,16 +139,13 @@
           Shop
         </a>
 
-
         <a
           href="/cart.html"
           class="cart-link"
           aria-label="View Shopping Cart"
         >
 
-          <span>
-            Cart
-          </span>
+          <span>Cart</span>
 
           <span
             id="cart-count"
@@ -277,14 +158,12 @@
 
         </a>
 
-
         <a
           href="/about.html"
           class="nav-link"
         >
           About
         </a>
-
 
         <a
           href="/contact.html"
@@ -300,18 +179,15 @@
   </header>
 
 
-  <!-- ======================================================================
-       MAIN SHOP
-       ====================================================================== -->
+  <!-- ==============================================================
+       MAIN STORE
+       ============================================================== -->
 
   <main class="products-page shop-container">
 
     <div class="container">
 
-
-      <!-- ==============================================================
-           SHOP HEADER
-           ============================================================== -->
+      <!-- SHOP INTRO -->
 
       <header class="products-header shop-header">
 
@@ -319,62 +195,24 @@
           id="products-heading"
           class="shop-title"
         >
-          Shop Physical Products
+          All Products
         </h1>
 
         <p class="shop-subtitle">
-          Discover useful products selected for everyday life, shipped globally.
+          Discover useful products selected for everyday life.
         </p>
 
       </header>
 
 
-      <!-- ==============================================================
-           GLOBAL SETTINGS TOOLBAR (LOCATION & CURRENCY)
-           ============================================================== -->
-
-      <section
-        class="global-settings-bar store-controls"
-        aria-label="Store region and currency settings"
-      >
-
-        <label for="global-ship-to" class="control-item">
-          <span>Ship to:</span>
-          <select id="global-ship-to">
-            <option value="US">United States</option>
-            <option value="CA">Canada</option>
-            <option value="GB">United Kingdom</option>
-            <option value="AU">Australia</option>
-            <option value="DE">Germany</option>
-            <option value="FR">France</option>
-          </select>
-        </label>
-
-        <label for="global-currency" class="control-item">
-          <span>Currency:</span>
-          <select id="global-currency">
-            <option value="USD">USD ($)</option>
-            <option value="EUR">EUR (€)</option>
-            <option value="GBP">GBP (£)</option>
-          </select>
-        </label>
-
-      </section>
-
-
-      <!-- ==============================================================
-           SEARCH / SORT TOOLBAR
-           ============================================================== -->
+      <!-- ============================================================
+           SEARCH
+           ============================================================ -->
 
       <section
         class="search-filter-bar products-toolbar"
-        aria-label="Product search and sorting"
+        aria-label="Product search"
       >
-
-
-        <!-- ============================================================
-             SEARCH
-             ============================================================ -->
 
         <div class="search-container product-search-container">
 
@@ -396,7 +234,6 @@
             aria-label="Search products"
           >
 
-
           <button
             id="clear-search"
             type="button"
@@ -410,9 +247,7 @@
         </div>
 
 
-        <!-- ============================================================
-             SORT
-             ============================================================ -->
+        <!-- SORT -->
 
         <label
           for="product-sort"
@@ -452,9 +287,9 @@
       </section>
 
 
-      <!-- ==============================================================
+      <!-- ============================================================
            CATEGORIES
-           ============================================================== -->
+           ============================================================ -->
 
       <nav
         id="products-categories"
@@ -474,9 +309,9 @@
       </nav>
 
 
-      <!-- ==============================================================
-           RESULT BAR
-           ============================================================== -->
+      <!-- ============================================================
+           RESULT INFORMATION
+           ============================================================ -->
 
       <div class="products-result-bar">
 
@@ -495,16 +330,16 @@
       </div>
 
 
-      <!-- ==============================================================
+      <!-- ============================================================
            PRODUCT GRID
-           ============================================================== -->
+           ============================================================ -->
 
       <section
         id="product-list"
         class="product-list product-grid"
         aria-live="polite"
         aria-busy="true"
-        aria-label="Products Catalog"
+        aria-label="Products"
       >
 
         <div
@@ -512,7 +347,10 @@
           role="status"
         >
 
-          <div class="spinner" aria-hidden="true"></div>
+          <div
+            class="spinner"
+            aria-hidden="true"
+          ></div>
 
           <h3>
             Loading products...
@@ -527,9 +365,9 @@
       </section>
 
 
-      <!-- ==============================================================
+      <!-- ============================================================
            STORE INFORMATION
-           ============================================================== -->
+           ============================================================ -->
 
       <section
         class="store-info"
@@ -541,9 +379,10 @@
         </h2>
 
         <p>
-          PRASUN SHOP offers selected physical products through trusted
-          fulfillment partners. Product availability, pricing, shipping
-          options, and delivery times may vary by product and destination.
+          PRASUN SHOP offers selected products through trusted
+          fulfillment partners. Product availability, pricing,
+          shipping options and delivery times may vary by product
+          and destination.
         </p>
 
       </section>
@@ -553,9 +392,7 @@
   </main>
 
 
-  <!-- ======================================================================
-       ACCESSIBILITY LIVE REGION
-       ====================================================================== -->
+  <!-- ACCESSIBILITY -->
 
   <div
     id="aria-live-region"
@@ -565,9 +402,9 @@
   ></div>
 
 
-  <!-- ======================================================================
+  <!-- ==============================================================
        FOOTER
-       ====================================================================== -->
+       ============================================================== -->
 
   <footer class="footer">
 
@@ -595,7 +432,6 @@
 
 
       <p>
-
         &copy; 2026 PRASUN SHOP by
 
         <a
@@ -607,7 +443,6 @@
         </a>.
 
         All rights reserved.
-
       </p>
 
     </div>
@@ -615,18 +450,17 @@
   </footer>
 
 
-  <!-- ======================================================================
-       JAVASCRIPT LOAD ORDER
-       ====================================================================== -->
+  <!-- ==============================================================
+       JAVASCRIPT
+       ============================================================== -->
 
   <script
-    src="/js/cart.js?v=20260820-01"
+    src="/js/cart.js?v=20260820-02"
     defer
   ></script>
 
-
   <script
-    src="/js/script.js?v=20260820-01"
+    src="/js/script.js?v=20260820-02"
     defer
   ></script>
 
