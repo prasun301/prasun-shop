@@ -12,11 +12,11 @@
        ======================================================================== */
 
     const CONFIG = {
-        // Replace with your backend proxy endpoints (handling AliExpress Open Platform API signatures)
+        // Updated to use your live Cloudflare Worker API endpoints
         API_ENDPOINTS: {
-            GET_PRODUCT: "/api/aliexpress/product",
-            GET_SHIPPING: "/api/aliexpress/shipping",
-            CREATE_ORDER: "/api/aliexpress/order"
+            GET_PRODUCT: "https://prasun-shop-api.prasun301.workers.dev/api/products",
+            GET_SHIPPING: "https://prasun-shop-api.prasun301.workers.dev/api/shipping",
+            CREATE_ORDER: "https://prasun-shop-api.prasun301.workers.dev/api/order"
         },
         CART_STORAGE_KEYS: ["store_cart", "ae_dropship_cart"],
         DEFAULT_CURRENCY: "USD",
@@ -67,17 +67,18 @@
     }
 
     /* ========================================================================
-       ALIEXPRESS API INTEGRATION LAYER
+       API INTEGRATION LAYER
        ======================================================================== */
 
     async function fetchAliExpressProduct(productId) {
         try {
-            const response = await fetch(`${CONFIG.API_ENDPOINTS.GET_PRODUCT}?productId=${encodeURIComponent(productId)}`);
+            // Updated to fetch using REST path structure: /api/products/:id
+            const response = await fetch(`${CONFIG.API_ENDPOINTS.GET_PRODUCT}/${encodeURIComponent(productId)}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
-            return data.result || data;
+            return data.product || data.result || data;
         } catch (error) {
-            console.error("Failed to fetch AliExpress product:", error);
+            console.error("Failed to fetch product:", error);
             return null;
         }
     }
@@ -161,7 +162,7 @@
                         ${product.originalPrice ? `<span class="original-price">${formatPrice(product.originalPrice)}</span>` : ""}
                     </div>
 
-                    <!-- AliExpress SKU Variants -->
+                    <!-- SKU Variants -->
                     <div class="product-variants" id="product-variants">
                         ${renderVariants(product.attributes)}
                     </div>
@@ -176,7 +177,7 @@
                             <option value="AU">Australia</option>
                         </select>
                         <div id="shipping-methods-container" class="shipping-methods">
-                            <p class="loading-text">Calculating AliExpress shipping options...</p>
+                            <p class="loading-text">Calculating shipping options...</p>
                         </div>
                     </div>
 
@@ -262,7 +263,6 @@
         const variantContainer = document.getElementById("product-variants");
         if (!variantContainer) return;
 
-        // Initialize default selected attributes
         currentProduct.attributes?.forEach(attr => {
             if (attr.values.length > 0) {
                 selectedSkuAttr[attr.id] = attr.values[0].id;
@@ -276,12 +276,10 @@
             const attrId = btn.dataset.attrId;
             const valId = btn.dataset.valId;
 
-            // Update DOM visual state
             const parent = btn.closest(".variant-options");
             parent.querySelectorAll(".variant-opt-btn").forEach(b => b.classList.remove("selected"));
             btn.classList.add("selected");
 
-            // Update state
             selectedSkuAttr[attrId] = valId;
             matchSku();
         });
@@ -290,7 +288,6 @@
     function matchSku() {
         if (!currentProduct.skus) return;
 
-        // Find matching SKU based on attribute properties
         const matched = currentProduct.skus.find(sku => {
             return Object.entries(selectedSkuAttr).every(([attrId, valId]) => {
                 return sku.attributes[attrId] === valId;
@@ -305,7 +302,6 @@
             const qtyInput = document.getElementById("qty-input");
             if (qtyInput) qtyInput.max = matched.stock;
 
-            // Trigger shipping recalculation for selected SKU
             loadShippingRates();
         }
     }
@@ -350,7 +346,7 @@
             return;
         }
 
-        selectedShipping = options[0]; // Default to first option
+        selectedShipping = options[0];
 
         container.innerHTML = `
             <select id="shipping-method-select" class="form-control">
@@ -548,7 +544,7 @@
         if (currentProduct) {
             renderProduct(currentProduct);
         } else {
-            renderError("Failed to retrieve AliExpress product data.");
+            renderError("Failed to retrieve product data from backend.");
         }
     }
 
