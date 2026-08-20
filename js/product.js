@@ -1,3056 +1,560 @@
 /**
- * ============================================================================
- * PRASUN SHOP — PRODUCT DETAILS
- * ============================================================================
- *
- * Production-safe product detail loader.
- *
- * Resolution priority:
- *   1. URL ?id=
- *   2. URL ?sku=
- *   3. URL ?product=
- *   4. URL ?name=
- *   5. localStorage selected product
- *   6. API / Cloudflare Worker catalog
- *
- * Designed to work with:
- *   - Local catalog products
- *   - CJ Dropshipping products
- *   - Cloudflare Worker normalized products
- *   - Existing index.html product cards
- *
- * ============================================================================
+ * product.js - E-commerce Storefront with AliExpress Dropshipping Integration
+ * Handles product fetching, variant/SKU selection, real-time shipping calculation,
+ * DOM rendering, and dropship order relay to the fulfillment API backend.
  */
 
-"use strict";
-
-(() => {
+(function () {
+    "use strict";
 
     /* ========================================================================
-       CONFIGURATION
+       CONFIG & STATE MANAGEMENT
        ======================================================================== */
 
     const CONFIG = {
-
-        /*
-         * IMPORTANT:
-         * Change this ONLY if your Cloudflare Worker uses another endpoint.
-         *
-         * If your homepage already successfully loads products from the
-         * Worker, use the SAME endpoint here.
-         */
-        API_URL: "/api/products",
-
-        /*
-         * Alternative endpoints that will be tried if the first endpoint
-         * fails.
-         */
-        API_FALLBACK_URLS: [
-            "/api/products",
-            "/products",
-            "/api/catalog"
-        ],
-
-        HOME_URL: "index.html",
-
-        CART_URL: "cart.html",
-
-        DEFAULT_IMAGE:
-            "https://via.placeholder.com/800x800?text=PRASUN+SHOP",
-
-        DEFAULT_CATEGORY: "General",
-
-        DEFAULT_PRICE: 0,
-
-        MAX_RELATED_PRODUCTS: 4,
-
-        STORAGE_KEYS: [
-            "prasun_selected_product",
-            "selectedProduct",
-            "currentProduct",
-            "product"
-        ],
-
-        CART_STORAGE_KEYS: [
-            "prasun_cart",
-            "cart"
-        ]
-
+        // Replace with your backend proxy endpoints (handling AliExpress Open Platform API signatures)
+        API_ENDPOINTS: {
+            GET_PRODUCT: "/api/aliexpress/product",
+            GET_SHIPPING: "/api/aliexpress/shipping",
+            CREATE_ORDER: "/api/aliexpress/order"
+        },
+        CART_STORAGE_KEYS: ["store_cart", "ae_dropship_cart"],
+        DEFAULT_CURRENCY: "USD",
+        SHIPPING_COUNTRY_DEFAULT: "US"
     };
 
-
-    /* ========================================================================
-       DOM REFERENCES
-       ======================================================================== */
-
-    const detailContainer =
-        document.getElementById("product-detail");
-
-    const breadcrumbCategory =
-        document.getElementById("breadcrumb-category");
-
-    const breadcrumbTitle =
-        document.getElementById("breadcrumb-title");
-
-    const productTabs =
-        document.getElementById("product-tabs");
-
-    const specTable =
-        document.getElementById("spec-table-body");
-
-    const relatedSection =
-        document.getElementById("related-section");
-
-    const relatedGrid =
-        document.getElementById("related-products-grid");
-
-    const mobileBuyBar =
-        document.getElementById("mobile-buy-bar");
-
-    const mobilePriceDisplay =
-        document.getElementById("mobile-price-display");
-
-    const mobileAddCartBtn =
-        document.getElementById("mobile-add-cart-btn");
-
-    const cartCount =
-        document.getElementById("cart-count");
-
-
-    /* ========================================================================
-       STATE
-       ======================================================================== */
-
-    let allProducts = [];
-
     let currentProduct = null;
-
+    let selectedSku = null;
+    let selectedSkuAttr = {};
+    let selectedShipping = null;
     let currentQuantity = 1;
-
     let currentImageIndex = 0;
 
+    // DOM References
+    const detailContainer = document.getElementById("product-detail-container");
+    const productTabs = document.getElementById("product-tabs");
+    const specTable = document.getElementById("spec-table");
+    const relatedSection = document.getElementById("related-products-section");
+    const relatedGrid = document.getElementById("related-products-grid");
+    const cartCount = document.getElementById("cart-count-badge");
 
     /* ========================================================================
        UTILITIES
        ======================================================================== */
 
-    function normalize(value) {
-
-        return String(value ?? "")
-            .trim()
-            .toLowerCase()
-            .replace(/&amp;/g, "&")
-            .replace(/[\u2018\u2019]/g, "'")
-            .replace(/[\u201C\u201D]/g, '"')
-            .replace(/\s+/g, " ")
-            .replace(/[^a-z0-9]+/g, " ")
-            .trim();
-
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
     }
 
-
-    function slugify(value) {
-
-        return normalize(value)
-            .replace(/\s+/g, "-");
-
-    }
-
-
-    function escapeHTML(value) {
-
-        return String(value ?? "")
+    function escapeHTML(str) {
+        if (!str) return "";
+        return String(str)
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
-
     }
 
-
-    function escapeAttribute(value) {
-
-        return escapeHTML(value);
-
-    }
-
-
-    function safeNumber(value, fallback = 0) {
-
-        if (
-            value === null ||
-            value === undefined ||
-            value === ""
-        ) {
-            return fallback;
-        }
-
-        const number = Number(
-            String(value)
-                .replace(/[$,\s]/g, "")
-        );
-
-        return Number.isFinite(number)
-            ? number
-            : fallback;
-
-    }
-
-
-    function formatPrice(value) {
-
-        const number = safeNumber(value, 0);
-
+    function formatPrice(amount, currency = CONFIG.DEFAULT_CURRENCY) {
+        const num = parseFloat(amount);
+        if (isNaN(num)) return "$0.00";
         return new Intl.NumberFormat("en-US", {
             style: "currency",
-            currency: "USD",
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(number);
-
+            currency: currency
+        }).format(num);
     }
-
-
-    function firstNonEmpty(...values) {
-
-        for (const value of values) {
-
-            if (
-                value !== undefined &&
-                value !== null &&
-                String(value).trim() !== ""
-            ) {
-                return value;
-            }
-
-        }
-
-        return "";
-
-    }
-
 
     /* ========================================================================
-       IMAGE NORMALIZATION
+       ALIEXPRESS API INTEGRATION LAYER
        ======================================================================== */
 
-    function normalizeImages(product) {
-
-        const images = [];
-
-        function addImage(value) {
-
-            if (!value) return;
-
-            if (Array.isArray(value)) {
-
-                value.forEach(addImage);
-
-                return;
-            }
-
-            if (typeof value === "object") {
-
-                addImage(
-                    value.url ||
-                    value.src ||
-                    value.image ||
-                    value.imageUrl
-                );
-
-                return;
-            }
-
-            const url = String(value).trim();
-
-            if (!url) return;
-
-            if (!images.includes(url)) {
-                images.push(url);
-            }
-
-        }
-
-
-        addImage(product.image);
-
-        addImage(product.imageUrl);
-
-        addImage(product.img);
-
-        addImage(product.thumbnail);
-
-        addImage(product.thumbnailUrl);
-
-        addImage(product.mainImage);
-
-        addImage(product.main_image);
-
-        addImage(product.images);
-
-        addImage(product.imageUrls);
-
-        addImage(product.image_urls);
-
-        addImage(product.gallery);
-
-        addImage(product.galleryImages);
-
-        if (!images.length) {
-            images.push(CONFIG.DEFAULT_IMAGE);
-        }
-
-        return images;
-
-    }
-
-
-    /* ========================================================================
-       PRODUCT NORMALIZATION
-       ======================================================================== */
-
-    function normalizeProduct(raw) {
-
-        if (!raw || typeof raw !== "object") {
+    async function fetchAliExpressProduct(productId) {
+        try {
+            const response = await fetch(`${CONFIG.API_ENDPOINTS.GET_PRODUCT}?productId=${encodeURIComponent(productId)}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            return data.result || data;
+        } catch (error) {
+            console.error("Failed to fetch AliExpress product:", error);
             return null;
         }
-
-
-        const id = firstNonEmpty(
-            raw.id,
-            raw.productId,
-            raw.product_id,
-            raw.itemId,
-            raw.item_id,
-            raw.goodsId,
-            raw.goods_id,
-            raw.pid,
-            raw.uuid,
-            raw.sku
-        );
-
-
-        const sku = firstNonEmpty(
-            raw.sku,
-            raw.SKU,
-            raw.productSku,
-            raw.product_sku,
-            raw.itemSku,
-            raw.item_sku
-        );
-
-
-        const name = firstNonEmpty(
-            raw.name,
-            raw.title,
-            raw.productName,
-            raw.product_name,
-            raw.itemName,
-            raw.item_name
-        );
-
-
-        const description = firstNonEmpty(
-            raw.description,
-            raw.productDescription,
-            raw.product_description,
-            raw.desc,
-            raw.shortDescription,
-            raw.short_description
-        );
-
-
-        const category = firstNonEmpty(
-            raw.category,
-            raw.categoryName,
-            raw.category_name,
-            raw.productCategory,
-            raw.product_category,
-            CONFIG.DEFAULT_CATEGORY
-        );
-
-
-        const price = safeNumber(
-            firstNonEmpty(
-                raw.price,
-                raw.salePrice,
-                raw.sale_price,
-                raw.sellingPrice,
-                raw.selling_price,
-                raw.retailPrice,
-                raw.retail_price,
-                raw.amount
-            ),
-            CONFIG.DEFAULT_PRICE
-        );
-
-
-        const originalPrice = safeNumber(
-            firstNonEmpty(
-                raw.originalPrice,
-                raw.original_price,
-                raw.compareAtPrice,
-                raw.compare_at_price,
-                raw.listPrice,
-                raw.list_price,
-                raw.msrp
-            ),
-            0
-        );
-
-
-        const stock = firstNonEmpty(
-            raw.stock,
-            raw.inventory,
-            raw.quantity,
-            raw.availableQuantity,
-            raw.available_quantity
-        );
-
-
-        const rating = safeNumber(
-            firstNonEmpty(
-                raw.rating,
-                raw.averageRating,
-                raw.average_rating,
-                raw.reviewRating,
-                raw.review_rating
-            ),
-            0
-        );
-
-
-        const reviewCount = safeNumber(
-            firstNonEmpty(
-                raw.reviewCount,
-                raw.review_count,
-                raw.reviewsCount,
-                raw.reviews_count,
-                raw.totalReviews,
-                raw.total_reviews
-            ),
-            0
-        );
-
-
-        const images = normalizeImages(raw);
-
-
-        const normalized = {
-
-            ...raw,
-
-            id: String(id || "").trim(),
-
-            sku: String(sku || "").trim(),
-
-            name:
-                String(name || "Unnamed Product").trim(),
-
-            title:
-                String(name || "Unnamed Product").trim(),
-
-            description:
-                String(description || "No product description available.").trim(),
-
-            category:
-                String(category || CONFIG.DEFAULT_CATEGORY).trim(),
-
-            price,
-
-            originalPrice,
-
-            stock,
-
-            rating,
-
-            reviewCount,
-
-            images,
-
-            image: images[0],
-
-            slug: slugify(name || id || sku)
-
-        };
-
-
-        return normalized;
-
     }
 
-
-    /* ========================================================================
-       EXTRACT PRODUCTS FROM API RESPONSE
-       ======================================================================== */
-
-    function extractProducts(payload) {
-
-        if (!payload) {
+    async function fetchShippingOptions(productId, countryCode, count = 1, skuId = null) {
+        try {
+            const query = new URLSearchParams({
+                productId,
+                country: countryCode,
+                quantity: count,
+                ...(skuId && { skuId })
+            });
+            const response = await fetch(`${CONFIG.API_ENDPOINTS.GET_SHIPPING}?${query.toString()}`);
+            if (!response.ok) throw new Error("Shipping lookup failed");
+            const data = await response.json();
+            return data.freightOptions || [];
+        } catch (error) {
+            console.error("Error fetching shipping rates:", error);
             return [];
         }
-
-
-        if (Array.isArray(payload)) {
-            return payload;
-        }
-
-
-        if (typeof payload !== "object") {
-            return [];
-        }
-
-
-        const candidates = [
-
-            payload.products,
-
-            payload.data,
-
-            payload.items,
-
-            payload.results,
-
-            payload.catalog,
-
-            payload.productList,
-
-            payload.product_list
-
-        ];
-
-
-        for (const candidate of candidates) {
-
-            if (Array.isArray(candidate)) {
-                return candidate;
-            }
-
-
-            if (
-                candidate &&
-                typeof candidate === "object"
-            ) {
-
-                const nested = extractProducts(candidate);
-
-                if (nested.length) {
-                    return nested;
-                }
-
-            }
-
-        }
-
-
-        /*
-         * Some APIs return:
-         *
-         * {
-         *   "001": {...},
-         *   "002": {...}
-         * }
-         */
-
-        const values = Object.values(payload);
-
-        if (
-            values.length &&
-            values.every(
-                value =>
-                    value &&
-                    typeof value === "object" &&
-                    !Array.isArray(value)
-            )
-        ) {
-
-            return values;
-
-        }
-
-
-        return [];
-
     }
 
-
-    /* ========================================================================
-       API FETCH
-       ======================================================================== */
-
-    async function fetchProductsFromAPI() {
-
-        const urls = [
-            ...new Set(CONFIG.API_FALLBACK_URLS)
-        ];
-
-
-        for (const url of urls) {
-
-            try {
-
-                const response = await fetch(
-                    url,
-                    {
-                        method: "GET",
-                        headers: {
-                            "Accept": "application/json"
-                        },
-                        cache: "no-store"
-                    }
-                );
-
-
-                if (!response.ok) {
-                    continue;
-                }
-
-
-                const payload =
-                    await response.json();
-
-
-                const products =
-                    extractProducts(payload);
-
-
-                if (products.length) {
-
-                    return products
-                        .map(normalizeProduct)
-                        .filter(Boolean);
-
-                }
-
-            } catch (error) {
-
-                console.warn(
-                    `Product API failed: ${url}`,
-                    error
-                );
-
-            }
-
+    async function sendDropshipOrderToBackend(orderPayload) {
+        try {
+            const response = await fetch(CONFIG.API_ENDPOINTS.CREATE_ORDER, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(orderPayload)
+            });
+            return await response.json();
+        } catch (error) {
+            console.error("Error creating dropshipping order:", error);
+            return { success: false, message: "Network error processing fulfillment." };
         }
-
-
-        return [];
-
     }
 
-
     /* ========================================================================
-       LOCAL STORAGE PRODUCT
-       ======================================================================== */
-
-    function getStoredProduct() {
-
-        for (
-            const key of CONFIG.STORAGE_KEYS
-        ) {
-
-            try {
-
-                const raw =
-                    localStorage.getItem(key);
-
-
-                if (!raw) {
-                    continue;
-                }
-
-
-                const parsed =
-                    JSON.parse(raw);
-
-
-                const product =
-                    normalizeProduct(parsed);
-
-
-                if (product) {
-                    return product;
-                }
-
-            } catch (error) {
-
-                console.warn(
-                    `Invalid stored product in ${key}`,
-                    error
-                );
-
-            }
-
-        }
-
-
-        return null;
-
-    }
-
-
-    /* ========================================================================
-       URL PARAMETERS
-       ======================================================================== */
-
-    function getProductParameters() {
-
-        const params =
-            new URLSearchParams(
-                window.location.search
-            );
-
-
-        return {
-
-            id:
-                params.get("id") ||
-                params.get("productId") ||
-                params.get("product_id"),
-
-            sku:
-                params.get("sku") ||
-                params.get("SKU"),
-
-            product:
-                params.get("product"),
-
-            name:
-                params.get("name"),
-
-            slug:
-                params.get("slug")
-
-        };
-
-    }
-
-
-    /* ========================================================================
-       PRODUCT MATCHING
-       ======================================================================== */
-
-    function findProduct(products, params) {
-
-        if (!products.length) {
-            return null;
-        }
-
-
-        /*
-         * 1. Exact ID
-         */
-
-        if (params.id) {
-
-            const target =
-                normalize(params.id);
-
-
-            const found =
-                products.find(product =>
-                    normalize(product.id) === target
-                );
-
-
-            if (found) {
-                return found;
-            }
-
-        }
-
-
-        /*
-         * 2. Exact SKU
-         */
-
-        if (params.sku) {
-
-            const target =
-                normalize(params.sku);
-
-
-            const found =
-                products.find(product =>
-                    normalize(product.sku) === target
-                );
-
-
-            if (found) {
-                return found;
-            }
-
-        }
-
-
-        /*
-         * 3. Product slug
-         */
-
-        if (params.slug) {
-
-            const target =
-                normalize(params.slug);
-
-
-            const found =
-                products.find(product =>
-                    normalize(product.slug) === target ||
-                    slugify(product.name) === target
-                );
-
-
-            if (found) {
-                return found;
-            }
-
-        }
-
-
-        /*
-         * 4. Product name
-         */
-
-        const nameTarget =
-            params.product ||
-            params.name;
-
-
-        if (nameTarget) {
-
-            const target =
-                normalize(
-                    decodeURIComponent(nameTarget)
-                );
-
-
-            /*
-             * Exact title
-             */
-
-            let found =
-                products.find(product =>
-                    normalize(product.name) === target
-                );
-
-
-            if (found) {
-                return found;
-            }
-
-
-            /*
-             * SKU / ID could have been passed through product parameter.
-             */
-
-            found =
-                products.find(product =>
-                    normalize(product.id) === target ||
-                    normalize(product.sku) === target
-                );
-
-
-            if (found) {
-                return found;
-            }
-
-
-            /*
-             * Loose title matching.
-             */
-
-            found =
-                products.find(product => {
-
-                    const productName =
-                        normalize(product.name);
-
-                    return (
-                        productName.includes(target) ||
-                        target.includes(productName)
-                    );
-
-                });
-
-
-            if (found) {
-                return found;
-            }
-
-        }
-
-
-        return null;
-
-    }
-
-
-    /* ========================================================================
-       RESOLVE CURRENT PRODUCT
-       ======================================================================== */
-
-    async function resolveProduct() {
-
-        const params =
-            getProductParameters();
-
-
-        /*
-         * Fetch catalog first because this is the authoritative source.
-         */
-
-        const apiProducts =
-            await fetchProductsFromAPI();
-
-
-        allProducts =
-            apiProducts;
-
-
-        /*
-         * Try URL-based resolution.
-         */
-
-        let product =
-            findProduct(
-                allProducts,
-                params
-            );
-
-
-        if (product) {
-            return product;
-        }
-
-
-        /*
-         * Try stored product.
-         */
-
-        const storedProduct =
-            getStoredProduct();
-
-
-        if (storedProduct) {
-
-            /*
-             * If URL has no useful identifier,
-             * use stored product directly.
-             */
-
-            if (
-                !params.id &&
-                !params.sku &&
-                !params.product &&
-                !params.name &&
-                !params.slug
-            ) {
-
-                return storedProduct;
-
-            }
-
-
-            /*
-             * If stored product has an ID/SKU,
-             * try to resolve it against API catalog.
-             */
-
-            const storedResolved =
-                findProduct(
-                    allProducts,
-                    {
-                        id: storedProduct.id,
-                        sku: storedProduct.sku,
-                        product: storedProduct.name,
-                        name: storedProduct.name
-                    }
-                );
-
-
-            if (storedResolved) {
-                return storedResolved;
-            }
-
-
-            return storedProduct;
-
-        }
-
-
-        /*
-         * If no explicit product identifier exists,
-         * use the first product only as a last resort.
-         */
-
-        if (
-            !params.id &&
-            !params.sku &&
-            !params.product &&
-            !params.name &&
-            !params.slug &&
-            allProducts.length
-        ) {
-
-            return allProducts[0];
-
-        }
-
-
-        return null;
-
-    }
-
-
-    /* ========================================================================
-       UPDATE DOCUMENT SEO
-       ======================================================================== */
-
-    function updateSEO(product) {
-
-        if (!product) {
-            return;
-        }
-
-
-        const title =
-            `${product.name} — PRASUN SHOP`;
-
-
-        const description =
-            product.description ||
-            `Buy ${product.name} from PRASUN SHOP.`;
-
-
-        document.title = title;
-
-
-        const metaDescription =
-            document.querySelector(
-                'meta[name="description"]'
-            );
-
-
-        if (metaDescription) {
-
-            metaDescription.setAttribute(
-                "content",
-                description.slice(0, 160)
-            );
-
-        }
-
-
-        const ogTitle =
-            document.querySelector(
-                'meta[property="og:title"]'
-            );
-
-
-        if (ogTitle) {
-
-            ogTitle.setAttribute(
-                "content",
-                title
-            );
-
-        }
-
-
-        const ogDescription =
-            document.querySelector(
-                'meta[property="og:description"]'
-            );
-
-
-        if (ogDescription) {
-
-            ogDescription.setAttribute(
-                "content",
-                description.slice(0, 200)
-            );
-
-        }
-
-
-        const ogImage =
-            document.querySelector(
-                'meta[property="og:image"]'
-            );
-
-
-        if (ogImage) {
-
-            ogImage.setAttribute(
-                "content",
-                product.image
-            );
-
-        }
-
-
-        const schema =
-            document.getElementById(
-                "product-schema"
-            );
-
-
-        if (schema) {
-
-            const schemaData = {
-
-                "@context":
-                    "https://schema.org/",
-
-                "@type":
-                    "Product",
-
-                name:
-                    product.name,
-
-                image:
-                    product.images,
-
-                description:
-                    description,
-
-                sku:
-                    product.sku || product.id,
-
-                brand: {
-
-                    "@type":
-                        "Brand",
-
-                    name:
-                        "PRASUN SHOP"
-
-                },
-
-                offers: {
-
-                    "@type":
-                        "Offer",
-
-                    priceCurrency:
-                        "USD",
-
-                    price:
-                        product.price.toFixed(2),
-
-                    availability:
-                        safeNumber(product.stock, 1) > 0
-                            ? "https://schema.org/InStock"
-                            : "https://schema.org/OutOfStock"
-
-                }
-
-            };
-
-
-            schema.textContent =
-                JSON.stringify(
-                    schemaData,
-                    null,
-                    2
-                );
-
-        }
-
-    }
-
-
-    /* ========================================================================
-       RATING HTML
-       ======================================================================== */
-
-    function renderRating(product) {
-
-        const rating =
-            Math.max(
-                0,
-                Math.min(
-                    5,
-                    safeNumber(product.rating, 0)
-                )
-            );
-
-
-        const rounded =
-            Math.round(rating);
-
-
-        let stars = "";
-
-
-        for (let i = 1; i <= 5; i++) {
-
-            stars +=
-                i <= rounded
-                    ? "★"
-                    : "☆";
-
-        }
-
-
-        const count =
-            safeNumber(
-                product.reviewCount,
-                0
-            );
-
-
-        return `
-
-            <div class="product-rating">
-
-                <span
-                    class="rating-stars"
-                    aria-label="${rating.toFixed(1)} out of 5 stars"
-                >
-                    ${stars}
-                </span>
-
-                <span>
-                    ${rating > 0 ? rating.toFixed(1) : "New"}
-                </span>
-
-                ${
-                    count > 0
-                        ? `<span class="rating-count">
-                            (${count})
-                           </span>`
-                        : ""
-                }
-
-            </div>
-
-        `;
-
-    }
-
-
-    /* ========================================================================
-       DISCOUNT
-       ======================================================================== */
-
-    function renderPricing(product) {
-
-        const price =
-            safeNumber(product.price, 0);
-
-
-        const original =
-            safeNumber(
-                product.originalPrice,
-                0
-            );
-
-
-        let originalHTML = "";
-
-        let discountHTML = "";
-
-
-        if (
-            original > price &&
-            price > 0
-        ) {
-
-            const discount =
-                Math.round(
-                    ((original - price) /
-                        original) *
-                    100
-                );
-
-
-            originalHTML = `
-                <span class="price-original">
-                    ${formatPrice(original)}
-                </span>
-            `;
-
-
-            discountHTML = `
-                <span class="price-discount">
-                    ${discount}% OFF
-                </span>
-            `;
-
-        }
-
-
-        return `
-
-            <div class="product-price">
-
-                <span class="price-current">
-                    ${formatPrice(price)}
-                </span>
-
-                ${originalHTML}
-
-                ${discountHTML}
-
-            </div>
-
-        `;
-
-    }
-
-
-    /* ========================================================================
-       RENDER MAIN PRODUCT
+       RENDER ENGINE
        ======================================================================== */
 
     function renderProduct(product) {
+        if (!detailContainer || !product) return;
 
-        if (!detailContainer) {
-            return;
+        // Auto-select initial SKU variant
+        if (product.skus && product.skus.length > 0) {
+            selectedSku = product.skus[0];
         }
 
-
-        currentProduct =
-            normalizeProduct(product);
-
-
-        if (!currentProduct) {
-
-            renderError(
-                "Product data could not be loaded."
-            );
-
-            return;
-
-        }
-
-
-        currentImageIndex = 0;
-
-        currentQuantity = 1;
-
-
-        updateSEO(currentProduct);
-
-
-        if (breadcrumbCategory) {
-
-            breadcrumbCategory.textContent =
-                currentProduct.category;
-
-        }
-
-
-        if (breadcrumbTitle) {
-
-            breadcrumbTitle.textContent =
-                currentProduct.name;
-
-        }
-
-
-        const images =
-            currentProduct.images;
-
-
-        const stockNumber =
-            safeNumber(
-                currentProduct.stock,
-                999
-            );
-
-
-        const inStock =
-            stockNumber > 0;
-
+        const activePrice = selectedSku ? selectedSku.price : product.price;
+        const activeStock = selectedSku ? selectedSku.stock : product.stock;
+        const inStock = activeStock > 0;
 
         detailContainer.innerHTML = `
-
-            <div class="product-grid">
-
-                <!-- =====================================================
-                     GALLERY
-                     ===================================================== -->
-
-                <div class="gallery-wrapper">
-
-                    <div class="product-image-container">
-
-                        <img
-                            id="main-product-image"
-                            src="${escapeAttribute(images[0])}"
-                            alt="${escapeAttribute(currentProduct.name)}"
-                            loading="eager"
-                            decoding="async"
-                        >
-
+            <div class="product-layout">
+                <!-- Gallery Section -->
+                <div class="product-gallery">
+                    <div class="main-image-wrapper">
+                        <img id="main-product-image" src="${escapeHTML(product.images[0])}" alt="${escapeHTML(product.title)}" />
                     </div>
-
-
-                    ${
-                        images.length > 1
-                            ? `
-
-                                <div
-                                    class="gallery-thumbnails"
-                                    id="gallery-thumbnails"
-                                >
-
-                                    ${images.map(
-                                        (image, index) => `
-
-                                        <button
-                                            type="button"
-                                            class="thumb-btn ${
-                                                index === 0
-                                                    ? "active"
-                                                    : ""
-                                            }"
-                                            data-image-index="${index}"
-                                            aria-label="View product image ${index + 1}"
-                                        >
-
-                                            <img
-                                                src="${escapeAttribute(image)}"
-                                                alt="${escapeAttribute(currentProduct.name)} image ${index + 1}"
-                                                loading="lazy"
-                                            >
-
-                                        </button>
-
-                                    `
-                                    ).join("")}
-
-                                </div>
-
-                            `
-                            : ""
-                    }
-
+                    <div class="gallery-thumbnails" id="gallery-thumbnails">
+                        ${product.images.map((img, idx) => `
+                            <button type="button" class="thumb-btn ${idx === 0 ? "active" : ""}" data-image-index="${idx}">
+                                <img src="${escapeHTML(img)}" alt="Thumbnail ${idx + 1}" />
+                            </button>
+                        `).join("")}
+                    </div>
                 </div>
 
-
-                <!-- =====================================================
-                     PRODUCT INFORMATION
-                     ===================================================== -->
-
+                <!-- Product Info Section -->
                 <div class="product-details">
-
-                    <div class="product-category-row">
-
-                        <span class="product-category">
-                            ${escapeHTML(currentProduct.category)}
-                        </span>
-
-                        ${renderRating(currentProduct)}
-
-                    </div>
-
-
-                    <h1 class="product-title">
-                        ${escapeHTML(currentProduct.name)}
-                    </h1>
-
-
+                    <h1 class="product-title">${escapeHTML(product.title)}</h1>
                     <div class="product-meta">
-
-                        ${
-                            inStock
-                                ? `
-                                    <span class="product-stock">
-
-                                        <span class="stock-dot"></span>
-
-                                        In Stock
-
-                                    </span>
-                                `
-                                : `
-                                    <span
-                                        class="product-stock"
-                                        style="
-                                            background:#fef2f2;
-                                            color:#dc2626;
-                                        "
-                                    >
-
-                                        <span
-                                            class="stock-dot"
-                                            style="background:#dc2626;"
-                                        ></span>
-
-                                        Out of Stock
-
-                                    </span>
-                                `
-                        }
-
-
-                        ${
-                            currentProduct.sku
-                                ? `
-                                    <span>
-                                        SKU:
-                                        ${escapeHTML(currentProduct.sku)}
-                                    </span>
-                                `
-                                : ""
-                        }
-
-                    </div>
-
-
-                    ${renderPricing(currentProduct)}
-
-
-                    <div class="product-description">
-
-                        ${formatDescription(
-                            currentProduct.description
-                        )}
-
-                    </div>
-
-
-                    <div class="quantity-row">
-
-                        <span class="quantity-label">
-                            Quantity
+                        <span class="sku-label">Item ID: ${escapeHTML(product.id)}</span>
+                        <span class="stock-status ${inStock ? "in-stock" : "out-of-stock"}">
+                            ${inStock ? `In Stock (${activeStock} available)` : "Out of Stock"}
                         </span>
+                    </div>
 
-                        <div class="quantity-control">
+                    <div class="product-pricing" id="product-pricing">
+                        <span class="current-price" id="display-price">${formatPrice(activePrice)}</span>
+                        ${product.originalPrice ? `<span class="original-price">${formatPrice(product.originalPrice)}</span>` : ""}
+                    </div>
 
-                            <button
-                                type="button"
-                                id="quantity-minus"
-                                aria-label="Decrease quantity"
-                            >
-                                −
-                            </button>
+                    <!-- AliExpress SKU Variants -->
+                    <div class="product-variants" id="product-variants">
+                        ${renderVariants(product.attributes)}
+                    </div>
 
-                            <input
-                                id="product-quantity"
-                                type="number"
-                                min="1"
-                                max="99"
-                                value="1"
-                                inputmode="numeric"
-                                aria-label="Product quantity"
-                            >
+                    <!-- Shipping Calculation Box -->
+                    <div class="shipping-calculator">
+                        <label for="shipping-country-select">Ship To:</label>
+                        <select id="shipping-country-select" class="form-control">
+                            <option value="US" selected>United States</option>
+                            <option value="CA">Canada</option>
+                            <option value="GB">United Kingdom</option>
+                            <option value="AU">Australia</option>
+                        </select>
+                        <div id="shipping-methods-container" class="shipping-methods">
+                            <p class="loading-text">Calculating AliExpress shipping options...</p>
+                        </div>
+                    </div>
 
-                            <button
-                                type="button"
-                                id="quantity-plus"
-                                aria-label="Increase quantity"
-                            >
-                                +
-                            </button>
-
+                    <!-- Actions -->
+                    <div class="product-actions">
+                        <div class="quantity-selector">
+                            <button type="button" class="qty-btn" id="qty-minus">-</button>
+                            <input type="number" id="qty-input" value="1" min="1" max="${activeStock}">
+                            <button type="button" class="qty-btn" id="qty-plus">+</button>
                         </div>
 
-                    </div>
-
-
-                    <div class="button-group">
-
-                        <button
-                            type="button"
-                            class="product-button product-button-primary"
-                            id="add-to-cart-btn"
-                            ${
-                                !inStock
-                                    ? "disabled"
-                                    : ""
-                            }
-                        >
-
-                            <svg
-                                width="18"
-                                height="18"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <circle cx="9" cy="21" r="1"></circle>
-                                <circle cx="20" cy="21" r="1"></circle>
-                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                            </svg>
-
-                            Add to Cart
-
+                        <button type="button" class="btn btn-primary" id="add-to-cart-btn" ${!inStock ? "disabled" : ""}>
+                            ${inStock ? "Add to Cart" : "Out of Stock"}
                         </button>
-
-
-                        <button
-                            type="button"
-                            class="product-button product-button-secondary"
-                            id="buy-now-btn"
-                            ${
-                                !inStock
-                                    ? "disabled"
-                                    : ""
-                            }
-                        >
+                        <button type="button" class="btn btn-secondary" id="buy-now-btn" ${!inStock ? "disabled" : ""}>
                             Buy Now
                         </button>
-
-
-                        <button
-                            type="button"
-                            class="wishlist-button"
-                            id="wishlist-btn"
-                            aria-label="Add to wishlist"
-                        >
-
-                            <svg
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-
-                        </button>
-
                     </div>
 
-
-                    <div class="trust-badges">
-
-                        <div class="trust-item">
-
-                            <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <rect
-                                    x="1"
-                                    y="3"
-                                    width="15"
-                                    height="13"
-                                ></rect>
-                                <polygon
-                                    points="16 8 20 8 23 11 23 16 16 16 16 8"
-                                ></polygon>
-                                <circle
-                                    cx="5.5"
-                                    cy="18.5"
-                                    r="2.5"
-                                ></circle>
-                                <circle
-                                    cx="18.5"
-                                    cy="18.5"
-                                    r="2.5"
-                                ></circle>
-                            </svg>
-
-                            <span>
-                                Fast Shipping
-                            </span>
-
-                        </div>
-
-
-                        <div class="trust-item">
-
-                            <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path d="M20 12V22H4V12"></path>
-                                <rect
-                                    x="2"
-                                    y="7"
-                                    width="20"
-                                    height="5"
-                                ></rect>
-                                <line
-                                    x1="12"
-                                    y1="22"
-                                    x2="12"
-                                    y2="7"
-                                ></line>
-                                <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-                                <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-                            </svg>
-
-                            <span>
-                                Secure Packaging
-                            </span>
-
-                        </div>
-
-
-                        <div class="trust-item">
-
-                            <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path d="M3 12a9 9 0 1 0 3-6.7"></path>
-                                <polyline
-                                    points="3 4 3 10 9 10"
-                                ></polyline>
-                            </svg>
-
-                            <span>
-                                Easy Returns
-                            </span>
-
-                        </div>
-
+                    <div class="product-description-short">
+                        <h3>Overview</h3>
+                        <p>${escapeHTML(product.description || "No description provided.")}</p>
                     </div>
-
                 </div>
-
             </div>
-
         `;
 
-
-        if (mobileBuyBar) {
-
-            mobileBuyBar.style.display =
-                window.innerWidth <= 768
-                    ? "flex"
-                    : "";
-
-        }
-
-
-        if (mobilePriceDisplay) {
-
-            mobilePriceDisplay.textContent =
-                formatPrice(
-                    currentProduct.price
-                );
-
-        }
-
-
-        bindProductEvents();
-
-        renderSpecifications(currentProduct);
-
-        renderRelatedProducts(currentProduct);
-
-        updateCartCount();
-
+        setupGallery();
+        setupVariantSelection();
+        setupQuantityControls();
+        setupShippingCalculator();
+        setupCartHandlers();
+        renderSpecifications(product);
+        renderRelatedProducts(product);
     }
 
+    function renderVariants(attributes) {
+        if (!attributes || !attributes.length) return "";
 
-    /* ========================================================================
-       DESCRIPTION FORMATTER
-       ======================================================================== */
-
-    function formatDescription(description) {
-
-        const safe =
-            escapeHTML(
-                description ||
-                "No product description available."
-            );
-
-
-        return safe
-            .replace(/\n{2,}/g, "</p><p>")
-            .replace(/\n/g, "<br>");
-
+        return attributes.map(attr => `
+            <div class="variant-group" data-attr-id="${escapeHTML(attr.id)}">
+                <label class="variant-label">${escapeHTML(attr.name)}:</label>
+                <div class="variant-options">
+                    ${attr.values.map((val, idx) => `
+                        <button type="button" 
+                                class="variant-opt-btn ${idx === 0 ? "selected" : ""}" 
+                                data-attr-id="${escapeHTML(attr.id)}" 
+                                data-val-id="${escapeHTML(val.id)}">
+                            ${val.image ? `<img src="${escapeHTML(val.image)}" class="variant-thumb" />` : ""}
+                            <span>${escapeHTML(val.name)}</span>
+                        </button>
+                    `).join("")}
+                </div>
+            </div>
+        `).join("");
     }
 
-
     /* ========================================================================
-       PRODUCT EVENTS
+       EVENT HANDLERS & LOGIC
        ======================================================================== */
 
-    function bindProductEvents() {
-
-        const quantityInput =
-            document.getElementById(
-                "product-quantity"
-            );
-
-
-        const minus =
-            document.getElementById(
-                "quantity-minus"
-            );
-
-
-        const plus =
-            document.getElementById(
-                "quantity-plus"
-            );
-
-
-        const addButton =
-            document.getElementById(
-                "add-to-cart-btn"
-            );
-
-
-        const buyButton =
-            document.getElementById(
-                "buy-now-btn"
-            );
-
-
-        const wishlistButton =
-            document.getElementById(
-                "wishlist-btn"
-            );
-
-
-        if (quantityInput) {
-
-            quantityInput.addEventListener(
-                "input",
-                () => {
-
-                    let value =
-                        parseInt(
-                            quantityInput.value,
-                            10
-                        );
-
-
-                    if (!Number.isFinite(value)) {
-                        value = 1;
-                    }
-
-
-                    value =
-                        Math.max(
-                            1,
-                            Math.min(
-                                99,
-                                value
-                            )
-                        );
-
-
-                    quantityInput.value =
-                        value;
-
-
-                    currentQuantity =
-                        value;
-
-                }
-            );
-
-        }
-
-
-        if (minus) {
-
-            minus.addEventListener(
-                "click",
-                () => {
-
-                    setQuantity(
-                        currentQuantity - 1
-                    );
-
-                }
-            );
-
-        }
-
-
-        if (plus) {
-
-            plus.addEventListener(
-                "click",
-                () => {
-
-                    setQuantity(
-                        currentQuantity + 1
-                    );
-
-                }
-            );
-
-        }
-
-
-        if (addButton) {
-
-            addButton.addEventListener(
-                "click",
-                () => {
-
-                    addCurrentProductToCart();
-
-                }
-            );
-
-        }
-
-
-        if (buyButton) {
-
-            buyButton.addEventListener(
-                "click",
-                () => {
-
-                    buyCurrentProduct();
-
-                }
-            );
-
-        }
-
-
-        if (mobileAddCartBtn) {
-
-            mobileAddCartBtn.onclick =
-                () => {
-
-                    addCurrentProductToCart();
-
-                };
-
-        }
-
-
-        if (wishlistButton) {
-
-            wishlistButton.addEventListener(
-                "click",
-                () => {
-
-                    toggleWishlist(
-                        wishlistButton
-                    );
-
-                }
-            );
-
-        }
-
-
-        document
-            .querySelectorAll(
-                ".thumb-btn"
-            )
-            .forEach(button => {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        const index =
-                            Number(
-                                button.dataset
-                                    .imageIndex
-                            );
-
-
-                        changeMainImage(index);
-
-                    }
-                );
-
+    function setupGallery() {
+        const mainImg = document.getElementById("main-product-image");
+        const thumbContainer = document.getElementById("gallery-thumbnails");
+        if (!mainImg || !thumbContainer) return;
+
+        thumbContainer.addEventListener("click", (e) => {
+            const btn = e.target.closest(".thumb-btn");
+            if (!btn) return;
+
+            const index = Number(btn.dataset.imageIndex);
+            if (isNaN(index) || !currentProduct.images[index]) return;
+
+            currentImageIndex = index;
+            mainImg.src = currentProduct.images[index];
+            thumbContainer.querySelectorAll(".thumb-btn").forEach((el, i) => {
+                el.classList.toggle("active", i === index);
             });
-
+        });
     }
 
+    function setupVariantSelection() {
+        const variantContainer = document.getElementById("product-variants");
+        if (!variantContainer) return;
 
-    /* ========================================================================
-       QUANTITY
-       ======================================================================== */
+        // Initialize default selected attributes
+        currentProduct.attributes?.forEach(attr => {
+            if (attr.values.length > 0) {
+                selectedSkuAttr[attr.id] = attr.values[0].id;
+            }
+        });
 
-    function setQuantity(value) {
+        variantContainer.addEventListener("click", (e) => {
+            const btn = e.target.closest(".variant-opt-btn");
+            if (!btn) return;
 
-        currentQuantity =
-            Math.max(
-                1,
-                Math.min(
-                    99,
-                    Number(value) || 1
-                )
-            );
+            const attrId = btn.dataset.attrId;
+            const valId = btn.dataset.valId;
 
+            // Update DOM visual state
+            const parent = btn.closest(".variant-options");
+            parent.querySelectorAll(".variant-opt-btn").forEach(b => b.classList.remove("selected"));
+            btn.classList.add("selected");
 
-        const input =
-            document.getElementById(
-                "product-quantity"
-            );
+            // Update state
+            selectedSkuAttr[attrId] = valId;
+            matchSku();
+        });
+    }
 
+    function matchSku() {
+        if (!currentProduct.skus) return;
 
-        if (input) {
+        // Find matching SKU based on attribute properties
+        const matched = currentProduct.skus.find(sku => {
+            return Object.entries(selectedSkuAttr).every(([attrId, valId]) => {
+                return sku.attributes[attrId] === valId;
+            });
+        });
 
-            input.value =
-                currentQuantity;
+        if (matched) {
+            selectedSku = matched;
+            const priceDisplay = document.getElementById("display-price");
+            if (priceDisplay) priceDisplay.textContent = formatPrice(matched.price);
 
+            const qtyInput = document.getElementById("qty-input");
+            if (qtyInput) qtyInput.max = matched.stock;
+
+            // Trigger shipping recalculation for selected SKU
+            loadShippingRates();
         }
-
     }
 
+    function setupQuantityControls() {
+        const qtyInput = document.getElementById("qty-input");
+        const minusBtn = document.getElementById("qty-minus");
+        const plusBtn = document.getElementById("qty-plus");
 
-    /* ========================================================================
-       CHANGE IMAGE
-       ======================================================================== */
+        if (!qtyInput) return;
 
-    function changeMainImage(index) {
+        const updateQty = (val) => {
+            const maxStock = selectedSku ? selectedSku.stock : (currentProduct.stock || 999);
+            currentQuantity = Math.max(1, Math.min(maxStock, parseInt(val, 10) || 1));
+            qtyInput.value = currentQuantity;
+            loadShippingRates();
+        };
 
-        if (!currentProduct) {
+        if (minusBtn) minusBtn.addEventListener("click", () => updateQty(currentQuantity - 1));
+        if (plusBtn) plusBtn.addEventListener("click", () => updateQty(currentQuantity + 1));
+        qtyInput.addEventListener("change", (e) => updateQty(e.target.value));
+    }
+
+    async function loadShippingRates() {
+        const container = document.getElementById("shipping-methods-container");
+        const countrySelect = document.getElementById("shipping-country-select");
+        if (!container || !countrySelect) return;
+
+        const country = countrySelect.value;
+        container.innerHTML = `<p class="loading-text">Fetching live shipping rates...</p>`;
+
+        const options = await fetchShippingOptions(
+            currentProduct.id,
+            country,
+            currentQuantity,
+            selectedSku ? selectedSku.id : null
+        );
+
+        if (!options.length) {
+            container.innerHTML = `<p class="error-text">No shipping available for selected destination.</p>`;
+            selectedShipping = null;
             return;
         }
 
+        selectedShipping = options[0]; // Default to first option
 
-        const images =
-            currentProduct.images || [];
+        container.innerHTML = `
+            <select id="shipping-method-select" class="form-control">
+                ${options.map(opt => `
+                    <option value="${escapeHTML(opt.company)}" data-price="${opt.amount}">
+                        ${escapeHTML(opt.company)} - ${formatPrice(opt.amount)} (${escapeHTML(opt.estimatedDays)} days)
+                    </option>
+                `).join("")}
+            </select>
+        `;
 
-
-        if (
-            index < 0 ||
-            index >= images.length
-        ) {
-            return;
-        }
-
-
-        currentImageIndex =
-            index;
-
-
-        const mainImage =
-            document.getElementById(
-                "main-product-image"
-            );
-
-
-        if (mainImage) {
-
-            mainImage.src =
-                images[index];
-
-        }
-
-
-        document
-            .querySelectorAll(
-                ".thumb-btn"
-            )
-            .forEach(
-                (button, buttonIndex) => {
-
-                    button.classList.toggle(
-                        "active",
-                        buttonIndex === index
-                    );
-
-                }
-            );
-
+        document.getElementById("shipping-method-select")?.addEventListener("change", (e) => {
+            const selectedOpt = e.target.options[e.target.selectedIndex];
+            selectedShipping = {
+                company: e.target.value,
+                amount: parseFloat(selectedOpt.dataset.price)
+            };
+        });
     }
 
+    function setupShippingCalculator() {
+        const countrySelect = document.getElementById("shipping-country-select");
+        if (countrySelect) {
+            countrySelect.addEventListener("change", () => loadShippingRates());
+        }
+        loadShippingRates();
+    }
 
     /* ========================================================================
-       CART
+       CART & FULFILLMENT HANDLERS
        ======================================================================== */
 
     function getCart() {
-
-        /*
-         * Prefer the same cart storage used by cart.js.
-         */
-
-        for (
-            const key of CONFIG.CART_STORAGE_KEYS
-        ) {
-
+        for (const key of CONFIG.CART_STORAGE_KEYS) {
             try {
-
-                const raw =
-                    localStorage.getItem(key);
-
-
-                if (!raw) {
-                    continue;
-                }
-
-
-                const parsed =
-                    JSON.parse(raw);
-
-
-                if (Array.isArray(parsed)) {
-                    return parsed;
-                }
-
-            } catch (error) {
-
-                console.warn(
-                    "Unable to read cart:",
-                    error
-                );
-
+                const data = localStorage.getItem(key);
+                if (data) return JSON.parse(data);
+            } catch (err) {
+                console.warn(`Error reading ${key}`, err);
             }
-
         }
-
-
         return [];
-
     }
-
 
     function saveCart(cart) {
-
-        /*
-         * Main cart storage.
-         */
-
-        localStorage.setItem(
-            "prasun_cart",
-            JSON.stringify(cart)
-        );
-
-
-        /*
-         * Keep legacy key synchronized.
-         */
-
-        localStorage.setItem(
-            "cart",
-            JSON.stringify(cart)
-        );
-
-    }
-
-
-    function addCurrentProductToCart() {
-
-        if (!currentProduct) {
-
-            showToast(
-                "Product is not available."
-            );
-
-            return;
-
-        }
-
-
-        const quantity =
-            currentQuantity || 1;
-
-
-        const cart =
-            getCart();
-
-
-        const productId =
-            currentProduct.id ||
-            currentProduct.sku ||
-            slugify(
-                currentProduct.name
-            );
-
-
-        const existing =
-            cart.find(item => {
-
-                const itemId =
-                    item.id ||
-                    item.sku ||
-                    item.productId ||
-                    slugify(
-                        item.name ||
-                        item.title ||
-                        ""
-                    );
-
-
-                return (
-                    String(itemId) ===
-                    String(productId)
-                );
-
-            });
-
-
-        if (existing) {
-
-            existing.quantity =
-                Math.max(
-                    1,
-                    safeNumber(
-                        existing.quantity,
-                        0
-                    ) + quantity
-                );
-
-        } else {
-
-            cart.push({
-
-                id:
-                    currentProduct.id ||
-                    productId,
-
-                sku:
-                    currentProduct.sku ||
-                    "",
-
-                name:
-                    currentProduct.name,
-
-                title:
-                    currentProduct.name,
-
-                price:
-                    currentProduct.price,
-
-                image:
-                    currentProduct.image,
-
-                images:
-                    currentProduct.images,
-
-                category:
-                    currentProduct.category,
-
-                quantity,
-
-                stock:
-                    currentProduct.stock
-
-            });
-
-        }
-
-
-        saveCart(cart);
-
+        CONFIG.CART_STORAGE_KEYS.forEach(key => {
+            try {
+                localStorage.setItem(key, JSON.stringify(cart));
+            } catch (err) {
+                console.warn(`Error writing ${key}`, err);
+            }
+        });
         updateCartCount();
-
-
-        showToast(
-            `${currentProduct.name} added to cart`
-        );
-
     }
 
-
-    /* ========================================================================
-       BUY NOW
-       ======================================================================== */
-
-    function buyCurrentProduct() {
-
-        addCurrentProductToCart();
-
-
-        setTimeout(() => {
-
-            window.location.href =
-                CONFIG.CART_URL;
-
-        }, 250);
-
+    function buildOrderItem() {
+        return {
+            productId: currentProduct.id,
+            skuId: selectedSku ? selectedSku.id : null,
+            title: currentProduct.title,
+            image: currentProduct.images[0],
+            attributes: selectedSkuAttr,
+            quantity: currentQuantity,
+            unitPrice: selectedSku ? selectedSku.price : currentProduct.price,
+            shippingMethod: selectedShipping
+        };
     }
 
+    function setupCartHandlers() {
+        const addBtn = document.getElementById("add-to-cart-btn");
+        const buyBtn = document.getElementById("buy-now-btn");
 
-    /* ========================================================================
-       CART COUNT
-       ======================================================================== */
+        if (addBtn) {
+            addBtn.addEventListener("click", () => {
+                const cart = getCart();
+                const item = buildOrderItem();
+                
+                const existingIndex = cart.findIndex(i => i.productId === item.productId && i.skuId === item.skuId);
+                if (existingIndex > -1) {
+                    cart[existingIndex].quantity += item.quantity;
+                } else {
+                    cart.push(item);
+                }
+
+                saveCart(cart);
+                addBtn.textContent = "Added to Cart!";
+                setTimeout(() => { addBtn.textContent = "Add to Cart"; }, 1500);
+            });
+        }
+
+        if (buyBtn) {
+            buyBtn.addEventListener("click", async () => {
+                buyBtn.disabled = true;
+                buyBtn.textContent = "Processing...";
+                
+                const payload = {
+                    items: [buildOrderItem()],
+                    destinationCountry: document.getElementById("shipping-country-select")?.value || CONFIG.SHIPPING_COUNTRY_DEFAULT
+                };
+
+                const response = await sendDropshipOrderToBackend(payload);
+                if (response.success && response.redirectUrl) {
+                    window.location.href = response.redirectUrl;
+                } else {
+                    alert(response.message || "Unable to process direct dropship order.");
+                    buyBtn.disabled = false;
+                    buyBtn.textContent = "Buy Now";
+                }
+            });
+        }
+    }
 
     function updateCartCount() {
-
-        if (!cartCount) {
-            return;
-        }
-
-
-        const cart =
-            getCart();
-
-
-        const count =
-            cart.reduce(
-                (total, item) =>
-                    total +
-                    Math.max(
-                        0,
-                        safeNumber(
-                            item.quantity,
-                            0
-                        )
-                    ),
-                0
-            );
-
-
-        cartCount.textContent =
-            count > 99
-                ? "99+"
-                : String(count);
-
-
-        cartCount.hidden =
-            count <= 0;
-
+        if (!cartCount) return;
+        const cart = getCart();
+        const total = cart.reduce((sum, item) => sum + (parseInt(item.quantity, 10) || 1), 0);
+        cartCount.textContent = total;
     }
-
 
     /* ========================================================================
-       WISHLIST
+       TABS, SPECS & AUXILIARY RENDERING
        ======================================================================== */
 
-    function getWishlist() {
+    function setupTabs() {
+        if (!productTabs) return;
+        productTabs.addEventListener("click", (e) => {
+            const btn = e.target.closest(".tab-btn");
+            if (!btn) return;
 
-        try {
+            const targetTab = btn.dataset.tab;
+            productTabs.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
 
-            const raw =
-                localStorage.getItem(
-                    "prasun_wishlist"
-                );
-
-
-            if (!raw) {
-                return [];
-            }
-
-
-            const parsed =
-                JSON.parse(raw);
-
-
-            return Array.isArray(parsed)
-                ? parsed
-                : [];
-
-        } catch {
-
-            return [];
-
-        }
-
+            btn.classList.add("active");
+            const content = document.getElementById(`tab-${targetTab}`);
+            if (content) content.classList.add("active");
+        });
     }
-
-
-    function toggleWishlist(button) {
-
-        if (!currentProduct) {
-            return;
-        }
-
-
-        const wishlist =
-            getWishlist();
-
-
-        const id =
-            currentProduct.id ||
-            currentProduct.sku ||
-            slugify(
-                currentProduct.name
-            );
-
-
-        const index =
-            wishlist.findIndex(
-                item =>
-                    String(item.id) ===
-                    String(id)
-            );
-
-
-        if (index >= 0) {
-
-            wishlist.splice(
-                index,
-                1
-            );
-
-
-            button.classList.remove(
-                "active"
-            );
-
-
-            showToast(
-                "Removed from wishlist"
-            );
-
-        } else {
-
-            wishlist.push({
-
-                id,
-
-                sku:
-                    currentProduct.sku,
-
-                name:
-                    currentProduct.name,
-
-                price:
-                    currentProduct.price,
-
-                image:
-                    currentProduct.image
-
-            });
-
-
-            button.classList.add(
-                "active"
-            );
-
-
-            showToast(
-                "Added to wishlist"
-            );
-
-        }
-
-
-        localStorage.setItem(
-            "prasun_wishlist",
-            JSON.stringify(wishlist)
-        );
-
-    }
-
-
-    /* ========================================================================
-       SPECIFICATIONS
-       ======================================================================== */
 
     function renderSpecifications(product) {
-
-        if (!productTabs || !specTable) {
-            return;
-        }
-
-
-        const specifications = [];
-
-
-        function add(label, value) {
-
-            if (
-                value === undefined ||
-                value === null ||
-                String(value).trim() === ""
-            ) {
-                return;
-            }
-
-
-            specifications.push({
-                label,
-                value
-            });
-
-        }
-
-
-        add(
-            "Product ID",
-            product.id
-        );
-
-
-        add(
-            "SKU",
-            product.sku
-        );
-
-
-        add(
-            "Category",
-            product.category
-        );
-
-
-        add(
-            "Availability",
-            safeNumber(
-                product.stock,
-                999
-            ) > 0
-                ? "In Stock"
-                : "Out of Stock"
-        );
-
-
-        /*
-         * Preserve useful custom specifications returned by the Worker.
-         */
-
-        const specs =
-            product.specifications ||
-            product.specs ||
-            product.attributes;
-
-
-        if (
-            specs &&
-            typeof specs === "object" &&
-            !Array.isArray(specs)
-        ) {
-
-            Object.entries(specs)
-                .forEach(
-                    ([key, value]) => {
-
-                        if (
-                            typeof value ===
-                            "object"
-                        ) {
-                            value =
-                                JSON.stringify(
-                                    value
-                                );
-                        }
-
-
-                        add(
-                            formatLabel(key),
-                            value
-                        );
-
-                    }
-                );
-
-        }
-
-
-        if (!specifications.length) {
-
-            specTable.innerHTML = `
-                <tbody>
-                    <tr>
-                        <td colspan="2">
-                            No additional specifications available.
-                        </td>
-                    </tr>
-                </tbody>
-            `;
-
-        } else {
-
-            specTable.innerHTML = `
-
-                <tbody>
-
-                    ${specifications.map(
-                        item => `
-
-                        <tr>
-
-                            <td>
-                                ${escapeHTML(item.label)}
-                            </td>
-
-                            <td>
-                                ${escapeHTML(item.value)}
-                            </td>
-
-                        </tr>
-
-                    `
-                    ).join("")}
-
-                </tbody>
-
-            `;
-
-        }
-
-
-        productTabs.style.display =
-            "block";
-
+        if (!specTable || !product.specifications) return;
+        specTable.innerHTML = Object.entries(product.specifications).map(([key, val]) => `
+            <tr>
+                <td><strong>${escapeHTML(key)}</strong></td>
+                <td>${escapeHTML(val)}</td>
+            </tr>
+        `).join("");
     }
-
-
-    function formatLabel(value) {
-
-        return String(value)
-            .replace(/[_-]+/g, " ")
-            .replace(
-                /([a-z])([A-Z])/g,
-                "$1 $2"
-            )
-            .replace(/\b\w/g, char =>
-                char.toUpperCase()
-            );
-
-    }
-
-
-    /* ========================================================================
-       RELATED PRODUCTS
-       ======================================================================== */
 
     function renderRelatedProducts(product) {
-
-        if (
-            !relatedSection ||
-            !relatedGrid
-        ) {
+        if (!relatedGrid || !relatedSection || !product.related) return;
+        if (!product.related.length) {
+            relatedSection.style.display = "none";
             return;
         }
 
-
-        let related =
-            allProducts.filter(item =>
-                item &&
-                (
-                    item.id !== product.id ||
-                    item.sku !== product.sku
-                )
-            );
-
-
-        const sameCategory =
-            related.filter(item =>
-                normalize(item.category) ===
-                normalize(product.category)
-            );
-
-
-        if (sameCategory.length) {
-
-            related =
-                [
-                    ...sameCategory,
-                    ...related.filter(
-                        item =>
-                            !sameCategory.includes(
-                                item
-                            )
-                    )
-                ];
-
-        }
-
-
-        related =
-            related.slice(
-                0,
-                CONFIG.MAX_RELATED_PRODUCTS
-            );
-
-
-        if (!related.length) {
-
-            relatedSection.style.display =
-                "none";
-
-            return;
-
-        }
-
-
-        relatedGrid.innerHTML =
-            related.map(
-                relatedProduct =>
-                    createRelatedCard(
-                        relatedProduct
-                    )
-            ).join("");
-
-
-        relatedSection.style.display =
-            "block";
-
-
-        relatedGrid
-            .querySelectorAll(
-                "[data-product-id]"
-            )
-            .forEach(card => {
-
-                card.addEventListener(
-                    "click",
-                    () => {
-
-                        const id =
-                            card.dataset.productId;
-
-
-                        const relatedProduct =
-                            allProducts.find(
-                                item =>
-                                    String(
-                                        item.id
-                                    ) ===
-                                    String(id)
-                            );
-
-
-                        if (
-                            relatedProduct
-                        ) {
-
-                            navigateToProduct(
-                                relatedProduct
-                            );
-
-                        }
-
-                    }
-                );
-
-            });
-
+        relatedSection.style.display = "block";
+        relatedGrid.innerHTML = product.related.map(item => `
+            <div class="product-card">
+                <a href="?id=${encodeURIComponent(item.id)}">
+                    <img src="${escapeHTML(item.image)}" alt="${escapeHTML(item.title)}" loading="lazy">
+                    <h3>${escapeHTML(item.title)}</h3>
+                    <p class="price">${formatPrice(item.price)}</p>
+                </a>
+            </div>
+        `).join("");
     }
-
-
-    function createRelatedCard(product) {
-
-        const id =
-            product.id ||
-            product.sku ||
-            slugify(product.name);
-
-
-        return `
-
-            <article
-                class="related-card"
-                data-product-id="${escapeAttribute(id)}"
-                tabindex="0"
-                role="link"
-                aria-label="View ${escapeAttribute(product.name)}"
-            >
-
-                <img
-                    src="${escapeAttribute(product.image)}"
-                    alt="${escapeAttribute(product.name)}"
-                    loading="lazy"
-                    decoding="async"
-                >
-
-                <h3 class="related-card-title">
-                    ${escapeHTML(product.name)}
-                </h3>
-
-                <div class="related-card-price">
-                    ${formatPrice(product.price)}
-                </div>
-
-            </article>
-
-        `;
-
-    }
-
-
-    /* ========================================================================
-       NAVIGATION
-       ======================================================================== */
-
-    function navigateToProduct(product) {
-
-        const identifier =
-            product.id ||
-            product.sku ||
-            slugify(product.name);
-
-
-        /*
-         * ID is preferred.
-         */
-
-        const parameter =
-            product.id
-                ? `id=${encodeURIComponent(product.id)}`
-                : product.sku
-                    ? `sku=${encodeURIComponent(product.sku)}`
-                    : `slug=${encodeURIComponent(slugify(product.name))}`;
-
-
-        /*
-         * Store a complete fallback copy.
-         */
-
-        try {
-
-            localStorage.setItem(
-                "prasun_selected_product",
-                JSON.stringify(product)
-            );
-
-        } catch (error) {
-
-            console.warn(
-                "Could not store selected product:",
-                error
-            );
-
-        }
-
-
-        window.location.href =
-            `product.html?${parameter}`;
-
-    }
-
-
-    /* ========================================================================
-       ERROR STATE
-       ======================================================================== */
 
     function renderError(message) {
-
-        if (!detailContainer) {
-            return;
-        }
-
-
+        if (!detailContainer) return;
         detailContainer.innerHTML = `
-
-            <div
-                style="
-                    min-height:420px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    text-align:center;
-                    padding:40px 20px;
-                "
-            >
-
-                <div>
-
-                    <div
-                        style="
-                            font-size:52px;
-                            margin-bottom:20px;
-                        "
-                    >
-                        🛍️
-                    </div>
-
-                    <h1
-                        style="
-                            margin:0 0 12px;
-                            font-size:28px;
-                        "
-                    >
-                        Product Not Found
-                    </h1>
-
-                    <p
-                        style="
-                            max-width:560px;
-                            margin:0 auto 24px;
-                            color:#71717a;
-                            line-height:1.6;
-                        "
-                    >
-                        ${escapeHTML(message)}
-                    </p>
-
-                    <a
-                        href="${CONFIG.HOME_URL}"
-                        class="product-button product-button-primary"
-                    >
-                        Back to Shop
-                    </a>
-
-                </div>
-
+            <div class="product-error">
+                <h2>Product Unavailable</h2>
+                <p>${escapeHTML(message)}</p>
+                <a href="/" class="btn btn-primary">Return to Catalog</a>
             </div>
-
         `;
-
-
-        if (productTabs) {
-            productTabs.style.display =
-                "none";
-        }
-
-
-        if (relatedSection) {
-            relatedSection.style.display =
-                "none";
-        }
-
     }
-
-
-    /* ========================================================================
-       TOAST
-       ======================================================================== */
-
-    function showToast(message) {
-
-        if (
-            typeof window.showToast ===
-            "function"
-        ) {
-
-            window.showToast(
-                message
-            );
-
-            return;
-
-        }
-
-
-        const container =
-            document.getElementById(
-                "toast-container"
-            );
-
-
-        if (!container) {
-            return;
-        }
-
-
-        const toast =
-            document.createElement(
-                "div"
-            );
-
-
-        toast.className =
-            "toast";
-
-
-        toast.textContent =
-            message;
-
-
-        container.appendChild(
-            toast
-        );
-
-
-        setTimeout(() => {
-
-            toast.remove();
-
-        }, 3000);
-
-    }
-
 
     /* ========================================================================
        INITIALIZATION
        ======================================================================== */
 
     async function init() {
+        updateCartCount();
+        setupTabs();
 
-        try {
-
-            /*
-             * Resolve product from URL/API/storage.
-             */
-
-            const product =
-                await resolveProduct();
-
-
-            if (!product) {
-
-                renderError(
-                    "We could not find this product. Please return to the shop and select the product again."
-                );
-
-                return;
-
-            }
-
-
-            renderProduct(
-                product
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "Product page initialization failed:",
-                error
-            );
-
-
-            renderError(
-                "Something went wrong while loading this product. Please try again."
-            );
-
+        const productId = getQueryParam("id") || getQueryParam("productId");
+        if (!productId) {
+            renderError("No product ID specified in request URL.");
+            return;
         }
 
+        currentProduct = await fetchAliExpressProduct(productId);
+        if (currentProduct) {
+            renderProduct(currentProduct);
+        } else {
+            renderError("Failed to retrieve AliExpress product data.");
+        }
     }
 
-
-    /* ========================================================================
-       GLOBAL HELPERS
-       ======================================================================== */
-
-    window.PrasunProduct = {
-
-        getCurrentProduct:
-            () => currentProduct,
-
-        getAllProducts:
-            () => allProducts,
-
-        navigateToProduct,
-
-        addCurrentProductToCart,
-
-        updateCartCount
-
-    };
-
-
-    /* ========================================================================
-       START
-       ======================================================================== */
-
-    if (
-        document.readyState ===
-        "loading"
-    ) {
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            init,
-            {
-                once: true
-            }
-        );
-
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
     } else {
-
         init();
-
     }
-
 })();
