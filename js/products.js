@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * PRASUN SHOP — PRODUCTS MANAGER
+ * PRASUN SHOP — PRODUCTS MANAGER (UPDATED & FIXED)
  * js/products.js
  * ============================================================================
  */
@@ -84,8 +84,9 @@
     cacheDOMElements();
 
     // Read initial HTML select state if present
-    if (elements.sortSelect && elements.sortSelect.value) {
-      state.sortBy = elements.sortSelect.value;
+    const currentSelect = elements.sortSelect || document.getElementById("product-sort") || document.querySelector("select[name='sort']");
+    if (currentSelect && currentSelect.value) {
+      state.sortBy = currentSelect.value;
       console.log("[PRASUN SHOP] Initialized sort state from DOM:", state.sortBy);
     }
 
@@ -105,19 +106,15 @@
     elements.resultsCount = document.getElementById("results-count");
     elements.searchInput = document.getElementById("product-search");
     elements.clearSearchBtn = document.getElementById("clear-search");
-    elements.sortSelect = document.getElementById("product-sort");
+    elements.sortSelect = document.getElementById("product-sort") || document.querySelector("select.product-sort");
     elements.categoriesNav = document.getElementById("products-categories");
     elements.pageHeading = document.getElementById("page-heading");
     elements.liveRegion = document.getElementById("aria-live-region");
-
-    if (!elements.sortSelect) {
-      console.warn("[PRASUN SHOP] Warning: element with id='product-sort' was not found in DOM.");
-    }
   }
 
 
   /* ==========================================================================
-     6. EVENTS
+     6. EVENTS (INCLUDES GLOBAL DELEGATION FALLBACK)
      ========================================================================== */
 
   function bindEvents() {
@@ -130,13 +127,17 @@
       elements.clearSearchBtn.addEventListener("click", clearSearch);
     }
 
+    // Direct listener
     if (elements.sortSelect) {
-      elements.sortSelect.addEventListener("change", (e) => {
-        state.sortBy = e.target.value || "featured";
-        console.log("[PRASUN SHOP] Dropdown changed sort to:", state.sortBy);
-        applyFiltersAndRender();
-      });
+      elements.sortSelect.addEventListener("change", handleSortChange);
     }
+
+    // Global Document Delegation fallback for dynamically inserted/re-rendered select inputs
+    document.addEventListener("change", (e) => {
+      if (e.target && (e.target.id === "product-sort" || e.target.classList.contains("product-sort") || e.target.name === "sort")) {
+        handleSortChange(e);
+      }
+    });
 
     if (elements.categoriesNav) {
       elements.categoriesNav.addEventListener("click", handleCategoryClick);
@@ -145,6 +146,13 @@
     if (elements.productList) {
       elements.productList.addEventListener("click", handleProductGridClick);
     }
+  }
+
+  function handleSortChange(e) {
+    const val = e.target.value || "featured";
+    state.sortBy = val;
+    console.log("[PRASUN SHOP] Sort changed to:", state.sortBy);
+    applyFiltersAndRender();
   }
 
 
@@ -263,7 +271,7 @@
 
 
   /* ==========================================================================
-     9. EXTRACT & NORMALIZE PRODUCT PAYLOAD
+     9. EXTRACT & NORMALIZE PRODUCT PAYLOAD (ROBUST PRICE PARSING)
      ========================================================================== */
 
   function extractProducts(data) {
@@ -282,6 +290,7 @@
       product.id ??
       product.pid ??
       product.sku ??
+      product._id ??
       ""
     ).trim();
 
@@ -289,19 +298,26 @@
       product.name ??
       product.title ??
       product.productNameEn ??
-      ""
+      "Unnamed Product"
     ).trim();
 
-    let rawPrice = product.price ?? product.sellPrice ?? 0;
-    let price = Number.parseFloat(
-      String(rawPrice).replace(/[^0-9.-]/g, "")
-    ) || 0;
+    // Deep object check for nested price values like { price: { amount: 19.99 } }
+    let rawPrice = product.price ?? product.sellPrice ?? product.unitPrice ?? product.cost ?? 0;
+    if (typeof rawPrice === "object" && rawPrice !== null) {
+      rawPrice = rawPrice.amount ?? rawPrice.value ?? rawPrice.raw ?? 0;
+    }
 
-    if (!id || !name || price <= 0) return null;
+    // Convert string currencies like "$19.99" to float 19.99
+    let price = parseFloat(
+      String(rawPrice).replace(/[^0-9.]/g, "")
+    );
+    if (isNaN(price)) price = 0;
+
+    if (!id || !name) return null;
 
     const category = String(product.category || "General");
     const image = product.image || product.productImage || CONFIG.PLACEHOLDER_IMAGE;
-    const rating = Number.parseFloat(product.rating) || 4.8;
+    const rating = parseFloat(product.rating) || 4.8;
 
     return {
       ...product,
@@ -371,7 +387,7 @@
 
 
   /* ==========================================================================
-     11. PAGE HEADING & AGGRESSIVE SORT MATCHING
+     11. PAGE HEADING & COMPREHENSIVE SORT COMPARISON
      ========================================================================== */
 
   function updatePageHeading(query) {
@@ -408,35 +424,40 @@
     const ratingA = Number(a.rating) || 0;
     const ratingB = Number(b.rating) || 0;
 
-    // Remove all punctuation, spaces, and convert to lower case
-    // Examples: "Price: Low to High" -> "pricelowtohigh", "low-to-high" -> "lowtohigh"
+    // Normalize state key into lowercase alphanumeric string
     const key = String(state.sortBy || "")
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "");
 
-    // Low to High Price
+    // 1. Low to High Price
     if (
       key.includes("lowtohigh") ||
       key.includes("pricelow") ||
-      key === "lowhigh" ||
-      key === "priceasc" ||
-      key === "asc"
+      key.includes("lowhigh") ||
+      key.includes("priceasc") ||
+      key === "low" ||
+      key === "asc" ||
+      key === "lh" ||
+      key === "1"
     ) {
       return priceA - priceB;
     }
 
-    // High to Low Price
+    // 2. High to Low Price
     if (
       key.includes("hightolow") ||
       key.includes("pricehigh") ||
-      key === "highlow" ||
-      key === "pricedesc" ||
-      key === "desc"
+      key.includes("highlow") ||
+      key.includes("pricedesc") ||
+      key === "high" ||
+      key === "desc" ||
+      key === "hl" ||
+      key === "2"
     ) {
       return priceB - priceA;
     }
 
-    // Alphabetical A to Z
+    // 3. Alphabetical A to Z
     if (
       key.includes("atoz") ||
       key.includes("az") ||
@@ -447,7 +468,7 @@
       return nameA.localeCompare(nameB, undefined, { sensitivity: "base" });
     }
 
-    // Alphabetical Z to A
+    // 4. Alphabetical Z to A
     if (
       key.includes("ztoa") ||
       key.includes("za") ||
@@ -458,7 +479,7 @@
       return nameB.localeCompare(nameA, undefined, { sensitivity: "base" });
     }
 
-    // Rating High to Low
+    // 5. Rating High to Low
     if (key.includes("rating") || key.includes("toprated")) {
       return ratingB - ratingA;
     }
@@ -673,6 +694,10 @@
 
   window.PrasunProducts = {
     reload: loadProducts,
+    sort: (sortValue) => {
+      state.sortBy = sortValue;
+      applyFiltersAndRender();
+    },
     getProducts: () => [...state.products],
     getFilteredProducts: () => [...state.filteredProducts],
     getProductById: id => state.products.find(p => String(p.id) === String(id)) || null
