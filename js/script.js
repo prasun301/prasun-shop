@@ -3,7 +3,7 @@
  * PRASUN SHOP — PRODUCTS & INTERACTIVITY
  * ============================================================================
  *
- * Production storefront product system.
+ * Production storefront product system with global fulfillment & regional selection.
  *
  * IMPORTANT:
  * - Local catalog is always loaded first.
@@ -38,18 +38,18 @@
     const MIN_SEARCH_LENGTH = 2;
 
     /* =========================================================================
-       LOCAL FALLBACK CATALOG
+       CURRENCY CONVERSION MAP (ESTIMATED FALLBACK RATES)
        ========================================================================= */
 
-    /*
-     * This catalog is intentionally kept inside the storefront.
-     *
-     * If the Worker/CJ API fails, products STILL display.
-     *
-     * IMPORTANT:
-     * `pid` is the CJ product ID where available.
-     * `sku` is the product SKU.
-     */
+    const CURRENCY_RATES = {
+        USD: 1.0,
+        EUR: 0.92,
+        GBP: 0.79
+    };
+
+    /* =========================================================================
+       LOCAL FALLBACK CATALOG
+       ========================================================================= */
 
     const LOCAL_CATALOG = [
 
@@ -539,11 +539,6 @@
             variants: []
         },
 
-        /*
-         * Previously encountered product.
-         *
-         * Keep it here so old carts and searches do not lose the product.
-         */
         {
             id: "021",
             pid: "",
@@ -596,16 +591,12 @@
     ];
 
     /* =========================================================================
-       DOM
+       DOM ELEMENTS
        ========================================================================= */
 
     const productList =
         document.getElementById("product-list");
 
-    /*
-     * script.js is intended for products.html.
-     * If the product grid does not exist, simply stop.
-     */
     if (!productList) {
         return;
     }
@@ -635,6 +626,12 @@
     const cartCount =
         document.getElementById("cart-count");
 
+    const shipToSelect =
+        document.getElementById("global-ship-to");
+
+    const currencySelect =
+        document.getElementById("global-currency");
+
     /* =========================================================================
        FALLBACK IMAGE
        ========================================================================= */
@@ -646,41 +643,17 @@
                  width="800"
                  height="800"
                  viewBox="0 0 800 800">
-
-                <rect
-                    width="800"
-                    height="800"
-                    fill="#f8fafc"
-                />
-
-                <path
-                    d="M220 540 L330 420 L420 500 L500 430 L580 540 Z"
-                    fill="#e2e8f0"
-                />
-
-                <circle
-                    cx="330"
-                    cy="300"
-                    r="55"
-                    fill="#cbd5e1"
-                />
-
-                <text
-                    x="400"
-                    y="635"
-                    text-anchor="middle"
-                    fill="#64748b"
-                    font-family="Arial,sans-serif"
-                    font-size="28"
-                >
+                <rect width="800" height="800" fill="#f8fafc"/>
+                <path d="M220 540 L330 420 L420 500 L500 430 L580 540 Z" fill="#e2e8f0"/>
+                <circle cx="330" cy="300" r="55" fill="#cbd5e1"/>
+                <text x="400" y="635" text-anchor="middle" fill="#64748b" font-family="Arial,sans-serif" font-size="28">
                     Image unavailable
                 </text>
-
             </svg>
         `);
 
     /* =========================================================================
-       HELPERS
+       HELPERS & DYNAMIC CURRENCY
        ========================================================================= */
 
     const ESCAPE_MAP = {
@@ -692,35 +665,17 @@
     };
 
     function escapeHTML(value) {
-        if (
-            value === null ||
-            value === undefined
-        ) {
+        if (value === null || value === undefined) {
             return "";
         }
-
-        return String(value)
-            .replace(
-                /[&<>"']/g,
-                character =>
-                    ESCAPE_MAP[character]
-            );
+        return String(value).replace(/[&<>"']/g, character => ESCAPE_MAP[character]);
     }
 
-    function cleanText(
-        value,
-        fallback = ""
-    ) {
-        if (
-            value === null ||
-            value === undefined
-        ) {
+    function cleanText(value, fallback = "") {
+        if (value === null || value === undefined) {
             return fallback;
         }
-
-        const text =
-            String(value).trim();
-
+        const text = String(value).trim();
         return text || fallback;
     }
 
@@ -729,77 +684,42 @@
     }
 
     function parsePrice(value) {
-
-        if (
-            typeof value === "number" &&
-            Number.isFinite(value)
-        ) {
+        if (typeof value === "number" && Number.isFinite(value)) {
             return Math.max(0, value);
         }
-
-        const parsed =
-            parseFloat(
-                String(value ?? "")
-                    .replace(
-                        /[^0-9.-]/g,
-                        ""
-                    )
-            );
-
-        return Number.isFinite(parsed)
-            ? Math.max(0, parsed)
-            : 0;
+        const parsed = parseFloat(
+            String(value ?? "").replace(/[^0-9.-]/g, "")
+        );
+        return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
     }
 
-    const currencyFormatter =
-        new Intl.NumberFormat(
-            "en-US",
-            {
+    function formatPrice(value) {
+        const rawPrice = parsePrice(value);
+        const curr = currencySelect?.value || "USD";
+        const rate = CURRENCY_RATES[curr] || 1.0;
+        const converted = rawPrice * rate;
+
+        try {
+            return new Intl.NumberFormat("en-US", {
                 style: "currency",
-                currency: "USD",
+                currency: curr,
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
-            }
-        );
-
-    function formatPrice(value) {
-        return currencyFormatter.format(
-            parsePrice(value)
-        );
+            }).format(converted);
+        } catch (e) {
+            return `$${converted.toFixed(2)}`;
+        }
     }
 
     function normalizeImageURL(value) {
-
-        if (!value) {
-            return "";
-        }
-
-        let image =
-            String(value).trim();
-
-        if (!image) {
-            return "";
-        }
-
-        if (
-            image.startsWith("//")
-        ) {
-            return "https:" + image;
-        }
-
-        if (
-            /^https?:\/\//i.test(image) ||
-            image.startsWith("data:") ||
-            image.startsWith("/") ||
-            image.startsWith("./")
-        ) {
+        if (!value) return "";
+        let image = String(value).trim();
+        if (!image) return "";
+        if (image.startsWith("//")) return "https:" + image;
+        if (/^https?:\/\//i.test(image) || image.startsWith("data:") || image.startsWith("/") || image.startsWith("./")) {
             return image;
         }
-
-        return (
-            "https://" +
-            image.replace(/^\/+/, "")
-        );
+        return "https://" + image.replace(/^\/+/, "");
     }
 
     /* =========================================================================
@@ -807,85 +727,36 @@
        ========================================================================= */
 
     function extractImages(product) {
-
         const candidates = [];
 
         function addCandidate(value) {
-
             if (Array.isArray(value)) {
-
-                value.forEach(
-                    addCandidate
-                );
-
+                value.forEach(addCandidate);
                 return;
             }
-
-            if (
-                value &&
-                typeof value === "object"
-            ) {
-
-                addCandidate(
-                    value.url
-                );
-
-                addCandidate(
-                    value.imageUrl
-                );
-
-                addCandidate(
-                    value.image
-                );
-
+            if (value && typeof value === "object") {
+                addCandidate(value.url);
+                addCandidate(value.imageUrl);
+                addCandidate(value.image);
                 return;
             }
-
-            const normalized =
-                normalizeImageURL(value);
-
+            const normalized = normalizeImageURL(value);
             if (normalized) {
-                candidates.push(
-                    normalized
-                );
+                candidates.push(normalized);
             }
         }
 
-        if (!product) {
-            return [];
-        }
+        if (!product) return [];
 
-        addCandidate(
-            product.image
-        );
+        addCandidate(product.image);
+        addCandidate(product.bigImage);
+        addCandidate(product.imageUrl);
+        addCandidate(product.productImage);
+        addCandidate(product.thumbnail);
+        addCandidate(product.images);
+        addCandidate(product.productImages);
 
-        addCandidate(
-            product.bigImage
-        );
-
-        addCandidate(
-            product.imageUrl
-        );
-
-        addCandidate(
-            product.productImage
-        );
-
-        addCandidate(
-            product.thumbnail
-        );
-
-        addCandidate(
-            product.images
-        );
-
-        addCandidate(
-            product.productImages
-        );
-
-        return [
-            ...new Set(candidates)
-        ];
+        return [...new Set(candidates)];
     }
 
     /* =========================================================================
@@ -893,113 +764,41 @@
        ========================================================================= */
 
     function getCJProductId(product) {
-
-        if (!product) {
-            return "";
-        }
-
+        if (!product) return "";
         return cleanText(
-            product.cjProductId ||
-            product.cjPid ||
-            product.pid ||
-            product.productId ||
-            product.productID ||
-            /*
-             * Some Worker responses may use `id` for the CJ ID.
-             */
-            product.id ||
-            ""
+            product.cjProductId || product.cjPid || product.pid || product.productId || product.productID || product.id || ""
         );
     }
 
     function getCJSKU(product) {
-
-        if (!product) {
-            return "";
-        }
-
+        if (!product) return "";
         return cleanText(
-            product.cjSku ||
-            product.cjSKU ||
-            product.productSku ||
-            product.productSKU ||
-            product.sku ||
-            ""
+            product.cjSku || product.cjSKU || product.productSku || product.productSKU || product.sku || ""
         );
     }
 
     function getVariantId(product) {
-
-        if (!product) {
-            return "";
-        }
-
-        return cleanText(
-            product.variantId ||
-            product.variantID ||
-            product.vid ||
-            product.cjVariantId ||
-            ""
-        );
+        if (!product) return "";
+        return cleanText(product.variantId || product.variantID || product.vid || product.cjVariantId || "");
     }
 
     function getVariantSKU(product) {
-
-        if (!product) {
-            return "";
-        }
-
-        return cleanText(
-            product.variantSku ||
-            product.variantSKU ||
-            product.cjVariantSku ||
-            ""
-        );
+        if (!product) return "";
+        return cleanText(product.variantSku || product.variantSKU || product.cjVariantSku || "");
     }
 
     /* =========================================================================
        PRODUCT NORMALIZATION
        ========================================================================= */
 
-    function normalizeProduct(
-        product,
-        index = 0
-    ) {
+    function normalizeProduct(product, index = 0) {
+        if (!product || typeof product !== "object") return null;
 
-        if (
-            !product ||
-            typeof product !== "object"
-        ) {
-            return null;
-        }
-
-        const internalId =
-            cleanText(
-                product.id,
-                `product-${index + 1}`
-            );
-
-        const cjProductId =
-            getCJProductId(product);
-
-        const sku =
-            getCJSKU(product);
-
-        const name =
-            cleanText(
-                product.name ||
-                product.productName ||
-                product.title ||
-                product.productNameEn,
-                "CJ Product"
-            );
-
-        const category =
-            cleanText(
-                product.category ||
-                product.categoryName,
-                "General"
-            );
+        const internalId = cleanText(product.id, `product-${index + 1}`);
+        const cjProductId = getCJProductId(product);
+        const sku = getCJSKU(product);
+        const name = cleanText(product.name || product.productName || product.title || product.productNameEn, "CJ Product");
+        const category = cleanText(product.category || product.categoryName, "General");
 
         const priceCandidates = [
             product.discountPrice,
@@ -1013,145 +812,51 @@
         ];
 
         let price = 0;
-
-        for (
-            const candidate
-            of priceCandidates
-        ) {
-
-            const parsed =
-                parsePrice(candidate);
-
+        for (const candidate of priceCandidates) {
+            const parsed = parsePrice(candidate);
             if (parsed > 0) {
                 price = parsed;
                 break;
             }
         }
 
-        const ratingValue =
-            product.rating ??
-            product.score ??
-            null;
-
+        const ratingValue = product.rating ?? product.score ?? null;
         let rating = null;
 
-        if (
-            ratingValue !== null &&
-            ratingValue !== undefined &&
-            ratingValue !== ""
-        ) {
-
-            const numeric =
-                Number(ratingValue);
-
-            if (
-                Number.isFinite(numeric)
-            ) {
-                rating =
-                    Math.max(
-                        0,
-                        Math.min(
-                            5,
-                            numeric
-                        )
-                    );
+        if (ratingValue !== null && ratingValue !== undefined && ratingValue !== "") {
+            const numeric = Number(ratingValue);
+            if (Number.isFinite(numeric)) {
+                rating = Math.max(0, Math.min(5, numeric));
             }
         }
 
-        const images =
-            extractImages(product);
-
-        const image =
-            images[0] || "";
+        const images = extractImages(product);
+        const image = images[0] || "";
 
         return {
-
-            /*
-             * Internal storefront ID.
-             */
-            id:
-                normalizeId(
-                    internalId
-                ),
-
-            /*
-             * Actual CJ identity.
-             */
+            id: normalizeId(internalId),
             cjProductId,
-
-            pid:
-                cjProductId,
-
+            pid: cjProductId,
             sku,
-
-            cjSku:
-                sku,
-
-            variantId:
-                getVariantId(product),
-
-            variantSku:
-                getVariantSKU(product),
-
+            cjSku: sku,
+            variantId: getVariantId(product),
+            variantSku: getVariantSKU(product),
             name,
-
             category,
-
             price,
-
             rating,
-
             image,
-
             images,
-
-            description:
-                cleanText(
-                    product.description ||
-                    product.productDescription,
-                    "Quality product from PRASUN SHOP."
-                ),
-
-            features:
-                Array.isArray(
-                    product.features
-                )
-                    ? product.features
-                    : [],
-
-            specifications:
-                product.specifications &&
-                typeof product.specifications === "object"
-                    ? product.specifications
-                    : {},
-
-            variants:
-                Array.isArray(
-                    product.variants
-                )
-                    ? product.variants
-                    : [],
-
-            raw:
-                product
+            description: cleanText(product.description || product.productDescription, "Quality product from PRASUN SHOP."),
+            features: Array.isArray(product.features) ? product.features : [],
+            specifications: product.specifications && typeof product.specifications === "object" ? product.specifications : {},
+            variants: Array.isArray(product.variants) ? product.variants : [],
+            raw: product
         };
     }
 
-    /* =========================================================================
-       LOCAL CATALOG NORMALIZATION
-       ========================================================================= */
-
     function getLocalProducts() {
-
-        return LOCAL_CATALOG
-            .map(
-                (product, index) =>
-                    normalizeProduct(
-                        product,
-                        index
-                    )
-            )
-            .filter(Boolean);
+        return LOCAL_CATALOG.map((product, index) => normalizeProduct(product, index)).filter(Boolean);
     }
 
     /* =========================================================================
@@ -1159,517 +864,205 @@
        ========================================================================= */
 
     function extractProducts(data) {
-
         if (Array.isArray(data)) {
-
-            return data
-                .map(
-                    normalizeProduct
-                )
-                .filter(Boolean);
+            return data.map(normalizeProduct).filter(Boolean);
         }
-
-        if (
-            !data ||
-            typeof data !== "object"
-        ) {
+        if (!data || typeof data !== "object") {
             return [];
         }
 
         const candidates = [
-
             data.products,
-
             data.items,
-
             data.list,
-
             data.results,
-
             data.product,
-
             data.data?.products,
-
             data.data?.items,
-
             data.data?.list,
-
             data.data?.results,
-
             data.data
-
         ];
 
-        for (
-            const candidate
-            of candidates
-        ) {
-
+        for (const candidate of candidates) {
             if (Array.isArray(candidate)) {
-
-                return candidate
-                    .map(
-                        normalizeProduct
-                    )
-                    .filter(Boolean);
+                return candidate.map(normalizeProduct).filter(Boolean);
             }
-
-            if (
-                candidate &&
-                typeof candidate === "object" &&
-                (
-                    candidate.id ||
-                    candidate.pid ||
-                    candidate.productId ||
-                    candidate.name ||
-                    candidate.title
-                )
-            ) {
-
-                const normalized =
-                    normalizeProduct(
-                        candidate
-                    );
-
-                return normalized
-                    ? [normalized]
-                    : [];
+            if (candidate && typeof candidate === "object" && (candidate.id || candidate.pid || candidate.productId || candidate.name || candidate.title)) {
+                const normalized = normalizeProduct(candidate);
+                return normalized ? [normalized] : [];
             }
         }
-
         return [];
     }
 
-    /* =========================================================================
-       PRODUCT UNIQUE KEY
-       ========================================================================= */
-
     function productKey(product) {
-
-        if (!product) {
-            return "";
-        }
-
-        /*
-         * Prefer CJ identity.
-         */
-        return cleanText(
-            product.cjProductId ||
-            product.cjSku ||
-            product.sku ||
-            product.id ||
-            product.name
-        )
-            .toLowerCase();
+        if (!product) return "";
+        return cleanText(product.cjProductId || product.cjSku || product.sku || product.id || product.name).toLowerCase();
     }
 
-    /* =========================================================================
-       MERGE CATALOG
-       ========================================================================= */
+    function mergeProducts(baseProducts, incomingProducts) {
+        const map = new Map();
 
-    function mergeProducts(
-        baseProducts,
-        incomingProducts
-    ) {
-
-        const map =
-            new Map();
-
-        /*
-         * Local catalog goes first.
-         */
-        for (
-            const product
-            of baseProducts || []
-        ) {
-
-            const normalized =
-                normalizeProduct(
-                    product
-                );
-
-            if (!normalized) {
-                continue;
-            }
-
-            const key =
-                productKey(
-                    normalized
-                );
-
-            if (key) {
-                map.set(
-                    key,
-                    normalized
-                );
-            }
+        for (const product of baseProducts || []) {
+            const normalized = normalizeProduct(product);
+            if (!normalized) continue;
+            const key = productKey(normalized);
+            if (key) map.set(key, normalized);
         }
 
-        /*
-         * API products override matching
-         * local products.
-         */
-        for (
-            const product
-            of incomingProducts || []
-        ) {
-
-            const normalized =
-                normalizeProduct(
-                    product
-                );
-
-            if (!normalized) {
-                continue;
-            }
-
-            const key =
-                productKey(
-                    normalized
-                );
-
-            if (key) {
-                map.set(
-                    key,
-                    normalized
-                );
-            }
+        for (const product of incomingProducts || []) {
+            const normalized = normalizeProduct(product);
+            if (!normalized) continue;
+            const key = productKey(normalized);
+            if (key) map.set(key, normalized);
         }
 
-        return Array.from(
-            map.values()
-        );
+        return Array.from(map.values());
     }
 
     /* =========================================================================
        FETCH
        ========================================================================= */
 
-    async function fetchJSON(
-        url,
-        timeout = API_TIMEOUT
-    ) {
-
-        const controller =
-            new AbortController();
-
+    async function fetchJSON(url, timeout = API_TIMEOUT) {
+        const controller = new AbortController();
         let timedOut = false;
 
-        const timeoutId =
-            window.setTimeout(
-                () => {
-
-                    timedOut = true;
-
-                    controller.abort();
-
-                },
-                timeout
-            );
+        const timeoutId = window.setTimeout(() => {
+            timedOut = true;
+            controller.abort();
+        }, timeout);
 
         try {
+            const response = await fetch(url, {
+                method: "GET",
+                headers: { Accept: "application/json" },
+                cache: "no-store",
+                signal: controller.signal
+            });
 
-            const response =
-                await fetch(
-                    url,
-                    {
-                        method: "GET",
-
-                        headers: {
-                            Accept:
-                                "application/json"
-                        },
-
-                        cache: "no-store",
-
-                        signal:
-                            controller.signal
-                    }
-                );
-
-            const text =
-                await response.text();
-
+            const text = await response.text();
             if (!response.ok) {
-
-                throw new Error(
-                    `HTTP ${response.status}`
-                );
+                throw new Error(`HTTP ${response.status}`);
             }
-
-            if (!text.trim()) {
-                return null;
-            }
+            if (!text.trim()) return null;
 
             return JSON.parse(text);
-
         } catch (error) {
-
-            if (
-                timedOut ||
-                error?.name ===
-                    "AbortError"
-            ) {
-
-                throw new Error(
-                    "Product API request timed out."
-                );
+            if (timedOut || error?.name === "AbortError") {
+                throw new Error("Product API request timed out.");
             }
-
             throw error;
-
         } finally {
-
-            window.clearTimeout(
-                timeoutId
-            );
+            window.clearTimeout(timeoutId);
         }
     }
 
-    async function loadProductsFromAPI(
-        keyword = ""
-    ) {
+    async function loadProductsFromAPI(keyword = "") {
+        const trimmed = String(keyword || "").trim();
+        let url = API_ENDPOINT;
 
-        const trimmed =
-            String(
-                keyword || ""
-            ).trim();
-
-        let url =
-            API_ENDPOINT;
-
+        const params = new URLSearchParams();
         if (trimmed) {
-
-            const params =
-                new URLSearchParams();
-
-            /*
-             * Send several common parameter names.
-             * The Worker can use whichever it supports.
-             */
-            params.set(
-                "keyword",
-                trimmed
-            );
-
-            params.set(
-                "query",
-                trimmed
-            );
-
-            params.set(
-                "search",
-                trimmed
-            );
-
-            url +=
-                `?${params.toString()}`;
+            params.set("keyword", trimmed);
+            params.set("query", trimmed);
+            params.set("search", trimmed);
         }
 
-        const data =
-            await fetchJSON(
-                url
-            );
+        if (shipToSelect?.value) {
+            params.set("country", shipToSelect.value);
+        }
+        if (currencySelect?.value) {
+            params.set("currency", currencySelect.value);
+        }
 
-        return extractProducts(
-            data
-        );
+        const queryString = params.toString();
+        if (queryString) {
+            url += `?${queryString}`;
+        }
+
+        const data = await fetchJSON(url);
+        return extractProducts(data);
     }
 
     /* =========================================================================
        STATE
        ========================================================================= */
 
-    let masterCatalog =
-        [];
-
-    let allProducts =
-        [];
-
-    let filteredProducts =
-        [];
-
-    let activeCategory =
-        "all";
-
-    let currentSearch =
-        "";
-
-    let currentSort =
-        sortSelect?.value ||
-        "featured";
-
-    let searchTimer =
-        null;
-
-    let activeSearchController =
-        null;
-
-    let searchRequestSequence =
-        0;
-
-    let catalogRequestSequence =
-        0;
+    let masterCatalog = [];
+    let allProducts = [];
+    let filteredProducts = [];
+    let activeCategory = "all";
+    let currentSearch = "";
+    let currentSort = sortSelect?.value || "featured";
+    let searchTimer = null;
+    let activeSearchController = null;
+    let searchRequestSequence = 0;
+    let catalogRequestSequence = 0;
 
     /* =========================================================================
-       ACCESSIBILITY
+       ACCESSIBILITY & UI
        ========================================================================= */
 
     function announce(message) {
-
-        if (!ariaLiveRegion) {
-            return;
-        }
-
-        ariaLiveRegion.textContent =
-            "";
-
-        window.setTimeout(
-            () => {
-
-                ariaLiveRegion.textContent =
-                    message;
-
-            },
-            20
-        );
+        if (!ariaLiveRegion) return;
+        ariaLiveRegion.textContent = "";
+        window.setTimeout(() => {
+            ariaLiveRegion.textContent = message;
+        }, 20);
     }
-
-    /* =========================================================================
-       SEARCH UI
-       ========================================================================= */
 
     function updateClearSearchButton() {
-
-        if (
-            !clearSearchButton ||
-            !searchInput
-        ) {
-            return;
-        }
-
-        clearSearchButton.hidden =
-            !searchInput.value.trim();
+        if (!clearSearchButton || !searchInput) return;
+        clearSearchButton.hidden = !searchInput.value.trim();
     }
 
     /* =========================================================================
-       FILTERING
+       FILTERING & SORTING
        ========================================================================= */
 
     function filterProducts() {
+        const search = currentSearch.trim().toLowerCase();
 
-        const search =
-            currentSearch
-                .trim()
-                .toLowerCase();
-
-        filteredProducts =
-            allProducts.filter(
-                product => {
-
-                    if (
-                        activeCategory !==
-                        "all"
-                    ) {
-
-                        const category =
-                            String(
-                                product.category ||
-                                ""
-                            )
-                                .trim()
-                                .toLowerCase();
-
-                        if (
-                            category !==
-                            activeCategory
-                                .trim()
-                                .toLowerCase()
-                        ) {
-                            return false;
-                        }
-                    }
-
-                    if (!search) {
-                        return true;
-                    }
-
-                    const searchableText = [
-
-                        product.name,
-
-                        product.category,
-
-                        product.sku,
-
-                        product.cjProductId,
-
-                        product.description
-
-                    ]
-                        .filter(Boolean)
-                        .join(" ")
-                        .toLowerCase();
-
-                    return searchableText
-                        .includes(search);
+        filteredProducts = allProducts.filter(product => {
+            if (activeCategory !== "all") {
+                const category = String(product.category || "").trim().toLowerCase();
+                if (category !== activeCategory.trim().toLowerCase()) {
+                    return false;
                 }
-            );
+            }
+
+            if (!search) return true;
+
+            const searchableText = [
+                product.name,
+                product.category,
+                product.sku,
+                product.cjProductId,
+                product.description
+            ].filter(Boolean).join(" ").toLowerCase();
+
+            return searchableText.includes(search);
+        });
 
         applySort();
     }
 
-    /* =========================================================================
-       SORTING
-       ========================================================================= */
-
     function applySort() {
-
-        switch (
-            currentSort
-        ) {
-
+        switch (currentSort) {
             case "price-low":
-
-                filteredProducts.sort(
-                    (a, b) =>
-                        parsePrice(a.price) -
-                        parsePrice(b.price)
-                );
-
+                filteredProducts.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
                 break;
-
             case "price-high":
-
-                filteredProducts.sort(
-                    (a, b) =>
-                        parsePrice(b.price) -
-                        parsePrice(a.price)
-                );
-
+                filteredProducts.sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
                 break;
-
             case "rating":
-
-                filteredProducts.sort(
-                    (a, b) =>
-                        (b.rating || 0) -
-                        (a.rating || 0)
-                );
-
+                filteredProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
                 break;
-
             case "name-az":
-
-                filteredProducts.sort(
-                    (a, b) =>
-                        a.name.localeCompare(
-                            b.name
-                        )
-                );
-
+                filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
                 break;
-
             default:
                 break;
         }
@@ -1680,1372 +1073,475 @@
        ========================================================================= */
 
     function buildCategories() {
+        if (!categoriesContainer) return;
 
-        if (
-            !categoriesContainer
-        ) {
-            return;
-        }
-
-        const categoryMap =
-            new Map();
-
-        allProducts.forEach(
-            product => {
-
-                const category =
-                    cleanText(
-                        product.category
-                    );
-
-                if (category) {
-
-                    categoryMap.set(
-                        category.toLowerCase(),
-                        category
-                    );
-                }
+        const categoryMap = new Map();
+        allProducts.forEach(product => {
+            const category = cleanText(product.category);
+            if (category) {
+                categoryMap.set(category.toLowerCase(), category);
             }
-        );
+        });
 
-        const categories =
-            Array.from(
-                categoryMap.values()
-            ).sort();
+        const categories = Array.from(categoryMap.values()).sort();
 
         categoriesContainer.innerHTML = `
-
-            <button
-                type="button"
-                class="category-pill"
-                data-category="all"
-                aria-pressed="false"
-            >
+            <button type="button" class="category-pill" data-category="all" aria-pressed="false">
                 All
             </button>
-
-            ${categories
-                .map(
-                    category => `
-                        <button
-                            type="button"
-                            class="category-pill"
-                            data-category="${escapeHTML(category)}"
-                            aria-pressed="false"
-                        >
-                            ${escapeHTML(category)}
-                        </button>
-                    `
-                )
-                .join("")}
-
+            ${categories.map(category => `
+                <button type="button" class="category-pill" data-category="${escapeHTML(category)}" aria-pressed="false">
+                    ${escapeHTML(category)}
+                </button>
+            `).join("")}
         `;
 
-        setActiveCategory(
-            activeCategory
-        );
+        setActiveCategory(activeCategory);
     }
 
-    function setActiveCategory(
-        category
-    ) {
+    function setActiveCategory(category) {
+        activeCategory = String(category || "all");
+        if (!categoriesContainer) return;
 
-        activeCategory =
-            String(
-                category ||
-                "all"
-            );
-
-        if (
-            !categoriesContainer
-        ) {
-            return;
-        }
-
-        categoriesContainer
-            .querySelectorAll(
-                ".category-pill"
-            )
-            .forEach(
-                button => {
-
-                    const active =
-                        String(
-                            button.dataset.category ||
-                            ""
-                        ).toLowerCase() ===
-                        activeCategory
-                            .toLowerCase();
-
-                    button.classList.toggle(
-                        "active",
-                        active
-                    );
-
-                    button.setAttribute(
-                        "aria-pressed",
-                        active
-                            ? "true"
-                            : "false"
-                    );
-                }
-            );
+        categoriesContainer.querySelectorAll(".category-pill").forEach(button => {
+            const active = String(button.dataset.category || "").toLowerCase() === activeCategory.toLowerCase();
+            button.classList.toggle("active", active);
+            button.setAttribute("aria-pressed", active ? "true" : "false");
+        });
     }
 
     /* =========================================================================
-       LOADING / EMPTY
+       RENDERING
        ========================================================================= */
 
-    function renderLoading(
-        message = "Loading products..."
-    ) {
-
+    function renderLoading(message = "Loading products...") {
         productList.innerHTML = `
-
-            <div
-                class="product-status-card"
-                role="status"
-            >
-
-                <div
-                    class="spinner"
-                    aria-hidden="true"
-                ></div>
-
-                <p>
-                    ${escapeHTML(message)}
-                </p>
-
+            <div class="product-status-card" role="status">
+                <div class="spinner" aria-hidden="true"></div>
+                <p>${escapeHTML(message)}</p>
             </div>
-
         `;
-
-        announce(
-            message
-        );
+        announce(message);
     }
 
-    function renderEmpty(
-        message =
-            "No products found matching your criteria."
-    ) {
-
+    function renderEmpty(message = "No products found matching your criteria.") {
         productList.innerHTML = `
-
-            <div
-                class="product-status-card empty"
-            >
-
-                <div
-                    class="status-icon"
-                    aria-hidden="true"
-                >
-                    🔎
-                </div>
-
-                <h3>
-                    No products found
-                </h3>
-
-                <p>
-                    ${escapeHTML(message)}
-                </p>
-
-                ${
-                    currentSearch
-                        ? `
-                            <button
-                                type="button"
-                                class="btn-clear-results"
-                                id="local-clear-results"
-                            >
-                                Clear Search
-                            </button>
-                          `
-                        : ""
-                }
-
+            <div class="product-status-card empty">
+                <div class="status-icon" aria-hidden="true">🔎</div>
+                <h3>No products found</h3>
+                <p>${escapeHTML(message)}</p>
+                ${currentSearch ? `
+                    <button type="button" class="btn-clear-results" id="local-clear-results">
+                        Clear Search
+                    </button>
+                ` : ""}
             </div>
-
         `;
 
-        document
-            .getElementById(
-                "local-clear-results"
-            )
-            ?.addEventListener(
-                "click",
-                () => {
+        document.getElementById("local-clear-results")?.addEventListener("click", () => {
+            if (searchInput) {
+                searchInput.value = "";
+                currentSearch = "";
+                updateClearSearchButton();
+                handleSearchExecution("");
+                searchInput.focus();
+            }
+        });
 
-                    if (
-                        searchInput
-                    ) {
-                        searchInput.value =
-                            "";
-
-                        currentSearch =
-                            "";
-
-                        updateClearSearchButton();
-
-                        handleSearchExecution(
-                            ""
-                        );
-
-                        searchInput.focus();
-                    }
-                }
-            );
-
-        announce(
-            message
-        );
+        announce(message);
     }
 
-    /* =========================================================================
-       RATING
-       ========================================================================= */
-
-    function renderRating(
-        rating
-    ) {
-
-        if (
-            rating === null ||
-            rating === undefined ||
-            !Number.isFinite(
-                rating
-            )
-        ) {
-
-            return `
-                <span
-                    class="rating-badge rating-none"
-                >
-                    No reviews
-                </span>
-            `;
+    function renderRating(rating) {
+        if (rating === null || rating === undefined || !Number.isFinite(rating)) {
+            return `<span class="rating-badge rating-none">No reviews</span>`;
         }
-
-        const rounded =
-            Math.round(
-                rating
-            );
-
-        const stars =
-            "★".repeat(
-                rounded
-            ) +
-            "☆".repeat(
-                5 - rounded
-            );
+        const rounded = Math.round(rating);
+        const stars = "★".repeat(rounded) + "☆".repeat(5 - rounded);
 
         return `
-            <span
-                class="rating-badge"
-                aria-label="Rating ${rating.toFixed(1)} out of 5"
-            >
+            <span class="rating-badge" aria-label="Rating ${rating.toFixed(1)} out of 5">
                 ${stars}
-                <span>
-                    (${rating.toFixed(1)})
-                </span>
+                <span>(${rating.toFixed(1)})</span>
             </span>
         `;
     }
 
-    /* =========================================================================
-       PRODUCT CARD
-       ========================================================================= */
-
-    function renderProductCard(
-        product
-    ) {
-
-        /*
-         * Product detail URL uses the storefront ID.
-         *
-         * The cart contains the CJ ID separately.
-         */
-        const detailIdentifier =
-            product.id ||
-            product.cjProductId ||
-            product.sku;
-
-        const detailUrl =
-            `${PRODUCT_DETAIL_PAGE}?id=${encodeURIComponent(
-                detailIdentifier
-            )}`;
-
-        const imageSrc =
-            escapeHTML(
-                product.image ||
-                FALLBACK_IMAGE
-            );
-
-        const productId =
-            escapeHTML(
-                product.id
-            );
-
-        const productName =
-            escapeHTML(
-                product.name
-            );
+    function renderProductCard(product) {
+        const detailIdentifier = product.id || product.cjProductId || product.sku;
+        const detailUrl = `${PRODUCT_DETAIL_PAGE}?id=${encodeURIComponent(detailIdentifier)}`;
+        const imageSrc = escapeHTML(product.image || FALLBACK_IMAGE);
+        const productId = escapeHTML(product.id);
+        const productName = escapeHTML(product.name);
 
         return `
-
-            <article
-                class="product-card"
-                data-id="${productId}"
-                data-cj-product-id="${escapeHTML(
-                    product.cjProductId
-                )}"
-                data-sku="${escapeHTML(
-                    product.sku
-                )}"
-            >
-
-                <a
-                    href="${detailUrl}"
-                    class="product-card-image-link"
-                    aria-label="${productName}"
-                >
-
-                    <img
-                        src="${imageSrc}"
-                        alt="${productName}"
-                        loading="lazy"
-                        decoding="async"
-                        class="product-image"
-                        onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}';"
-                    >
-
+            <article class="product-card" data-id="${productId}" data-cj-product-id="${escapeHTML(product.cjProductId)}" data-sku="${escapeHTML(product.sku)}">
+                <a href="${detailUrl}" class="product-card-image-link" aria-label="${productName}">
+                    <img src="${imageSrc}" alt="${productName}" loading="lazy" decoding="async" class="product-image" onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}';">
                 </a>
-
-                <div
-                    class="product-card-body"
-                >
-
-                    <div
-                        class="product-meta"
-                    >
-
-                        <span
-                            class="product-category"
-                        >
-                            ${escapeHTML(
-                                product.category
-                            )}
-                        </span>
-
-                        ${renderRating(
-                            product.rating
-                        )}
-
+                <div class="product-card-body">
+                    <div class="product-meta">
+                        <span class="product-category">${escapeHTML(product.category)}</span>
+                        ${renderRating(product.rating)}
                     </div>
-
-                    <h3
-                        class="product-title"
-                    >
-
-                        <a
-                            href="${detailUrl}"
-                        >
-                            ${productName}
-                        </a>
-
+                    <h3 class="product-title">
+                        <a href="${detailUrl}">${productName}</a>
                     </h3>
-
-                    <p
-                        class="product-description"
-                    >
-                        ${escapeHTML(
-                            product.description
-                        )}
-                    </p>
-
-                    <div
-                        class="product-card-footer"
-                    >
-
-                        <span
-                            class="product-price"
-                        >
-                            ${formatPrice(
-                                product.price
-                            )}
-                        </span>
-
-                        <button
-                            type="button"
-                            class="btn-add-to-cart"
-                            data-id="${productId}"
-                            aria-label="Add ${productName} to cart"
-                        >
-
-                            <span
-                                class="cart-button-icon"
-                                aria-hidden="true"
-                            >
-                                +
-                            </span>
-
+                    <p class="product-description">${escapeHTML(product.description)}</p>
+                    <div class="product-card-footer">
+                        <span class="product-price">${formatPrice(product.price)}</span>
+                        <button type="button" class="btn-add-to-cart" data-id="${productId}" aria-label="Add ${productName} to cart">
+                            <span class="cart-button-icon" aria-hidden="true">+</span>
                             Add to Cart
-
                         </button>
-
                     </div>
-
                 </div>
-
             </article>
-
         `;
     }
 
-    /* =========================================================================
-       PRODUCT LIST RENDER
-       ========================================================================= */
-
     function updateProductHeadingAndCount() {
-
-        if (
-            productsCount
-        ) {
-
-            productsCount.textContent =
-                `${filteredProducts.length} ${
-                    filteredProducts.length === 1
-                        ? "product"
-                        : "products"
-                }`;
+        if (productsCount) {
+            productsCount.textContent = `${filteredProducts.length} ${filteredProducts.length === 1 ? "product" : "products"}`;
         }
 
-        if (
-            productsHeading
-        ) {
-
-            if (
-                currentSearch.trim()
-            ) {
-
-                productsHeading.textContent =
-                    `Search Results for "${currentSearch.trim()}"`;
-
-            } else if (
-                activeCategory !==
-                "all"
-            ) {
-
-                productsHeading.textContent =
-                    activeCategory;
-
+        if (productsHeading) {
+            if (currentSearch.trim()) {
+                productsHeading.textContent = `Search Results for "${currentSearch.trim()}"`;
+            } else if (activeCategory !== "all") {
+                productsHeading.textContent = activeCategory;
             } else {
-
-                productsHeading.textContent =
-                    "All Products";
+                productsHeading.textContent = "All Products";
             }
         }
     }
 
     function renderProducts() {
-
         filterProducts();
-
         updateProductHeadingAndCount();
 
-        if (
-            !filteredProducts.length
-        ) {
-
+        if (!filteredProducts.length) {
             renderEmpty();
-
             return;
         }
 
-        productList.innerHTML =
-            filteredProducts
-                .map(
-                    renderProductCard
-                )
-                .join("");
-
-        announce(
-            `Showing ${filteredProducts.length} products`
-        );
+        productList.innerHTML = filteredProducts.map(renderProductCard).join("");
+        announce(`Showing ${filteredProducts.length} products`);
     }
 
     /* =========================================================================
-       CART
+       CART INTEGRATION
        ========================================================================= */
 
     function getCart() {
-
         try {
-
-            const raw =
-                localStorage.getItem(
-                    CART_KEY
-                );
-
-            if (!raw) {
-                return [];
-            }
-
-            const parsed =
-                JSON.parse(raw);
-
-            return Array.isArray(
-                parsed
-            )
-                ? parsed
-                : [];
-
+            const raw = localStorage.getItem(CART_KEY);
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
         } catch (error) {
-
-            console.error(
-                "[PRASUN SHOP] Unable to read cart:",
-                error
-            );
-
+            console.error("[PRASUN SHOP] Unable to read cart:", error);
             return [];
         }
     }
 
-    function saveCart(
-        cart
-    ) {
-
+    function saveCart(cart) {
         try {
-
-            localStorage.setItem(
-                CART_KEY,
-                JSON.stringify(
-                    cart
-                )
-            );
-
-            window.dispatchEvent(
-                new CustomEvent(
-                    CART_EVENT_NAME,
-                    {
-                        detail: {
-                            cart
-                        }
-                    }
-                )
-            );
-
+            localStorage.setItem(CART_KEY, JSON.stringify(cart));
+            window.dispatchEvent(new CustomEvent(CART_EVENT_NAME, { detail: { cart } }));
         } catch (error) {
-
-            console.error(
-                "[PRASUN SHOP] Unable to save cart:",
-                error
-            );
+            console.error("[PRASUN SHOP] Unable to save cart:", error);
         }
     }
 
     function updateCartBadge() {
+        if (!cartCount) return;
+        const cart = getCart();
+        const totalItems = cart.reduce((sum, item) => {
+            const quantity = Number(item.quantity);
+            return sum + (Number.isFinite(quantity) && quantity > 0 ? Math.floor(quantity) : 1);
+        }, 0);
 
-        if (!cartCount) {
-            return;
-        }
-
-        const cart =
-            getCart();
-
-        const totalItems =
-            cart.reduce(
-                (
-                    sum,
-                    item
-                ) => {
-
-                    const quantity =
-                        Number(
-                            item.quantity
-                        );
-
-                    return (
-                        sum +
-                        (
-                            Number.isFinite(
-                                quantity
-                            ) &&
-                            quantity > 0
-                                ? Math.floor(
-                                    quantity
-                                )
-                                : 1
-                        )
-                    );
-                },
-                0
-            );
-
-        cartCount.textContent =
-            String(
-                totalItems
-            );
-
-        cartCount.hidden =
-            totalItems <= 0;
+        cartCount.textContent = String(totalItems);
+        cartCount.hidden = totalItems <= 0;
     }
 
-    /* =========================================================================
-       CART IDENTITY
-       ========================================================================= */
+    function cartItemsMatch(a, b) {
+        const aVariant = cleanText(a.variantId);
+        const bVariant = cleanText(b.variantId);
 
-    function cartItemsMatch(
-        a,
-        b
-    ) {
-
-        const aVariant =
-            cleanText(
-                a.variantId
-            );
-
-        const bVariant =
-            cleanText(
-                b.variantId
-            );
-
-        if (
-            aVariant ||
-            bVariant
-        ) {
-
-            return (
-                aVariant &&
-                bVariant &&
-                aVariant ===
-                    bVariant
-            );
+        if (aVariant || bVariant) {
+            return aVariant && bVariant && aVariant === bVariant;
         }
 
-        const aCJ =
-            cleanText(
-                a.cjProductId ||
-                a.cjPid ||
-                a.pid
-            );
+        const aCJ = cleanText(a.cjProductId || a.cjPid || a.pid);
+        const bCJ = cleanText(b.cjProductId || b.cjPid || b.pid);
 
-        const bCJ =
-            cleanText(
-                b.cjProductId ||
-                b.cjPid ||
-                b.pid
-            );
-
-        if (
-            aCJ &&
-            bCJ
-        ) {
-
-            return (
-                aCJ ===
-                bCJ
-            );
+        if (aCJ && bCJ) {
+            return aCJ === bCJ;
         }
 
-        const aSKU =
-            cleanText(
-                a.cjSku ||
-                a.sku
-            );
+        const aSKU = cleanText(a.cjSku || a.sku);
+        const bSKU = cleanText(b.cjSku || b.sku);
 
-        const bSKU =
-            cleanText(
-                b.cjSku ||
-                b.sku
-            );
-
-        if (
-            aSKU &&
-            bSKU
-        ) {
-
-            return (
-                aSKU ===
-                bSKU
-            );
+        if (aSKU && bSKU) {
+            return aSKU === bSKU;
         }
 
-        /*
-         * Only use internal ID as final identity.
-         */
-        const aId =
-            cleanText(
-                a.id
-            );
+        const aId = cleanText(a.id);
+        const bId = cleanText(b.id);
 
-        const bId =
-            cleanText(
-                b.id
-            );
-
-        return (
-            aId &&
-            bId &&
-            aId ===
-                bId
-        );
+        return aId && bId && aId === bId;
     }
 
-    /* =========================================================================
-       ADD TO CART
-       ========================================================================= */
-
-    function addToCart(
-        productId
-    ) {
-
-        const product =
-            allProducts.find(
-                product =>
-                    String(
-                        product.id
-                    ) ===
-                        String(
-                            productId
-                        )
-            ) ||
-            masterCatalog.find(
-                product =>
-                    String(
-                        product.id
-                    ) ===
-                        String(
-                            productId
-                        )
-            );
+    function addToCart(productId) {
+        const product = allProducts.find(p => String(p.id) === String(productId)) ||
+                        masterCatalog.find(p => String(p.id) === String(productId));
 
         if (!product) {
-
-            console.error(
-                "[PRASUN SHOP] Product not found:",
-                productId
-            );
-
-            announce(
-                "Unable to add this product."
-            );
-
+            console.error("[PRASUN SHOP] Product not found:", productId);
+            announce("Unable to add this product.");
             return;
         }
 
-        const cart =
-            getCart();
-
-        /*
-         * Store CJ information explicitly.
-         */
+        const cart = getCart();
         const cartItem = {
-
-            id:
-                product.id,
-
-            sku:
-                product.sku,
-
-            cjProductId:
-                product.cjProductId,
-
-            cjPid:
-                product.cjProductId,
-
-            cjSku:
-                product.cjSku ||
-                product.sku,
-
-            variantId:
-                product.variantId ||
-                "",
-
-            variantSku:
-                product.variantSku ||
-                "",
-
-            name:
-                product.name,
-
-            category:
-                product.category,
-
-            price:
-                parsePrice(
-                    product.price
-                ),
-
-            image:
-                product.image ||
-                FALLBACK_IMAGE,
-
-            quantity:
-                1
+            id: product.id,
+            sku: product.sku,
+            cjProductId: product.cjProductId,
+            cjPid: product.cjProductId,
+            cjSku: product.cjSku || product.sku,
+            variantId: product.variantId || "",
+            variantSku: product.variantSku || "",
+            name: product.name,
+            category: product.category,
+            price: parsePrice(product.price),
+            image: product.image || FALLBACK_IMAGE,
+            quantity: 1
         };
 
-        const existingIndex =
-            cart.findIndex(
-                item =>
-                    cartItemsMatch(
-                        item,
-                        cartItem
-                    )
-            );
+        const existingIndex = cart.findIndex(item => cartItemsMatch(item, cartItem));
 
-        if (
-            existingIndex >= 0
-        ) {
-
-            const oldQuantity =
-                Number(
-                    cart[
-                        existingIndex
-                    ].quantity
-                ) || 1;
-
-            cart[
-                existingIndex
-            ] = {
-
-                ...cart[
-                    existingIndex
-                ],
-
+        if (existingIndex >= 0) {
+            const oldQuantity = Number(cart[existingIndex].quantity) || 1;
+            cart[existingIndex] = {
+                ...cart[existingIndex],
                 ...cartItem,
-
-                quantity:
-                    Math.min(
-                        MAX_CART_QUANTITY,
-                        oldQuantity + 1
-                    )
+                quantity: Math.min(MAX_CART_QUANTITY, oldQuantity + 1)
             };
-
         } else {
-
-            cart.push(
-                cartItem
-            );
+            cart.push(cartItem);
         }
 
-        saveCart(
-            cart
-        );
-
+        saveCart(cart);
         updateCartBadge();
+        announce(`${product.name} added to your cart.`);
 
-        announce(
-            `${product.name} added to your cart.`
-        );
-
-        /*
-         * Small visual feedback.
-         */
-        const button =
-            productList.querySelector(
-                `.btn-add-to-cart[data-id="${CSS.escape(
-                    String(product.id)
-                )}"]`
-            );
-
+        const button = productList.querySelector(`.btn-add-to-cart[data-id="${CSS.escape(String(product.id))}"]`);
         if (button) {
-
-            const original =
-                button.innerHTML;
-
-            button.classList.add(
-                "added"
-            );
-
-            button.innerHTML =
-                "✓ Added";
-
-            window.setTimeout(
-                () => {
-
-                    button.classList.remove(
-                        "added"
-                    );
-
-                    button.innerHTML =
-                        original;
-
-                },
-                1200
-            );
+            const original = button.innerHTML;
+            button.classList.add("added");
+            button.innerHTML = "✓ Added";
+            window.setTimeout(() => {
+                button.classList.remove("added");
+                button.innerHTML = original;
+            }, 1200);
         }
     }
 
     /* =========================================================================
-       SEARCH
+       SEARCH EXECUTION
        ========================================================================= */
 
-    async function handleSearchExecution(
-        query
-    ) {
-
-        const trimmed =
-            String(
-                query || ""
-            ).trim();
-
+    async function handleSearchExecution(query) {
+        const trimmed = String(query || "").trim();
         searchRequestSequence++;
+        const currentSequence = searchRequestSequence;
 
-        const currentSequence =
-            searchRequestSequence;
-
-        if (
-            activeSearchController
-        ) {
-
+        if (activeSearchController) {
             activeSearchController.abort();
-
-            activeSearchController =
-                null;
+            activeSearchController = null;
         }
 
-        /*
-         * IMPORTANT:
-         *
-         * Local search happens FIRST.
-         *
-         * This guarantees that search never results
-         * in a blank page simply because CJ failed.
-         */
-        if (
-            trimmed.length >=
-            MIN_SEARCH_LENGTH
-        ) {
+        if (trimmed.length >= MIN_SEARCH_LENGTH) {
+            const localResults = masterCatalog.filter(product => {
+                const text = [
+                    product.name,
+                    product.category,
+                    product.sku,
+                    product.cjProductId,
+                    product.description
+                ].filter(Boolean).join(" ").toLowerCase();
 
-            const localResults =
-                masterCatalog.filter(
-                    product => {
+                return text.includes(trimmed.toLowerCase());
+            });
 
-                        const text = [
-
-                            product.name,
-
-                            product.category,
-
-                            product.sku,
-
-                            product.cjProductId,
-
-                            product.description
-
-                        ]
-                            .filter(Boolean)
-                            .join(" ")
-                            .toLowerCase();
-
-                        return text.includes(
-                            trimmed.toLowerCase()
-                        );
-                    }
-                );
-
-            /*
-             * Immediately display local results.
-             */
-            allProducts =
-                localResults.length
-                    ? localResults
-                    : [...masterCatalog];
-
-            currentSearch =
-                trimmed;
-
+            allProducts = localResults.length ? localResults : [...masterCatalog];
+            currentSearch = trimmed;
             renderProducts();
 
-            /*
-             * If no local match exists, tell user
-             * that CJ search is running.
-             */
-            if (
-                !localResults.length
-            ) {
-
-                renderLoading(
-                    `Searching CJ for "${trimmed}"...`
-                );
+            if (!localResults.length) {
+                renderLoading(`Searching network for "${trimmed}"...`);
             }
 
-            activeSearchController =
-                new AbortController();
+            activeSearchController = new AbortController();
 
             try {
+                const apiResults = await loadProductsFromAPI(trimmed);
 
-                const apiResults =
-                    await loadProductsFromAPI(
-                        trimmed
-                    );
+                if (currentSequence !== searchRequestSequence) return;
 
-                if (
-                    currentSequence !==
-                    searchRequestSequence
-                ) {
-                    return;
-                }
+                const merged = mergeProducts(masterCatalog, apiResults);
+                const searchLower = trimmed.toLowerCase();
 
-                /*
-                 * Merge API search results
-                 * with the local catalog.
-                 */
-                const merged =
-                    mergeProducts(
-                        masterCatalog,
-                        apiResults
-                    );
+                const matching = merged.filter(product => {
+                    const text = [
+                        product.name,
+                        product.category,
+                        product.sku,
+                        product.cjProductId,
+                        product.description
+                    ].filter(Boolean).join(" ").toLowerCase();
 
-                const searchLower =
-                    trimmed.toLowerCase();
+                    return text.includes(searchLower);
+                });
 
-                const matching =
-                    merged.filter(
-                        product => {
-
-                            const text = [
-
-                                product.name,
-
-                                product.category,
-
-                                product.sku,
-
-                                product.cjProductId,
-
-                                product.description
-
-                            ]
-                                .filter(Boolean)
-                                .join(" ")
-                                .toLowerCase();
-
-                            return text.includes(
-                                searchLower
-                            );
-                        }
-                    );
-
-                allProducts =
-                    matching;
-
+                allProducts = matching;
                 buildCategories();
-
                 renderProducts();
 
             } catch (error) {
+                if (error?.name === "AbortError") return;
+                if (currentSequence !== searchRequestSequence) return;
 
-                /*
-                 * API failure is NOT fatal.
-                 *
-                 * Restore local search results.
-                 */
-                if (
-                    error?.name ===
-                        "AbortError"
-                ) {
-                    return;
-                }
-
-                if (
-                    currentSequence !==
-                    searchRequestSequence
-                ) {
-                    return;
-                }
-
-                allProducts =
-                    localResults;
-
+                allProducts = localResults;
                 buildCategories();
-
                 renderProducts();
-
             } finally {
-
-                if (
-                    currentSequence ===
-                    searchRequestSequence
-                ) {
-
-                    activeSearchController =
-                        null;
+                if (currentSequence === searchRequestSequence) {
+                    activeSearchController = null;
                 }
             }
-
         } else {
-
-            allProducts =
-                [...masterCatalog];
-
+            allProducts = [...masterCatalog];
             renderProducts();
         }
     }
 
-    function onSearchInput(
-        event
-    ) {
-
-        currentSearch =
-            event.target.value;
-
+    function onSearchInput(event) {
+        currentSearch = event.target.value;
         updateClearSearchButton();
 
-        if (
-            searchTimer
-        ) {
-
-            window.clearTimeout(
-                searchTimer
-            );
+        if (searchTimer) {
+            window.clearTimeout(searchTimer);
         }
 
-        searchTimer =
-            window.setTimeout(
-                () =>
-                    handleSearchExecution(
-                        currentSearch
-                    ),
-                SEARCH_DELAY
-            );
+        searchTimer = window.setTimeout(
+            () => handleSearchExecution(currentSearch),
+            SEARCH_DELAY
+        );
     }
 
     /* =========================================================================
-       EVENTS
+       EVENT LISTENERS
        ========================================================================= */
 
     function attachEventListeners() {
+        searchInput?.addEventListener("input", onSearchInput);
 
-        searchInput?.addEventListener(
-            "input",
-            onSearchInput
-        );
-
-        clearSearchButton?.addEventListener(
-            "click",
-            () => {
-
-                if (
-                    searchInput
-                ) {
-
-                    searchInput.value =
-                        "";
-
-                    currentSearch =
-                        "";
-
-                    updateClearSearchButton();
-
-                    handleSearchExecution(
-                        ""
-                    );
-
-                    searchInput.focus();
-                }
+        clearSearchButton?.addEventListener("click", () => {
+            if (searchInput) {
+                searchInput.value = "";
+                currentSearch = "";
+                updateClearSearchButton();
+                handleSearchExecution("");
+                searchInput.focus();
             }
-        );
+        });
 
-        sortSelect?.addEventListener(
-            "change",
-            event => {
+        sortSelect?.addEventListener("change", event => {
+            currentSort = event.target.value;
+            renderProducts();
+        });
 
-                currentSort =
-                    event.target.value;
+        shipToSelect?.addEventListener("change", () => {
+            initCatalog();
+        });
 
-                renderProducts();
+        currencySelect?.addEventListener("change", () => {
+            renderProducts();
+        });
+
+        categoriesContainer?.addEventListener("click", event => {
+            const button = event.target.closest(".category-pill");
+            if (!button) return;
+            setActiveCategory(button.dataset.category);
+            renderProducts();
+        });
+
+        productList.addEventListener("click", event => {
+            const button = event.target.closest(".btn-add-to-cart, .add-to-cart-btn");
+            if (!button) return;
+
+            event.preventDefault();
+            const id = button.dataset.id;
+            if (id) {
+                addToCart(id);
             }
-        );
+        });
 
-        categoriesContainer?.addEventListener(
-            "click",
-            event => {
-
-                const button =
-                    event.target.closest(
-                        ".category-pill"
-                    );
-
-                if (!button) {
-                    return;
-                }
-
-                setActiveCategory(
-                    button.dataset.category
-                );
-
-                renderProducts();
+        window.addEventListener(CART_EVENT_NAME, updateCartBadge);
+        window.addEventListener("storage", event => {
+            if (event.key === CART_KEY) {
+                updateCartBadge();
             }
-        );
-
-        productList.addEventListener(
-            "click",
-            event => {
-
-                const button =
-                    event.target.closest(
-                        ".btn-add-to-cart, .add-to-cart-btn"
-                    );
-
-                if (!button) {
-                    return;
-                }
-
-                event.preventDefault();
-
-                const id =
-                    button.dataset.id;
-
-                if (id) {
-
-                    addToCart(
-                        id
-                    );
-                }
-            }
-        );
-
-        window.addEventListener(
-            CART_EVENT_NAME,
-            updateCartBadge
-        );
-
-        window.addEventListener(
-            "storage",
-            event => {
-
-                if (
-                    event.key ===
-                    CART_KEY
-                ) {
-
-                    updateCartBadge();
-                }
-            }
-        );
+        });
     }
 
     /* =========================================================================
-       CATALOG INITIALIZATION
+       INITIALIZATION
        ========================================================================= */
 
     async function initCatalog() {
-
         catalogRequestSequence++;
+        const sequence = catalogRequestSequence;
 
-        const sequence =
-            catalogRequestSequence;
-
-        /*
-         * CRITICAL:
-         *
-         * Local catalog is displayed immediately.
-         * Never wait for CJ.
-         */
-        masterCatalog =
-            getLocalProducts();
-
-        allProducts =
-            [...masterCatalog];
+        masterCatalog = getLocalProducts();
+        allProducts = [...masterCatalog];
 
         buildCategories();
-
         renderProducts();
-
         updateCartBadge();
-
         updateClearSearchButton();
 
-        /*
-         * Now try Worker/CJ in the background.
-         */
         try {
+            const remoteProducts = await loadProductsFromAPI();
+            if (sequence !== catalogRequestSequence) return;
 
-            const remoteProducts =
-                await loadProductsFromAPI();
-
-            if (
-                sequence !==
-                catalogRequestSequence
-            ) {
-                return;
-            }
-
-            if (
-                remoteProducts.length
-            ) {
-
-                masterCatalog =
-                    mergeProducts(
-                        getLocalProducts(),
-                        remoteProducts
-                    );
-
-                allProducts =
-                    [...masterCatalog];
-
+            if (remoteProducts.length) {
+                masterCatalog = mergeProducts(getLocalProducts(), remoteProducts);
+                allProducts = [...masterCatalog];
                 buildCategories();
 
-                /*
-                 * Only render the normal catalog if
-                 * the user is not currently searching.
-                 */
-                if (
-                    !currentSearch.trim()
-                ) {
-
+                if (!currentSearch.trim()) {
                     renderProducts();
                 }
             }
-
         } catch (error) {
-
             console.warn(
-                "[PRASUN SHOP] Worker/CJ catalog unavailable. Using local catalog.",
-                error?.message ||
-                    error
+                "[PRASUN SHOP] Remote catalog unavailable. Using local catalog.",
+                error?.message || error
             );
-
-            /*
-             * Do NOTHING else.
-             *
-             * The local catalog is already visible.
-             */
         }
     }
 
-    /* =========================================================================
-       INIT
-       ========================================================================= */
-
     function init() {
-
         attachEventListeners();
-
-        /*
-         * Immediate local catalog.
-         */
         initCatalog();
     }
 
-    if (
-        document.readyState ===
-        "loading"
-    ) {
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            init,
-            {
-                once: true
-            }
-        );
-
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init, { once: true });
     } else {
-
         init();
     }
 
