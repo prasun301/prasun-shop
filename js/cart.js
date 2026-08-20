@@ -7,20 +7,27 @@
  *
  *     prasun_cart
  *
- * Cart item:
+ * Supported cart item structure:
  *
  * {
- *   id: "internal storefront ID",
- *   cjProductId: "actual CJ product ID",
- *   cjPid: "actual CJ product ID",
+ *   id: "storefront ID",
+ *
+ *   cjProductId: "CJ product ID",
+ *   cjPid: "CJ product ID",
+ *
  *   sku: "storefront/CJ SKU",
  *   cjSku: "CJ SKU",
+ *
  *   variantId: "CJ variant ID",
  *   variantSku: "CJ variant SKU",
- *   name: "display name",
- *   category: "category",
+ *
+ *   name: "Product name",
+ *   category: "Category",
+ *
  *   price: 29.99,
+ *
  *   image: "https://...",
+ *
  *   quantity: 1
  * }
  *
@@ -31,6 +38,10 @@
 
 (() => {
 
+    /* =========================================================================
+       CONFIG
+       ========================================================================= */
+
     const CART_KEY =
         "prasun_cart";
 
@@ -40,14 +51,18 @@
         "prasun_cart_items"
     ];
 
-    const PRODUCTS_ENDPOINT =
-        "https://prasun-shop-api.prasun301.workers.dev/api/products";
-
     const MAX_QUANTITY =
         99;
 
-    const REQUEST_TIMEOUT_MS =
-        12000;
+    const CHECKOUT_URL =
+        "/checkout.html";
+
+    const PRODUCTS_URL =
+        "/products.html";
+
+    /* =========================================================================
+       CURRENCY
+       ========================================================================= */
 
     const currencyFormatter =
         new Intl.NumberFormat(
@@ -112,21 +127,18 @@
     let cart = [];
 
     /* =========================================================================
-       HELPERS
+       BASIC HELPERS
        ========================================================================= */
 
-    function cleanString(
-        value
-    ) {
+    function cleanString(value) {
 
         return String(
             value ?? ""
         ).trim();
+
     }
 
-    function firstNonEmpty(
-        ...values
-    ) {
+    function firstNonEmpty(...values) {
 
         for (
             const value
@@ -141,14 +153,14 @@
             if (cleaned) {
                 return cleaned;
             }
+
         }
 
         return "";
+
     }
 
-    function escapeHTML(
-        value
-    ) {
+    function escapeHTML(value) {
 
         return String(
             value ?? ""
@@ -173,38 +185,55 @@
                 /'/g,
                 "&#039;"
             );
+
     }
 
-    function formatPrice(
-        value
-    ) {
+    function escapeAttribute(value) {
 
-        const number =
-            Number(value);
+        return escapeHTML(
+            value
+        );
 
-        return Number.isFinite(
-            number
-        )
-            ? currencyFormatter.format(
-                number
-            )
-            : "$0.00";
     }
 
-    function normalizeQuantity(
-        value
-    ) {
+    function formatPrice(value) {
 
         const number =
-            Number(value);
+            Number(
+                value
+            );
 
         if (
             !Number.isFinite(
                 number
-            ) ||
-            number <= 0
+            )
         ) {
+
+            return "$0.00";
+
+        }
+
+        return currencyFormatter.format(
+            number
+        );
+
+    }
+
+    function normalizeQuantity(value) {
+
+        const number =
+            Number(
+                value
+            );
+
+        if (
+            !Number.isFinite(
+                number
+            )
+        ) {
+
             return 1;
+
         }
 
         return Math.min(
@@ -216,15 +245,40 @@
                 )
             )
         );
+
+    }
+
+    function normalizePrice(value) {
+
+        const number =
+            Number(
+                value
+            );
+
+        if (
+            !Number.isFinite(
+                number
+            ) ||
+            number < 0
+        ) {
+
+            return 0;
+
+        }
+
+        return Number(
+            number.toFixed(
+                2
+            )
+        );
+
     }
 
     /* =========================================================================
-       CJ IDENTITY
+       CJ PRODUCT ID
        ========================================================================= */
 
-    function getProductIdentity(
-        item
-    ) {
+    function getCJProductId(item) {
 
         return firstNonEmpty(
 
@@ -236,15 +290,39 @@
 
             item?.productId,
 
-            item?.productID,
+            item?.productID
 
-            item?.id
         );
+
     }
 
-    function getSKU(
-        item
-    ) {
+    /* =========================================================================
+       STOREFRONT ID
+       ========================================================================= */
+
+    function getStorefrontId(item) {
+
+        return firstNonEmpty(
+
+            item?.id,
+
+            item?.productId,
+
+            item?.productID,
+
+            getCJProductId(
+                item
+            )
+
+        );
+
+    }
+
+    /* =========================================================================
+       SKU
+       ========================================================================= */
+
+    function getSKU(item) {
 
         return firstNonEmpty(
 
@@ -257,12 +335,16 @@
             item?.productSKU,
 
             item?.sku
+
         );
+
     }
 
-    function getVariantIdentity(
-        item
-    ) {
+    /* =========================================================================
+       VARIANT ID
+       ========================================================================= */
+
+    function getVariantId(item) {
 
         return firstNonEmpty(
 
@@ -272,13 +354,19 @@
 
             item?.vid,
 
-            item?.cjVariantId
+            item?.cjVariantId,
+
+            item?.cjVariantID
+
         );
+
     }
 
-    function getVariantSKU(
-        item
-    ) {
+    /* =========================================================================
+       VARIANT SKU
+       ========================================================================= */
+
+    function getVariantSKU(item) {
 
         return firstNonEmpty(
 
@@ -286,83 +374,131 @@
 
             item?.variantSKU,
 
-            item?.cjVariantSku
+            item?.cjVariantSku,
+
+            item?.cjVariantSKU
+
         );
+
     }
 
     /* =========================================================================
-       CART NORMALIZATION
+       PRODUCT NAME
        ========================================================================= */
 
-    function normalizeCartItem(
-        item
-    ) {
+    function getProductName(item) {
+
+        return firstNonEmpty(
+
+            item?.name,
+
+            item?.productName,
+
+            item?.title,
+
+            /*
+             * Legacy compatibility.
+             */
+            typeof item?.id ===
+                "string" &&
+            !/^CJ/i.test(
+                item.id
+            )
+                ? item.id
+                : ""
+
+        );
+
+    }
+
+    /* =========================================================================
+       IMAGE
+       ========================================================================= */
+
+    function getProductImage(item) {
+
+        return firstNonEmpty(
+
+            item?.image,
+
+            item?.imageUrl,
+
+            item?.thumbnail,
+
+            item?.productImage,
+
+            item?.mainImage
+
+        );
+
+    }
+
+    /* =========================================================================
+       CART ITEM NORMALIZATION
+       ========================================================================= */
+
+    function normalizeCartItem(item) {
 
         if (
             !item ||
             typeof item !==
                 "object"
         ) {
+
             return null;
+
         }
 
+        const name =
+            getProductName(
+                item
+            );
+
         const cjProductId =
-            getProductIdentity(
+            getCJProductId(
+                item
+            );
+
+        const storefrontId =
+            getStorefrontId(
                 item
             );
 
         /*
-         * Legacy carts sometimes contain the product
-         * name inside `id`.
-         *
-         * We preserve the name for display, but don't
-         * deliberately create a fake CJ ID from it.
+         * A cart item needs at least a product
+         * identity or a display name.
          */
-        const name =
-            firstNonEmpty(
-
-                item.name,
-
-                item.productName,
-
-                item.title,
-
-                /*
-                 * Legacy compatibility only.
-                 */
-                typeof item.id ===
-                    "string" &&
-                !/^CJ/i.test(
-                    item.id
-                )
-                    ? item.id
-                    : ""
-            );
-
         if (
+            !storefrontId &&
             !cjProductId &&
             !name
         ) {
+
             return null;
+
         }
 
-        const price =
-            Number(
-                item.price
+        const sku =
+            getSKU(
+                item
             );
 
-        const normalized = {
+        const variantId =
+            getVariantId(
+                item
+            );
+
+        const variantSku =
+            getVariantSKU(
+                item
+            );
+
+        return {
 
             id:
-                firstNonEmpty(
-                    item.id,
-                    cjProductId
-                ),
-
-            sku:
-                getSKU(
-                    item
-                ),
+                storefrontId ||
+                cjProductId ||
+                name,
 
             cjProductId:
                 cjProductId,
@@ -370,20 +506,17 @@
             cjPid:
                 cjProductId,
 
+            sku:
+                sku,
+
             cjSku:
-                getSKU(
-                    item
-                ),
+                sku,
 
             variantId:
-                getVariantIdentity(
-                    item
-                ),
+                variantId,
 
             variantSku:
-                getVariantSKU(
-                    item
-                ),
+                variantSku,
 
             name:
                 name ||
@@ -391,64 +524,56 @@
 
             category:
                 firstNonEmpty(
-                    item.category,
-                    item.categoryName
+                    item?.category,
+                    item?.categoryName
                 ),
 
             price:
-                Number.isFinite(
-                    price
-                ) &&
-                price >= 0
-                    ? Number(
-                        price.toFixed(
-                            2
-                        )
-                    )
-                    : 0,
+                normalizePrice(
+                    item?.price
+                ),
 
             image:
-                firstNonEmpty(
-                    item.image,
-                    item.imageUrl,
-                    item.thumbnail
+                getProductImage(
+                    item
                 ),
 
             quantity:
                 normalizeQuantity(
-                    item.quantity
+                    item?.quantity
                 )
+
         };
 
-        return normalized;
     }
 
-    function normalizeCartArray(
-        value
-    ) {
+    function normalizeCartArray(value) {
 
         if (
             !Array.isArray(
                 value
             )
         ) {
+
             return [];
+
         }
 
         return value
             .map(
                 normalizeCartItem
             )
-            .filter(Boolean);
+            .filter(
+                Boolean
+            );
+
     }
 
     /* =========================================================================
        STORAGE
        ========================================================================= */
 
-    function readStorage(
-        key
-    ) {
+    function readStorage(key) {
 
         try {
 
@@ -459,12 +584,14 @@
         } catch (error) {
 
             console.error(
-                "[PRASUN SHOP] localStorage read error:",
+                "[PRASUN SHOP] Unable to read localStorage:",
                 error
             );
 
             return null;
+
         }
+
     }
 
     function writeStorage(
@@ -484,13 +611,38 @@
         } catch (error) {
 
             console.error(
-                "[PRASUN SHOP] localStorage write error:",
+                "[PRASUN SHOP] Unable to write localStorage:",
                 error
             );
 
             return false;
+
         }
+
     }
+
+    function removeStorage(key) {
+
+        try {
+
+            localStorage.removeItem(
+                key
+            );
+
+        } catch (error) {
+
+            console.error(
+                "[PRASUN SHOP] Unable to remove localStorage item:",
+                error
+            );
+
+        }
+
+    }
+
+    /* =========================================================================
+       READ CART
+       ========================================================================= */
 
     function readCartFromStorage() {
 
@@ -517,15 +669,17 @@
                     return normalizeCartArray(
                         parsed
                     );
+
                 }
 
             } catch (error) {
 
-                console.error(
-                    "[PRASUN SHOP] Invalid primary cart:",
-                    error
+                console.warn(
+                    "[PRASUN SHOP] Invalid primary cart data."
                 );
+
             }
+
         }
 
         /*
@@ -557,7 +711,9 @@
                         parsed
                     )
                 ) {
+
                     continue;
+
                 }
 
                 const migrated =
@@ -569,28 +725,36 @@
                     migrated.length
                 ) {
 
-                    saveCart(
-                        migrated
+                    writeStorage(
+                        CART_KEY,
+                        JSON.stringify(
+                            migrated
+                        )
                     );
 
                     return migrated;
+
                 }
 
             } catch (error) {
 
-                console.error(
-                    "[PRASUN SHOP] Legacy migration error:",
-                    error
+                console.warn(
+                    `[PRASUN SHOP] Unable to migrate legacy cart: ${key}`
                 );
+
             }
+
         }
 
         return [];
+
     }
 
-    function saveCart(
-        nextCart
-    ) {
+    /* =========================================================================
+       SAVE CART
+       ========================================================================= */
+
+    function saveCart(nextCart) {
 
         cart =
             normalizeCartArray(
@@ -604,55 +768,72 @@
             )
         );
 
-        window.dispatchEvent(
-            new CustomEvent(
-                "prasunCartUpdated",
-                {
-                    detail: {
-                        cart:
-                            cart.map(
-                                item =>
-                                    ({
-                                        ...item
-                                    })
-                            )
-                    }
-                }
-            )
-        );
+        dispatchCartUpdate();
 
         return cart;
+
     }
 
-    function clearAllCartStorage() {
+    /* =========================================================================
+       CART UPDATE EVENT
+       ========================================================================= */
+
+    function dispatchCartUpdate() {
 
         try {
 
-            localStorage.removeItem(
-                CART_KEY
+            window.dispatchEvent(
+                new CustomEvent(
+                    "prasunCartUpdated",
+                    {
+                        detail: {
+                            cart:
+                                cart.map(
+                                    item => ({
+                                        ...item
+                                    })
+                                )
+                        }
+                    }
+                )
             );
-
-            for (
-                const key
-                of LEGACY_KEYS
-            ) {
-
-                localStorage.removeItem(
-                    key
-                );
-            }
 
         } catch (error) {
 
             console.error(
-                "[PRASUN SHOP] Cart clearing error:",
+                "[PRASUN SHOP] Cart event error:",
                 error
             );
+
         }
+
     }
 
     /* =========================================================================
-       CART IDENTITY
+       CLEAR ALL STORAGE
+       ========================================================================= */
+
+    function clearAllCartStorage() {
+
+        removeStorage(
+            CART_KEY
+        );
+
+        for (
+            const key
+            of LEGACY_KEYS
+        ) {
+
+            removeStorage(
+                key
+            );
+
+        }
+
+    }
+
+    /* =========================================================================
+       CART PRODUCT IDENTITY
        ========================================================================= */
 
     function sameCartProduct(
@@ -661,40 +842,52 @@
     ) {
 
         const aVariant =
-            getVariantIdentity(
+            getVariantId(
                 a
             );
 
         const bVariant =
-            getVariantIdentity(
+            getVariantId(
                 b
             );
 
+        /*
+         * If both products have variant IDs,
+         * the variant ID is the strongest identity.
+         */
+        if (
+            aVariant &&
+            bVariant
+        ) {
+
+            return (
+                aVariant ===
+                bVariant
+            );
+
+        }
+
+        /*
+         * If only one item has a variant,
+         * don't merge it with a non-variant item.
+         */
         if (
             aVariant ||
             bVariant
         ) {
 
-            return (
-                aVariant &&
-                bVariant &&
-                aVariant ===
-                    bVariant
-            );
+            return false;
+
         }
 
         const aCJ =
-            firstNonEmpty(
-                a.cjProductId,
-                a.cjPid,
-                a.pid
+            getCJProductId(
+                a
             );
 
         const bCJ =
-            firstNonEmpty(
-                b.cjProductId,
-                b.cjPid,
-                b.pid
+            getCJProductId(
+                b
             );
 
         if (
@@ -706,6 +899,7 @@
                 aCJ ===
                 bCJ
             );
+
         }
 
         const aSKU =
@@ -724,9 +918,10 @@
         ) {
 
             return (
-                aSKU ===
-                bSKU
+                aSKU.toLowerCase() ===
+                bSKU.toLowerCase()
             );
+
         }
 
         const aId =
@@ -748,20 +943,29 @@
                 aId ===
                 bId
             );
+
         }
 
-        return (
+        const aName =
             cleanString(
                 a.name
-            ).toLowerCase() ===
+            ).toLowerCase();
+
+        const bName =
             cleanString(
                 b.name
-            ).toLowerCase()
+            ).toLowerCase();
+
+        return (
+            aName &&
+            bName &&
+            aName === bName
         );
+
     }
 
     /* =========================================================================
-       CART OPERATIONS
+       ADD PRODUCT
        ========================================================================= */
 
     function addProduct(
@@ -774,25 +978,35 @@
             typeof product !==
                 "object"
         ) {
+
+            console.error(
+                "[PRASUN SHOP] Invalid product passed to cart."
+            );
+
             return false;
+
         }
 
         const normalized =
             normalizeCartItem(
                 {
                     ...product,
-                    quantity
+                    quantity:
+                        normalizeQuantity(
+                            quantity
+                        )
                 }
             );
 
         if (!normalized) {
 
             console.error(
-                "[PRASUN SHOP] Invalid product:",
+                "[PRASUN SHOP] Product could not be normalized:",
                 product
             );
 
             return false;
+
         }
 
         const existingIndex =
@@ -808,28 +1022,32 @@
             existingIndex >= 0
         ) {
 
-            const oldQuantity =
+            const existing =
+                cart[
+                    existingIndex
+                ];
+
+            existing.quantity =
                 normalizeQuantity(
-                    cart[
-                        existingIndex
-                    ].quantity
+                    existing.quantity +
+                    normalized.quantity
                 );
 
+            /*
+             * Refresh useful product information
+             * without losing the existing quantity.
+             */
             cart[
                 existingIndex
             ] = {
 
-                ...cart[
-                    existingIndex
-                ],
+                ...existing,
 
                 ...normalized,
 
                 quantity:
-                    normalizeQuantity(
-                        oldQuantity +
-                        normalized.quantity
-                    )
+                    existing.quantity
+
             };
 
         } else {
@@ -837,6 +1055,7 @@
             cart.push(
                 normalized
             );
+
         }
 
         saveCart(
@@ -850,7 +1069,12 @@
         );
 
         return true;
+
     }
+
+    /* =========================================================================
+       UPDATE QUANTITY
+       ========================================================================= */
 
     function updateQuantity(
         index,
@@ -864,13 +1088,21 @@
             index < 0 ||
             index >= cart.length
         ) {
-            return;
+
+            return false;
+
         }
 
-        cart[index].quantity =
+        const item =
+            cart[index];
+
+        const newQuantity =
             normalizeQuantity(
                 quantity
             );
+
+        item.quantity =
+            newQuantity;
 
         saveCart(
             cart
@@ -879,13 +1111,18 @@
         renderCart();
 
         announce(
-            `${cart[index].name} quantity updated.`
+            `${item.name} quantity updated to ${newQuantity}.`
         );
+
+        return true;
+
     }
 
-    function removeItem(
-        index
-    ) {
+    /* =========================================================================
+       REMOVE ITEM
+       ========================================================================= */
+
+    function removeItem(index) {
 
         if (
             !Number.isInteger(
@@ -894,7 +1131,9 @@
             index < 0 ||
             index >= cart.length
         ) {
-            return;
+
+            return false;
+
         }
 
         const removed =
@@ -914,7 +1153,14 @@
         announce(
             `${removed.name} removed from cart.`
         );
+
+        return true;
+
     }
+
+    /* =========================================================================
+       CLEAR CART
+       ========================================================================= */
 
     function clearCart() {
 
@@ -922,42 +1168,85 @@
 
         clearAllCartStorage();
 
-        window.dispatchEvent(
-            new CustomEvent(
-                "prasunCartUpdated",
-                {
-                    detail: {
-                        cart: []
-                    }
-                }
-            )
-        );
+        dispatchCartUpdate();
 
         renderCart();
 
         announce(
             "Cart cleared."
         );
+
     }
 
     /* =========================================================================
-       HEADER COUNT
+       TOTAL QUANTITY
+       ========================================================================= */
+
+    function getTotalQuantity() {
+
+        return cart.reduce(
+            (
+                total,
+                item
+            ) => {
+
+                return (
+                    total +
+                    normalizeQuantity(
+                        item.quantity
+                    )
+                );
+
+            },
+            0
+        );
+
+    }
+
+    /* =========================================================================
+       SUBTOTAL
+       ========================================================================= */
+
+    function getSubtotal() {
+
+        return cart.reduce(
+            (
+                total,
+                item
+            ) => {
+
+                const price =
+                    normalizePrice(
+                        item.price
+                    );
+
+                const quantity =
+                    normalizeQuantity(
+                        item.quantity
+                    );
+
+                return (
+                    total +
+                    (
+                        price *
+                        quantity
+                    )
+                );
+
+            },
+            0
+        );
+
+    }
+
+    /* =========================================================================
+       UPDATE HEADER
        ========================================================================= */
 
     function updateHeaderCount() {
 
         const totalQuantity =
-            cart.reduce(
-                (
-                    sum,
-                    item
-                ) =>
-                    sum +
-                    normalizeQuantity(
-                        item.quantity
-                    ),
-                0
-            );
+            getTotalQuantity();
 
         if (
             cartCountElement
@@ -973,8 +1262,13 @@
 
             cartCountElement.setAttribute(
                 "aria-label",
-                `${totalQuantity} items in cart`
+                `${totalQuantity} ${
+                    totalQuantity === 1
+                        ? "item"
+                        : "items"
+                } in cart`
             );
+
         }
 
         if (
@@ -987,6 +1281,7 @@
                         ? "item"
                         : "items"
                 }`;
+
         }
 
         if (
@@ -997,7 +1292,9 @@
                 String(
                     totalQuantity
                 );
+
         }
+
     }
 
     /* =========================================================================
@@ -1009,14 +1306,14 @@
         if (
             !cartItemsElement
         ) {
+
             return;
+
         }
 
         cartItemsElement.innerHTML = `
 
-            <div
-                class="cart-empty"
-            >
+            <div class="cart-empty">
 
                 <div
                     class="cart-empty-icon"
@@ -1062,7 +1359,7 @@
                 </p>
 
                 <a
-                    href="/products.html"
+                    href="${PRODUCTS_URL}"
                     class="continue-shopping"
                 >
                     Continue Shopping
@@ -1071,6 +1368,49 @@
             </div>
 
         `;
+
+    }
+
+    /* =========================================================================
+       IMAGE FALLBACK
+       ========================================================================= */
+
+    function handleImageError(image) {
+
+        if (!image) {
+            return;
+        }
+
+        image.style.display =
+            "none";
+
+        const parent =
+            image.parentElement;
+
+        if (!parent) {
+            return;
+        }
+
+        const placeholder =
+            document.createElement(
+                "div"
+            );
+
+        placeholder.className =
+            "cart-item-image cart-item-image-placeholder";
+
+        placeholder.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        placeholder.textContent =
+            "🛍";
+
+        parent.appendChild(
+            placeholder
+        );
+
     }
 
     /* =========================================================================
@@ -1087,7 +1427,9 @@
         if (
             !cartItemsElement
         ) {
+
             return;
+
         }
 
         if (
@@ -1102,6 +1444,7 @@
 
                 cartSubtotalElement.textContent =
                     "$0.00";
+
             }
 
             if (
@@ -1110,6 +1453,7 @@
 
                 cartTotalElement.textContent =
                     "$0.00";
+
             }
 
             if (
@@ -1123,6 +1467,7 @@
                     "aria-disabled",
                     "true"
                 );
+
             }
 
             if (
@@ -1131,13 +1476,14 @@
 
                 clearCartButton.disabled =
                     true;
+
             }
 
             return;
+
         }
 
-        let subtotal =
-            0;
+        let subtotal = 0;
 
         const html =
             cart
@@ -1153,9 +1499,9 @@
                             );
 
                         const price =
-                            Number(
+                            normalizePrice(
                                 item.price
-                            ) || 0;
+                            );
 
                         const itemSubtotal =
                             price *
@@ -1165,9 +1511,8 @@
                             itemSubtotal;
 
                         const image =
-                            escapeHTML(
-                                item.image ||
-                                ""
+                            escapeAttribute(
+                                item.image
                             );
 
                         const name =
@@ -1182,6 +1527,39 @@
                                 ""
                             );
 
+                        const variantId =
+                            escapeHTML(
+                                getVariantId(
+                                    item
+                                )
+                            );
+
+                        const variantSKU =
+                            escapeHTML(
+                                getVariantSKU(
+                                    item
+                                )
+                            );
+
+                        let variantText =
+                            "";
+
+                        if (
+                            variantSKU
+                        ) {
+
+                            variantText =
+                                `Variant: ${variantSKU}`;
+
+                        } else if (
+                            variantId
+                        ) {
+
+                            variantText =
+                                `Variant: ${variantId}`;
+
+                        }
+
                         return `
 
                             <article
@@ -1194,9 +1572,9 @@
                                 >
 
                                     <a
-                                        href="/products.html"
+                                        href="${PRODUCTS_URL}"
                                         class="cart-item-image-link"
-                                        aria-label="${name}"
+                                        aria-label="${escapeAttribute(name)}"
                                     >
 
                                         ${
@@ -1205,11 +1583,10 @@
                                                 ? `
                                                     <img
                                                         src="${image}"
-                                                        alt="${name}"
+                                                        alt="${escapeAttribute(name)}"
                                                         class="cart-item-image"
                                                         loading="lazy"
                                                         decoding="async"
-                                                        onerror="this.onerror=null;this.style.display='none';"
                                                     >
                                                   `
 
@@ -1248,7 +1625,7 @@
                                         >
 
                                             <a
-                                                href="/products.html"
+                                                href="${PRODUCTS_URL}"
                                             >
                                                 ${name}
                                             </a>
@@ -1263,6 +1640,20 @@
                                             )}
                                             each
                                         </p>
+
+                                        ${
+                                            variantText
+
+                                                ? `
+                                                    <p
+                                                        class="cart-item-variant"
+                                                    >
+                                                        ${variantText}
+                                                    </p>
+                                                  `
+
+                                                : ""
+                                        }
 
                                     </div>
 
@@ -1281,7 +1672,12 @@
                                             type="button"
                                             data-action="decrease"
                                             data-index="${index}"
-                                            aria-label="Decrease quantity"
+                                            aria-label="Decrease quantity of ${escapeAttribute(name)}"
+                                            ${
+                                                quantity <= 1
+                                                    ? "disabled"
+                                                    : ""
+                                            }
                                         >
                                             −
                                         </button>
@@ -1291,17 +1687,24 @@
                                             type="number"
                                             min="1"
                                             max="${MAX_QUANTITY}"
+                                            step="1"
                                             value="${quantity}"
                                             data-action="quantity"
                                             data-index="${index}"
-                                            aria-label="Quantity for ${name}"
+                                            aria-label="Quantity for ${escapeAttribute(name)}"
+                                            inputmode="numeric"
                                         >
 
                                         <button
                                             type="button"
                                             data-action="increase"
                                             data-index="${index}"
-                                            aria-label="Increase quantity"
+                                            aria-label="Increase quantity of ${escapeAttribute(name)}"
+                                            ${
+                                                quantity >= MAX_QUANTITY
+                                                    ? "disabled"
+                                                    : ""
+                                            }
                                         >
                                             +
                                         </button>
@@ -1334,6 +1737,7 @@
                             </article>
 
                         `;
+
                     }
                 )
                 .join("");
@@ -1341,6 +1745,37 @@
         cartItemsElement.innerHTML =
             html;
 
+        /*
+         * Attach image fallback handlers.
+         */
+        const images =
+            cartItemsElement.querySelectorAll(
+                "img.cart-item-image"
+            );
+
+        images.forEach(
+            image => {
+
+                image.addEventListener(
+                    "error",
+                    () => {
+
+                        handleImageError(
+                            image
+                        );
+
+                    },
+                    {
+                        once: true
+                    }
+                );
+
+            }
+        );
+
+        /*
+         * Summary.
+         */
         if (
             cartSubtotalElement
         ) {
@@ -1349,6 +1784,7 @@
                 formatPrice(
                     subtotal
                 );
+
         }
 
         if (
@@ -1359,8 +1795,12 @@
                 formatPrice(
                     subtotal
                 );
+
         }
 
+        /*
+         * Checkout.
+         */
         if (
             checkoutButton
         ) {
@@ -1372,29 +1812,35 @@
                 "aria-disabled",
                 "false"
             );
+
         }
 
+        /*
+         * Clear cart.
+         */
         if (
             clearCartButton
         ) {
 
             clearCartButton.disabled =
                 false;
+
         }
+
     }
 
     /* =========================================================================
-       EVENTS
+       ANNOUNCEMENTS
        ========================================================================= */
 
-    function announce(
-        message
-    ) {
+    function announce(message) {
 
         if (
             !liveRegion
         ) {
+
             return;
+
         }
 
         liveRegion.textContent =
@@ -1409,7 +1855,12 @@
             },
             20
         );
+
     }
+
+    /* =========================================================================
+       CART CLICK EVENTS
+       ========================================================================= */
 
     if (
         cartItemsElement
@@ -1441,7 +1892,18 @@
                         index
                     )
                 ) {
+
                     return;
+
+                }
+
+                if (
+                    index < 0 ||
+                    index >= cart.length
+                ) {
+
+                    return;
+
                 }
 
                 if (
@@ -1451,9 +1913,12 @@
 
                     updateQuantity(
                         index,
-                        cart[index]
-                            .quantity + 1
+                        cart[index].quantity +
+                        1
                     );
+
+                    return;
+
                 }
 
                 if (
@@ -1463,9 +1928,12 @@
 
                     updateQuantity(
                         index,
-                        cart[index]
-                            .quantity - 1
+                        cart[index].quantity -
+                        1
                     );
+
+                    return;
+
                 }
 
                 if (
@@ -1476,9 +1944,15 @@
                     removeItem(
                         index
                     );
+
                 }
+
             }
         );
+
+        /* =====================================================================
+           QUANTITY INPUT
+           ===================================================================== */
 
         cartItemsElement.addEventListener(
             "change",
@@ -1498,15 +1972,62 @@
                         input.dataset.index
                     );
 
+                if (
+                    !Number.isInteger(
+                        index
+                    )
+                ) {
+
+                    return;
+
+                }
+
                 updateQuantity(
                     index,
                     Number(
                         input.value
                     )
                 );
+
             }
         );
+
+        /*
+         * Prevent invalid typing from submitting
+         * an empty or decimal quantity.
+         */
+        cartItemsElement.addEventListener(
+            "keydown",
+            event => {
+
+                const input =
+                    event.target.closest(
+                        'input[data-action="quantity"]'
+                    );
+
+                if (!input) {
+                    return;
+                }
+
+                if (
+                    event.key ===
+                    "Enter"
+                ) {
+
+                    event.preventDefault();
+
+                    input.blur();
+
+                }
+
+            }
+        );
+
     }
+
+    /* =========================================================================
+       CHECKOUT
+       ========================================================================= */
 
     if (
         checkoutButton
@@ -1516,25 +2037,38 @@
             "click",
             () => {
 
+                /*
+                 * Always refresh the cart before checkout.
+                 */
+                cart =
+                    readCartFromStorage();
+
                 if (
                     !cart.length
                 ) {
+
                     return;
+
                 }
 
                 /*
-                 * Store the current cart again before
-                 * opening checkout.
+                 * Normalize and persist one final time.
                  */
                 saveCart(
                     cart
                 );
 
                 window.location.href =
-                    "/checkout.html";
+                    CHECKOUT_URL;
+
             }
         );
+
     }
+
+    /* =========================================================================
+       CLEAR CART BUTTON
+       ========================================================================= */
 
     if (
         clearCartButton
@@ -1547,20 +2081,32 @@
                 if (
                     !cart.length
                 ) {
+
                     return;
+
                 }
 
-                if (
+                const confirmed =
                     window.confirm(
                         "Are you sure you want to clear your cart?"
-                    )
+                    );
+
+                if (
+                    confirmed
                 ) {
 
                     clearCart();
+
                 }
+
             }
         );
+
     }
+
+    /* =========================================================================
+       CROSS-TAB STORAGE SYNCHRONIZATION
+       ========================================================================= */
 
     window.addEventListener(
         "storage",
@@ -1578,18 +2124,52 @@
                     readCartFromStorage();
 
                 renderCart();
+
             }
+
         }
     );
 
+    /* =========================================================================
+       SAME-TAB CART SYNCHRONIZATION
+       ========================================================================= */
+
     window.addEventListener(
         "prasunCartUpdated",
-        () => {
+        event => {
 
+            /*
+             * Don't blindly trust the event payload.
+             * Read the canonical storage instead.
+             */
             cart =
                 readCartFromStorage();
 
             renderCart();
+
+        }
+    );
+
+    /* =========================================================================
+       PAGE VISIBILITY
+       ========================================================================= */
+
+    document.addEventListener(
+        "visibilitychange",
+        () => {
+
+            if (
+                document.visibilityState ===
+                "visible"
+            ) {
+
+                cart =
+                    readCartFromStorage();
+
+                renderCart();
+
+            }
+
         }
     );
 
@@ -1599,9 +2179,23 @@
 
     window.PrasunCart = {
 
-        getCart:
-            () =>
-                readCartFromStorage(),
+        getCart: () => {
+
+            return readCartFromStorage();
+
+        },
+
+        getCount: () => {
+
+            return getTotalQuantity();
+
+        },
+
+        getSubtotal: () => {
+
+            return getSubtotal();
+
+        },
 
         add:
             addProduct,
@@ -1626,6 +2220,7 @@
 
         render:
             renderCart
+
     };
 
     /* =========================================================================
