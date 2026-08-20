@@ -596,36 +596,52 @@
         renderProducts(sorted);
       }
 
-      // Render Grid Cards
+      // Render Grid Cards with Dual Buttons
       function renderProducts(products) {
         if (resultsCount) {
           resultsCount.textContent = `Showing ${products.length} products`;
         }
 
-        productList.innerHTML = products.map((product) => `
-          <article class="product-card">
-            <div class="product-image-container">
+        productList.innerHTML = products.map((product) => {
+          const productId = String(product.id || product.pid || '');
+          const localProductUrl = `/product.html?id=${encodeURIComponent(productId)}`;
+          
+          return `
+          <article class="product-card" data-product-id="${productId}">
+            <a href="${localProductUrl}" class="product-card-image-wrap">
+              <span class="product-badge">${product.category || 'General'}</span>
               <img 
                 src="${product.image || '/placeholder.jpg'}" 
-                alt="${product.title}" 
+                alt="${product.title || 'Product'}" 
                 class="product-image"
                 loading="lazy" 
               />
-            </div>
-            <div class="product-details">
-              <span class="product-category-tag">${product.category || 'General'}</span>
-              <h3 class="product-title-text">${product.title}</h3>
-              <div class="product-bottom-row">
-                <span class="product-price-tag">$${Number(product.price).toFixed(2)}</span>
-                ${product.product_url ? `
-                  <a href="${product.product_url}" target="_blank" rel="noopener noreferrer" class="view-btn">
-                    View
+            </a>
+            <div class="product-card-body">
+              <h3 class="product-title">
+                <a href="${localProductUrl}">${product.title || 'Product'}</a>
+              </h3>
+              <div class="product-card-footer">
+                <div class="price-container">
+                  <span class="product-price">$${Number(product.price || 0).toFixed(2)}</span>
+                </div>
+                <div class="product-actions-group">
+                  <a href="${localProductUrl}" class="btn-card btn-secondary">
+                    View Details
                   </a>
-                ` : ''}
+                  <button 
+                    type="button" 
+                    class="btn-card btn-primary btn-add-to-cart add-to-cart-btn"
+                    data-product-id="${productId}"
+                    aria-label="Add ${product.title || 'Product'} to cart"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
               </div>
             </div>
           </article>
-        `).join('');
+        `}).join('');
       }
 
       // Empty State Display
