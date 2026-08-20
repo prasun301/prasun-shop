@@ -1,1970 +1,1348 @@
 /**
  * ============================================================================
- * PRASUN SHOP — STOREFRONT CONTROLLER
+ * PRASUN SHOP — CLOUDFLARE WORKER
  * ============================================================================
  *
- * AliExpress-only production storefront controller.
+ * AliExpress-only storefront backend
  *
- * Compatible with:
+ * FEATURES
+ * --------
+ * - Loads products from /products.json
+ * - Provides GET /api/products
+ * - Provides GET /api/products/:id
+ * - Provides POST /api/order
+ * - Server-side product/price validation
+ * - CORS support
+ * - Security headers
+ * - Order number generation
  *
- *   Cloudflare Worker:
- *   https://prasun-shop-api.prasun301.workers.dev
+ * IMPORTANT
+ * ---------
+ * This Worker does NOT connect to AliExpress automatically.
  *
- * API:
+ * AliExpress is used as the supplier.
+ * Orders received here must be fulfilled manually through AliExpress
+ * unless you later add an AliExpress-compatible ordering integration.
  *
- *   GET /api/products
- *   GET /api/products/:id
- *
- * Product source:
- *
- *   products.json
- *
- * Supported product fields:
- *
- *   id
- *   aliexpress_id
- *   sku
- *   name
- *   category
- *   price
- *   rating
- *   image
- *   description
- *   features[]
- *   specifications{}
- *
- * IMPORTANT:
- *   This file contains NO CJ Dropshipping logic.
- *
+ * NO CJ DROPSHIPPING COMPONENTS ARE USED.
  * ============================================================================
  */
 
 "use strict";
 
-(() => {
-    /* =========================================================================
-       1. CONFIGURATION
-       ========================================================================= */
+/* ============================================================================
+   CONFIGURATION
+   ============================================================================ */
 
-    const API_BASE_URL =
-        "https://prasun-shop-api.prasun301.workers.dev";
-
-    const PRODUCTS_ENDPOINT =
-        `${API_BASE_URL}/api/products`;
-
-    const PRODUCT_ENDPOINT =
-        `${API_BASE_URL}/api/products/`;
-
-    const PRODUCT_DETAIL_PAGE =
-        "/product.html";
-
-    const API_TIMEOUT =
-        15000;
-
-    const SEARCH_DELAY =
-        300;
-
-    const MAX_PRODUCTS =
-        1000;
+const CONFIG = {
+    SHOP_ORIGIN: "https://shop.prasunbarua.com",
 
     /*
-     * Currency display only.
+     * IMPORTANT:
+     * Products are loaded from the same storefront origin.
      *
-     * The Worker stores authoritative prices in USD.
-     * These rates are for storefront display only.
+     * If products.json is located at:
+     * https://shop.prasunbarua.com/products.json
      *
-     * Change these whenever you want to update display rates.
+     * this URL is correct.
      */
-    const CURRENCY_RATES = {
-        USD: 1,
-        EUR: 0.92,
-        GBP: 0.79
+    PRODUCTS_URL: "https://shop.prasunbarua.com/products.json",
+
+    MAX_PRODUCTS: 1000,
+
+    MAX_QUANTITY: 99,
+
+    MAX_ORDER_ITEMS: 50,
+
+    MAX_NAME_LENGTH: 100,
+
+    MAX_EMAIL_LENGTH: 150,
+
+    MAX_PHONE_LENGTH: 40,
+
+    MAX_ADDRESS_LENGTH: 500,
+
+    MAX_CITY_LENGTH: 100,
+
+    MAX_PROVINCE_LENGTH: 100,
+
+    MAX_COUNTRY_LENGTH: 100,
+
+    MAX_COUNTRY_CODE_LENGTH: 2,
+
+    MAX_ZIP_LENGTH: 30,
+
+    MAX_NOTE_LENGTH: 1000,
+
+    REQUEST_TIMEOUT_MS: 15000
+};
+
+
+/* ============================================================================
+   CORS
+   ============================================================================ */
+
+const ALLOWED_ORIGINS = new Set([
+    "https://shop.prasunbarua.com"
+]);
+
+
+function getAllowedOrigin(request) {
+    const origin = request.headers.get("Origin");
+
+    if (origin && ALLOWED_ORIGINS.has(origin)) {
+        return origin;
+    }
+
+    return CONFIG.SHOP_ORIGIN;
+}
+
+
+function corsHeaders(request) {
+    return {
+        "Access-Control-Allow-Origin": getAllowedOrigin(request),
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Accept",
+        "Access-Control-Max-Age": "86400",
+        "Vary": "Origin"
+    };
+}
+
+
+/* ============================================================================
+   SECURITY HEADERS
+   ============================================================================ */
+
+function securityHeaders() {
+    return {
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "X-Frame-Options": "SAMEORIGIN",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
+    };
+}
+
+
+/* ============================================================================
+   RESPONSE HELPERS
+   ============================================================================ */
+
+function jsonResponse(
+    data,
+    status = 200,
+    request = null,
+    extraHeaders = {}
+) {
+    const headers = {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store",
+
+        ...(request
+            ? corsHeaders(request)
+            : {}),
+
+        ...securityHeaders(),
+
+        ...extraHeaders
     };
 
-    /* =========================================================================
-       2. STATE
-       ========================================================================= */
-
-    let masterCatalog = [];
-
-    let allProducts = [];
-
-    let filteredProducts = [];
-
-    let activeCategory = "all";
-
-    let currentSearch = "";
-
-    let currentSort = "featured";
-
-    let searchTimer = null;
-
-    let catalogRequestSequence = 0;
-
-    /* =========================================================================
-       3. DOM ELEMENTS
-       ========================================================================= */
-
-    const productList =
-        document.getElementById("product-list");
-
-    /*
-     * If this script is loaded on a page without the product grid,
-     * simply stop here.
-     */
-    if (!productList) {
-        return;
-    }
-
-    const searchInput =
-        document.getElementById("product-search");
-
-    const sortSelect =
-        document.getElementById("product-sort");
-
-    const categoriesContainer =
-        document.getElementById("products-categories");
-
-    const productsHeading =
-        document.getElementById("products-heading") ||
-        document.getElementById("page-heading");
-
-    const productsCount =
-        document.getElementById("results-count");
-
-    const clearSearchButton =
-        document.getElementById("clear-search");
-
-    const ariaLiveRegion =
-        document.getElementById("aria-live-region");
-
-    const cartCountBadge =
-        document.getElementById("cart-count") ||
-        document.getElementById("cart-badge");
-
-    const currencySelect =
-        document.getElementById("global-currency");
-
-    /* =========================================================================
-       4. FALLBACK IMAGE
-       ========================================================================= */
-
-    const FALLBACK_IMAGE =
-        "data:image/svg+xml;charset=UTF-8," +
-        encodeURIComponent(`
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="800"
-                height="800"
-                viewBox="0 0 800 800"
-            >
-                <rect
-                    width="800"
-                    height="800"
-                    fill="#f8fafc"
-                />
-
-                <path
-                    d="M180 560
-                       L300 420
-                       L395 500
-                       L500 385
-                       L620 560
-                       Z"
-                    fill="#e2e8f0"
-                />
-
-                <circle
-                    cx="325"
-                    cy="305"
-                    r="58"
-                    fill="#cbd5e1"
-                />
-
-                <text
-                    x="400"
-                    y="650"
-                    text-anchor="middle"
-                    fill="#64748b"
-                    font-family="Arial, sans-serif"
-                    font-size="28"
-                >
-                    Image Unavailable
-                </text>
-            </svg>
-        `);
-
-    /* =========================================================================
-       5. HTML ESCAPING
-       ========================================================================= */
-
-    const ESCAPE_MAP = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-    };
-
-    function escapeHTML(value) {
-        if (
-            value === null ||
-            value === undefined
-        ) {
-            return "";
+    return new Response(
+        JSON.stringify(data, null, 2),
+        {
+            status,
+            headers
         }
+    );
+}
 
-        return String(value).replace(
-            /[&<>"']/g,
-            character => ESCAPE_MAP[character]
-        );
-    }
 
-    /* =========================================================================
-       6. TEXT NORMALIZATION
-       ========================================================================= */
+function errorResponse(
+    message,
+    status = 400,
+    request = null,
+    extra = {}
+) {
+    return jsonResponse(
+        {
+            success: false,
+            error: message,
+            ...extra
+        },
+        status,
+        request
+    );
+}
 
-    function cleanText(
-        value,
-        fallback = ""
-    ) {
-        if (
-            value === null ||
-            value === undefined
-        ) {
-            return fallback;
-        }
 
-        const text =
-            String(value).trim();
+/* ============================================================================
+   FETCH WITH TIMEOUT
+   ============================================================================ */
 
-        return text || fallback;
-    }
+async function fetchWithTimeout(
+    resource,
+    options = {},
+    timeout = CONFIG.REQUEST_TIMEOUT_MS
+) {
+    const controller = new AbortController();
 
-    /* =========================================================================
-       7. PRICE NORMALIZATION
-       ========================================================================= */
+    const timer = setTimeout(
+        () => controller.abort(),
+        timeout
+    );
 
-    function parsePrice(value) {
-        if (
-            typeof value === "number" &&
-            Number.isFinite(value)
-        ) {
-            return Math.max(
-                0,
-                value
-            );
-        }
-
-        const parsed =
-            parseFloat(
-                String(value ?? "")
-                    .replace(
-                        /[^0-9.-]/g,
-                        ""
-                    )
-            );
-
-        if (
-            !Number.isFinite(parsed)
-        ) {
-            return 0;
-        }
-
-        return Math.max(
-            0,
-            parsed
-        );
-    }
-
-    /* =========================================================================
-       8. PRICE DISPLAY
-       ========================================================================= */
-
-    function formatPrice(
-        amount
-    ) {
-        const usdPrice =
-            parsePrice(amount);
-
-        const selectedCurrency =
-            currencySelect?.value ||
-            "USD";
-
-        const rate =
-            CURRENCY_RATES[
-                selectedCurrency
-            ] ||
-            1;
-
-        const convertedPrice =
-            usdPrice * rate;
-
-        try {
-            return new Intl.NumberFormat(
-                "en-US",
-                {
-                    style: "currency",
-                    currency:
-                        selectedCurrency,
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                }
-            ).format(
-                convertedPrice
-            );
-        } catch {
-            return `$${convertedPrice.toFixed(2)}`;
-        }
-    }
-
-    /* =========================================================================
-       9. IMAGE URL NORMALIZATION
-       ========================================================================= */
-
-    function normalizeImageURL(
-        value
-    ) {
-        if (
-            value === null ||
-            value === undefined
-        ) {
-            return "";
-        }
-
-        const image =
-            String(value).trim();
-
-        if (!image) {
-            return "";
-        }
-
-        /*
-         * Protocol-relative URL.
-         */
-        if (
-            image.startsWith("//")
-        ) {
-            return `https:${image}`;
-        }
-
-        /*
-         * Absolute HTTP/HTTPS URL.
-         */
-        if (
-            /^https?:\/\//i.test(image)
-        ) {
-            return image;
-        }
-
-        /*
-         * Data URL.
-         */
-        if (
-            image.startsWith("data:")
-        ) {
-            return image;
-        }
-
-        /*
-         * Relative URL.
-         */
-        if (
-            image.startsWith("/")
-        ) {
-            return image;
-        }
-
-        if (
-            image.startsWith("./")
-        ) {
-            return image;
-        }
-
-        /*
-         * Everything else is treated as HTTPS.
-         */
-        return `https://${image}`;
-    }
-
-    /* =========================================================================
-       10. IMAGE EXTRACTION
-       ========================================================================= */
-
-    function extractImages(
-        product
-    ) {
-        const images = [];
-
-        const addImage = value => {
-            if (
-                Array.isArray(value)
-            ) {
-                value.forEach(
-                    addImage
-                );
-
-                return;
+    try {
+        return await fetch(
+            resource,
+            {
+                ...options,
+                signal: controller.signal
             }
-
-            if (
-                value &&
-                typeof value === "object"
-            ) {
-                addImage(
-                    value.url
-                );
-
-                addImage(
-                    value.image
-                );
-
-                addImage(
-                    value.imageUrl
-                );
-
-                return;
-            }
-
-            const normalized =
-                normalizeImageURL(
-                    value
-                );
-
-            if (
-                normalized &&
-                !images.includes(
-                    normalized
-                )
-            ) {
-                images.push(
-                    normalized
-                );
-            }
-        };
-
-        if (!product) {
-            return [];
+        );
+    } catch (error) {
+        if (error?.name === "AbortError") {
+            throw new Error(
+                "The product catalog request timed out."
+            );
         }
 
-        addImage(
-            product.image
-        );
-
-        addImage(
-            product.images
-        );
-
-        addImage(
-            product.imageUrl
-        );
-
-        addImage(
-            product.thumbnail
-        );
-
-        addImage(
-            product.bigImage
-        );
-
-        addImage(
-            product.productImage
-        );
-
-        return images;
+        throw error;
+    } finally {
+        clearTimeout(timer);
     }
+}
 
-    /* =========================================================================
-       11. PRODUCT NORMALIZATION
-       ========================================================================= */
 
-    function normalizeProduct(
-        rawProduct,
-        index = 0
-    ) {
-        if (
-            !rawProduct ||
-            typeof rawProduct !== "object"
-        ) {
-            return null;
-        }
+/* ============================================================================
+   LOAD PRODUCTS.JSON
+   ============================================================================ */
 
-        const id =
-            cleanText(
-                rawProduct.id,
-                `prod-${index + 1}`
-            );
-
-        const aliexpressId =
-            cleanText(
-                rawProduct.aliexpress_id
-            );
-
-        const sku =
-            cleanText(
-                rawProduct.sku
-            );
-
-        const name =
-            cleanText(
-                rawProduct.name,
-                "Unnamed Product"
-            );
-
-        const category =
-            cleanText(
-                rawProduct.category,
-                "General"
-            );
-
-        const description =
-            cleanText(
-                rawProduct.description,
-                "High quality product."
-            );
-
-        const price =
-            parsePrice(
-                rawProduct.price
-            );
-
-        let rating = null;
-
-        if (
-            rawProduct.rating !==
-            null &&
-            rawProduct.rating !==
-            undefined &&
-            rawProduct.rating !== ""
-        ) {
-            const parsedRating =
-                Number(
-                    rawProduct.rating
-                );
-
-            if (
-                Number.isFinite(
-                    parsedRating
-                )
-            ) {
-                rating =
-                    Math.min(
-                        5,
-                        Math.max(
-                            0,
-                            parsedRating
-                        )
-                    );
-            }
-        }
-
-        const images =
-            extractImages(
-                rawProduct
-            );
-
-        const image =
-            images[0] ||
-            "";
-
-        const features =
-            Array.isArray(
-                rawProduct.features
-            )
-                ? rawProduct.features
-                    .map(
-                        feature =>
-                            cleanText(
-                                feature
-                            )
-                    )
-                    .filter(Boolean)
-                : [];
-
-        const specifications =
-            rawProduct.specifications &&
-            typeof rawProduct.specifications ===
-                "object"
-                ? rawProduct.specifications
-                : {};
-
-        /*
-         * The storefront requires the core AliExpress catalog fields.
-         */
-        if (
-            !id ||
-            !name ||
-            !sku ||
-            !aliexpressId
-        ) {
-            console.warn(
-                "[PRASUN SHOP] Invalid product skipped:",
-                rawProduct
-            );
-
-            return null;
-        }
-
-        return {
-            id,
-
-            aliexpress_id:
-                aliexpressId,
-
-            sku,
-
-            name,
-
-            category,
-
-            price:
-                Number(
-                    price.toFixed(2)
-                ),
-
-            rating,
-
-            image,
-
-            images,
-
-            description,
-
-            features,
-
-            specifications
-        };
-    }
-
-    /* =========================================================================
-       12. API RESPONSE NORMALIZATION
-       ========================================================================= */
-
-    function extractProductsFromAPI(
-        data
-    ) {
-        if (
-            Array.isArray(data)
-        ) {
-            return data
-                .map(
-                    normalizeProduct
-                )
-                .filter(Boolean);
-        }
-
-        if (
-            !data ||
-            typeof data !== "object"
-        ) {
-            return [];
-        }
-
-        let rawProducts = [];
-
-        if (
-            Array.isArray(
-                data.products
-            )
-        ) {
-            rawProducts =
-                data.products;
-        } else if (
-            Array.isArray(
-                data.items
-            )
-        ) {
-            rawProducts =
-                data.items;
-        } else if (
-            Array.isArray(
-                data.results
-            )
-        ) {
-            rawProducts =
-                data.results;
-        } else if (
-            data.data &&
-            Array.isArray(
-                data.data.products
-            )
-        ) {
-            rawProducts =
-                data.data.products;
-        } else if (
-            data.data &&
-            Array.isArray(
-                data.data.items
-            )
-        ) {
-            rawProducts =
-                data.data.items;
-        } else if (
-            Array.isArray(
-                data.data
-            )
-        ) {
-            rawProducts =
-                data.data;
-        }
-
-        return rawProducts
-            .map(
-                normalizeProduct
-            )
-            .filter(Boolean);
-    }
-
-    /* =========================================================================
-       13. FETCH WITH TIMEOUT
-       ========================================================================= */
-
-    async function fetchJSON(
-        url,
-        timeout = API_TIMEOUT
-    ) {
-        const controller =
-            new AbortController();
-
-        const timer =
-            setTimeout(
-                () => {
-                    controller.abort();
-                },
-                timeout
-            );
-
-        try {
-            const response =
-                await fetch(
-                    url,
-                    {
-                        method: "GET",
-
-                        headers: {
-                            Accept:
-                                "application/json"
-                        },
-
-                        cache:
-                            "no-store",
-
-                        signal:
-                            controller.signal
-                    }
-                );
-
-            if (
-                !response.ok
-            ) {
-                throw new Error(
-                    `HTTP ${response.status}`
-                );
-            }
-
-            return await response.json();
-
-        } finally {
-            clearTimeout(
-                timer
-            );
-        }
-    }
-
-    /* =========================================================================
-       14. LOAD COMPLETE PRODUCT CATALOG
-       ========================================================================= */
-
-    async function loadProductsFromAPI() {
-        const data =
-            await fetchJSON(
-                PRODUCTS_ENDPOINT
-            );
-
-        return extractProductsFromAPI(
-            data
-        ).slice(
-            0,
-            MAX_PRODUCTS
-        );
-    }
-
-    /* =========================================================================
-       15. ACCESSIBILITY ANNOUNCEMENT
-       ========================================================================= */
-
-    function announce(
-        message
-    ) {
-        if (
-            !ariaLiveRegion
-        ) {
-            return;
-        }
-
-        ariaLiveRegion.textContent =
-            "";
-
-        setTimeout(
-            () => {
-                ariaLiveRegion.textContent =
-                    message;
+async function loadProducts() {
+    const response = await fetchWithTimeout(
+        CONFIG.PRODUCTS_URL,
+        {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
             },
-            20
-        );
-    }
 
-    /* =========================================================================
-       16. SEARCH CLEAR BUTTON
-       ========================================================================= */
-
-    function updateClearSearchButton() {
-        if (
-            !clearSearchButton ||
-            !searchInput
-        ) {
-            return;
-        }
-
-        clearSearchButton.hidden =
-            !searchInput.value.trim();
-    }
-
-    /* =========================================================================
-       17. FILTER PRODUCTS
-       ========================================================================= */
-
-    function filterProducts() {
-        const searchTerm =
-            currentSearch
-                .trim()
-                .toLowerCase();
-
-        filteredProducts =
-            allProducts.filter(
-                product => {
-
-                    /*
-                     * Category filter.
-                     */
-                    if (
-                        activeCategory !==
-                        "all"
-                    ) {
-                        if (
-                            product.category
-                                .toLowerCase() !==
-                            activeCategory
-                                .toLowerCase()
-                        ) {
-                            return false;
-                        }
-                    }
-
-                    /*
-                     * Search filter.
-                     */
-                    if (
-                        !searchTerm
-                    ) {
-                        return true;
-                    }
-
-                    const searchableText =
-                        [
-                            product.name,
-                            product.category,
-                            product.sku,
-                            product.aliexpress_id,
-                            product.description,
-                            ...(product.features || [])
-                        ]
-                            .join(" ")
-                            .toLowerCase();
-
-                    return searchableText.includes(
-                        searchTerm
-                    );
-                }
-            );
-
-        applySort();
-    }
-
-    /* =========================================================================
-       18. SORT PRODUCTS
-       ========================================================================= */
-
-    function applySort() {
-        switch (
-            currentSort
-        ) {
-            case "price-low":
-
-                filteredProducts.sort(
-                    (a, b) =>
-                        a.price -
-                        b.price
-                );
-
-                break;
-
-            case "price-high":
-
-                filteredProducts.sort(
-                    (a, b) =>
-                        b.price -
-                        a.price
-                );
-
-                break;
-
-            case "rating":
-
-                filteredProducts.sort(
-                    (a, b) =>
-                        (b.rating || 0) -
-                        (a.rating || 0)
-                );
-
-                break;
-
-            case "name-az":
-
-                filteredProducts.sort(
-                    (a, b) =>
-                        a.name.localeCompare(
-                            b.name
-                        )
-                );
-
-                break;
-
-            case "featured":
-            default:
-
-                /*
-                 * Preserve products.json order.
-                 */
-                break;
-        }
-    }
-
-    /* =========================================================================
-       19. BUILD CATEGORY FILTER
-       ========================================================================= */
-
-    function buildCategories() {
-        if (
-            !categoriesContainer
-        ) {
-            return;
-        }
-
-        const categorySet =
-            new Set();
-
-        allProducts.forEach(
-            product => {
-
-                const category =
-                    cleanText(
-                        product.category
-                    );
-
-                if (
-                    category
-                ) {
-                    categorySet.add(
-                        category
-                    );
-                }
+            /*
+             * Prevent stale catalog data.
+             */
+            cf: {
+                cacheEverything: false
             }
-        );
-
-        const categories =
-            Array.from(
-                categorySet
-            ).sort(
-                (a, b) =>
-                    a.localeCompare(
-                        b
-                    )
-            );
-
-        categoriesContainer.innerHTML =
-            `
-                <button
-                    type="button"
-                    class="category-pill active"
-                    data-category="all"
-                    aria-pressed="true"
-                >
-                    All
-                </button>
-
-                ${categories
-                    .map(
-                        category =>
-                            `
-                                <button
-                                    type="button"
-                                    class="category-pill"
-                                    data-category="${escapeHTML(category)}"
-                                    aria-pressed="false"
-                                >
-                                    ${escapeHTML(category)}
-                                </button>
-                            `
-                    )
-                    .join("")}
-            `;
-    }
-
-    /* =========================================================================
-       20. ACTIVE CATEGORY
-       ========================================================================= */
-
-    function setActiveCategory(
-        category
-    ) {
-        activeCategory =
-            cleanText(
-                category,
-                "all"
-            );
-
-        if (
-            !categoriesContainer
-        ) {
-            return;
         }
+    );
 
-        categoriesContainer
-            .querySelectorAll(
-                ".category-pill"
-            )
-            .forEach(
-                button => {
-
-                    const isActive =
-                        String(
-                            button.dataset.category
-                        ).toLowerCase() ===
-                        activeCategory.toLowerCase();
-
-                    button.classList.toggle(
-                        "active",
-                        isActive
-                    );
-
-                    button.setAttribute(
-                        "aria-pressed",
-                        isActive
-                            ? "true"
-                            : "false"
-                    );
-                }
-            );
-    }
-
-    /* =========================================================================
-       21. LOADING STATE
-       ========================================================================= */
-
-    function renderLoading(
-        message =
-            "Loading products..."
-    ) {
-        productList.innerHTML =
-            `
-                <div
-                    class="product-status-card"
-                    role="status"
-                    aria-live="polite"
-                >
-                    <div
-                        class="spinner"
-                        aria-hidden="true"
-                    ></div>
-
-                    <p>
-                        ${escapeHTML(message)}
-                    </p>
-                </div>
-            `;
-
-        announce(
-            message
+    if (!response.ok) {
+        throw new Error(
+            `products.json returned HTTP ${response.status}.`
         );
     }
 
-    /* =========================================================================
-       22. EMPTY STATE
-       ========================================================================= */
+    const text = await response.text();
 
-    function renderEmpty(
-        message =
-            "No products found."
-    ) {
-        productList.innerHTML =
-            `
-                <div
-                    class="product-status-card empty"
-                    role="status"
-                >
-                    <div
-                        class="status-icon"
-                        aria-hidden="true"
-                    >
-                        🔎
-                    </div>
-
-                    <h3>
-                        No products found
-                    </h3>
-
-                    <p>
-                        ${escapeHTML(message)}
-                    </p>
-                </div>
-            `;
-
-        announce(
-            message
+    if (!text.trim()) {
+        throw new Error(
+            "products.json is empty."
         );
     }
 
-    /* =========================================================================
-       23. ERROR STATE
-       ========================================================================= */
+    let products;
 
-    function renderError(
-        message =
-            "Unable to load products."
-    ) {
-        productList.innerHTML =
-            `
-                <div
-                    class="product-status-card empty"
-                    role="alert"
-                >
-                    <div
-                        class="status-icon"
-                        aria-hidden="true"
-                    >
-                        ⚠️
-                    </div>
-
-                    <h3>
-                        Store temporarily unavailable
-                    </h3>
-
-                    <p>
-                        ${escapeHTML(message)}
-                    </p>
-
-                    <button
-                        type="button"
-                        class="btn-retry-products"
-                        id="retry-products"
-                    >
-                        Try Again
-                    </button>
-                </div>
-            `;
-
-        document
-            .getElementById(
-                "retry-products"
-            )
-            ?.addEventListener(
-                "click",
-                initCatalog,
-                {
-                    once: true
-                }
-            );
-
-        announce(
-            message
+    try {
+        products = JSON.parse(text);
+    } catch (error) {
+        throw new Error(
+            "products.json contains invalid JSON."
         );
     }
 
-    /* =========================================================================
-       24. RATING DISPLAY
-       ========================================================================= */
+    if (!Array.isArray(products)) {
+        throw new Error(
+            "products.json must contain a JSON array."
+        );
+    }
 
-    function renderRating(
-        rating
+    return products;
+}
+
+
+/* ============================================================================
+   PRODUCT NORMALIZATION
+   ============================================================================ */
+
+function normalizeProduct(product) {
+    if (
+        !product ||
+        typeof product !== "object"
     ) {
-        if (
-            rating === null ||
-            !Number.isFinite(
-                rating
-            )
-        ) {
-            return `
-                <span
-                    class="rating-badge rating-none"
-                >
-                    No reviews
-                </span>
-            `;
-        }
+        return null;
+    }
 
-        const rounded =
-            Math.min(
-                5,
-                Math.max(
-                    0,
-                    Math.round(
+    const id = String(
+        product.id ?? ""
+    ).trim();
+
+    const aliexpressId = String(
+        product.aliexpress_id ?? ""
+    ).trim();
+
+    const sku = String(
+        product.sku ?? ""
+    ).trim();
+
+    const name = String(
+        product.name ?? ""
+    ).trim();
+
+    const category = String(
+        product.category ?? "Uncategorized"
+    ).trim();
+
+    const description = String(
+        product.description ?? ""
+    ).trim();
+
+    const image = String(
+        product.image ?? ""
+    ).trim();
+
+    const price = Number(
+        product.price
+    );
+
+    const rating = Number(
+        product.rating
+    );
+
+    /*
+     * Required fields
+     */
+    if (
+        !id ||
+        !aliexpressId ||
+        !sku ||
+        !name ||
+        !Number.isFinite(price) ||
+        price < 0
+    ) {
+        return null;
+    }
+
+    const features = Array.isArray(
+        product.features
+    )
+        ? product.features
+            .map(item => String(item).trim())
+            .filter(Boolean)
+        : [];
+
+    const specifications =
+        product.specifications &&
+        typeof product.specifications === "object"
+            ? product.specifications
+            : {};
+
+    return {
+        id,
+
+        aliexpress_id:
+            aliexpressId,
+
+        sku,
+
+        name,
+
+        category,
+
+        price:
+            Number(
+                price.toFixed(2)
+            ),
+
+        rating:
+            Number.isFinite(rating)
+                ? Math.min(
+                    5,
+                    Math.max(
+                        0,
                         rating
                     )
                 )
-            );
+                : 0,
 
-        const stars =
-            "★".repeat(
-                rounded
-            ) +
-            "☆".repeat(
-                5 - rounded
-            );
+        image,
 
-        return `
-            <span
-                class="rating-badge"
-                aria-label="Rating ${rating.toFixed(1)} out of 5"
-            >
-                ${stars}
-                <span>
-                    (${rating.toFixed(1)})
-                </span>
-            </span>
-        `;
+        description,
+
+        features,
+
+        specifications
+    };
+}
+
+
+/* ============================================================================
+   GET NORMALIZED PRODUCTS
+   ============================================================================ */
+
+async function getProducts() {
+    const rawProducts = await loadProducts();
+
+    const products = rawProducts
+        .map(normalizeProduct)
+        .filter(Boolean)
+        .slice(0, CONFIG.MAX_PRODUCTS);
+
+    return products;
+}
+
+
+/* ============================================================================
+   PRODUCT SEARCH
+   ============================================================================ */
+
+function searchProducts(
+    products,
+    keyword
+) {
+    const term = String(
+        keyword || ""
+    )
+        .trim()
+        .toLowerCase();
+
+    if (!term) {
+        return products;
     }
 
-    /* =========================================================================
-       25. PRODUCT CARD
-       ========================================================================= */
+    return products.filter(product => {
+        const searchable = [
+            product.id,
+            product.sku,
+            product.aliexpress_id,
+            product.name,
+            product.category,
+            product.description,
+            ...(product.features || [])
+        ]
+            .join(" ")
+            .toLowerCase();
 
-    function renderProductCard(
-        product
-    ) {
-        const detailUrl =
-            `${PRODUCT_DETAIL_PAGE}?id=${encodeURIComponent(product.id)}`;
+        return searchable.includes(term);
+    });
+}
 
-        const image =
-            product.image ||
-            FALLBACK_IMAGE;
 
-        const safeImage =
-            escapeHTML(
-                image
+/* ============================================================================
+   PRODUCT ENDPOINT
+   ============================================================================ */
+
+async function handleProducts(
+    request,
+    url
+) {
+    try {
+        let products = await getProducts();
+
+        /*
+         * Optional keyword search.
+         *
+         * Example:
+         *
+         * /api/products?keyword=solar
+         */
+        const keyword = url.searchParams.get("keyword");
+
+        if (keyword) {
+            products = searchProducts(
+                products,
+                keyword
             );
-
-        const safeName =
-            escapeHTML(
-                product.name
-            );
-
-        const safeId =
-            escapeHTML(
-                product.id
-            );
-
-        return `
-            <article
-                class="product-card"
-                data-id="${safeId}"
-            >
-
-                <a
-                    href="${detailUrl}"
-                    class="product-card-image-link"
-                    aria-label="View ${safeName}"
-                >
-
-                    <img
-                        src="${safeImage}"
-                        alt="${safeName}"
-                        loading="lazy"
-                        decoding="async"
-                        class="product-image"
-                        onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}';"
-                    >
-
-                </a>
-
-                <div
-                    class="product-card-body"
-                >
-
-                    <div
-                        class="product-meta"
-                    >
-
-                        <span
-                            class="product-category"
-                        >
-                            ${escapeHTML(
-                                product.category
-                            )}
-                        </span>
-
-                        ${renderRating(
-                            product.rating
-                        )}
-
-                    </div>
-
-                    <h3
-                        class="product-title"
-                    >
-
-                        <a
-                            href="${detailUrl}"
-                        >
-                            ${safeName}
-                        </a>
-
-                    </h3>
-
-                    <p
-                        class="product-description"
-                    >
-                        ${escapeHTML(
-                            product.description
-                        )}
-                    </p>
-
-                    <div
-                        class="product-card-footer"
-                    >
-
-                        <span
-                            class="product-price"
-                        >
-                            ${formatPrice(
-                                product.price
-                            )}
-                        </span>
-
-                        <button
-                            type="button"
-                            class="btn-add-to-cart"
-                            data-id="${safeId}"
-                            aria-label="Add ${safeName} to cart"
-                        >
-                            Add to Cart
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </article>
-        `;
-    }
-
-    /* =========================================================================
-       26. UPDATE PAGE HEADING / COUNT
-       ========================================================================= */
-
-    function updateHeadingAndCount() {
-        if (
-            productsCount
-        ) {
-            productsCount.textContent =
-                `${filteredProducts.length} ${
-                    filteredProducts.length === 1
-                        ? "product"
-                        : "products"
-                }`;
         }
 
+        /*
+         * GET /api/products/:id
+         */
         if (
-            productsHeading
+            url.pathname.startsWith(
+                "/api/products/"
+            )
         ) {
-            if (
-                currentSearch.trim()
-            ) {
-                productsHeading.textContent =
-                    `Search Results for "${currentSearch.trim()}"`;
-            } else if (
-                activeCategory !== "all"
-            ) {
-                productsHeading.textContent =
-                    activeCategory;
-            } else {
-                productsHeading.textContent =
-                    "All Products";
+            const prefix = "/api/products/";
+
+            const productId =
+                decodeURIComponent(
+                    url.pathname.slice(
+                        prefix.length
+                    )
+                );
+
+            if (!productId) {
+                return errorResponse(
+                    "Product ID is required.",
+                    400,
+                    request
+                );
             }
-        }
-    }
 
-    /* =========================================================================
-       27. RENDER PRODUCTS
-       ========================================================================= */
+            const product =
+                products.find(
+                    item =>
+                        item.id === productId
+                );
 
-    function renderProducts() {
-        filterProducts();
+            if (!product) {
+                return errorResponse(
+                    "Product not found.",
+                    404,
+                    request
+                );
+            }
 
-        updateHeadingAndCount();
-
-        if (
-            !filteredProducts.length
-        ) {
-            renderEmpty(
-                currentSearch.trim()
-                    ? "Try another search term or category."
-                    : "No products are currently available."
+            return jsonResponse(
+                {
+                    success: true,
+                    product
+                },
+                200,
+                request
             );
-
-            return;
         }
 
-        productList.innerHTML =
-            filteredProducts
-                .map(
-                    renderProductCard
-                )
-                .join("");
+        /*
+         * GET /api/products
+         */
+        return jsonResponse(
+            {
+                success: true,
+                count: products.length,
+                products
+            },
+            200,
+            request
+        );
 
-        announce(
-            `Showing ${filteredProducts.length} products`
+    } catch (error) {
+        console.error(
+            "[PRASUN SHOP] Product catalog error:",
+            error
+        );
+
+        return errorResponse(
+            "Unable to load the product catalog.",
+            500,
+            request,
+            {
+                details:
+                    error?.message ||
+                    "Unknown catalog error."
+            }
+        );
+    }
+}
+
+
+/* ============================================================================
+   JSON REQUEST BODY
+   ============================================================================ */
+
+async function readJsonBody(request) {
+    const contentType =
+        request.headers.get("Content-Type") || "";
+
+    if (
+        !contentType
+            .toLowerCase()
+            .includes("application/json")
+    ) {
+        throw new Error(
+            "Request must use Content-Type: application/json."
         );
     }
 
-    /* =========================================================================
-       28. CART BADGE
-       ========================================================================= */
+    const text = await request.text();
 
-    function updateCartBadge() {
-        /*
-         * Prefer the central cart.js implementation.
-         */
-        if (
-            window.PrasunShopCart &&
-            typeof window.PrasunShopCart.updateCartBadge ===
-                "function"
-        ) {
-            window.PrasunShopCart.updateCartBadge();
-
-            return;
-        }
-
-        /*
-         * Safe fallback.
-         */
-        if (
-            !cartCountBadge
-        ) {
-            return;
-        }
-
-        try {
-            const cart =
-                JSON.parse(
-                    localStorage.getItem(
-                        "prasun_cart"
-                    ) || "[]"
-                );
-
-            const count =
-                Array.isArray(cart)
-                    ? cart.reduce(
-                        (
-                            total,
-                            item
-                        ) =>
-                            total +
-                            Math.max(
-                                0,
-                                Number(
-                                    item.quantity
-                                ) || 0
-                            ),
-                        0
-                    )
-                    : 0;
-
-            cartCountBadge.textContent =
-                String(
-                    count
-                );
-
-            cartCountBadge.hidden =
-                count <= 0;
-
-        } catch {
-            cartCountBadge.textContent =
-                "0";
-
-            cartCountBadge.hidden =
-                true;
-        }
+    if (!text.trim()) {
+        throw new Error(
+            "Request body is empty."
+        );
     }
 
-    /* =========================================================================
-       29. ADD TO CART
-       ========================================================================= */
+    if (text.length > 100000) {
+        throw new Error(
+            "Request body is too large."
+        );
+    }
 
-    function handleAddToCart(
-        productId
+    try {
+        return JSON.parse(text);
+    } catch {
+        throw new Error(
+            "Invalid JSON request body."
+        );
+    }
+}
+
+
+/* ============================================================================
+   STRING CLEANING
+   ============================================================================ */
+
+function cleanString(
+    value,
+    maxLength
+) {
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return "";
+    }
+
+    return String(value)
+        .trim()
+        .slice(0, maxLength);
+}
+
+
+/* ============================================================================
+   VALIDATION
+   ============================================================================ */
+
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        email
+    );
+}
+
+
+function isValidCountryCode(code) {
+    return /^[A-Z]{2}$/.test(
+        code
+    );
+}
+
+
+function isValidPhone(phone) {
+    return /^[0-9+()\-\s]{7,40}$/.test(
+        phone
+    );
+}
+
+
+/* ============================================================================
+   CUSTOMER VALIDATION
+   ============================================================================ */
+
+function validateCustomer(body) {
+    const customerName = cleanString(
+        body.customerName ?? body.name,
+        CONFIG.MAX_NAME_LENGTH
+    );
+
+    const email = cleanString(
+        body.email,
+        CONFIG.MAX_EMAIL_LENGTH
+    ).toLowerCase();
+
+    const phone = cleanString(
+        body.phone,
+        CONFIG.MAX_PHONE_LENGTH
+    );
+
+    const address = cleanString(
+        body.address,
+        CONFIG.MAX_ADDRESS_LENGTH
+    );
+
+    const address2 = cleanString(
+        body.address2,
+        CONFIG.MAX_ADDRESS_LENGTH
+    );
+
+    const city = cleanString(
+        body.shippingCity ??
+        body.city,
+        CONFIG.MAX_CITY_LENGTH
+    );
+
+    const province = cleanString(
+        body.shippingProvince ??
+        body.province ??
+        body.state,
+        CONFIG.MAX_PROVINCE_LENGTH
+    );
+
+    const country = cleanString(
+        body.shippingCountry ??
+        body.country,
+        CONFIG.MAX_COUNTRY_LENGTH
+    );
+
+    const countryCode = cleanString(
+        body.shippingCountryCode ??
+        body.countryCode,
+        CONFIG.MAX_COUNTRY_CODE_LENGTH
+    ).toUpperCase();
+
+    const zip = cleanString(
+        body.shippingZip ??
+        body.zip ??
+        body.postalCode,
+        CONFIG.MAX_ZIP_LENGTH
+    );
+
+    const remark = cleanString(
+        body.remark ??
+        body.orderNote ??
+        body.note,
+        CONFIG.MAX_NOTE_LENGTH
+    );
+
+    if (!customerName) {
+        throw new Error(
+            "Full name is required."
+        );
+    }
+
+    if (
+        !email ||
+        !isValidEmail(email)
+    ) {
+        throw new Error(
+            "A valid email address is required."
+        );
+    }
+
+    if (
+        !phone ||
+        !isValidPhone(phone)
+    ) {
+        throw new Error(
+            "A valid phone number is required."
+        );
+    }
+
+    if (!address) {
+        throw new Error(
+            "Shipping address is required."
+        );
+    }
+
+    if (!city) {
+        throw new Error(
+            "City is required."
+        );
+    }
+
+    if (!province) {
+        throw new Error(
+            "State / Province is required."
+        );
+    }
+
+    if (!country) {
+        throw new Error(
+            "Country is required."
+        );
+    }
+
+    if (
+        !countryCode ||
+        !isValidCountryCode(countryCode)
+    ) {
+        throw new Error(
+            "A valid two-letter country code is required."
+        );
+    }
+
+    return {
+        customerName,
+        email,
+        phone,
+        address,
+        address2,
+        shippingCity: city,
+        shippingProvince: province,
+        shippingCountry: country,
+        shippingCountryCode: countryCode,
+        shippingZip: zip,
+        remark
+    };
+}
+
+
+/* ============================================================================
+   ORDER ITEM NORMALIZATION
+   ============================================================================ */
+
+function normalizeOrderItem(item) {
+    if (
+        !item ||
+        typeof item !== "object"
+    ) {
+        return null;
+    }
+
+    const id = cleanString(
+        item.id,
+        100
+    );
+
+    const quantityNumber =
+        Number(item.quantity);
+
+    if (
+        !id ||
+        !Number.isFinite(quantityNumber)
+    ) {
+        return null;
+    }
+
+    if (
+        quantityNumber < 1
+    ) {
+        return null;
+    }
+
+    if (
+        quantityNumber > CONFIG.MAX_QUANTITY
+    ) {
+        return null;
+    }
+
+    const quantity = Math.floor(
+        quantityNumber
+    );
+
+    return {
+        id,
+        quantity
+    };
+}
+
+
+/* ============================================================================
+   ORDER NUMBER
+   ============================================================================ */
+
+function generateOrderNumber() {
+    const now = new Date();
+
+    const year =
+        now.getUTCFullYear();
+
+    const month =
+        String(
+            now.getUTCMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            now.getUTCDate()
+        ).padStart(2, "0");
+
+    const characters =
+        "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    let random = "";
+
+    for (
+        let i = 0;
+        i < 6;
+        i++
+    ) {
+        random += characters[
+            Math.floor(
+                Math.random() *
+                characters.length
+            )
+        ];
+    }
+
+    return `PS-${year}${month}${day}-${random}`;
+}
+
+
+/* ============================================================================
+   BUILD ORDER
+   ============================================================================ */
+
+async function buildOrder(body) {
+    const customer =
+        validateCustomer(body);
+
+    if (
+        !Array.isArray(body.cart)
+    ) {
+        throw new Error(
+            "Cart is missing."
+        );
+    }
+
+    if (
+        body.cart.length === 0
+    ) {
+        throw new Error(
+            "Your cart is empty."
+        );
+    }
+
+    if (
+        body.cart.length >
+        CONFIG.MAX_ORDER_ITEMS
+    ) {
+        throw new Error(
+            `You can order a maximum of ${CONFIG.MAX_ORDER_ITEMS} different products at once.`
+        );
+    }
+
+    const normalizedItems =
+        body.cart.map(
+            normalizeOrderItem
+        );
+
+    if (
+        normalizedItems.some(
+            item => !item
+        )
+    ) {
+        throw new Error(
+            "One or more cart items are invalid."
+        );
+    }
+
+    /*
+     * Prevent duplicate product IDs.
+     */
+    const ids = normalizedItems.map(
+        item => item.id
+    );
+
+    if (
+        new Set(ids).size !== ids.length
+    ) {
+        throw new Error(
+            "Duplicate products are not allowed in the cart."
+        );
+    }
+
+    /*
+     * Load authoritative products.json.
+     */
+    const products =
+        await getProducts();
+
+    const productMap =
+        new Map(
+            products.map(
+                product => [
+                    product.id,
+                    product
+                ]
+            )
+        );
+
+    const orderItems = [];
+
+    let subtotal = 0;
+
+    for (
+        const cartItem of normalizedItems
     ) {
         const product =
-            masterCatalog.find(
-                item =>
-                    String(
-                        item.id
-                    ) ===
-                    String(
-                        productId
-                    )
+            productMap.get(
+                cartItem.id
             );
 
-        if (
-            !product
-        ) {
-            console.warn(
-                "[PRASUN SHOP] Product not found:",
-                productId
+        if (!product) {
+            throw new Error(
+                `Product ${cartItem.id} is no longer available.`
             );
-
-            return;
         }
 
         /*
-         * AliExpress-only cart object.
+         * NEVER trust browser price.
          *
-         * IMPORTANT:
-         * No CJ fields are included.
+         * Price always comes from products.json.
          */
-        if (
-            window.PrasunShopCart &&
-            typeof window.PrasunShopCart.addToCart ===
-                "function"
-        ) {
-            window.PrasunShopCart.addToCart(
-                {
-                    id:
-                        product.id,
+        const unitPrice =
+            Number(product.price);
 
-                    name:
-                        product.name,
+        const quantity =
+            cartItem.quantity;
 
-                    price:
-                        product.price,
-
-                    image:
-                        product.image,
-
-                    category:
-                        product.category,
-
-                    sku:
-                        product.sku,
-
-                    aliexpress_id:
-                        product.aliexpress_id
-                },
-                1
+        const itemSubtotal =
+            Number(
+                (
+                    unitPrice *
+                    quantity
+                ).toFixed(2)
             );
 
-        } else {
-            /*
-             * If cart.js is not loaded, do not silently pretend
-             * the product was added.
-             */
-            console.error(
-                "[PRASUN SHOP] PrasunShopCart.addToCart() is unavailable."
+        subtotal =
+            Number(
+                (
+                    subtotal +
+                    itemSubtotal
+                ).toFixed(2)
             );
 
-            announce(
-                "Cart is temporarily unavailable."
+        orderItems.push({
+            id: product.id,
+            sku: product.sku,
+            aliexpress_id:
+                product.aliexpress_id,
+            name: product.name,
+            category: product.category,
+            image: product.image,
+            quantity,
+            unitPrice,
+            subtotal: itemSubtotal
+        });
+    }
+
+    /*
+     * Shipping is currently zero.
+     *
+     * You can add a shipping table later.
+     */
+    const shipping = 0;
+
+    const total =
+        Number(
+            (
+                subtotal +
+                shipping
+            ).toFixed(2)
+        );
+
+    return {
+        success: true,
+
+        orderNumber:
+            generateOrderNumber(),
+
+        status: "pending",
+
+        source: "aliexpress",
+
+        createdAt:
+            new Date().toISOString(),
+
+        customer,
+
+        items: orderItems,
+
+        subtotal,
+
+        shipping,
+
+        total,
+
+        currency: "USD"
+    };
+}
+
+
+/* ============================================================================
+   HANDLE ORDER
+   ============================================================================ */
+
+async function handleOrder(request) {
+    try {
+        const body =
+            await readJsonBody(
+                request
             );
 
-            return;
-        }
+        const order =
+            await buildOrder(
+                body
+            );
 
-        announce(
-            `${product.name} added to cart.`
+        console.log(
+            "[PRASUN SHOP] AliExpress order received:",
+            JSON.stringify({
+                orderNumber:
+                    order.orderNumber,
+                total:
+                    order.total,
+                itemCount:
+                    order.items.length
+            })
         );
 
         /*
-         * Visual feedback.
+         * IMPORTANT:
+         *
+         * This does NOT place the order on AliExpress.
+         *
+         * It only validates and accepts the storefront order.
          */
-        const selector =
-            `.btn-add-to-cart[data-id="${CSS.escape(
-                String(product.id)
-            )}"]`;
 
-        const button =
-            productList.querySelector(
-                selector
-            );
+        return jsonResponse(
+            {
+                success: true,
 
-        if (
-            button
-        ) {
-            const originalText =
-                button.textContent;
+                message:
+                    "Your order has been received successfully.",
 
-            button.textContent =
-                "✓ Added";
+                orderNumber:
+                    order.orderNumber,
 
-            button.classList.add(
-                "added"
-            );
+                status:
+                    order.status,
 
-            button.disabled =
-                true;
+                source:
+                    order.source,
 
-            setTimeout(
-                () => {
-                    button.textContent =
-                        originalText;
+                subtotal:
+                    order.subtotal,
 
-                    button.classList.remove(
-                        "added"
-                    );
+                shipping:
+                    order.shipping,
 
-                    button.disabled =
-                        false;
-                },
-                1200
-            );
-        }
+                total:
+                    order.total,
 
-        updateCartBadge();
-    }
+                currency:
+                    order.currency,
 
-    /* =========================================================================
-       30. SEARCH
-       ========================================================================= */
+                paymentUrl:
+                    null,
 
-    function executeLocalSearch(
-        query
-    ) {
-        currentSearch =
-            cleanText(
-                query
-            );
+                items:
+                    order.items.map(
+                        item => ({
+                            id:
+                                item.id,
 
-        allProducts =
-            [...masterCatalog];
+                            sku:
+                                item.sku,
 
-        renderProducts();
-    }
+                            aliexpress_id:
+                                item.aliexpress_id,
 
-    /* =========================================================================
-       31. INITIAL CATALOG LOAD
-       ========================================================================= */
+                            name:
+                                item.name,
 
-    async function initCatalog() {
-        catalogRequestSequence++;
+                            quantity:
+                                item.quantity,
 
-        const requestSequence =
-            catalogRequestSequence;
+                            unitPrice:
+                                item.unitPrice,
 
-        renderLoading(
-            "Fetching catalog..."
+                            subtotal:
+                                item.subtotal
+                        })
+                    )
+            },
+            201,
+            request
         );
 
-        try {
-            const products =
-                await loadProductsFromAPI();
-
-            /*
-             * Ignore old request if a newer request started.
-             */
-            if (
-                requestSequence !==
-                catalogRequestSequence
-            ) {
-                return;
-            }
-
-            if (
-                !products.length
-            ) {
-                masterCatalog = [];
-
-                allProducts = [];
-
-                buildCategories();
-
-                renderEmpty(
-                    "No products are currently available."
-                );
-
-                return;
-            }
-
-            /*
-             * The Worker is authoritative.
-             */
-            masterCatalog =
-                products;
-
-            allProducts =
-                [...masterCatalog];
-
-            /*
-             * Reset category only if the current
-             * category no longer exists.
-             */
-            const categoryExists =
-                activeCategory ===
-                    "all" ||
-                allProducts.some(
-                    product =>
-                        product.category
-                            .toLowerCase() ===
-                        activeCategory.toLowerCase()
-                );
-
-            if (
-                !categoryExists
-            ) {
-                activeCategory =
-                    "all";
-            }
-
-            buildCategories();
-
-            setActiveCategory(
-                activeCategory
-            );
-
-            renderProducts();
-
-            console.info(
-                `[PRASUN SHOP] Loaded ${masterCatalog.length} products.`
-            );
-
-        } catch (
+    } catch (error) {
+        console.error(
+            "[PRASUN SHOP] Order error:",
             error
-        ) {
+        );
+
+        return errorResponse(
+            error?.message ||
+            "Unable to process your order.",
+            400,
+            request
+        );
+    }
+}
+
+
+/* ============================================================================
+   HEALTH CHECK
+   ============================================================================ */
+
+function handleHealth(request) {
+    return jsonResponse(
+        {
+            success: true,
+
+            service:
+                "PRASUN SHOP API",
+
+            status:
+                "online",
+
+            supplier:
+                "AliExpress",
+
+            cj:
+                false,
+
+            timestamp:
+                new Date().toISOString()
+        },
+        200,
+        request
+    );
+}
+
+
+/* ============================================================================
+   MAIN REQUEST ROUTER
+   ============================================================================ */
+
+async function handleRequest(request) {
+    const url =
+        new URL(request.url);
+
+    /*
+     * ------------------------------------------------------------------------
+     * OPTIONS / CORS PREFLIGHT
+     * ------------------------------------------------------------------------
+     */
+
+    if (
+        request.method === "OPTIONS"
+    ) {
+        return new Response(
+            null,
+            {
+                status: 204,
+
+                headers: {
+                    ...corsHeaders(
+                        request
+                    ),
+
+                    ...securityHeaders()
+                }
+            }
+        );
+    }
+
+
+    /*
+     * ------------------------------------------------------------------------
+     * HEALTH
+     * ------------------------------------------------------------------------
+     */
+
+    if (
+        request.method === "GET" &&
+        (
+            url.pathname === "/" ||
+            url.pathname === "/health" ||
+            url.pathname === "/api/health"
+        )
+    ) {
+        return handleHealth(
+            request
+        );
+    }
+
+
+    /*
+     * ------------------------------------------------------------------------
+     * PRODUCTS
+     * ------------------------------------------------------------------------
+     */
+
+    if (
+        request.method === "GET" &&
+        (
+            url.pathname === "/api/products" ||
+            url.pathname.startsWith(
+                "/api/products/"
+            )
+        )
+    ) {
+        return handleProducts(
+            request,
+            url
+        );
+    }
+
+
+    /*
+     * ------------------------------------------------------------------------
+     * CREATE ORDER
+     * ------------------------------------------------------------------------
+     */
+
+    if (
+        request.method === "POST" &&
+        url.pathname === "/api/order"
+    ) {
+        return handleOrder(
+            request
+        );
+    }
+
+
+    /*
+     * ------------------------------------------------------------------------
+     * ORDER METHOD NOT ALLOWED
+     * ------------------------------------------------------------------------
+     */
+
+    if (
+        url.pathname === "/api/order"
+    ) {
+        return errorResponse(
+            "Method not allowed. Use POST.",
+            405,
+            request,
+            {
+                Allow:
+                    "POST, OPTIONS"
+            }
+        );
+    }
+
+
+    /*
+     * ------------------------------------------------------------------------
+     * 404
+     * ------------------------------------------------------------------------
+     */
+
+    return errorResponse(
+        "API endpoint not found.",
+        404,
+        request
+    );
+}
+
+
+/* ============================================================================
+   CLOUDFLARE WORKER ENTRY POINT
+   ============================================================================ */
+
+export default {
+    async fetch(
+        request,
+        env,
+        ctx
+    ) {
+        try {
+            return await handleRequest(
+                request
+            );
+
+        } catch (error) {
             console.error(
-                "[PRASUN SHOP] Catalog loading failed:",
+                "[PRASUN SHOP] Unhandled Worker error:",
                 error
             );
 
-            masterCatalog = [];
-
-            allProducts = [];
-
-            renderError(
-                "Unable to connect to the product catalog. Please try again."
+            return errorResponse(
+                "Internal server error.",
+                500,
+                request
             );
         }
-
-        updateCartBadge();
-
-        updateClearSearchButton();
     }
-
-    /* =========================================================================
-       32. EVENT LISTENERS
-       ========================================================================= */
-
-    function attachEventListeners() {
-
-        /*
-         * SEARCH
-         */
-        searchInput?.addEventListener(
-            "input",
-            event => {
-
-                currentSearch =
-                    event.target.value;
-
-                updateClearSearchButton();
-
-                clearTimeout(
-                    searchTimer
-                );
-
-                searchTimer =
-                    setTimeout(
-                        () => {
-
-                            executeLocalSearch(
-                                currentSearch
-                            );
-
-                        },
-                        SEARCH_DELAY
-                    );
-            }
-        );
-
-        /*
-         * CLEAR SEARCH
-         */
-        clearSearchButton?.addEventListener(
-            "click",
-            () => {
-
-                if (
-                    searchInput
-                ) {
-                    searchInput.value =
-                        "";
-
-                    currentSearch =
-                        "";
-
-                    updateClearSearchButton();
-
-                    executeLocalSearch(
-                        ""
-                    );
-
-                    searchInput.focus();
-                }
-            }
-        );
-
-        /*
-         * SORT
-         */
-        sortSelect?.addEventListener(
-            "change",
-            event => {
-
-                currentSort =
-                    event.target.value;
-
-                renderProducts();
-            }
-        );
-
-        /*
-         * CATEGORY
-         */
-        categoriesContainer?.addEventListener(
-            "click",
-            event => {
-
-                const button =
-                    event.target.closest(
-                        ".category-pill"
-                    );
-
-                if (
-                    !button
-                ) {
-                    return;
-                }
-
-                setActiveCategory(
-                    button.dataset.category
-                );
-
-                renderProducts();
-            }
-        );
-
-        /*
-         * ADD TO CART
-         */
-        productList.addEventListener(
-            "click",
-            event => {
-
-                const button =
-                    event.target.closest(
-                        ".btn-add-to-cart"
-                    );
-
-                if (
-                    !button
-                ) {
-                    return;
-                }
-
-                event.preventDefault();
-
-                handleAddToCart(
-                    button.dataset.id
-                );
-            }
-        );
-
-        /*
-         * CURRENCY DISPLAY.
-         *
-         * This does NOT change the Worker price.
-         * It only changes the displayed currency.
-         */
-        currencySelect?.addEventListener(
-            "change",
-            () => {
-                renderProducts();
-            }
-        );
-
-        /*
-         * CART EVENTS.
-         */
-        window.addEventListener(
-            "prasun:cart-updated",
-            updateCartBadge
-        );
-
-        /*
-         * Storage changes from another tab.
-         */
-        window.addEventListener(
-            "storage",
-            event => {
-
-                if (
-                    event.key ===
-                    "prasun_cart"
-                ) {
-                    updateCartBadge();
-                }
-            }
-        );
-    }
-
-    /* =========================================================================
-       33. INITIALIZATION
-       ========================================================================= */
-
-    function init() {
-        attachEventListeners();
-
-        updateClearSearchButton();
-
-        updateCartBadge();
-
-        initCatalog();
-    }
-
-    /* =========================================================================
-       34. START
-       ========================================================================= */
-
-    if (
-        document.readyState ===
-        "loading"
-    ) {
-        document.addEventListener(
-            "DOMContentLoaded",
-            init,
-            {
-                once: true
-            }
-        );
-    } else {
-        init();
-    }
-
-})();
+};
