@@ -3,42 +3,49 @@
  * PRASUN SHOP — CHECKOUT
  * ============================================================================
  *
- * CUSTOMER FLOW
+ * Browser flow:
  *
  * Cart
  *   ↓
  * Checkout
  *   ↓
- * Customer enters shipping information
+ * Validate customer information
  *   ↓
- * Browser sends order request to PRASUN SHOP Worker
+ * Send product IDs + quantities
  *   ↓
- * Worker validates cart
+ * PRASUN SHOP Worker
  *   ↓
- * Worker creates CJ order
+ * Server-side catalog validation
  *   ↓
- * CJ returns payment URL
+ * CJ shipping calculation
  *   ↓
- * Browser redirects customer to CJ payment page
+ * CJ createOrderV2
+ *   ↓
+ * cjPayUrl
+ *   ↓
+ * CJ payment page
  *
- * IMPORTANT
+ * IMPORTANT:
  *
- * The CJ API key is NEVER exposed to the browser.
+ * The browser NEVER receives the CJ API token.
  *
- * ============================================================================ */
+ * The browser also does NOT send product prices to the Worker.
+ *
+ * ============================================================================
+ */
 
 "use strict";
 
 (() => {
 
     /* ========================================================================
-       CONFIGURATION
+       CONFIG
        ======================================================================== */
 
     const CART_KEY =
         "prasun_cart";
 
-    const LEGACY_CART_KEYS = [
+    const LEGACY_KEYS = [
         "prasunShopCart",
         "cart",
         "prasun_cart_items"
@@ -57,7 +64,7 @@
         99;
 
     const REQUEST_TIMEOUT_MS =
-        15000;
+        20000;
 
 
     /* ========================================================================
@@ -84,11 +91,6 @@
             "checkout-status"
         );
 
-    const placeOrderButton =
-        document.getElementById(
-            "place-order-button"
-        );
-
     const cartCount =
         document.getElementById(
             "cart-count"
@@ -96,51 +98,42 @@
 
 
     /* ========================================================================
-       STATE
-       ======================================================================== */
-
-    let cart = [];
-
-    let productMap =
-        new Map();
-
-    let productsFetchPromise =
-        null;
-
-    let checkoutProcessing =
-        false;
-
-
-    /* ========================================================================
-       CURRENCY
+       FORMATTERS
        ======================================================================== */
 
     const currencyFormatter =
         new Intl.NumberFormat(
             "en-US",
             {
-                style: "currency",
-                currency: "USD",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
+                style:
+                    "currency",
+
+                currency:
+                    "USD",
+
+                minimumFractionDigits:
+                    2,
+
+                maximumFractionDigits:
+                    2
             }
         );
 
 
-    function formatPrice(value) {
+    function formatPrice(
+        value
+    ) {
 
         const number =
             Number(value);
 
-        if (
-            !Number.isFinite(number)
-        ) {
-            return "$0.00";
-        }
-
-        return currencyFormatter.format(
+        return Number.isFinite(
             number
-        );
+        )
+            ? currencyFormatter.format(
+                number
+            )
+            : "$0.00";
     }
 
 
@@ -150,67 +143,105 @@
 
     const ESCAPE_MAP = {
 
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
+        "&":
+            "&amp;",
 
+        "<":
+            "&lt;",
+
+        ">":
+            "&gt;",
+
+        '"':
+            "&quot;",
+
+        "'":
+            "&#039;"
     };
 
 
-    function escapeHTML(value) {
+    function escapeHTML(
+        value
+    ) {
 
         if (
             value === null ||
             value === undefined
         ) {
+
             return "";
         }
 
-        return String(value).replace(
+
+        return String(
+            value
+        ).replace(
             /[&<>"']/g,
-            char =>
-                ESCAPE_MAP[char]
+            character =>
+                ESCAPE_MAP[
+                    character
+                ]
         );
     }
 
 
     /* ========================================================================
-       URL VALIDATION
+       REQUEST TIMEOUT
        ======================================================================== */
 
-    function isValidHttpUrl(
-        value
+    async function fetchWithTimeout(
+        resource,
+        options = {}
     ) {
 
-        if (!value) {
-            return false;
-        }
+        const controller =
+            new AbortController();
+
+        const timer =
+            setTimeout(
+                () =>
+                    controller.abort(),
+                REQUEST_TIMEOUT_MS
+            );
+
 
         try {
 
-            const url =
-                new URL(
-                    value
-                );
+            return await fetch(
+                resource,
+                {
+                    ...options,
 
-            return (
-                url.protocol ===
-                    "https:" ||
-                url.protocol ===
-                    "http:"
+                    signal:
+                        controller.signal
+                }
             );
 
-        } catch {
+        } catch (error) {
 
-            return false;
+            if (
+                error?.name ===
+                "AbortError"
+            ) {
+
+                throw new Error(
+                    "The request timed out. Please check your connection and try again."
+                );
+            }
+
+            throw error;
+
+        } finally {
+
+            clearTimeout(
+                timer
+            );
         }
     }
 
 
     /* ========================================================================
-       CART NORMALIZATION
+       CART
        ======================================================================== */
 
     function normalizeCartItem(
@@ -219,34 +250,20 @@
 
         if (
             !item ||
-            item.id === undefined ||
-            item.id === null
+            item.id ===
+                undefined ||
+            item.id ===
+                null
         ) {
 
             return null;
         }
 
 
-        const numericQuantity =
+        const quantity =
             Number(
                 item.quantity
             );
-
-
-        const quantity =
-            Number.isFinite(
-                numericQuantity
-            ) &&
-            numericQuantity > 0
-
-                ? Math.min(
-                    MAX_QUANTITY,
-                    Math.floor(
-                        numericQuantity
-                    )
-                )
-
-                : 1;
 
 
         return {
@@ -256,39 +273,31 @@
                     item.id
                 ),
 
-            quantity,
+            quantity:
+                Number.isInteger(
+                    quantity
+                ) &&
+                quantity > 0
+                    ? Math.min(
+                        MAX_QUANTITY,
+                        quantity
+                    )
+                    : 1,
 
-            sku:
-                String(
-                    item.sku ||
-                    ""
-                ),
-
-            cjSku:
-                String(
-                    item.cjSku ||
-                    item.sku ||
-                    ""
-                ),
-
-            variantSku:
-                String(
-                    item.variantSku ||
-                    ""
-                ),
-
-            vid:
-                String(
-                    item.vid ||
-                    ""
-                ),
+            /*
+             * Preserve variant metadata.
+             * The Worker does not trust CJ identifiers
+             * from the browser.
+             */
 
             variantOptions:
                 String(
                     item.variantOptions ||
                     ""
+                ).slice(
+                    0,
+                    200
                 )
-
         };
     }
 
@@ -326,9 +335,7 @@
                 )
                 .filter(Boolean);
 
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             console.error(
                 "[PRASUN SHOP] Cart parse error:",
@@ -350,7 +357,9 @@
                 );
 
 
-            if (primary) {
+            if (
+                primary
+            ) {
 
                 return parseCart(
                     primary
@@ -360,7 +369,7 @@
 
             for (
                 const key
-                of LEGACY_CART_KEYS
+                of LEGACY_KEYS
             ) {
 
                 const legacy =
@@ -369,39 +378,37 @@
                     );
 
 
-                if (!legacy) {
-                    continue;
-                }
-
-
-                const legacyCart =
-                    parseCart(
-                        legacy
-                    );
-
-
                 if (
-                    legacyCart.length > 0
+                    legacy
                 ) {
 
-                    localStorage.setItem(
-                        CART_KEY,
-                        JSON.stringify(
-                            legacyCart
-                        )
-                    );
+                    const cart =
+                        parseCart(
+                            legacy
+                        );
 
 
-                    return legacyCart;
+                    if (
+                        cart.length
+                    ) {
+
+                        localStorage.setItem(
+                            CART_KEY,
+                            JSON.stringify(
+                                cart
+                            )
+                        );
+
+
+                        return cart;
+                    }
                 }
             }
 
 
             return [];
 
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             console.error(
                 "[PRASUN SHOP] Cart read error:",
@@ -413,7 +420,7 @@
     }
 
 
-    function clearAllCartKeys() {
+    function clearCart() {
 
         try {
 
@@ -422,7 +429,7 @@
             );
 
 
-            LEGACY_CART_KEYS.forEach(
+            LEGACY_KEYS.forEach(
                 key => {
 
                     localStorage.removeItem(
@@ -432,12 +439,10 @@
                 }
             );
 
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             console.error(
-                "[PRASUN SHOP] Cart clear error:",
+                "[PRASUN SHOP] Could not clear cart:",
                 error
             );
         }
@@ -448,9 +453,14 @@
        CART COUNT
        ======================================================================== */
 
-    function updateCartCount() {
+    function updateCartCount(
+        cart
+    ) {
 
-        if (!cartCount) {
+        if (
+            !cartCount
+        ) {
+
             return;
         }
 
@@ -483,86 +493,88 @@
 
 
     /* ========================================================================
-       FETCH WITH TIMEOUT
+       ERROR UI
        ======================================================================== */
 
-    async function fetchWithTimeout(
-        resource,
-        options = {}
+    function showError(
+        message
     ) {
 
-        const timeout =
-            Number(
-                options.timeout
-            ) ||
-            REQUEST_TIMEOUT_MS;
-
-
-        const controller =
-            new AbortController();
-
-
-        const timer =
-            setTimeout(
-                () => {
-                    controller.abort();
-                },
-                timeout
-            );
-
-
-        try {
-
-            const fetchOptions = {
-                ...options,
-                signal:
-                    controller.signal
-            };
-
-
-            delete fetchOptions.timeout;
-
-
-            return await fetch(
-                resource,
-                fetchOptions
-            );
-
-        } catch (
-            error
+        if (
+            checkoutError
         ) {
 
-            if (
-                error &&
-                error.name ===
-                    "AbortError"
-            ) {
+            checkoutError.textContent =
+                message;
 
-                throw new Error(
-                    "The request timed out. Please check your connection and try again."
-                );
-            }
+            checkoutError.classList.add(
+                "visible"
+            );
 
 
-            throw error;
+            checkoutError.scrollIntoView({
+                behavior:
+                    "smooth",
 
-        } finally {
+                block:
+                    "nearest"
+            });
 
-            clearTimeout(
-                timer
+            return;
+        }
+
+
+        alert(
+            message
+        );
+    }
+
+
+    function hideError() {
+
+        if (
+            checkoutError
+        ) {
+
+            checkoutError.textContent =
+                "";
+
+            checkoutError.classList.remove(
+                "visible"
             );
         }
     }
 
 
+    function setStatus(
+        message
+    ) {
+
+        if (
+            checkoutStatus
+        ) {
+
+            checkoutStatus.textContent =
+                message;
+        }
+    }
+
+
     /* ========================================================================
-       FETCH PRODUCTS
+       PRODUCT CACHE
        ======================================================================== */
+
+    let productMap =
+        new Map();
+
+    let productFetchPromise =
+        null;
+
 
     async function fetchProducts() {
 
         if (
-            productMap.size > 0
+            productMap.size
         ) {
 
             return productMap;
@@ -570,286 +582,187 @@
 
 
         if (
-            productsFetchPromise
+            productFetchPromise
         ) {
 
-            return productsFetchPromise;
+            return productFetchPromise;
         }
 
 
-        productsFetchPromise =
+        productFetchPromise =
             (async () => {
+
+                const response =
+                    await fetchWithTimeout(
+                        PRODUCTS_ENDPOINT,
+                        {
+                            method:
+                                "GET",
+
+                            cache:
+                                "no-store",
+
+                            headers: {
+                                "Accept":
+                                    "application/json"
+                            }
+                        }
+                    );
+
+
+                const text =
+                    await response.text();
+
+
+                let data;
 
                 try {
 
-                    const response =
-                        await fetchWithTimeout(
-                            PRODUCTS_ENDPOINT,
-                            {
-                                method:
-                                    "GET",
-
-                                cache:
-                                    "no-store",
-
-                                headers: {
-                                    Accept:
-                                        "application/json"
-                                }
-                            }
+                    data =
+                        JSON.parse(
+                            text
                         );
 
+                } catch {
 
-                    if (
-                        !response.ok
-                    ) {
-
-                        throw new Error(
-                            `Products request failed with HTTP ${response.status}.`
-                        );
-                    }
-
-
-                    const data =
-                        await response.json();
-
-
-                    const products =
-                        Array.isArray(
-                            data
-                        )
-
-                            ? data
-
-                            : Array.isArray(
-                                data?.products
-                            )
-
-                                ? data.products
-
-                                : [];
-
-
-                    const nextMap =
-                        new Map();
-
-
-                    for (
-                        const product
-                        of products
-                    ) {
-
-                        if (
-                            !product ||
-                            product.id ===
-                                undefined ||
-                            product.id ===
-                                null
-                        ) {
-
-                            continue;
-                        }
-
-
-                        nextMap.set(
-                            String(
-                                product.id
-                            ),
-                            product
-                        );
-                    }
-
-
-                    productMap =
-                        nextMap;
-
-
-                    if (
-                        productMap.size ===
-                            0
-                    ) {
-
-                        throw new Error(
-                            "The product API returned no products."
-                        );
-                    }
-
-
-                    return productMap;
-
-                } catch (
-                    error
-                ) {
-
-                    productsFetchPromise =
-                        null;
-
-                    throw error;
+                    throw new Error(
+                        "The product server returned invalid data."
+                    );
                 }
 
-            })();
+
+                if (
+                    !response.ok
+                ) {
+
+                    throw new Error(
+                        data?.error ||
+                        `Products server returned HTTP ${response.status}.`
+                    );
+                }
 
 
-        return productsFetchPromise;
+                const products =
+                    Array.isArray(
+                        data
+                    )
+                        ? data
+                        : Array.isArray(
+                            data?.products
+                        )
+                            ? data.products
+                            : [];
+
+
+                productMap =
+                    new Map(
+                        products
+                            .filter(Boolean)
+                            .map(
+                                product => [
+                                    String(
+                                        product.id
+                                    ),
+                                    product
+                                ]
+                            )
+                    );
+
+
+                return productMap;
+
+            })()
+                .catch(
+                    error => {
+
+                        productFetchPromise =
+                            null;
+
+                        throw error;
+                    }
+                );
+
+
+        return productFetchPromise;
     }
 
 
     /* ========================================================================
-       UI ERROR
+       EMPTY CART
        ======================================================================== */
 
-    function showFormError(
-        message
-    ) {
+    function renderEmptyCheckout() {
 
-        if (!checkoutError) {
-            alert(message);
-            return;
+        if (
+            orderSummary
+        ) {
+
+            orderSummary.innerHTML = `
+
+                <div class="empty-checkout">
+
+                    <h2>
+                        Your cart is empty
+                    </h2>
+
+                    <p>
+                        Add products to your cart before continuing to checkout.
+                    </p>
+
+                    <a href="/">
+                        Continue Shopping
+                    </a>
+
+                </div>
+
+            `;
         }
 
 
-        checkoutError.textContent =
-            message;
+        if (
+            checkoutForm
+        ) {
 
-
-        checkoutError.classList.add(
-            "visible"
-        );
-
-
-        checkoutError.scrollIntoView({
-            behavior:
-                "smooth",
-            block:
-                "nearest"
-        });
-    }
-
-
-    function hideFormError() {
-
-        if (!checkoutError) {
-            return;
-        }
-
-
-        checkoutError.textContent =
-            "";
-
-
-        checkoutError.classList.remove(
-            "visible"
-        );
-    }
-
-
-    /* ========================================================================
-       STATUS
-       ======================================================================== */
-
-    function setStatus(
-        message
-    ) {
-
-        if (!checkoutStatus) {
-            return;
-        }
-
-
-        checkoutStatus.textContent =
-            message || "";
-    }
-
-
-    /* ========================================================================
-       EMPTY CHECKOUT
-       ======================================================================== */
-
-    function renderEmptySummary() {
-
-        if (!orderSummary) {
-            return;
-        }
-
-
-        orderSummary.setAttribute(
-            "aria-busy",
-            "false"
-        );
-
-
-        orderSummary.innerHTML = `
-
-            <div class="empty-checkout">
-
-                <h2>
-                    Your cart is empty
-                </h2>
-
-                <p>
-                    Add products to your cart before checking out.
-                </p>
-
-                <a href="/">
-                    Continue Shopping
-                </a>
-
-            </div>
-
-        `;
-
-
-        if (placeOrderButton) {
-
-            placeOrderButton.disabled =
-                true;
-
+            checkoutForm.style.display =
+                "none";
         }
     }
 
 
     /* ========================================================================
-       CHECKOUT SUMMARY
+       ORDER SUMMARY
        ======================================================================== */
 
-    async function loadCheckoutSummary() {
+    async function renderSummary() {
 
-        if (!orderSummary) {
+        if (
+            !orderSummary
+        ) {
+
             return;
         }
 
 
-        orderSummary.setAttribute(
-            "aria-busy",
-            "true"
+        const cart =
+            getCart();
+
+
+        updateCartCount(
+            cart
         );
+
+
+        if (
+            !cart.length
+        ) {
+
+            renderEmptyCheckout();
+
+            return;
+        }
 
 
         try {
-
-            cart =
-                getCart();
-
-
-            updateCartCount();
-
-
-            if (
-                !cart.length
-            ) {
-
-                renderEmptySummary();
-
-                return;
-            }
-
-
-            if (placeOrderButton) {
-
-                placeOrderButton.disabled =
-                    false;
-            }
-
 
             await fetchProducts();
 
@@ -857,9 +770,11 @@
             let total =
                 0;
 
+            let validCount =
+                0;
 
-            const validItems =
-                [];
+
+            let html = "";
 
 
             for (
@@ -875,12 +790,9 @@
                     );
 
 
-                if (!product) {
-
-                    console.warn(
-                        "[PRASUN SHOP] Product not found:",
-                        item.id
-                    );
+                if (
+                    !product
+                ) {
 
                     continue;
                 }
@@ -899,20 +811,15 @@
                     price < 0
                 ) {
 
-                    console.warn(
-                        "[PRASUN SHOP] Invalid product price:",
-                        product.id
-                    );
-
                     continue;
                 }
 
 
                 const quantity =
-                    Math.max(
-                        1,
-                        Math.min(
-                            MAX_QUANTITY,
+                    Math.min(
+                        MAX_QUANTITY,
+                        Math.max(
+                            1,
                             Number(
                                 item.quantity
                             ) || 1
@@ -928,106 +835,20 @@
                 total +=
                     subtotal;
 
+                validCount++;
 
-                validItems.push({
-
-                    id:
-                        String(
-                            product.id
-                        ),
-
-                    sku:
-                        String(
-                            product.sku ||
-                            item.sku ||
-                            ""
-                        ),
-
-                    cjSku:
-                        String(
-                            product.cjSku ||
-                            product.sku ||
-                            item.cjSku ||
-                            item.sku ||
-                            ""
-                        ),
-
-                    variantSku:
-                        String(
-                            item.variantSku ||
-                            ""
-                        ),
-
-                    vid:
-                        String(
-                            item.vid ||
-                            ""
-                        ),
-
-                    variantOptions:
-                        String(
-                            item.variantOptions ||
-                            ""
-                        ),
-
-                    name:
-                        String(
-                            product.name ||
-                            "Product"
-                        ),
-
-                    image:
-                        String(
-                            product.image ||
-                            ""
-                        ),
-
-                    price,
-
-                    quantity,
-
-                    subtotal
-
-                });
-            }
-
-
-            if (
-                validItems.length ===
-                    0
-            ) {
-
-                renderEmptySummary();
-
-                showFormError(
-                    "The products in your cart could not be found. Please return to the shop and add the products again."
-                );
-
-                return;
-            }
-
-
-            let html = `
-
-                <div class="summary-list">
-
-            `;
-
-
-            for (
-                const item
-                of validItems
-            ) {
 
                 const image =
                     escapeHTML(
-                        item.image
+                        product.image ||
+                        ""
                     );
 
 
                 const name =
                     escapeHTML(
-                        item.name
+                        product.name ||
+                        "Product"
                     );
 
 
@@ -1035,14 +856,24 @@
 
                     <div class="summary-item">
 
-                        <img
-                            class="summary-item-image"
-                            src="${image}"
-                            alt="${name}"
-                            loading="lazy"
-                            decoding="async"
-                        >
-
+                        ${
+                            image
+                                ? `
+                                    <img
+                                        class="summary-item-image"
+                                        src="${image}"
+                                        alt="${name}"
+                                        loading="lazy"
+                                        decoding="async"
+                                    >
+                                  `
+                                : `
+                                    <div
+                                        class="summary-item-image"
+                                        aria-hidden="true"
+                                    ></div>
+                                  `
+                        }
 
                         <div class="summary-item-info">
 
@@ -1051,23 +882,16 @@
                             </p>
 
                             <p class="summary-item-meta">
-                                Qty: ${item.quantity}
+                                Qty: ${quantity}
                             </p>
 
                         </div>
 
-
                         <div class="summary-item-price">
 
                             ${formatPrice(
-                                item.subtotal
+                                subtotal
                             )}
-
-                            <div class="summary-item-unit">
-                                ${formatPrice(
-                                    item.price
-                                )} each
-                            </div>
 
                         </div>
 
@@ -1077,25 +901,17 @@
             }
 
 
-            html += `
-                </div>
-            `;
+            if (
+                !validCount
+            ) {
+
+                renderEmptyCheckout();
+
+                return;
+            }
 
 
             html += `
-
-                <div class="summary-shipping">
-
-                    <span>
-                        Shipping
-                    </span>
-
-                    <span class="summary-shipping-value">
-                        Calculated by CJ
-                    </span>
-
-                </div>
-
 
                 <div class="summary-total">
 
@@ -1111,6 +927,13 @@
 
                 </div>
 
+                <div
+                    class="checkout-status"
+                    style="text-align:left;margin-top:10px;"
+                >
+                    Final CJ shipping and payable amount are calculated during checkout.
+                </div>
+
             `;
 
 
@@ -1123,20 +946,11 @@
                 "false"
             );
 
-
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             console.error(
-                "[PRASUN SHOP] Checkout summary error:",
+                "[PRASUN SHOP] Summary error:",
                 error
-            );
-
-
-            orderSummary.setAttribute(
-                "aria-busy",
-                "false"
             );
 
 
@@ -1149,17 +963,18 @@
                     </h2>
 
                     <p>
-                        We could not load your cart information.
+                        ${escapeHTML(
+                            error.message
+                        )}
                     </p>
 
                     <button
                         type="button"
-                        id="retry-summary-button"
+                        id="retry-summary"
                         style="
-                            min-height:44px;
-                            padding:0 18px;
                             border:0;
                             border-radius:10px;
+                            padding:11px 18px;
                             background:#2563eb;
                             color:#fff;
                             font-weight:700;
@@ -1174,31 +989,21 @@
             `;
 
 
-            const retryButton =
+            const retry =
                 document.getElementById(
-                    "retry-summary-button"
+                    "retry-summary"
                 );
 
 
-            if (retryButton) {
+            if (
+                retry
+            ) {
 
-                retryButton.addEventListener(
+                retry.addEventListener(
                     "click",
-                    () => {
-
-                        hideFormError();
-
-                        loadCheckoutSummary();
-
-                    }
+                    renderSummary
                 );
             }
-
-
-            showFormError(
-                error?.message ||
-                "Unable to load your order."
-            );
         }
     }
 
@@ -1207,100 +1012,15 @@
        FORM VALIDATION
        ======================================================================== */
 
-    function clearInvalidFields() {
+    function getFormData() {
 
-        if (!checkoutForm) {
-            return;
-        }
-
-
-        checkoutForm
-            .querySelectorAll(
-                ".invalid"
-            )
-            .forEach(
-                element => {
-
-                    element.classList.remove(
-                        "invalid"
-                    );
-
-                }
-            );
-    }
-
-
-    function markInvalid(
-        element
-    ) {
-
-        if (!element) {
-            return;
-        }
-
-
-        element.classList.add(
-            "invalid"
-        );
-
-
-        try {
-
-            element.focus();
-
-        } catch (_) {}
-    }
-
-
-    function validateForm(
-        formData
-    ) {
-
-        clearInvalidFields();
-
-
-        const nameField =
-            document.getElementById(
-                "customer-name"
-            );
-
-        const emailField =
-            document.getElementById(
-                "customer-email"
-            );
-
-        const phoneField =
-            document.getElementById(
-                "customer-phone"
-            );
-
-        const addressField =
-            document.getElementById(
-                "shipping-address"
-            );
-
-        const countryField =
-            document.getElementById(
-                "shipping-country"
-            );
-
-        const countryCodeField =
-            document.getElementById(
-                "shipping-country-code"
-            );
-
-        const provinceField =
-            document.getElementById(
-                "shipping-province"
-            );
-
-        const cityField =
-            document.getElementById(
-                "shipping-city"
+        const formData =
+            new FormData(
+                checkoutForm
             );
 
 
-        const name =
+        const customerName =
             String(
                 formData.get(
                     "name"
@@ -1320,14 +1040,6 @@
             String(
                 formData.get(
                     "phone"
-                ) || ""
-            ).trim();
-
-
-        const address =
-            String(
-                formData.get(
-                    "address"
                 ) || ""
             ).trim();
 
@@ -1366,13 +1078,49 @@
             ).trim();
 
 
-        if (
-            name.length < 2
-        ) {
+        const zip =
+            String(
+                formData.get(
+                    "zip"
+                ) || ""
+            ).trim();
 
-            markInvalid(
-                nameField
-            );
+
+        const county =
+            String(
+                formData.get(
+                    "county"
+                ) || ""
+            ).trim();
+
+
+        const address =
+            String(
+                formData.get(
+                    "address"
+                ) || ""
+            ).trim();
+
+
+        const address2 =
+            String(
+                formData.get(
+                    "address2"
+                ) || ""
+            ).trim();
+
+
+        const remark =
+            String(
+                formData.get(
+                    "remark"
+                ) || ""
+            ).trim();
+
+
+        if (
+            !customerName
+        ) {
 
             throw new Error(
                 "Please enter your full name."
@@ -1386,48 +1134,18 @@
             )
         ) {
 
-            markInvalid(
-                emailField
-            );
-
             throw new Error(
                 "Please enter a valid email address."
             );
         }
 
 
-        const phoneDigits =
-            phone.replace(
-                /[^\d]/g,
-                ""
-            );
-
-
         if (
-            phoneDigits.length < 7 ||
-            phoneDigits.length > 15
+            !phone
         ) {
 
-            markInvalid(
-                phoneField
-            );
-
             throw new Error(
-                "Please enter a valid phone number."
-            );
-        }
-
-
-        if (
-            !address
-        ) {
-
-            markInvalid(
-                addressField
-            );
-
-            throw new Error(
-                "Please enter your shipping address."
+                "Please enter your phone number."
             );
         }
 
@@ -1435,10 +1153,6 @@
         if (
             !country
         ) {
-
-            markInvalid(
-                countryField
-            );
 
             throw new Error(
                 "Please enter your country."
@@ -1452,12 +1166,8 @@
             )
         ) {
 
-            markInvalid(
-                countryCodeField
-            );
-
             throw new Error(
-                "Please enter a valid two-letter country code, such as US."
+                "Please enter a valid two-letter country code."
             );
         }
 
@@ -1466,12 +1176,8 @@
             !province
         ) {
 
-            markInvalid(
-                provinceField
-            );
-
             throw new Error(
-                "Please enter your state or province."
+                "Please enter your state/province."
             );
         }
 
@@ -1480,273 +1186,124 @@
             !city
         ) {
 
-            markInvalid(
-                cityField
-            );
-
             throw new Error(
                 "Please enter your city."
             );
         }
 
 
+        if (
+            !address
+        ) {
+
+            throw new Error(
+                "Please enter your shipping address."
+            );
+        }
+
+
         return {
 
-            name,
+            customerName,
 
             email,
 
             phone,
 
+            shippingCountry:
+                country,
+
+            shippingCountryCode:
+                countryCode,
+
+            shippingProvince:
+                province,
+
+            shippingCity:
+                city,
+
+            shippingZip:
+                zip,
+
+            shippingCounty:
+                county,
+
             address,
 
-            address2:
-                String(
-                    formData.get(
-                        "address2"
-                    ) || ""
-                ).trim(),
+            address2,
 
-            city,
-
-            province,
-
-            country,
-
-            countryCode,
-
-            zip:
-                String(
-                    formData.get(
-                        "zip"
-                    ) || ""
-                ).trim(),
-
-            county:
-                String(
-                    formData.get(
-                        "county"
-                    ) || ""
-                ).trim(),
-
-            remark:
-                String(
-                    formData.get(
-                        "remark"
-                    ) || ""
-                ).trim()
-
+            remark
         };
     }
 
 
     /* ========================================================================
-       ENRICH CART
+       BUILD SERVER CART
        ======================================================================== */
 
-    function buildEnrichedCart() {
+    function buildServerCart() {
 
-        const currentCart =
-            getCart();
-
-
-        if (
-            !currentCart.length
-        ) {
-
-            throw new Error(
-                "Your cart is empty. Please return to the shop."
-            );
-        }
-
-
-        const enrichedCart =
-            [];
-
-
-        for (
-            const item
-            of currentCart
-        ) {
-
-            const product =
-                productMap.get(
-                    String(
-                        item.id
-                    )
-                );
-
-
-            if (!product) {
-
-                throw new Error(
-                    `Could not find product "${item.id}". Please return to the shop and add it again.`
-                );
-            }
-
-
-            const quantity =
-                Math.min(
-                    MAX_QUANTITY,
-                    Math.max(
-                        1,
-                        Math.floor(
-                            Number(
-                                item.quantity
-                            ) || 1
-                        )
-                    )
-                );
-
-
-            enrichedCart.push({
+        return getCart().map(
+            item => ({
 
                 id:
                     String(
-                        product.id
+                        item.id
                     ),
 
-                sku:
-                    String(
-                        product.sku ||
-                        item.sku ||
-                        ""
-                    ),
-
-                cjSku:
-                    String(
-                        product.cjSku ||
-                        product.sku ||
-                        item.cjSku ||
-                        item.sku ||
-                        ""
-                    ),
-
-                variantSku:
-                    String(
-                        item.variantSku ||
-                        ""
-                    ),
-
-                vid:
-                    String(
-                        item.vid ||
-                        ""
-                    ),
-
-                name:
-                    String(
-                        product.name ||
-                        "Product"
-                    ),
-
-                image:
-                    String(
-                        product.image ||
-                        ""
+                quantity:
+                    Math.min(
+                        MAX_QUANTITY,
+                        Math.max(
+                            1,
+                            Math.floor(
+                                Number(
+                                    item.quantity
+                                ) || 1
+                            )
+                        )
                     ),
 
                 variantOptions:
                     String(
                         item.variantOptions ||
                         ""
-                    ),
-
-                quantity
-
-            });
-        }
-
-
-        return enrichedCart;
+                    ).slice(
+                        0,
+                        200
+                    )
+            })
+        );
     }
 
 
     /* ========================================================================
-       SAVE PENDING ORDER
+       SUBMIT ORDER
        ======================================================================== */
 
-    function savePendingOrder(
-        data
-    ) {
-
-        try {
-
-            sessionStorage.setItem(
-                "prasun_pending_cj_order",
-                JSON.stringify({
-
-                    orderNumber:
-                        data.orderNumber ||
-                        "",
-
-                    cjOrderId:
-                        data.cjOrderId ||
-                        "",
-
-                    shipmentOrderId:
-                        data.shipmentOrderId ||
-                        "",
-
-                    cjOrderAmount:
-                        Number(
-                            data.cjOrderAmount
-                        ) || 0,
-
-                    createdAt:
-                        Date.now()
-
-                })
-            );
-
-        } catch (
-            error
-        ) {
-
-            console.warn(
-                "[PRASUN SHOP] Could not save pending CJ order:",
-                error
-            );
-        }
-    }
-
-
-    /* ========================================================================
-       SUBMIT CHECKOUT
-       ======================================================================== */
-
-    async function submitCheckout(
+    async function submitOrder(
         event
     ) {
 
         event.preventDefault();
 
-
-        if (
-            checkoutProcessing
-        ) {
-
-            return;
-        }
+        hideError();
 
 
-        hideFormError();
-
-        setStatus("");
-
-
-        cart =
+        const cart =
             getCart();
 
 
-        updateCartCount();
+        updateCartCount(
+            cart
+        );
 
 
         if (
             !cart.length
         ) {
 
-            showFormError(
+            showError(
                 "Your cart is empty. Please return to the shop."
             );
 
@@ -1754,137 +1311,139 @@
         }
 
 
-        if (
-            !checkoutForm
-        ) {
-
-            return;
-        }
-
-
-        const formData =
-            new FormData(
-                checkoutForm
-            );
-
-
-        let customer;
-
+        let form;
 
         try {
 
-            customer =
-                validateForm(
-                    formData
-                );
+            form =
+                getFormData();
 
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
-            showFormError(
-                error?.message ||
-                "Please check your shipping information."
+            showError(
+                error.message
             );
 
             return;
         }
 
 
+        const submitButton =
+            document.getElementById(
+                "place-order-button"
+            );
+
+
         if (
-            !placeOrderButton
+            !submitButton ||
+            submitButton.dataset.processing ===
+                "true"
         ) {
 
             return;
         }
 
 
-        checkoutProcessing =
-            true;
-
-
         const originalText =
-            placeOrderButton.textContent;
+            submitButton.textContent;
 
 
-        placeOrderButton.disabled =
+        submitButton.dataset.processing =
+            "true";
+
+        submitButton.disabled =
             true;
 
+        submitButton.textContent =
+            "Preparing Order...";
 
-        placeOrderButton.classList.add(
-            "checkout-processing"
+
+        setStatus(
+            "Validating your order..."
         );
-
-
-        placeOrderButton.textContent =
-            "Preparing order...";
 
 
         try {
 
             /*
-             * Always refresh products before creating
-             * the order so the Worker receives current
-             * product/SKU information.
+             * Ensure product IDs exist locally.
              */
 
             await fetchProducts();
 
 
-            const enrichedCart =
-                buildEnrichedCart();
+            for (
+                const item
+                of cart
+            ) {
+
+                if (
+                    !productMap.has(
+                        String(
+                            item.id
+                        )
+                    )
+                ) {
+
+                    throw new Error(
+                        `Product ${item.id} is no longer available.`
+                    );
+                }
+            }
 
 
             setStatus(
-                "Creating your CJ order securely..."
+                "Calculating shipping and creating your CJ order..."
             );
-
-
-            placeOrderButton.textContent =
-                "Creating CJ Order...";
 
 
             const requestBody = {
 
                 customerName:
-                    customer.name,
+                    form.customerName,
 
                 email:
-                    customer.email,
+                    form.email,
 
                 phone:
-                    customer.phone,
+                    form.phone,
 
                 address:
-                    customer.address,
+                    form.address,
 
                 address2:
-                    customer.address2,
+                    form.address2,
 
                 shippingCity:
-                    customer.city,
+                    form.shippingCity,
 
                 shippingProvince:
-                    customer.province,
+                    form.shippingProvince,
 
                 shippingCountry:
-                    customer.country,
+                    form.shippingCountry,
 
                 shippingCountryCode:
-                    customer.countryCode,
+                    form.shippingCountryCode,
 
                 shippingZip:
-                    customer.zip,
+                    form.shippingZip,
 
                 shippingCounty:
-                    customer.county,
+                    form.shippingCounty,
 
                 remark:
-                    customer.remark,
+                    form.remark,
+
+                /*
+                 * Only IDs and quantities are sent.
+                 *
+                 * Product price/CJ SKU/CJ VID are
+                 * resolved by the Worker.
+                 */
 
                 cart:
-                    enrichedCart
-
+                    buildServerCart()
             };
 
 
@@ -1896,13 +1455,11 @@
                             "POST",
 
                         headers: {
-
                             "Content-Type":
                                 "application/json",
 
-                            Accept:
+                            "Accept":
                                 "application/json"
-
                         },
 
                         body:
@@ -1913,7 +1470,7 @@
                 );
 
 
-            const responseText =
+            const text =
                 await response.text();
 
 
@@ -1921,30 +1478,19 @@
                 null;
 
 
-            if (
-                responseText
-            ) {
+            try {
 
-                try {
+                data =
+                    text
+                        ? JSON.parse(
+                            text
+                        )
+                        : null;
 
-                    data =
-                        JSON.parse(
-                            responseText
-                        );
+            } catch {
 
-                } catch (
-                    error
-                ) {
-
-                    console.error(
-                        "[PRASUN SHOP] Invalid Worker JSON:",
-                        responseText
-                    );
-
-                    throw new Error(
-                        "The order server returned an invalid response."
-                    );
-                }
+                data =
+                    null;
             }
 
 
@@ -1954,79 +1500,97 @@
 
                 throw new Error(
                     data?.error ||
-                    data?.message ||
                     `Order server returned HTTP ${response.status}.`
                 );
             }
 
 
             if (
-                !data ||
-                data.success !== true
+                !data?.success
             ) {
 
                 throw new Error(
                     data?.error ||
-                    data?.message ||
                     "CJ could not create the order."
                 );
             }
 
 
-            const cjPayUrl =
-                String(
-                    data.cjPayUrl ||
-                    ""
-                ).trim();
-
-
             if (
-                !cjPayUrl
+                !data.cjPayUrl
             ) {
 
                 throw new Error(
-                    "CJ created the order, but no payment URL was returned."
-                );
-            }
-
-
-            if (
-                !isValidHttpUrl(
-                    cjPayUrl
-                )
-            ) {
-
-                throw new Error(
-                    "CJ returned an invalid payment URL."
+                    "CJ created the order but did not return a payment page."
                 );
             }
 
 
             /*
-             * Save the CJ order information before redirect.
+             * Store temporary order information.
              */
 
-            savePendingOrder(
-                data
+            try {
+
+                sessionStorage.setItem(
+                    "prasun_pending_cj_order",
+                    JSON.stringify({
+
+                        orderNumber:
+                            data.orderNumber ||
+                            "",
+
+                        cjOrderId:
+                            data.cjOrderId ||
+                            "",
+
+                        shipmentOrderId:
+                            data.shipmentOrderId ||
+                            "",
+
+                        cjOrderAmount:
+                            data.cjOrderAmount ||
+                            0,
+
+                        shippingCost:
+                            data.shippingCost ||
+                            0,
+
+                        shippingMethod:
+                            data.shippingMethod ||
+                            "",
+
+                        shippingEstimate:
+                            data.shippingEstimate ||
+                            "",
+
+                        createdAt:
+                            Date.now()
+                    })
+                );
+
+            } catch (error) {
+
+                console.warn(
+                    "[PRASUN SHOP] Session storage unavailable:",
+                    error
+                );
+            }
+
+
+            /*
+             * CJ order now exists.
+             *
+             * Clear the cart only after CJ
+             * successfully created the order.
+             */
+
+            clearCart();
+
+
+            updateCartCount(
+                []
             );
-
-
-            /*
-             * IMPORTANT:
-             *
-             * At this point the Worker has confirmed that
-             * CJ accepted/created the order.
-             *
-             * We can safely clear the browser cart.
-             */
-
-            clearAllCartKeys();
-
-
-            cart = [];
-
-
-            updateCartCount();
 
 
             window.dispatchEvent(
@@ -2042,36 +1606,23 @@
 
 
             setStatus(
-                "Order created. Redirecting to secure CJ payment..."
+                "Order created. Redirecting to CJ payment..."
             );
 
 
-            placeOrderButton.textContent =
+            submitButton.textContent =
                 "Redirecting to Payment...";
 
 
             /*
-             * Small delay allows the status text to be
-             * rendered before navigation.
+             * Redirect to CJ.
              */
 
-            await new Promise(
-                resolve =>
-                    setTimeout(
-                        resolve,
-                        250
-                    )
-            );
-
-
             window.location.assign(
-                cjPayUrl
+                data.cjPayUrl
             );
 
-
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             console.error(
                 "[PRASUN SHOP] Checkout error:",
@@ -2079,39 +1630,43 @@
             );
 
 
-            showFormError(
+            showError(
                 error?.message ||
-                "Unable to create your order. Please try again."
+                "Unable to create the order. Please try again."
             );
 
 
-            setStatus("");
+            setStatus(
+                ""
+            );
 
 
-            placeOrderButton.disabled =
+            submitButton.disabled =
                 false;
 
-
-            placeOrderButton.textContent =
+            submitButton.textContent =
                 originalText;
 
-
-            placeOrderButton.classList.remove(
-                "checkout-processing"
-            );
-
-
-            checkoutProcessing =
-                false;
-
+            submitButton.dataset.processing =
+                "false";
         }
-
     }
 
 
     /* ========================================================================
-       CART STORAGE SYNC
+       EVENT LISTENERS
        ======================================================================== */
+
+    if (
+        checkoutForm
+    ) {
+
+        checkoutForm.addEventListener(
+            "submit",
+            submitOrder
+        );
+    }
+
 
     window.addEventListener(
         "storage",
@@ -2120,127 +1675,39 @@
             if (
                 event.key ===
                     CART_KEY ||
-                LEGACY_CART_KEYS.includes(
+                LEGACY_KEYS.includes(
                     event.key
                 )
             ) {
 
-                cart =
-                    getCart();
-
-                updateCartCount();
-
-                loadCheckoutSummary();
-
+                renderSummary();
             }
-
         }
     );
 
-
-    /* ========================================================================
-       CUSTOM CART SYNC
-       ======================================================================== */
 
     window.addEventListener(
         "prasunCartUpdated",
         () => {
 
-            cart =
-                getCart();
-
-            updateCartCount();
-
-            loadCheckoutSummary();
-
+            renderSummary();
         }
     );
 
 
     /* ========================================================================
-       FORM INPUT ERROR RESET
+       INITIALIZE
        ======================================================================== */
 
-    if (checkoutForm) {
-
-        checkoutForm
-            .querySelectorAll(
-                "input, textarea, select"
-            )
-            .forEach(
-                field => {
-
-                    field.addEventListener(
-                        "input",
-                        () => {
-
-                            field.classList.remove(
-                                "invalid"
-                            );
-
-                            hideFormError();
-
-                        }
-                    );
-
-                }
-            );
-
-
-        checkoutForm.addEventListener(
-            "submit",
-            submitCheckout
-        );
-    }
-
-
-    /* ========================================================================
-       COUNTRY CODE NORMALIZATION
-       ======================================================================== */
-
-    const countryCodeInput =
-        document.getElementById(
-            "shipping-country-code"
-        );
-
-
-    if (
-        countryCodeInput
-    ) {
-
-        countryCodeInput.addEventListener(
-            "input",
-            () => {
-
-                countryCodeInput.value =
-                    countryCodeInput.value
-                        .replace(
-                            /[^a-zA-Z]/g,
-                            ""
-                        )
-                        .slice(
-                            0,
-                            2
-                        )
-                        .toUpperCase();
-
-            }
-        );
-
-    }
-
-
-    /* ========================================================================
-       INITIALIZATION
-       ======================================================================== */
-
-    cart =
+    const initialCart =
         getCart();
 
 
-    updateCartCount();
+    updateCartCount(
+        initialCart
+    );
 
 
-    loadCheckoutSummary();
+    renderSummary();
 
 })();
