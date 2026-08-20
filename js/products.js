@@ -10,6 +10,7 @@
  * - Live backend integration with Cloudflare Worker API (/api/products?q=...)
  * - Pre-configured targeted categories (Solar Lights, Consumer Electronics, etc.)
  * - Strict local store routing to prevent external CJ redirects (/product.html?id=...)
+ * - Dual button product layout: "View Details" + "Add to Cart"
  * - Debounced input handling for smooth search queries (400ms)
  * - Sorting options (Price, Rating, Name)
  * - Fallback image handling and accessible screen reader notifications
@@ -453,10 +454,12 @@
     return `
       <article class="product-card" data-product-id="${safeId}">
 
-        <a class="product-card-image" href="${escapeHtml(localProductUrl)}">
+        <a class="product-card-image-wrap" href="${escapeHtml(localProductUrl)}">
+          <span class="product-badge">${category}</span>
           <img
             src="${image}"
             alt="${title}"
+            class="product-image"
             loading="lazy"
             decoding="async"
             onerror="this.onerror=null;this.src='${CONFIG.PLACEHOLDER_IMAGE}'"
@@ -464,8 +467,6 @@
         </a>
 
         <div class="product-card-body">
-
-          <span class="product-category">${category}</span>
 
           <h3 class="product-title">
             <a href="${escapeHtml(localProductUrl)}">${title}</a>
@@ -476,16 +477,24 @@
           </div>
 
           <div class="product-card-footer">
-            <span class="product-price">${escapeHtml(price)}</span>
+            <div class="price-container">
+              <span class="product-price">${escapeHtml(price)}</span>
+            </div>
 
-            <button
-              type="button"
-              class="button button-primary add-to-cart-btn"
-              data-product-id="${safeId}"
-              aria-label="Add ${title} to cart"
-            >
-              Add to Cart
-            </button>
+            <div class="product-actions-group">
+              <a href="${escapeHtml(localProductUrl)}" class="btn-card btn-secondary">
+                View Details
+              </a>
+
+              <button
+                type="button"
+                class="btn-card btn-primary btn-add-to-cart add-to-cart-btn"
+                data-product-id="${safeId}"
+                aria-label="Add ${title} to cart"
+              >
+                Add to Cart
+              </button>
+            </div>
           </div>
 
         </div>
