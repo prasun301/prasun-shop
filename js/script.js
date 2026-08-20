@@ -8,14 +8,13 @@
  * https://shop.prasunbarua.com/api/products
  *
  * Supports:
- *
- * - Product loading
  * - Search
  * - Category filtering
  * - Sorting
+ * - Product cards
  * - Product details
  * - Cart count
- * - Retry
+ * - API diagnostics
  *
  * ============================================================================
  */
@@ -37,7 +36,10 @@
             "/api/products",
 
         REQUEST_TIMEOUT:
-            15000
+            15000,
+
+        PRODUCTS_PER_PAGE:
+            100
 
     };
 
@@ -54,13 +56,17 @@
 
         categories: [],
 
-        activeCategory: "all",
+        activeCategory:
+            "all",
 
-        search: "",
+        search:
+            "",
 
-        sort: "featured",
+        sort:
+            "featured",
 
-        loading: false
+        loading:
+            false
 
     };
 
@@ -218,7 +224,8 @@
 
         const image =
             String(
-                product?.image || ""
+                product?.image ||
+                ""
             ).trim();
 
 
@@ -240,12 +247,11 @@
 
 
     /* =========================================================================
-       FETCH
+       FETCH WITH TIMEOUT
        ========================================================================= */
 
     async function fetchWithTimeout(
         url,
-        options = {},
         timeout = CONFIG.REQUEST_TIMEOUT
     ) {
 
@@ -255,9 +261,8 @@
 
         const timer =
             setTimeout(
-                () => {
-                    controller.abort();
-                },
+                () =>
+                    controller.abort(),
                 timeout
             );
 
@@ -268,13 +273,40 @@
                 url,
                 {
 
-                    ...options,
+                    method:
+                        "GET",
+
+                    headers: {
+
+                        "Accept":
+                            "application/json"
+
+                    },
+
+                    cache:
+                        "no-store",
 
                     signal:
                         controller.signal
 
                 }
             );
+
+        } catch (error) {
+
+            if (
+                error?.name ===
+                "AbortError"
+            ) {
+
+                throw new Error(
+                    "Product API request timed out."
+                );
+
+            }
+
+
+            throw error;
 
         } finally {
 
@@ -298,6 +330,9 @@
         );
 
 
+        renderLoading();
+
+
         try {
 
             const url =
@@ -307,42 +342,35 @@
                 );
 
 
+            url.searchParams.set(
+                "limit",
+                String(
+                    CONFIG.PRODUCTS_PER_PAGE
+                )
+            );
+
+
+            console.log(
+                "[PRASUN SHOP] Loading:",
+                url.toString()
+            );
+
+
             const response =
                 await fetchWithTimeout(
-                    url.toString(),
-                    {
-
-                        method:
-                            "GET",
-
-                        headers: {
-
-                            "Accept":
-                                "application/json"
-
-                        },
-
-                        cache:
-                            "no-store"
-
-                    }
+                    url.toString()
                 );
 
 
             /*
-             * IMPORTANT:
-             *
              * Read text first.
              *
-             * This prevents:
-             *
-             * JSON.parse:
-             * unexpected character at line 1 column 1
-             *
-             * from hiding the real server response.
+             * This is important because if Cloudflare
+             * returns HTML instead of JSON, response.json()
+             * hides the actual response.
              */
 
-            const responseText =
+            const text =
                 await response.text();
 
 
@@ -353,10 +381,18 @@
 
 
             console.log(
-                "[PRASUN SHOP] API response:",
-                responseText.slice(
+                "[PRASUN SHOP] API content type:",
+                response.headers.get(
+                    "content-type"
+                )
+            );
+
+
+            console.log(
+                "[PRASUN SHOP] API response preview:",
+                text.slice(
                     0,
-                    1000
+                    500
                 )
             );
 
@@ -367,30 +403,43 @@
 
                 throw new Error(
 
-                    `API returned HTTP ${response.status}: ${responseText.slice(0, 300)}`
+                    `Product API returned HTTP ${response.status}.`
 
                 );
 
             }
 
 
-            let data;
+            if (
+                !text.trim()
+            ) {
 
+                throw new Error(
+                    "Product API returned an empty response."
+                );
+
+            }
+
+
+            /*
+             * Parse manually.
+             */
+
+            let data;
 
             try {
 
                 data =
                     JSON.parse(
-                        responseText
+                        text
                     );
 
-            } catch (parseError) {
+            } catch (error) {
 
                 console.error(
-                    "[PRASUN SHOP] Invalid API JSON:",
-                    parseError
+                    "[PRASUN SHOP] JSON parse error:",
+                    error
                 );
-
 
                 throw new Error(
 
@@ -401,22 +450,49 @@
             }
 
 
+            /*
+             * Accept:
+             *
+             * {
+             *   success: true,
+             *   products: [...]
+             * }
+             */
+
             if (
                 !data ||
-                data.success !== true ||
+                typeof data !== "object"
+            ) {
+
+                throw new Error(
+                    "Product API returned an invalid response object."
+                );
+
+            }
+
+
+            if (
+                data.success !== true
+            ) {
+
+                throw new Error(
+
+                    data.error ||
+                    "Product API returned success=false."
+
+                );
+
+            }
+
+
+            if (
                 !Array.isArray(
                     data.products
                 )
             ) {
 
-                console.error(
-                    "[PRASUN SHOP] Invalid product API structure:",
-                    data
-                );
-
-
                 throw new Error(
-                    "Invalid product API response."
+                    "Product API response does not contain a products array."
                 );
 
             }
@@ -427,7 +503,15 @@
 
 
             state.filteredProducts =
-                [...state.products];
+                [
+                    ...state.products
+                ];
+
+
+            console.log(
+                "[PRASUN SHOP] Products loaded:",
+                state.products.length
+            );
 
 
             buildCategories();
@@ -446,26 +530,20 @@
         } catch (error) {
 
             console.error(
-
                 "[PRASUN SHOP] Product loading error:",
-
                 error
-
             );
 
 
             renderError(
-
                 error?.message ||
                 "Unable to load products."
-
             );
 
 
             announce(
                 "Unable to load products."
             );
-
 
         } finally {
 
@@ -506,6 +584,34 @@
     }
 
 
+    function renderLoading() {
+
+        if (
+            !elements.productList
+        ) {
+            return;
+        }
+
+
+        elements.productList.innerHTML = `
+
+            <div class="products-loading">
+
+                <div class="loading-spinner"
+                     aria-hidden="true">
+                </div>
+
+                <p>
+                    Loading products...
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+
     /* =========================================================================
        CATEGORIES
        ========================================================================= */
@@ -515,9 +621,7 @@
         if (
             !elements.categories
         ) {
-
             return;
-
         }
 
 
@@ -639,13 +743,15 @@
 
 
     /* =========================================================================
-       FILTER
+       FILTERS
        ========================================================================= */
 
     function applyFilters() {
 
         let products =
-            [...state.products];
+            [
+                ...state.products
+            ];
 
 
         const search =
@@ -709,8 +815,10 @@
                             ""
                         )
                             .toLowerCase() ===
+
                         state.activeCategory
                             .toLowerCase()
+
                 );
 
         }
@@ -749,8 +857,12 @@
 
                 products.sort(
                     (a, b) =>
-                        Number(a.price) -
-                        Number(b.price)
+                        Number(
+                            a.price
+                        ) -
+                        Number(
+                            b.price
+                        )
                 );
 
                 break;
@@ -760,8 +872,12 @@
 
                 products.sort(
                     (a, b) =>
-                        Number(b.price) -
-                        Number(a.price)
+                        Number(
+                            b.price
+                        ) -
+                        Number(
+                            a.price
+                        )
                 );
 
                 break;
@@ -772,10 +888,12 @@
                 products.sort(
                     (a, b) =>
                         String(
-                            a.name || ""
+                            a.name ||
+                            ""
                         ).localeCompare(
                             String(
-                                b.name || ""
+                                b.name ||
+                                ""
                             )
                         )
                 );
@@ -788,10 +906,12 @@
                 products.sort(
                     (a, b) =>
                         Number(
-                            b.rating || 0
+                            b.rating ||
+                            0
                         ) -
                         Number(
-                            a.rating || 0
+                            a.rating ||
+                            0
                         )
                 );
 
@@ -819,10 +939,14 @@
             elements.resultsCount
         ) {
 
+            const count =
+                state.filteredProducts.length;
+
+
             elements.resultsCount.textContent =
 
-                `${state.filteredProducts.length} product${
-                    state.filteredProducts.length === 1
+                `${count} product${
+                    count === 1
                         ? ""
                         : "s"
                 }`;
@@ -891,15 +1015,16 @@
 
         const rating =
             Number(
-                product.rating || 0
+                product.rating ||
+                0
             );
 
 
         const roundedRating =
-            Math.min(
-                5,
-                Math.max(
-                    0,
+            Math.max(
+                0,
+                Math.min(
+                    5,
                     Math.round(
                         rating
                     )
@@ -908,11 +1033,9 @@
 
 
         const ratingStars =
-            roundedRating > 0
-                ? "★".repeat(
-                    roundedRating
-                )
-                : "";
+            "★".repeat(
+                roundedRating
+            );
 
 
         article.innerHTML = `
@@ -940,9 +1063,11 @@
                                 class="product-image product-image-placeholder"
                                 aria-label="Product image unavailable"
                             >
+
                                 <span>
                                     No Image
                                 </span>
+
                             </div>
 
                         `
@@ -979,7 +1104,7 @@
 
                             <div
                                 class="product-rating"
-                                aria-label="${rating} out of 5 stars"
+                                aria-label="${rating.toFixed(1)} out of 5 stars"
                             >
 
                                 <span>
@@ -1048,9 +1173,7 @@
         if (
             !elements.productList
         ) {
-
             return;
-
         }
 
 
@@ -1118,9 +1241,7 @@
         if (
             !elements.productList
         ) {
-
             return;
-
         }
 
 
@@ -1137,6 +1258,7 @@
                         message
                     )}
                 </p>
+
 
                 <button
                     type="button"
@@ -1199,9 +1321,7 @@
         if (
             !elements.cartCount
         ) {
-
             return;
-
         }
 
 
@@ -1211,6 +1331,7 @@
 
         const count =
             cart.reduce(
+
                 (
                     total,
                     item
@@ -1223,6 +1344,7 @@
                     ),
 
                 0
+
             );
 
 
@@ -1281,9 +1403,9 @@
 
 
         const specifications =
-
             product.specifications &&
-            typeof product.specifications === "object"
+            typeof product.specifications ===
+                "object"
 
                 ? Object.entries(
                     product.specifications
@@ -1311,24 +1433,22 @@
                 ? `Category: ${product.category}`
                 : "",
 
-            "",
-
             product.description ||
                 "",
 
             features
-                ? `\nFeatures:\n${features}`
+                ? `Features:\n${features}`
                 : "",
 
             specifications
-                ? `\nSpecifications:\n${specifications}`
+                ? `Specifications:\n${specifications}`
                 : ""
 
         ]
 
             .filter(Boolean)
 
-            .join("\n");
+            .join("\n\n");
 
 
         window.alert(
@@ -1343,10 +1463,6 @@
        ========================================================================= */
 
     function bindEvents() {
-
-        /*
-         * SEARCH
-         */
 
         if (
             elements.searchInput
@@ -1377,10 +1493,6 @@
 
         }
 
-
-        /*
-         * CLEAR SEARCH
-         */
 
         if (
             elements.clearSearch
@@ -1416,10 +1528,6 @@
         }
 
 
-        /*
-         * SORT
-         */
-
         if (
             elements.sort
         ) {
@@ -1439,10 +1547,6 @@
 
         }
 
-
-        /*
-         * CATEGORY
-         */
 
         if (
             elements.categories
@@ -1507,10 +1611,6 @@
         }
 
 
-        /*
-         * PRODUCT BUTTON
-         */
-
         if (
             elements.productList
         ) {
@@ -1541,10 +1641,6 @@
 
         }
 
-
-        /*
-         * RETRY
-         */
 
         document.addEventListener(
             "click",
@@ -1589,7 +1685,8 @@
             "DOMContentLoaded",
             init,
             {
-                once: true
+                once:
+                    true
             }
         );
 
