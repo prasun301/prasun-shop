@@ -3,18 +3,6 @@
  * PRASUN SHOP — PRODUCTS MANAGER
  * js/products.js
  * ============================================================================
- *
- * Sourced Storefront Product Manager with Live Worker Search API.
- *
- * Features:
- * - Live backend integration with Cloudflare Worker API (/api/products?q=...)
- * - Pre-configured targeted categories (Solar Lights, Consumer Electronics, etc.)
- * - Strict local store routing to prevent external CJ redirects (/product.html?id=...)
- * - Dual button product layout: "View Details" + "Add to Cart"
- * - Debounced input handling for smooth search queries (400ms)
- * - Multi-format robust sorting (Price, Rating, Alphabetical A-Z/Z-A, Featured)
- * - Fallback image handling and accessible screen reader notifications
- * ============================================================================
  */
 
 "use strict";
@@ -45,7 +33,6 @@
       400
   };
 
-  /* Preset category mapping for high-demand, active CJ niches */
   const CATEGORY_MAP = [
     { label: "All Items", query: "" },
     { label: "Solar Lights", query: "solar light" },
@@ -95,6 +82,13 @@
 
   function init() {
     cacheDOMElements();
+
+    // Read initial HTML select state if present
+    if (elements.sortSelect && elements.sortSelect.value) {
+      state.sortBy = elements.sortSelect.value;
+      console.log("[PRASUN SHOP] Initialized sort state from DOM:", state.sortBy);
+    }
+
     bindEvents();
     renderCategoryPills();
     updateClearSearchButton();
@@ -115,6 +109,10 @@
     elements.categoriesNav = document.getElementById("products-categories");
     elements.pageHeading = document.getElementById("page-heading");
     elements.liveRegion = document.getElementById("aria-live-region");
+
+    if (!elements.sortSelect) {
+      console.warn("[PRASUN SHOP] Warning: element with id='product-sort' was not found in DOM.");
+    }
   }
 
 
@@ -133,8 +131,9 @@
     }
 
     if (elements.sortSelect) {
-      elements.sortSelect.addEventListener("change", () => {
-        state.sortBy = elements.sortSelect.value || "featured";
+      elements.sortSelect.addEventListener("change", (e) => {
+        state.sortBy = e.target.value || "featured";
+        console.log("[PRASUN SHOP] Dropdown changed sort to:", state.sortBy);
         applyFiltersAndRender();
       });
     }
@@ -159,7 +158,6 @@
 
     window.clearTimeout(searchDebounceTimer);
     searchDebounceTimer = window.setTimeout(() => {
-      // Direct text search overrides category pill selection
       state.activeCategoryQuery = "";
       highlightActiveCategoryPill("");
       loadProducts(state.searchQuery);
@@ -232,7 +230,6 @@
       const data = await response.json();
       const rawProducts = extractProducts(data);
 
-      /* Normalize & sanitize active products */
       state.products = rawProducts
         .map(normalizeProduct)
         .filter(product => product !== null && product.id);
@@ -295,11 +292,11 @@
       ""
     ).trim();
 
+    let rawPrice = product.price ?? product.sellPrice ?? 0;
     let price = Number.parseFloat(
-      String(product.price ?? product.sellPrice ?? 0).replace(/[^0-9.-]/g, "")
+      String(rawPrice).replace(/[^0-9.-]/g, "")
     ) || 0;
 
-    // Filter out invalid or missing data
     if (!id || !name || price <= 0) return null;
 
     const category = String(product.category || "General");
@@ -350,7 +347,6 @@
     const query = button.dataset.query ?? "";
     state.activeCategoryQuery = query;
 
-    /* Clear standard text search input when picking a category pill */
     if (elements.searchInput) {
       elements.searchInput.value = "";
       state.searchQuery = "";
@@ -375,7 +371,7 @@
 
 
   /* ==========================================================================
-     11. PAGE HEADING & SORTING
+     11. PAGE HEADING & AGGRESSIVE SORT MATCHING
      ========================================================================== */
 
   function updatePageHeading(query) {
@@ -405,57 +401,70 @@
   }
 
   function sortProducts(a, b) {
-    const priceA = Number.parseFloat(a.price) || 0;
-    const priceB = Number.parseFloat(b.price) || 0;
+    const priceA = Number(a.price) || 0;
+    const priceB = Number(b.price) || 0;
     const nameA = String(a.name || a.title || "");
     const nameB = String(b.name || b.title || "");
-    const ratingA = Number.parseFloat(a.rating) || 0;
-    const ratingB = Number.parseFloat(b.rating) || 0;
+    const ratingA = Number(a.rating) || 0;
+    const ratingB = Number(b.rating) || 0;
 
-    const sortKey = String(state.sortBy || "").toLowerCase().trim();
+    // Remove all punctuation, spaces, and convert to lower case
+    // Examples: "Price: Low to High" -> "pricelowtohigh", "low-to-high" -> "lowtohigh"
+    const key = String(state.sortBy || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
 
-    switch (sortKey) {
-      // Low to High Price
-      case "price-low":
-      case "price-low-high":
-      case "low-to-high":
-      case "low-high":
-      case "price_asc":
-        return priceA - priceB;
-
-      // High to Low Price
-      case "price-high":
-      case "price-high-low":
-      case "high-to-low":
-      case "high-low":
-      case "price_desc":
-        return priceB - priceA;
-
-      // Highest Rating
-      case "rating":
-      case "rating-high":
-      case "rating-desc":
-        return ratingB - ratingA;
-
-      // Alphabetical A to Z
-      case "name-az":
-      case "a-z":
-      case "name-asc":
-      case "title-asc":
-        return nameA.localeCompare(nameB, undefined, { sensitivity: "base" });
-
-      // Alphabetical Z to A
-      case "name-za":
-      case "z-a":
-      case "name-desc":
-      case "title-desc":
-        return nameB.localeCompare(nameA, undefined, { sensitivity: "base" });
-
-      // Default / Featured
-      case "featured":
-      default:
-        return 0;
+    // Low to High Price
+    if (
+      key.includes("lowtohigh") ||
+      key.includes("pricelow") ||
+      key === "lowhigh" ||
+      key === "priceasc" ||
+      key === "asc"
+    ) {
+      return priceA - priceB;
     }
+
+    // High to Low Price
+    if (
+      key.includes("hightolow") ||
+      key.includes("pricehigh") ||
+      key === "highlow" ||
+      key === "pricedesc" ||
+      key === "desc"
+    ) {
+      return priceB - priceA;
+    }
+
+    // Alphabetical A to Z
+    if (
+      key.includes("atoz") ||
+      key.includes("az") ||
+      key.includes("nameaz") ||
+      key.includes("titleasc") ||
+      key === "nameasc"
+    ) {
+      return nameA.localeCompare(nameB, undefined, { sensitivity: "base" });
+    }
+
+    // Alphabetical Z to A
+    if (
+      key.includes("ztoa") ||
+      key.includes("za") ||
+      key.includes("nameza") ||
+      key.includes("titledesc") ||
+      key === "namedesc"
+    ) {
+      return nameB.localeCompare(nameA, undefined, { sensitivity: "base" });
+    }
+
+    // Rating High to Low
+    if (key.includes("rating") || key.includes("toprated")) {
+      return ratingB - ratingA;
+    }
+
+    // Default / Featured
+    return 0;
   }
 
 
@@ -486,7 +495,6 @@
     const price = formatPrice(product.price);
     const rating = Number(product.rating) || 4.8;
 
-    /* Always route directly to local internal product page */
     const localProductUrl = `${CONFIG.PRODUCT_PAGE}?id=${encodeURIComponent(safeId)}`;
 
     return `
