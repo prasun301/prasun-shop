@@ -279,7 +279,7 @@
             id="product-search"
             class="products-search-input"
             type="search"
-            placeholder="Search products"
+            placeholder="Search products..."
             autocomplete="off"
             spellcheck="false"
             enterkeyhint="search"
@@ -520,13 +520,171 @@
   ></script>
 
 
-  <!-- Product catalog / API / search / filtering -->
+  <!-- Live Search & CJ Product Integration -->
 
-  <script
-    src="/js/products.js?v=20260820-03"
-    defer
-  ></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const API_ENDPOINT = "https://prasun-shop-api.prasun301.workers.dev/api/products";
+      
+      const searchInput = document.getElementById("product-search");
+      const clearBtn = document.getElementById("clear-search");
+      const sortSelect = document.getElementById("product-sort");
+      const productList = document.getElementById("product-list");
+      const resultsCount = document.getElementById("results-count");
+      const pageHeading = document.getElementById("page-heading");
+      
+      let currentProducts = [];
+      let searchTimeout = null;
 
+      // Fetch Products from Cloudflare Worker API
+      async function fetchProducts(query = "") {
+        if (!productList) return;
+
+        productList.setAttribute("aria-busy", "true");
+        resultsCount.textContent = "Searching products...";
+        
+        productList.innerHTML = `
+          <div class="product-status-card products-empty" role="status">
+            <div class="spinner" aria-hidden="true"></div>
+            <h3>Loading products...</h3>
+            <p>Fetching latest items from catalog...</p>
+          </div>
+        `;
+
+        try {
+          const url = query.trim() 
+            ? `${API_ENDPOINT}?q=${encodeURIComponent(query.trim())}`
+            : API_ENDPOINT;
+
+          const response = await fetch(url);
+          const data = await response.json();
+
+          if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+            currentProducts = data.products;
+            applySortAndRender();
+            
+            if (pageHeading) {
+              pageHeading.textContent = query.trim() ? `Search Results for "${query}"` : "All Products";
+            }
+          } else {
+            currentProducts = [];
+            showEmptyState(query.trim() ? `No products found for "${query}".` : "No products available at the moment.");
+          }
+        } catch (error) {
+          console.error("Failed to fetch products:", error);
+          showEmptyState("Unable to load products right now. Please try again later.");
+        } finally {
+          productList.setAttribute("aria-busy", "false");
+        }
+      }
+
+      // Sort and Render Products
+      function applySortAndRender() {
+        let sorted = [...currentProducts];
+        const sortValue = sortSelect ? sortSelect.value : "featured";
+
+        if (sortValue === "price-low") {
+          sorted.sort((a, b) => a.price - b.price);
+        } else if (sortValue === "price-high") {
+          sorted.sort((a, b) => b.price - a.price);
+        } else if (sortValue === "rating") {
+          sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        } else if (sortValue === "name-az") {
+          sorted.sort((a, b) => a.title.localeCompare(b.title));
+        }
+
+        renderProducts(sorted);
+      }
+
+      // Render Grid Cards
+      function renderProducts(products) {
+        if (resultsCount) {
+          resultsCount.textContent = `Showing ${products.length} products`;
+        }
+
+        productList.innerHTML = products.map((product) => `
+          <article class="product-card">
+            <div class="product-image-container">
+              <img 
+                src="${product.image || '/placeholder.jpg'}" 
+                alt="${product.title}" 
+                class="product-image"
+                loading="lazy" 
+              />
+            </div>
+            <div class="product-details">
+              <span class="product-category-tag">${product.category || 'General'}</span>
+              <h3 class="product-title-text">${product.title}</h3>
+              <div class="product-bottom-row">
+                <span class="product-price-tag">$${Number(product.price).toFixed(2)}</span>
+                ${product.product_url ? `
+                  <a href="${product.product_url}" target="_blank" rel="noopener noreferrer" class="view-btn">
+                    View
+                  </a>
+                ` : ''}
+              </div>
+            </div>
+          </article>
+        `).join('');
+      }
+
+      // Empty State Display
+      function showEmptyState(message) {
+        if (resultsCount) {
+          resultsCount.textContent = "0 products found";
+        }
+        
+        productList.innerHTML = `
+          <div class="product-status-card products-empty" role="status">
+            <h3>No Products Found</h3>
+            <p>${message}</p>
+          </div>
+        `;
+      }
+
+      // Handle Debouncing Input Search
+      if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+          const value = e.target.value;
+          
+          if (clearBtn) {
+            clearBtn.hidden = !value.length;
+          }
+
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(() => {
+            fetchProducts(value);
+          }, 400);
+        });
+
+        // Search on Enter Key
+        searchInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            clearTimeout(searchTimeout);
+            fetchProducts(searchInput.value);
+          }
+        });
+      }
+
+      // Clear Search Button Event
+      if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+          searchInput.value = "";
+          clearBtn.hidden = true;
+          fetchProducts("");
+        });
+      }
+
+      // Sort Selector Event
+      if (sortSelect) {
+        sortSelect.addEventListener("change", applySortAndRender);
+      }
+
+      // Initial Fetch
+      fetchProducts();
+    });
+  </script>
 
 </body>
 
