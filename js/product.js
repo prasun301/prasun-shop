@@ -1,7 +1,5 @@
 /**
  * product.js - E-commerce Storefront with AliExpress Dropshipping Integration
- * Handles product fetching, variant/SKU selection, real-time shipping calculation,
- * DOM rendering, and dropship order relay to the fulfillment API backend.
  */
 
 (function () {
@@ -12,10 +10,8 @@
        ======================================================================== */
 
     const CONFIG = {
-        // Updated to use your live Cloudflare Worker API endpoints
         API_ENDPOINTS: {
             GET_PRODUCT: "https://prasun-shop-api.prasun301.workers.dev/api/products",
-            GET_SHIPPING: "https://prasun-shop-api.prasun301.workers.dev/api/shipping",
             CREATE_ORDER: "https://prasun-shop-api.prasun301.workers.dev/api/order"
         },
         CART_STORAGE_KEYS: ["store_cart", "ae_dropship_cart"],
@@ -26,7 +22,7 @@
     let currentProduct = null;
     let selectedSku = null;
     let selectedSkuAttr = {};
-    let selectedShipping = null;
+    let selectedShipping = { company: "Standard Free Shipping", amount: 0 };
     let currentQuantity = 1;
     let currentImageIndex = 0;
 
@@ -72,7 +68,6 @@
 
     async function fetchAliExpressProduct(productId) {
         try {
-            // Updated to fetch using REST path structure: /api/products/:id
             const response = await fetch(`${CONFIG.API_ENDPOINTS.GET_PRODUCT}/${encodeURIComponent(productId)}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
@@ -80,24 +75,6 @@
         } catch (error) {
             console.error("Failed to fetch product:", error);
             return null;
-        }
-    }
-
-    async function fetchShippingOptions(productId, countryCode, count = 1, skuId = null) {
-        try {
-            const query = new URLSearchParams({
-                productId,
-                country: countryCode,
-                quantity: count,
-                ...(skuId && { skuId })
-            });
-            const response = await fetch(`${CONFIG.API_ENDPOINTS.GET_SHIPPING}?${query.toString()}`);
-            if (!response.ok) throw new Error("Shipping lookup failed");
-            const data = await response.json();
-            return data.freightOptions || [];
-        } catch (error) {
-            console.error("Error fetching shipping rates:", error);
-            return [];
         }
     }
 
@@ -110,8 +87,8 @@
             });
             return await response.json();
         } catch (error) {
-            console.error("Error creating dropshipping order:", error);
-            return { success: false, message: "Network error processing fulfillment." };
+            console.error("Error creating order:", error);
+            return { success: false, error: "Network error processing fulfillment." };
         }
     }
 
@@ -122,49 +99,31 @@
     function renderProduct(product) {
         if (!detailContainer || !product) return;
 
-        // Auto-select initial SKU variant
-        if (product.skus && product.skus.length > 0) {
-            selectedSku = product.skus[0];
-        }
+        const activePrice = product.price;
+        const inStock = true; // Default since worker catalog items are available
 
-        const activePrice = selectedSku ? selectedSku.price : product.price;
-        const activeStock = selectedSku ? selectedSku.stock : product.stock;
-        const inStock = activeStock > 0;
+        // Ensure images array exists
+        const images = product.image ? [product.image] : ["https://via.placeholder.com/600"];
 
         detailContainer.innerHTML = `
             <div class="product-layout">
                 <!-- Gallery Section -->
                 <div class="product-gallery">
                     <div class="main-image-wrapper">
-                        <img id="main-product-image" src="${escapeHTML(product.images[0])}" alt="${escapeHTML(product.title)}" />
-                    </div>
-                    <div class="gallery-thumbnails" id="gallery-thumbnails">
-                        ${product.images.map((img, idx) => `
-                            <button type="button" class="thumb-btn ${idx === 0 ? "active" : ""}" data-image-index="${idx}">
-                                <img src="${escapeHTML(img)}" alt="Thumbnail ${idx + 1}" />
-                            </button>
-                        `).join("")}
+                        <img id="main-product-image" src="${escapeHTML(images[0])}" alt="${escapeHTML(product.name)}" />
                     </div>
                 </div>
 
                 <!-- Product Info Section -->
                 <div class="product-details">
-                    <h1 class="product-title">${escapeHTML(product.title)}</h1>
+                    <h1 class="product-title">${escapeHTML(product.name)}</h1>
                     <div class="product-meta">
-                        <span class="sku-label">Item ID: ${escapeHTML(product.id)}</span>
-                        <span class="stock-status ${inStock ? "in-stock" : "out-of-stock"}">
-                            ${inStock ? `In Stock (${activeStock} available)` : "Out of Stock"}
-                        </span>
+                        <span class="sku-label">SKU: ${escapeHTML(product.sku)}</span>
+                        <span class="stock-status in-stock">In Stock</span>
                     </div>
 
                     <div class="product-pricing" id="product-pricing">
                         <span class="current-price" id="display-price">${formatPrice(activePrice)}</span>
-                        ${product.originalPrice ? `<span class="original-price">${formatPrice(product.originalPrice)}</span>` : ""}
-                    </div>
-
-                    <!-- SKU Variants -->
-                    <div class="product-variants" id="product-variants">
-                        ${renderVariants(product.attributes)}
                     </div>
 
                     <!-- Shipping Calculation Box -->
@@ -177,7 +136,7 @@
                             <option value="AU">Australia</option>
                         </select>
                         <div id="shipping-methods-container" class="shipping-methods">
-                            <p class="loading-text">Calculating shipping options...</p>
+                            <p class="success-text">Standard Free Shipping (Estimated 7-15 days) - $0.00</p>
                         </div>
                     </div>
 
@@ -185,16 +144,12 @@
                     <div class="product-actions">
                         <div class="quantity-selector">
                             <button type="button" class="qty-btn" id="qty-minus">-</button>
-                            <input type="number" id="qty-input" value="1" min="1" max="${activeStock}">
+                            <input type="number" id="qty-input" value="1" min="1" max="99">
                             <button type="button" class="qty-btn" id="qty-plus">+</button>
                         </div>
 
-                        <button type="button" class="btn btn-primary" id="add-to-cart-btn" ${!inStock ? "disabled" : ""}>
-                            ${inStock ? "Add to Cart" : "Out of Stock"}
-                        </button>
-                        <button type="button" class="btn btn-secondary" id="buy-now-btn" ${!inStock ? "disabled" : ""}>
-                            Buy Now
-                        </button>
+                        <button type="button" class="btn btn-primary" id="add-to-cart-btn">Add to Cart</button>
+                        <button type="button" class="btn btn-secondary" id="buy-now-btn">Buy Now</button>
                     </div>
 
                     <div class="product-description-short">
@@ -205,106 +160,14 @@
             </div>
         `;
 
-        setupGallery();
-        setupVariantSelection();
         setupQuantityControls();
-        setupShippingCalculator();
         setupCartHandlers();
         renderSpecifications(product);
-        renderRelatedProducts(product);
-    }
-
-    function renderVariants(attributes) {
-        if (!attributes || !attributes.length) return "";
-
-        return attributes.map(attr => `
-            <div class="variant-group" data-attr-id="${escapeHTML(attr.id)}">
-                <label class="variant-label">${escapeHTML(attr.name)}:</label>
-                <div class="variant-options">
-                    ${attr.values.map((val, idx) => `
-                        <button type="button" 
-                                class="variant-opt-btn ${idx === 0 ? "selected" : ""}" 
-                                data-attr-id="${escapeHTML(attr.id)}" 
-                                data-val-id="${escapeHTML(val.id)}">
-                            ${val.image ? `<img src="${escapeHTML(val.image)}" class="variant-thumb" />` : ""}
-                            <span>${escapeHTML(val.name)}</span>
-                        </button>
-                    `).join("")}
-                </div>
-            </div>
-        `).join("");
     }
 
     /* ========================================================================
        EVENT HANDLERS & LOGIC
        ======================================================================== */
-
-    function setupGallery() {
-        const mainImg = document.getElementById("main-product-image");
-        const thumbContainer = document.getElementById("gallery-thumbnails");
-        if (!mainImg || !thumbContainer) return;
-
-        thumbContainer.addEventListener("click", (e) => {
-            const btn = e.target.closest(".thumb-btn");
-            if (!btn) return;
-
-            const index = Number(btn.dataset.imageIndex);
-            if (isNaN(index) || !currentProduct.images[index]) return;
-
-            currentImageIndex = index;
-            mainImg.src = currentProduct.images[index];
-            thumbContainer.querySelectorAll(".thumb-btn").forEach((el, i) => {
-                el.classList.toggle("active", i === index);
-            });
-        });
-    }
-
-    function setupVariantSelection() {
-        const variantContainer = document.getElementById("product-variants");
-        if (!variantContainer) return;
-
-        currentProduct.attributes?.forEach(attr => {
-            if (attr.values.length > 0) {
-                selectedSkuAttr[attr.id] = attr.values[0].id;
-            }
-        });
-
-        variantContainer.addEventListener("click", (e) => {
-            const btn = e.target.closest(".variant-opt-btn");
-            if (!btn) return;
-
-            const attrId = btn.dataset.attrId;
-            const valId = btn.dataset.valId;
-
-            const parent = btn.closest(".variant-options");
-            parent.querySelectorAll(".variant-opt-btn").forEach(b => b.classList.remove("selected"));
-            btn.classList.add("selected");
-
-            selectedSkuAttr[attrId] = valId;
-            matchSku();
-        });
-    }
-
-    function matchSku() {
-        if (!currentProduct.skus) return;
-
-        const matched = currentProduct.skus.find(sku => {
-            return Object.entries(selectedSkuAttr).every(([attrId, valId]) => {
-                return sku.attributes[attrId] === valId;
-            });
-        });
-
-        if (matched) {
-            selectedSku = matched;
-            const priceDisplay = document.getElementById("display-price");
-            if (priceDisplay) priceDisplay.textContent = formatPrice(matched.price);
-
-            const qtyInput = document.getElementById("qty-input");
-            if (qtyInput) qtyInput.max = matched.stock;
-
-            loadShippingRates();
-        }
-    }
 
     function setupQuantityControls() {
         const qtyInput = document.getElementById("qty-input");
@@ -314,65 +177,13 @@
         if (!qtyInput) return;
 
         const updateQty = (val) => {
-            const maxStock = selectedSku ? selectedSku.stock : (currentProduct.stock || 999);
-            currentQuantity = Math.max(1, Math.min(maxStock, parseInt(val, 10) || 1));
+            currentQuantity = Math.max(1, Math.min(99, parseInt(val, 10) || 1));
             qtyInput.value = currentQuantity;
-            loadShippingRates();
         };
 
         if (minusBtn) minusBtn.addEventListener("click", () => updateQty(currentQuantity - 1));
         if (plusBtn) plusBtn.addEventListener("click", () => updateQty(currentQuantity + 1));
         qtyInput.addEventListener("change", (e) => updateQty(e.target.value));
-    }
-
-    async function loadShippingRates() {
-        const container = document.getElementById("shipping-methods-container");
-        const countrySelect = document.getElementById("shipping-country-select");
-        if (!container || !countrySelect) return;
-
-        const country = countrySelect.value;
-        container.innerHTML = `<p class="loading-text">Fetching live shipping rates...</p>`;
-
-        const options = await fetchShippingOptions(
-            currentProduct.id,
-            country,
-            currentQuantity,
-            selectedSku ? selectedSku.id : null
-        );
-
-        if (!options.length) {
-            container.innerHTML = `<p class="error-text">No shipping available for selected destination.</p>`;
-            selectedShipping = null;
-            return;
-        }
-
-        selectedShipping = options[0];
-
-        container.innerHTML = `
-            <select id="shipping-method-select" class="form-control">
-                ${options.map(opt => `
-                    <option value="${escapeHTML(opt.company)}" data-price="${opt.amount}">
-                        ${escapeHTML(opt.company)} - ${formatPrice(opt.amount)} (${escapeHTML(opt.estimatedDays)} days)
-                    </option>
-                `).join("")}
-            </select>
-        `;
-
-        document.getElementById("shipping-method-select")?.addEventListener("change", (e) => {
-            const selectedOpt = e.target.options[e.target.selectedIndex];
-            selectedShipping = {
-                company: e.target.value,
-                amount: parseFloat(selectedOpt.dataset.price)
-            };
-        });
-    }
-
-    function setupShippingCalculator() {
-        const countrySelect = document.getElementById("shipping-country-select");
-        if (countrySelect) {
-            countrySelect.addEventListener("change", () => loadShippingRates());
-        }
-        loadShippingRates();
     }
 
     /* ========================================================================
@@ -404,14 +215,13 @@
 
     function buildOrderItem() {
         return {
-            productId: currentProduct.id,
-            skuId: selectedSku ? selectedSku.id : null,
-            title: currentProduct.title,
-            image: currentProduct.images[0],
-            attributes: selectedSkuAttr,
+            id: currentProduct.id,
+            sku: currentProduct.sku,
+            name: currentProduct.name,
+            image: currentProduct.image,
             quantity: currentQuantity,
-            unitPrice: selectedSku ? selectedSku.price : currentProduct.price,
-            shippingMethod: selectedShipping
+            unitPrice: currentProduct.price,
+            subtotal: Number((currentProduct.price * currentQuantity).toFixed(2))
         };
     }
 
@@ -424,7 +234,7 @@
                 const cart = getCart();
                 const item = buildOrderItem();
                 
-                const existingIndex = cart.findIndex(i => i.productId === item.productId && i.skuId === item.skuId);
+                const existingIndex = cart.findIndex(i => i.id === item.id);
                 if (existingIndex > -1) {
                     cart[existingIndex].quantity += item.quantity;
                 } else {
@@ -442,16 +252,27 @@
                 buyBtn.disabled = true;
                 buyBtn.textContent = "Processing...";
                 
+                // Payload structure matched precisely to your worker's buildOrder expectations
                 const payload = {
-                    items: [buildOrderItem()],
-                    destinationCountry: document.getElementById("shipping-country-select")?.value || CONFIG.SHIPPING_COUNTRY_DEFAULT
+                    customerName: "Guest Customer",
+                    email: "customer@example.com",
+                    phone: "+15555555555",
+                    address: "123 Main St",
+                    shippingCity: "New York",
+                    shippingProvince: "NY",
+                    shippingCountry: "United States",
+                    shippingCountryCode: document.getElementById("shipping-country-select")?.value || "US",
+                    shippingZip: "10001",
+                    cart: [buildOrderItem()]
                 };
 
                 const response = await sendDropshipOrderToBackend(payload);
-                if (response.success && response.redirectUrl) {
-                    window.location.href = response.redirectUrl;
+                if (response.success) {
+                    alert(`Order placed successfully! Order Number: ${response.orderNumber}`);
+                    localStorage.removeItem("store_cart");
+                    window.location.reload();
                 } else {
-                    alert(response.message || "Unable to process direct dropship order.");
+                    alert(response.error || "Unable to process order.");
                     buyBtn.disabled = false;
                     buyBtn.textContent = "Buy Now";
                 }
@@ -467,24 +288,8 @@
     }
 
     /* ========================================================================
-       TABS, SPECS & AUXILIARY RENDERING
+       SPECS & AUXILIARY RENDERING
        ======================================================================== */
-
-    function setupTabs() {
-        if (!productTabs) return;
-        productTabs.addEventListener("click", (e) => {
-            const btn = e.target.closest(".tab-btn");
-            if (!btn) return;
-
-            const targetTab = btn.dataset.tab;
-            productTabs.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-
-            btn.classList.add("active");
-            const content = document.getElementById(`tab-${targetTab}`);
-            if (content) content.classList.add("active");
-        });
-    }
 
     function renderSpecifications(product) {
         if (!specTable || !product.specifications) return;
@@ -493,25 +298,6 @@
                 <td><strong>${escapeHTML(key)}</strong></td>
                 <td>${escapeHTML(val)}</td>
             </tr>
-        `).join("");
-    }
-
-    function renderRelatedProducts(product) {
-        if (!relatedGrid || !relatedSection || !product.related) return;
-        if (!product.related.length) {
-            relatedSection.style.display = "none";
-            return;
-        }
-
-        relatedSection.style.display = "block";
-        relatedGrid.innerHTML = product.related.map(item => `
-            <div class="product-card">
-                <a href="?id=${encodeURIComponent(item.id)}">
-                    <img src="${escapeHTML(item.image)}" alt="${escapeHTML(item.title)}" loading="lazy">
-                    <h3>${escapeHTML(item.title)}</h3>
-                    <p class="price">${formatPrice(item.price)}</p>
-                </a>
-            </div>
         `).join("");
     }
 
@@ -532,7 +318,6 @@
 
     async function init() {
         updateCartCount();
-        setupTabs();
 
         const productId = getQueryParam("id") || getQueryParam("productId");
         if (!productId) {
