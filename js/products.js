@@ -12,7 +12,7 @@
  * - Strict local store routing to prevent external CJ redirects (/product.html?id=...)
  * - Dual button product layout: "View Details" + "Add to Cart"
  * - Debounced input handling for smooth search queries (400ms)
- * - Sorting options (Price, Rating, Name)
+ * - Multi-format robust sorting (Price, Rating, Alphabetical A-Z/Z-A, Featured)
  * - Fallback image handling and accessible screen reader notifications
  * ============================================================================
  */
@@ -405,15 +405,53 @@
   }
 
   function sortProducts(a, b) {
-    switch (state.sortBy) {
+    const priceA = Number.parseFloat(a.price) || 0;
+    const priceB = Number.parseFloat(b.price) || 0;
+    const nameA = String(a.name || a.title || "");
+    const nameB = String(b.name || b.title || "");
+    const ratingA = Number.parseFloat(a.rating) || 0;
+    const ratingB = Number.parseFloat(b.rating) || 0;
+
+    const sortKey = String(state.sortBy || "").toLowerCase().trim();
+
+    switch (sortKey) {
+      // Low to High Price
       case "price-low":
-        return Number(a.price) - Number(b.price);
+      case "price-low-high":
+      case "low-to-high":
+      case "low-high":
+      case "price_asc":
+        return priceA - priceB;
+
+      // High to Low Price
       case "price-high":
-        return Number(b.price) - Number(a.price);
+      case "price-high-low":
+      case "high-to-low":
+      case "high-low":
+      case "price_desc":
+        return priceB - priceA;
+
+      // Highest Rating
       case "rating":
-        return Number(b.rating) - Number(a.rating);
+      case "rating-high":
+      case "rating-desc":
+        return ratingB - ratingA;
+
+      // Alphabetical A to Z
       case "name-az":
-        return String(a.name).localeCompare(String(b.name), undefined, { sensitivity: "base" });
+      case "a-z":
+      case "name-asc":
+      case "title-asc":
+        return nameA.localeCompare(nameB, undefined, { sensitivity: "base" });
+
+      // Alphabetical Z to A
+      case "name-za":
+      case "z-a":
+      case "name-desc":
+      case "title-desc":
+        return nameB.localeCompare(nameA, undefined, { sensitivity: "base" });
+
+      // Default / Featured
       case "featured":
       default:
         return 0;
