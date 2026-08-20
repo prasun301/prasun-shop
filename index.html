@@ -121,13 +121,13 @@
         </div>
 
         <label for="product-sort" class="visually-hidden">Sort products</label>
-       <select id="product-sort" class="product-sort">
-  <option value="featured">Featured</option>
-  <option value="Price: Low to High">Price: Low to High</option>
-  <option value="Price: High to Low">Price: High to Low</option>
-  <option value="A to Z">Name: A to Z</option>
-  <option value="Z to A">Name: Z to A</option>
-</select>
+        <select id="product-sort" class="product-sort">
+          <option value="featured">Featured</option>
+          <option value="Price: Low to High">Price: Low to High</option>
+          <option value="Price: High to Low">Price: High to Low</option>
+          <option value="A to Z">Name: A to Z</option>
+          <option value="Z to A">Name: Z to A</option>
+        </select>
       </section>
 
       <nav id="products-categories" class="products-categories" aria-label="Product categories">
@@ -208,6 +208,23 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${PROXY_ENDPOINT}?url=${encodeURIComponent(target)}`;
   }
 
+  function getSortedProducts(products, sortBy) {
+    const list = [...products];
+    switch (sortBy) {
+      case "Price: Low to High":
+        return list.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+      case "Price: High to Low":
+        return list.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+      case "A to Z":
+        return list.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+      case "Z to A":
+        return list.sort((a, b) => String(b.title || "").localeCompare(String(a.title || "")));
+      case "featured":
+      default:
+        return list;
+    }
+  }
+
   async function loadProducts(query = "") {
     if (!productList) return;
 
@@ -229,7 +246,9 @@ document.addEventListener("DOMContentLoaded", () => {
           images: Array.isArray(p.images) ? p.images.map(getProxiedImageUrl) : [getProxiedImageUrl(p.image)]
         }));
 
-        renderProducts(currentProducts);
+        const selectedSort = sortSelect ? sortSelect.value : "featured";
+        const sortedProducts = getSortedProducts(currentProducts, selectedSort);
+        renderProducts(sortedProducts);
 
         if (pageHeading) {
           pageHeading.textContent = query.trim() ? `Search Results for "${query}"` : "Home Improvement / Solar Catalog";
@@ -318,6 +337,15 @@ document.addEventListener("DOMContentLoaded", () => {
           setTimeout(() => btn.textContent = "Add to Cart", 1200);
         }
       });
+    });
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener("change", (e) => {
+      if (currentProducts.length > 0) {
+        const sorted = getSortedProducts(currentProducts, e.target.value);
+        renderProducts(sorted);
+      }
     });
   }
 
