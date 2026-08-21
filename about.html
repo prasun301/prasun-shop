@@ -16,7 +16,7 @@
 
   <meta
     name="description"
-    content="Learn about PRASUN SHOP, an online store offering practical technology, electronics, smart home, renewable energy, and everyday digital products."
+    content="Learn about PRASUN SHOP, an online store for technology, electronics, smart devices, renewable energy products, and everyday essentials."
   />
 
   <meta
@@ -34,10 +34,6 @@
   </script>
 
   <style>
-
-    /* =========================================================================
-       RESET / BASE
-       ========================================================================= */
 
     * {
       box-sizing: border-box;
@@ -88,9 +84,9 @@
     }
 
 
-    /* =========================================================================
+    /* =======================================================================
        HEADER
-       ========================================================================= */
+       ======================================================================= */
 
     .header {
       position: sticky;
@@ -117,15 +113,13 @@
 
       gap: 24px;
 
-      padding:
-        16px
-        24px;
+      padding: 16px 24px;
     }
 
 
-    /* =========================================================================
-       LOGO
-       ========================================================================= */
+    /* =======================================================================
+       PRASUN SHOP HOME PAGE LOGO
+       ======================================================================= */
 
     .logo {
       display: inline-flex;
@@ -147,17 +141,22 @@
       color: var(--text);
     }
 
-    .logo svg {
+    /*
+     * Same simple book-style icon used by the home-page version.
+     */
+    .logo-icon {
       width: 22px;
       height: 22px;
 
       flex: 0 0 auto;
+
+      display: block;
     }
 
 
-    /* =========================================================================
+    /* =======================================================================
        NAVIGATION
-       ========================================================================= */
+       ======================================================================= */
 
     .nav-links {
       display: flex;
@@ -173,8 +172,7 @@
 
       text-decoration: none;
 
-      transition:
-        color 0.18s ease;
+      transition: color 0.18s ease;
     }
 
     .nav-links a:hover,
@@ -187,9 +185,9 @@
     }
 
 
-    /* =========================================================================
+    /* =======================================================================
        MAIN CONTENT
-       ========================================================================= */
+       ======================================================================= */
 
     main {
       width: 100%;
@@ -199,12 +197,9 @@
       width: calc(100% - 32px);
       max-width: 800px;
 
-      margin:
-        48px auto
-        64px;
+      margin: 48px auto 64px;
 
-      padding:
-        40px;
+      padding: 40px;
 
       background: var(--surface);
 
@@ -219,11 +214,7 @@
     h1 {
       color: var(--text);
 
-      font-size: clamp(
-        1.9rem,
-        4vw,
-        2.35rem
-      );
+      font-size: clamp(1.9rem, 4vw, 2.35rem);
 
       line-height: 1.2;
 
@@ -253,9 +244,7 @@
 
       line-height: 1.35;
 
-      margin:
-        30px 0
-        10px;
+      margin: 30px 0 10px;
 
       letter-spacing: -0.01em;
     }
@@ -274,18 +263,16 @@
     }
 
 
-    /* =========================================================================
+    /* =======================================================================
        FOOTER
-       ========================================================================= */
+       ======================================================================= */
 
     .footer {
       border-top: 1px solid var(--border);
 
       background: var(--surface);
 
-      padding:
-        34px
-        20px;
+      padding: 34px 20px;
 
       text-align: center;
 
@@ -312,9 +299,7 @@
       flex-wrap: wrap;
       justify-content: center;
 
-      gap:
-        10px
-        22px;
+      gap: 10px 22px;
     }
 
     .footer-links a {
@@ -324,8 +309,7 @@
 
       text-decoration: none;
 
-      transition:
-        color 0.18s ease;
+      transition: color 0.18s ease;
     }
 
     .footer-links a:hover {
@@ -341,17 +325,14 @@
     }
 
 
-    /* =========================================================================
+    /* =======================================================================
        MOBILE
-       ========================================================================= */
+       ======================================================================= */
 
     @media (max-width: 700px) {
 
       .header-container {
-        padding:
-          14px
-          16px;
-
+        padding: 14px 16px;
         gap: 16px;
       }
 
@@ -370,13 +351,9 @@
       .content-card {
         width: calc(100% - 24px);
 
-        margin:
-          28px auto
-          40px;
+        margin: 28px auto 40px;
 
-        padding:
-          28px
-          22px;
+        padding: 28px 22px;
 
         border-radius: 12px;
       }
@@ -398,29 +375,22 @@
       }
 
       .footer {
-        padding:
-          28px
-          16px;
+        padding: 28px 16px;
       }
 
       .footer-links {
-        gap:
-          8px
-          16px;
+        gap: 8px 16px;
       }
 
     }
 
 
-    /* =========================================================================
+    /* =======================================================================
        ACCESSIBILITY
-       ========================================================================= */
+       ======================================================================= */
 
     :focus-visible {
-      outline:
-        2px solid
-        var(--primary);
-
+      outline: 2px solid var(--primary);
       outline-offset: 3px;
     }
 
@@ -458,13 +428,17 @@
         aria-label="PRASUN SHOP home"
       >
 
+        <!-- SAME HOME PAGE LOGO ICON -->
         <svg
+          class="logo-icon"
           width="22"
           height="22"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
           stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
           aria-hidden="true"
         >
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
