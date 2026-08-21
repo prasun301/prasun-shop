@@ -13,7 +13,7 @@
  * Cloudflare Worker:
  *     https://prasun-shop-api.prasun301.workers.dev
  *
- * Worker routes used:
+ * Worker routes:
  *
  *     GET  /api/health
  *     GET  /api/products
@@ -23,12 +23,21 @@
  * Supplier:
  *     CJ Dropshipping
  *
+ * DESIGN:
+ *
+ *     - No Material Symbols dependency
+ *     - No emoji
+ *     - Inline SVG icons only
+ *     - Clean responsive checkout
+ *     - Browser prices are display-only
+ *     - Worker remains authoritative
+ *
  * IMPORTANT:
- * - No CJ API credentials are stored in this file.
- * - Browser never calls CJ directly.
- * - Browser prices are display values only.
- * - Worker must validate price, stock, variant and supplier data again.
- * - CJ order creation happens server-side.
+ *
+ *     - No CJ credentials are stored in the browser.
+ *     - Browser never calls CJ directly.
+ *     - Product / price / stock / variant data is refreshed before order.
+ *     - Worker must validate everything again before creating the order.
  *
  * ============================================================================
  */
@@ -64,13 +73,9 @@
         LEGACY_CART_KEYS: [
 
             "prasunShopCart",
-
             "store_cart",
-
             "ae_dropship_cart",
-
             "cart",
-
             "prasun_cart_items"
 
         ],
@@ -79,7 +84,10 @@
             99,
 
         REQUEST_TIMEOUT:
-            15000
+            15000,
+
+        LOAD_RETRY_DELAY:
+            250
 
     };
 
@@ -184,9 +192,14 @@
 
     const state = {
 
-        cart: [],
+        cart:
+            [],
 
-        products: new Map(),
+        products:
+            new Map(),
+
+        refreshedItems:
+            [],
 
         loading:
             false,
@@ -195,7 +208,10 @@
             false,
 
         initialized:
-            false
+            false,
+
+        loadSequence:
+            0
 
     };
 
@@ -232,7 +248,6 @@
                 value
             );
 
-
         if (
             !Number.isFinite(
                 number
@@ -242,7 +257,6 @@
             return "$0.00";
 
         }
-
 
         return currencyFormatter.format(
             number
@@ -260,8 +274,7 @@
     ) {
 
         return String(
-            value ??
-            ""
+            value ?? ""
         ).trim();
 
     }
@@ -272,30 +285,24 @@
     ) {
 
         return String(
-            value ??
-            ""
+            value ?? ""
         )
-
             .replace(
                 /&/g,
                 "&amp;"
             )
-
             .replace(
                 /</g,
                 "&lt;"
             )
-
             .replace(
                 />/g,
                 "&gt;"
             )
-
             .replace(
                 /"/g,
                 "&quot;"
             )
-
             .replace(
                 /'/g,
                 "&#039;"
@@ -313,7 +320,6 @@
                 value
             );
 
-
         if (
             !Number.isFinite(
                 number
@@ -324,7 +330,6 @@
             return 0;
 
         }
-
 
         return Number(
             number.toFixed(
@@ -344,7 +349,6 @@
                 value
             );
 
-
         if (
             !Number.isFinite(
                 number
@@ -355,7 +359,6 @@
             return 1;
 
         }
-
 
         return Math.min(
             CONFIG.MAX_QUANTITY,
@@ -370,40 +373,218 @@
     }
 
 
-    function getMaterialIcon(
-        name,
-        className = "icon-sm"
-    ) {
-
-        return `
-
-            <span
-                class="material-symbols-rounded ${className}"
-                aria-hidden="true"
-            >
-                ${escapeHTML(
-                    name
-                )}
-            </span>
-
-        `;
-
-    }
-
-
     function getWorkerURL(
         endpoint
     ) {
 
+        return `${CONFIG.WORKER_BASE}${endpoint}`;
+
+    }
+
+
+    /* =========================================================================
+       6. INLINE SVG ICON SYSTEM
+       =========================================================================
+       
+       SVG icons are used instead of Material Symbols so the checkout page
+       does not depend on an external icon font or ligature rendering.
+       ========================================================================= */
+
+    function svgIcon(
+        name,
+        className = "checkout-icon"
+    ) {
+
+        const safeClass =
+            escapeHTML(
+                className
+            );
+
+
+        const icons = {
+
+            cart: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <circle cx="9" cy="20" r="1.4"></circle>
+                    <circle cx="18" cy="20" r="1.4"></circle>
+                    <path d="M3 4h2l2.3 11a2 2 0 0 0 2 1.6h8.1a2 2 0 0 0 1.9-1.5L21 8H6"></path>
+                </svg>
+            `,
+
+            package: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"></path>
+                    <path d="M12 12v9"></path>
+                    <path d="m4.5 7.5 7.5 4.2 7.5-4.2"></path>
+                    <path d="M8 5.2 16 9.5"></path>
+                </svg>
+            `,
+
+            tune: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="M4 7h16"></path>
+                    <path d="M4 17h16"></path>
+                    <circle cx="9" cy="7" r="2"></circle>
+                    <circle cx="15" cy="17" r="2"></circle>
+                </svg>
+            `,
+
+            sync: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="M20 7v5h-5"></path>
+                    <path d="M4 17v-5h5"></path>
+                    <path d="M6.2 9a6.5 6.5 0 0 1 10.9-2"></path>
+                    <path d="M17.8 15a6.5 6.5 0 0 1-10.9 2"></path>
+                </svg>
+            `,
+
+            error: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 8v5"></path>
+                    <path d="M12 16h.01"></path>
+                </svg>
+            `,
+
+            refresh: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="M20 11a8 8 0 1 0 1 4"></path>
+                    <path d="M20 4v7h-7"></path>
+                </svg>
+            `,
+
+            receipt: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"></path>
+                    <path d="M9 8h6"></path>
+                    <path d="M9 12h6"></path>
+                    <path d="M9 16h3"></path>
+                </svg>
+            `,
+
+            payment: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <rect
+                        x="3"
+                        y="5"
+                        width="18"
+                        height="14"
+                        rx="2"
+                    ></rect>
+                    <path d="M3 10h18"></path>
+                    <path d="M7 15h3"></path>
+                </svg>
+            `,
+
+            check: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="m5 12 4 4L19 6"></path>
+                </svg>
+            `
+
+        };
+
+
         return (
-            `${CONFIG.WORKER_BASE}${endpoint}`
+            icons[name] ||
+            icons.package
         );
 
     }
 
 
     /* =========================================================================
-       6. STORAGE
+       7. STORAGE
        ========================================================================= */
 
     function readStorage(
@@ -487,7 +668,7 @@
 
 
     /* =========================================================================
-       7. CART NORMALIZATION
+       8. CART NORMALIZATION
        ========================================================================= */
 
     function normalizeCartItem(
@@ -496,8 +677,7 @@
 
         if (
             !item ||
-            typeof item !==
-                "object"
+            typeof item !== "object"
         ) {
 
             return null;
@@ -695,8 +875,8 @@
 
 
         for (
-            const key
-            of CONFIG.LEGACY_CART_KEYS
+            const key of
+            CONFIG.LEGACY_CART_KEYS
         ) {
 
             if (
@@ -735,13 +915,10 @@
             ) {
 
                 writeStorage(
-
                     CONFIG.CART_KEY,
-
                     JSON.stringify(
                         migrated
                     )
-
                 );
 
 
@@ -770,8 +947,8 @@
 
 
         for (
-            const key
-            of CONFIG.LEGACY_CART_KEYS
+            const key of
+            CONFIG.LEGACY_CART_KEYS
         ) {
 
             removeStorage(
@@ -784,7 +961,7 @@
 
 
     /* =========================================================================
-       8. CART COUNT
+       9. CART COUNT
        ========================================================================= */
 
     function updateCartCount() {
@@ -828,15 +1005,13 @@
 
 
         elements.cartCount.hidden =
-            count <=
-            0;
+            count <= 0;
 
 
         elements.cartCount.setAttribute(
             "aria-label",
             `${count} ${
-                count ===
-                    1
+                count === 1
                     ? "item"
                     : "items"
             } in cart`
@@ -846,7 +1021,7 @@
 
 
     /* =========================================================================
-       9. FETCH WITH TIMEOUT
+       10. FETCH
        ========================================================================= */
 
     async function fetchWithTimeout(
@@ -868,9 +1043,7 @@
         const timer =
             window.setTimeout(
                 () => {
-
                     controller.abort();
-
                 },
                 timeout
             );
@@ -878,10 +1051,9 @@
 
         try {
 
-            const fetchOptions =
-                {
-                    ...options
-                };
+            const fetchOptions = {
+                ...options
+            };
 
 
             delete fetchOptions.timeout;
@@ -971,7 +1143,7 @@
 
 
     /* =========================================================================
-       10. ERROR / STATUS UI
+       11. ERROR / STATUS UI
        ========================================================================= */
 
     function showError(
@@ -1010,6 +1182,14 @@
                 "visible"
             );
 
+            elements.checkoutError.scrollIntoView({
+                behavior:
+                    "smooth",
+
+                block:
+                    "nearest"
+            });
+
         }
 
 
@@ -1019,23 +1199,6 @@
 
             elements.checkoutSuccess.classList.remove(
                 "visible"
-            );
-
-        }
-
-
-        if (
-            elements.checkoutError
-        ) {
-
-            elements.checkoutError.scrollIntoView(
-                {
-                    behavior:
-                        "smooth",
-
-                    block:
-                        "nearest"
-                }
             );
 
         }
@@ -1072,21 +1235,25 @@
         message
     ) {
 
+        const text =
+            cleanString(
+                message
+            );
+
+
         if (
             elements.checkoutSuccessMessage
         ) {
 
             elements.checkoutSuccessMessage.textContent =
-                cleanString(
-                    message
-                );
+                text;
 
         } else if (
             elements.checkoutSuccess
         ) {
 
             elements.checkoutSuccess.textContent =
-                message;
+                text;
 
         }
 
@@ -1154,35 +1321,47 @@
         }
 
 
-        elements.checkoutStatus.innerHTML =
+        const text =
+            escapeHTML(
+                message || ""
+            );
+
+
+        if (
             loading
+        ) {
 
-                ? `
+            elements.checkoutStatus.innerHTML = `
 
-                    ${getMaterialIcon(
-                        "progress_activity",
-                        "icon-sm"
+                <span
+                    class="checkout-status-icon"
+                    aria-hidden="true"
+                >
+                    ${svgIcon(
+                        "sync",
+                        "status-svg-icon"
                     )}
+                </span>
 
-                    <span>
-                        ${escapeHTML(
-                            message ||
-                            ""
-                        )}
-                    </span>
+                <span>
+                    ${text}
+                </span>
 
-                `
+            `;
 
-                : escapeHTML(
-                    message ||
-                    ""
-                );
+            return;
+
+        }
+
+
+        elements.checkoutStatus.textContent =
+            message || "";
 
     }
 
 
     /* =========================================================================
-       11. FORM HELPERS
+       12. FORM HELPERS
        ========================================================================= */
 
     function getField(
@@ -1248,7 +1427,7 @@
 
 
     /* =========================================================================
-       12. FORM VALIDATION
+       13. FORM VALIDATION
        ========================================================================= */
 
     function validateForm() {
@@ -1415,10 +1594,9 @@
 
 
         if (
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-                .test(
-                    email
-                )
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                email
+            )
         ) {
 
             markInvalid(
@@ -1472,10 +1650,9 @@
 
 
         if (
-            !/^[A-Z]{2}$/
-                .test(
-                    countryCode
-                )
+            !/^[A-Z]{2}$/.test(
+                countryCode
+            )
         ) {
 
             markInvalid(
@@ -1545,27 +1722,16 @@
         return {
 
             name,
-
             email,
-
             phone,
-
             country,
-
             countryCode,
-
             province,
-
             city,
-
             zip,
-
             county,
-
             address,
-
             address2,
-
             remark
 
         };
@@ -1574,7 +1740,7 @@
 
 
     /* =========================================================================
-       13. PRODUCT FETCH
+       14. PRODUCT FETCH
        ========================================================================= */
 
     async function fetchProductById(
@@ -1622,12 +1788,9 @@
                         "no-store",
 
                     headers: {
-
                         Accept:
                             "application/json"
-
                     }
-
                 }
             );
 
@@ -1651,8 +1814,7 @@
 
 
         if (
-            data?.success !==
-                true ||
+            data?.success !== true ||
             !data?.product
         ) {
 
@@ -1670,7 +1832,7 @@
 
 
     /* =========================================================================
-       14. REFRESH CART PRODUCTS
+       15. REFRESH CART PRODUCTS
        ========================================================================= */
 
     async function refreshCartProducts() {
@@ -1688,8 +1850,7 @@
         }
 
 
-        const refreshed =
-            [];
+        const refreshed = [];
 
 
         for (
@@ -1787,7 +1948,8 @@
             };
 
 
-            let selectedVariant = null;
+            let selectedVariant =
+                null;
 
 
             const selectedVid =
@@ -1808,11 +1970,13 @@
             ) {
 
                 selectedVariant =
-                    normalizedProduct.variants
+                    normalizedProduct
+                        .variants
                         .find(
                             variant =>
                                 String(
-                                    variant.vid
+                                    variant?.vid ||
+                                    ""
                                 ) ===
                                 String(
                                     selectedVid
@@ -1829,13 +1993,15 @@
             ) {
 
                 selectedVariant =
-                    normalizedProduct.variants
+                    normalizedProduct
+                        .variants
                         .find(
                             variant =>
                                 String(
-                                    variant.sku ||
+                                    variant?.sku ||
                                     ""
-                                ).toLowerCase() ===
+                                )
+                                    .toLowerCase() ===
                                 selectedVariantSku
                                     .toLowerCase()
                         ) ||
@@ -1843,11 +2009,6 @@
 
             }
 
-
-            /*
-             * If cart has a selected variant but it is no longer
-             * present, do not silently change it to another variant.
-             */
 
             if (
                 (
@@ -1864,10 +2025,6 @@
             }
 
 
-            /*
-             * Prefer fresh variant price when selected.
-             */
-
             let effectivePrice =
                 normalizedProduct.price;
 
@@ -1883,10 +2040,6 @@
 
             }
 
-
-            /*
-             * Quantity validation.
-             */
 
             const requestedQuantity =
                 normalizeQuantity(
@@ -1911,8 +2064,7 @@
 
                 throw new Error(
                     `${normalizedProduct.name} has only ${currentInventory} unit${
-                        currentInventory ===
-                            1
+                        currentInventory === 1
                             ? ""
                             : "s"
                     } available.`
@@ -1948,7 +2100,7 @@
 
 
     /* =========================================================================
-       15. SUMMARY RENDERING
+       16. SUMMARY RENDERING
        ========================================================================= */
 
     function renderOrderSummary(
@@ -1985,9 +2137,7 @@
 
         const html =
             items.map(
-                (
-                    entry
-                ) => {
+                entry => {
 
                     const product =
                         entry.product;
@@ -2034,24 +2184,18 @@
 
                     const variantText =
                         cleanString(
-                            entry.cartItem
-                                .variantOptions
+                            entry.cartItem.variantOptions
                         ) ||
                         cleanString(
-                            entry.cartItem
-                                .variantSku
+                            entry.cartItem.variantSku
                         );
 
 
                     return `
 
-                        <div
-                            class="summary-item"
-                        >
+                        <div class="summary-item">
 
-                            <div
-                                class="summary-item-image-wrap"
-                            >
+                            <div class="summary-item-image-wrap">
 
                                 ${
                                     image
@@ -2072,9 +2216,14 @@
                                         : `
 
                                             <div
-                                                class="summary-item-image"
+                                                class="summary-item-image summary-item-image-placeholder"
                                                 aria-hidden="true"
-                                            ></div>
+                                            >
+                                                ${svgIcon(
+                                                    "package",
+                                                    "summary-placeholder-icon"
+                                                )}
+                                            </div>
 
                                         `
                                 }
@@ -2090,26 +2239,16 @@
                             </div>
 
 
-                            <div
-                                class="summary-item-info"
-                            >
+                            <div class="summary-item-info">
 
-                                <p
-                                    class="summary-item-name"
-                                >
+                                <p class="summary-item-name">
                                     ${name}
                                 </p>
 
 
-                                <div
-                                    class="summary-item-meta"
-                                >
+                                <div class="summary-item-meta">
 
                                     <span>
-                                        ${getMaterialIcon(
-                                            "inventory_2",
-                                            "icon-xs"
-                                        )}
                                         ${formatPrice(
                                             entry.price
                                         )}
@@ -2120,14 +2259,16 @@
 
                                             ? `
 
-                                                <span>
-                                                    ${getMaterialIcon(
+                                                <span class="summary-variant">
+                                                    ${svgIcon(
                                                         "tune",
-                                                        "icon-xs"
+                                                        "summary-meta-icon"
                                                     )}
-                                                    ${escapeHTML(
-                                                        variantText
-                                                    )}
+                                                    <span>
+                                                        ${escapeHTML(
+                                                            variantText
+                                                        )}
+                                                    </span>
                                                 </span>
 
                                             `
@@ -2140,9 +2281,7 @@
                             </div>
 
 
-                            <div
-                                class="summary-item-price"
-                            >
+                            <div class="summary-item-price">
                                 ${formatPrice(
                                     lineTotal
                                 )}
@@ -2263,17 +2402,15 @@
                 role="status"
             >
 
-                <span
+                <div
                     class="summary-empty-icon"
                     aria-hidden="true"
                 >
-
-                    ${getMaterialIcon(
-                        "shopping_cart",
-                        "icon-xl"
+                    ${svgIcon(
+                        "cart",
+                        "summary-empty-svg"
                     )}
-
-                </span>
+                </div>
 
 
                 <strong>
@@ -2313,7 +2450,7 @@
 
 
     /* =========================================================================
-       16. LOAD CHECKOUT
+       17. LOAD CHECKOUT
        ========================================================================= */
 
     async function loadCheckout() {
@@ -2325,6 +2462,10 @@
             return;
 
         }
+
+
+        const requestId =
+            ++state.loadSequence;
 
 
         state.loading =
@@ -2370,10 +2511,15 @@
                     role="status"
                 >
 
-                    ${getMaterialIcon(
-                        "progress_activity",
-                        "icon-xl"
-                    )}
+                    <div
+                        class="summary-loading"
+                        aria-hidden="true"
+                    >
+                        ${svgIcon(
+                            "sync",
+                            "summary-loading-svg"
+                        )}
+                    </div>
 
                     <p>
                         Loading your order...
@@ -2392,6 +2538,16 @@
                 await refreshCartProducts();
 
 
+            if (
+                requestId !==
+                state.loadSequence
+            ) {
+
+                return;
+
+            }
+
+
             state.refreshedItems =
                 refreshedItems;
 
@@ -2406,7 +2562,8 @@
             ) {
 
                 elements.placeOrderButton.disabled =
-                    false;
+                    refreshedItems.length ===
+                    0;
 
             }
 
@@ -2426,6 +2583,16 @@
             );
 
 
+            if (
+                requestId !==
+                state.loadSequence
+            ) {
+
+                return;
+
+            }
+
+
             showError(
                 error?.message ||
                 "Unable to load your cart."
@@ -2443,28 +2610,42 @@
                         role="alert"
                     >
 
-                        ${getMaterialIcon(
-                            "error",
-                            "icon-xl"
-                        )}
+                        <div
+                            class="summary-empty-icon"
+                            aria-hidden="true"
+                        >
+                            ${svgIcon(
+                                "error",
+                                "summary-error-svg"
+                            )}
+                        </div>
+
+
+                        <strong>
+                            Unable to load order
+                        </strong>
+
 
                         <p>
                             Unable to load current product information.
                         </p>
+
 
                         <button
                             type="button"
                             id="retry-checkout-button"
                             class="continue-shopping"
                         >
-                            ${getMaterialIcon(
+
+                            ${svgIcon(
                                 "refresh",
-                                "icon-sm"
+                                "button-svg-icon"
                             )}
 
                             <span>
                                 Try Again
                             </span>
+
                         </button>
 
                     </div>
@@ -2484,16 +2665,26 @@
 
                             loadCheckout();
 
+                        },
+                        {
+                            once:
+                                true
                         }
                     );
 
             }
 
-
         } finally {
 
-            state.loading =
-                false;
+            if (
+                requestId ===
+                state.loadSequence
+            ) {
+
+                state.loading =
+                    false;
+
+            }
 
         }
 
@@ -2501,7 +2692,7 @@
 
 
     /* =========================================================================
-       17. VALIDATE CHECKOUT ITEMS AGAIN
+       18. VALIDATE CHECKOUT ITEMS AGAIN
        ========================================================================= */
 
     async function validateCheckoutItems() {
@@ -2536,7 +2727,7 @@
 
 
     /* =========================================================================
-       18. BUILD ORDER PAYLOAD
+       19. BUILD ORDER PAYLOAD
        ========================================================================= */
 
     function buildOrderPayload(
@@ -2560,10 +2751,6 @@
                         entry.variant;
 
 
-                    /*
-                     * Preserve the CJ VID when available.
-                     */
-
                     const vid =
                         cleanString(
                             variant?.vid ||
@@ -2581,10 +2768,6 @@
 
                     return {
 
-                        /*
-                         * Storefront product identifiers
-                         */
-
                         id:
                             String(
                                 product.id ||
@@ -2596,11 +2779,6 @@
                                 product.pid ||
                                 product.id
                             ),
-
-
-                        /*
-                         * CJ identification
-                         */
 
                         cj_id:
                             String(
@@ -2616,28 +2794,17 @@
                                 ""
                             ),
 
-                        vid:
-
-                            vid,
-
+                        vid,
 
                         variantId:
                             vid,
 
-
-                        variantSku:
-                            variantSku,
-
+                        variantSku,
 
                         variantOptions:
                             cleanString(
                                 cartItem.variantOptions
                             ),
-
-
-                        /*
-                         * Display/reference information
-                         */
 
                         name:
                             String(
@@ -2659,12 +2826,6 @@
                                 product.originalImage ||
                                 ""
                             ),
-
-
-                        /*
-                         * Quantity only.
-                         * Worker remains authoritative for price.
-                         */
 
                         quantity:
                             normalizeQuantity(
@@ -2737,20 +2898,10 @@
                 customer.remark,
 
 
-            items:
+            items,
 
-
-                items,
-
-
-            /*
-             * Backward compatibility.
-             * The Worker can ignore this if the new items
-             * array is its canonical source.
-             */
 
             cart:
-
                 items.map(
                     item => ({
 
@@ -2792,7 +2943,7 @@
 
 
     /* =========================================================================
-       19. PLACE ORDER
+       20. PLACE ORDER
        ========================================================================= */
 
     async function submitOrder() {
@@ -2807,7 +2958,6 @@
 
 
         hideError();
-
         hideSuccess();
 
 
@@ -2877,9 +3027,9 @@
 
             elements.placeOrderButton.innerHTML = `
 
-                ${getMaterialIcon(
-                    "progress_activity",
-                    "icon-md"
+                ${svgIcon(
+                    "sync",
+                    "button-svg-icon"
                 )}
 
                 <span>
@@ -2899,17 +3049,9 @@
             );
 
 
-            /*
-             * Re-fetch products immediately before submission.
-             */
-
             const refreshedItems =
                 await validateCheckoutItems();
 
-
-            /*
-             * Build a clean server-side order payload.
-             */
 
             const payload =
                 buildOrderPayload(
@@ -2917,12 +3059,6 @@
                     refreshedItems
                 );
 
-
-            /*
-             * Save a local checkout snapshot.
-             *
-             * This contains no CJ credentials.
-             */
 
             writeStorage(
                 CONFIG.CHECKOUT_SNAPSHOT_KEY,
@@ -2932,8 +3068,7 @@
                             1,
 
                         createdAt:
-                            new Date()
-                                .toISOString(),
+                            new Date().toISOString(),
 
                         items:
                             payload.items
@@ -2950,11 +3085,9 @@
 
             const response =
                 await fetchWithTimeout(
-
                     getWorkerURL(
                         CONFIG.ORDER_ENDPOINT
                     ),
-
                     {
 
                         method:
@@ -2976,7 +3109,6 @@
                             )
 
                     }
-
                 );
 
 
@@ -3000,8 +3132,7 @@
 
 
             if (
-                data?.success !==
-                    true
+                data?.success !== true
             ) {
 
                 throw new Error(
@@ -3013,24 +3144,14 @@
             }
 
 
-            /*
-             * The Worker may return different identifiers
-             * depending on the CJ order flow.
-             */
-
             const orderNumber =
                 cleanString(
 
                     data.orderNumber ||
-
                     data.orderId ||
-
                     data.orderCode ||
-
                     data.order?.orderNumber ||
-
                     data.order?.orderCode ||
-
                     ""
 
                 );
@@ -3040,13 +3161,9 @@
                 cleanString(
 
                     data.cjOrderNumber ||
-
                     data.cjOrderCode ||
-
                     data.cjOrder?.orderNumber ||
-
                     data.cjOrder?.orderCode ||
-
                     ""
 
                 );
@@ -3056,43 +3173,29 @@
                 cleanString(
 
                     data.cjPayUrl ||
-
                     data.paymentUrl ||
-
                     data.payUrl ||
-
                     data.order?.cjPayUrl ||
-
                     ""
 
                 );
 
 
-            /*
-             * Store minimal confirmation information.
-             */
-
             try {
 
                 sessionStorage.setItem(
-
                     "prasun_order_confirmation",
-
                     JSON.stringify(
                         {
 
-                            orderNumber:
-                                orderNumber,
-
-                            cjOrderNumber:
-                                cjOrderNumber,
+                            orderNumber,
+                            cjOrderNumber,
 
                             createdAt:
                                 Date.now()
 
                         }
                     )
-
                 );
 
             } catch (
@@ -3100,16 +3203,12 @@
             ) {
 
                 console.warn(
-                    "[PRASUN SHOP] Unable to store order confirmation:",
+                    "[PRASUN SHOP] Unable to store confirmation:",
                     error
                 );
 
             }
 
-
-            /*
-             * Clear cart only after Worker accepts the order.
-             */
 
             clearCart();
 
@@ -3128,10 +3227,6 @@
             );
 
 
-            /*
-             * Confirmation number
-             */
-
             if (
                 elements.confirmationOrderNumber
             ) {
@@ -3144,9 +3239,9 @@
 
                 elements.confirmationOrderNumber.innerHTML = `
 
-                    ${getMaterialIcon(
-                        "receipt_long",
-                        "icon-sm"
+                    ${svgIcon(
+                        "receipt",
+                        "confirmation-svg-icon"
                     )}
 
                     <span>
@@ -3159,10 +3254,6 @@
 
             }
 
-
-            /*
-             * Hide layout and show confirmation.
-             */
 
             if (
                 elements.checkoutLayout
@@ -3194,11 +3285,6 @@
                 );
 
 
-                /*
-                 * Replace the confirmation shopping button
-                 * with a payment link without exposing credentials.
-                 */
-
                 const confirmation =
                     elements.orderConfirmation;
 
@@ -3220,11 +3306,14 @@
                         existingContinue.href =
                             paymentURL;
 
+                        existingContinue.target =
+                            "_self";
+
                         existingContinue.innerHTML = `
 
-                            ${getMaterialIcon(
-                                "payments",
-                                "icon-sm"
+                            ${svgIcon(
+                                "payment",
+                                "button-svg-icon"
                             )}
 
                             <span>
@@ -3250,7 +3339,6 @@
                 ""
             );
 
-
         } catch (
             error
         ) {
@@ -3271,7 +3359,6 @@
                 ""
             );
 
-
         } finally {
 
             state.submitting =
@@ -3285,10 +3372,6 @@
                 elements.placeOrderButton.dataset.processing =
                     "false";
 
-
-                /*
-                 * Do not re-enable if confirmation is being shown.
-                 */
 
                 const confirmationVisible =
                     elements.orderConfirmation
@@ -3307,9 +3390,9 @@
 
                     elements.placeOrderButton.innerHTML = `
 
-                        ${getMaterialIcon(
-                            "shopping_cart_checkout",
-                            "icon-md"
+                        ${svgIcon(
+                            "cart",
+                            "button-svg-icon"
                         )}
 
                         <span>
@@ -3328,7 +3411,7 @@
 
 
     /* =========================================================================
-       20. COUNTRY CODE
+       21. COUNTRY CODE
        ========================================================================= */
 
     function bindCountryCode() {
@@ -3354,17 +3437,14 @@
 
                 input.value =
                     input.value
-
                         .replace(
                             /[^a-zA-Z]/g,
                             ""
                         )
-
                         .slice(
                             0,
                             2
                         )
-
                         .toUpperCase();
 
             }
@@ -3374,7 +3454,7 @@
 
 
     /* =========================================================================
-       21. FORM FIELD EVENTS
+       22. FORM EVENTS
        ========================================================================= */
 
     function bindFormEvents() {
@@ -3439,7 +3519,7 @@
 
 
     /* =========================================================================
-       22. CART EVENTS
+       23. CART EVENTS
        ========================================================================= */
 
     function bindCartEvents() {
@@ -3451,14 +3531,12 @@
                 if (
                     event.key ===
                         CONFIG.CART_KEY ||
-
                     CONFIG.LEGACY_CART_KEYS.includes(
                         event.key
                     )
                 ) {
 
                     updateCartCount();
-
                     loadCheckout();
 
                 }
@@ -3472,7 +3550,6 @@
             () => {
 
                 updateCartCount();
-
                 loadCheckout();
 
             }
@@ -3489,7 +3566,6 @@
                 ) {
 
                     updateCartCount();
-
                     loadCheckout();
 
                 }
@@ -3501,7 +3577,7 @@
 
 
     /* =========================================================================
-       23. INITIALIZATION
+       24. INITIALIZATION
        ========================================================================= */
 
     async function initialize() {
@@ -3521,14 +3597,39 @@
 
         updateCartCount();
 
-
         bindCountryCode();
-
-
         bindFormEvents();
-
-
         bindCartEvents();
+
+        if (
+            elements.placeOrderButton
+        ) {
+
+            /*
+             * Make sure the original button is readable even before
+             * JavaScript starts loading dynamic state.
+             */
+
+            if (
+                !elements.placeOrderButton.textContent.trim()
+            ) {
+
+                elements.placeOrderButton.innerHTML = `
+
+                    ${svgIcon(
+                        "cart",
+                        "button-svg-icon"
+                    )}
+
+                    <span>
+                        Place Order
+                    </span>
+
+                `;
+
+            }
+
+        }
 
 
         await loadCheckout();
