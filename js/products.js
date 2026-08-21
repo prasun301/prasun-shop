@@ -5,52 +5,39 @@
  *
  * js/products.js
  *
- * BROAD CJ CATALOG MODE
+ * CJ Dropshipping + Cloudflare Worker storefront manager.
  *
- * IMPORTANT
- * ============================================================================
+ * APPROVED STORE CATEGORIES
+ * - All Products
+ * - Solar Lights
+ * - Battery
+ * - Chargers
+ * - Power Bank
+ * - Cables
+ * - Earphones
+ * - Headphones
+ * - Modem
+ * - Routers
+ * - Laptops
+ * - Power Tools
+ * - Smart Home
+ * - Camera
  *
- * This file contains JavaScript only.
- *
- * The Worker is the source of the complete synchronized CJ catalog.
- *
- * /api/products
- *      ↓
- * ALL returned product records
- *      ↓
- * local catalog
- *      ↓
- * local search
- *      ↓
- * local category filtering
- *      ↓
- * local sorting
- *
- * IMPORTANT:
- * - No hard 5,000-product truncation.
- * - No server-side category request for storefront buttons.
- * - Search is local.
- * - Category filtering is local.
- * - All CJ products remain available under "All Products".
- * - Products are progressively rendered to keep the page responsive.
- *
- * Categories:
- *
- * All Products
- * Solar Lights
- * Battery
- * Chargers
- * Power Bank
- * Cables
- * Earphones
- * Headphones
- * Modem
- * Routers
- * Laptops
- * Power Tools
- * Camera
- * Smart Home
- *
+ * FEATURES
+ * - Loads products from Cloudflare Worker
+ * - Uses CJ images through Worker proxy
+ * - Displays full CJ descriptions
+ * - Product details modal
+ * - CJ image gallery
+ * - CJ PID / SKU / VID / variants preserved
+ * - Search
+ * - Category filtering
+ * - Sorting
+ * - Cart integration
+ * - Inline SVG icons only
+ * - No Material Symbols
+ * - No emoji
+ * - No stock-image services
  * ============================================================================
  */
 
@@ -70,39 +57,29 @@
         PRODUCTS_ENDPOINT:
             "/api/products",
 
-        IMAGE_PROXY_ENDPOINT:
-            "/api/image-proxy",
-
         PRODUCT_PAGE:
             "/product.html",
 
+        IMAGE_PROXY_ENDPOINT:
+            "/api/image-proxy",
+
         REQUEST_TIMEOUT:
-            30000,
+            15000,
 
-        /*
-         * IMPORTANT:
-         * Do not limit the catalog at 5,000.
-         *
-         * The Worker is authoritative.
-         */
+        DEBOUNCE_DELAY:
+            300,
+
         MAX_PRODUCTS:
-            Number.POSITIVE_INFINITY,
-
-        /*
-         * Render products in batches so thousands of products
-         * do not freeze the browser.
-         */
-        RENDER_BATCH_SIZE:
-            80,
+            1000,
 
         DEFAULT_CATEGORY:
-            "General"
+            "Home Improvement / Solar"
 
     };
 
 
     /* =========================================================================
-       2. PLACEHOLDER
+       2. PLACEHOLDER IMAGE
        ========================================================================= */
 
     const PLACEHOLDER_IMAGE =
@@ -165,343 +142,79 @@
 
 
     /* =========================================================================
-       3. CATEGORY DEFINITIONS
+       3. APPROVED CATEGORIES
        ========================================================================= */
 
     const CATEGORY_MAP = [
 
         {
-            label:
-                "All Products",
-
-            query:
-                "",
-
-            terms:
-                []
+            label: "All Products",
+            query: ""
         },
 
         {
-            label:
-                "Solar Lights",
-
-            query:
-                "solar-lights",
-
-            terms:
-                [
-                    "solar",
-                    "solar light",
-                    "solar lights",
-                    "solar lamp",
-                    "solar lighting",
-                    "solar spotlight",
-                    "solar floodlight",
-                    "solar street light",
-                    "solar wall light",
-                    "solar garden light",
-                    "solar outdoor light",
-                    "solar pathway light",
-                    "solar motion light"
-                ]
+            label: "Solar Lights",
+            query: "solar light"
         },
 
         {
-            label:
-                "Battery",
-
-            query:
-                "battery",
-
-            terms:
-                [
-                    "battery",
-                    "batteries",
-                    "rechargeable battery",
-                    "lithium battery",
-                    "lithium ion",
-                    "li-ion",
-                    "battery pack",
-                    "battery bank",
-                    "power battery",
-                    "aa battery",
-                    "aaa battery",
-                    "18650",
-                    "21700"
-                ]
+            label: "Battery",
+            query: "battery"
         },
 
         {
-            label:
-                "Chargers",
-
-            query:
-                "chargers",
-
-            terms:
-                [
-                    "charger",
-                    "chargers",
-                    "charging",
-                    "charging station",
-                    "fast charger",
-                    "fast charging",
-                    "wall charger",
-                    "usb charger",
-                    "phone charger",
-                    "mobile charger",
-                    "wireless charger",
-                    "car charger",
-                    "travel charger",
-                    "power adapter",
-                    "charging adapter"
-                ]
+            label: "Chargers",
+            query: "charger"
         },
 
         {
-            label:
-                "Power Bank",
-
-            query:
-                "power-bank",
-
-            terms:
-                [
-                    "power bank",
-                    "powerbank",
-                    "portable power bank",
-                    "portable charger",
-                    "portable battery",
-                    "mobile power",
-                    "emergency power bank",
-                    "powerbank charger"
-                ]
+            label: "Power Bank",
+            query: "power bank"
         },
 
         {
-            label:
-                "Cables",
-
-            query:
-                "cables",
-
-            terms:
-                [
-                    "cable",
-                    "cables",
-                    "usb cable",
-                    "charging cable",
-                    "data cable",
-                    "type c cable",
-                    "type-c cable",
-                    "usb-c cable",
-                    "lightning cable",
-                    "micro usb cable",
-                    "hdmi cable",
-                    "network cable",
-                    "ethernet cable",
-                    "lan cable",
-                    "audio cable",
-                    "display cable"
-                ]
+            label: "Cables",
+            query: "cable"
         },
 
         {
-            label:
-                "Earphones",
-
-            query:
-                "earphones",
-
-            terms:
-                [
-                    "earphone",
-                    "earphones",
-                    "earbud",
-                    "earbuds",
-                    "tws",
-                    "true wireless",
-                    "wireless earbud",
-                    "bluetooth earphone",
-                    "in-ear",
-                    "in ear",
-                    "in-ear headphones"
-                ]
+            label: "Earphones",
+            query: "earphone"
         },
 
         {
-            label:
-                "Headphones",
-
-            query:
-                "headphones",
-
-            terms:
-                [
-                    "headphone",
-                    "headphones",
-                    "headset",
-                    "gaming headset",
-                    "gaming headphones",
-                    "bluetooth headset",
-                    "wireless headset",
-                    "wireless headphones",
-                    "over-ear",
-                    "on-ear"
-                ]
+            label: "Headphones",
+            query: "headphone"
         },
 
         {
-            label:
-                "Modem",
-
-            query:
-                "modem",
-
-            terms:
-                [
-                    "modem",
-                    "4g modem",
-                    "5g modem",
-                    "lte modem",
-                    "usb modem",
-                    "mobile modem",
-                    "wireless modem",
-                    "cellular modem"
-                ]
+            label: "Modem",
+            query: "modem"
         },
 
         {
-            label:
-                "Routers",
-
-            query:
-                "routers",
-
-            terms:
-                [
-                    "router",
-                    "routers",
-                    "wifi router",
-                    "wi-fi router",
-                    "wireless router",
-                    "4g router",
-                    "5g router",
-                    "lte router",
-                    "network router",
-                    "mesh router",
-                    "wifi mesh",
-                    "wi-fi mesh"
-                ]
+            label: "Routers",
+            query: "router"
         },
 
         {
-            label:
-                "Laptops",
-
-            query:
-                "laptops",
-
-            terms:
-                [
-                    "laptop",
-                    "laptops",
-                    "notebook",
-                    "notebooks",
-                    "ultrabook",
-                    "chromebook",
-                    "gaming laptop",
-                    "computer notebook",
-                    "portable computer"
-                ]
+            label: "Laptops",
+            query: "laptop"
         },
 
         {
-            label:
-                "Power Tools",
-
-            query:
-                "power-tools",
-
-            terms:
-                [
-                    "power tool",
-                    "power tools",
-                    "drill",
-                    "cordless drill",
-                    "impact driver",
-                    "impact wrench",
-                    "grinder",
-                    "angle grinder",
-                    "screwdriver",
-                    "electric screwdriver",
-                    "saw",
-                    "circular saw",
-                    "jigsaw",
-                    "sander",
-                    "rotary tool",
-                    "heat gun",
-                    "polisher",
-                    "cutting tool",
-                    "hammer drill"
-                ]
+            label: "Power Tools",
+            query: "power tool"
         },
 
         {
-            label:
-                "Camera",
-
-            query:
-                "camera",
-
-            terms:
-                [
-                    "camera",
-                    "cameras",
-                    "security camera",
-                    "cctv",
-                    "ip camera",
-                    "wireless camera",
-                    "wifi camera",
-                    "wi-fi camera",
-                    "action camera",
-                    "digital camera",
-                    "webcam",
-                    "dash camera",
-                    "dash cam",
-                    "surveillance camera",
-                    "outdoor camera",
-                    "indoor camera"
-                ]
+            label: "Smart Home",
+            query: "smart home"
         },
 
         {
-            label:
-                "Smart Home",
-
-            query:
-                "smart-home",
-
-            terms:
-                [
-                    "smart home",
-                    "smart device",
-                    "smart devices",
-                    "smart switch",
-                    "smart plug",
-                    "smart socket",
-                    "smart sensor",
-                    "smart lock",
-                    "smart bulb",
-                    "smart light",
-                    "smart lighting",
-                    "smart thermostat",
-                    "smart security",
-                    "smart doorbell",
-                    "wifi smart",
-                    "wi-fi smart",
-                    "home automation"
-                ]
+            label: "Camera",
+            query: "camera"
         }
 
     ];
@@ -513,71 +226,57 @@
 
     const state = {
 
-        products:
-            [],
+        products: [],
 
-        filteredProducts:
-            [],
+        filteredProducts: [],
 
-        activeCategory:
-            "",
+        activeCategoryQuery: "",
 
-        searchQuery:
-            "",
+        searchQuery: "",
 
-        sortBy:
-            "featured",
+        sortBy: "featured",
 
-        loading:
-            false,
+        loading: false,
 
-        initialized:
-            false,
-
-        renderToken:
-            0
+        requestSequence: 0
 
     };
 
 
+    let activeAbortController =
+        null;
+
+    let searchDebounceTimer =
+        null;
+
+
     /* =========================================================================
-       5. DOM
+       5. DOM ELEMENTS
        ========================================================================= */
 
     const elements = {
 
-        productList:
-            null,
+        productList: null,
 
-        resultsCount:
-            null,
+        resultsCount: null,
 
-        searchInput:
-            null,
+        searchInput: null,
 
-        clearSearchButton:
-            null,
+        clearSearchButton: null,
 
-        sortSelect:
-            null,
+        sortSelect: null,
 
-        categoriesNav:
-            null,
+        categoriesNav: null,
 
-        pageHeading:
-            null,
+        pageHeading: null,
 
-        liveRegion:
-            null,
+        liveRegion: null,
 
-        productModal:
-            null,
+        productModal: null,
 
-        modalBody:
-            null,
+        modalBody: null,
 
-        modalClose:
-            null
+        modalClose: null
 
     };
 
@@ -595,8 +294,7 @@
             "DOMContentLoaded",
             initialize,
             {
-                once:
-                    true
+                once: true
             }
         );
 
@@ -609,49 +307,25 @@
 
     function initialize() {
 
-        if (
-            state.initialized
-        ) {
-
-            return;
-
-        }
-
-
-        state.initialized =
-            true;
-
-
         cacheDOM();
 
         loadInitialSort();
 
-        /*
-         * Render categories immediately.
-         */
-        renderCategoryPills();
-
         bindEvents();
+
+        renderCategoryPills();
 
         updateClearSearchButton();
 
-        updatePageHeading();
+        updatePageHeading("");
 
-        renderLoadingState();
-
-        /*
-         * Delay catalog fetch until initial paint.
-         */
-        window.setTimeout(
-            loadCatalog,
-            0
-        );
+        loadProducts();
 
     }
 
 
     /* =========================================================================
-       7. CACHE DOM
+       7. DOM CACHE
        ========================================================================= */
 
     function cacheDOM() {
@@ -677,9 +351,7 @@
             );
 
         elements.sortSelect =
-            document.getElementById(
-                "product-sort"
-            );
+            findSortSelect();
 
         elements.categoriesNav =
             document.getElementById(
@@ -714,15 +386,39 @@
     }
 
 
+    function findSortSelect() {
+
+        return (
+
+            document.getElementById(
+                "product-sort"
+            ) ||
+
+            document.querySelector(
+                "select.product-sort"
+            ) ||
+
+            document.querySelector(
+                "select[name='sort']"
+            )
+
+        );
+
+    }
+
+
     function loadInitialSort() {
 
+        const sort =
+            findSortSelect();
+
         if (
-            elements.sortSelect &&
-            elements.sortSelect.value
+            sort &&
+            sort.value
         ) {
 
             state.sortBy =
-                elements.sortSelect.value;
+                sort.value;
 
         }
 
@@ -730,7 +426,7 @@
 
 
     /* =========================================================================
-       8. SVG ICONS
+       8. INLINE SVG ICONS
        ========================================================================= */
 
     function svgIcon(
@@ -743,11 +439,9 @@
                 className
             );
 
-
         const icons = {
 
-            apps:
-                `
+            apps: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
@@ -759,10 +453,23 @@
                     <rect x="4" y="14" width="6" height="6" rx="1"></rect>
                     <rect x="14" y="14" width="6" height="6" rx="1"></rect>
                 </svg>
-                `,
+            `,
 
-            solar:
-                `
+            category: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <rect x="4" y="4" width="6" height="6" rx="1"></rect>
+                    <rect x="14" y="4" width="6" height="6" rx="1"></rect>
+                    <rect x="4" y="14" width="6" height="6" rx="1"></rect>
+                    <rect x="14" y="14" width="6" height="6" rx="1"></rect>
+                </svg>
+            `,
+
+            solar: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
@@ -779,201 +486,186 @@
                     <path d="m19.1 4.9-1.4 1.4"></path>
                     <path d="m6.3 17.7-1.4 1.4"></path>
                 </svg>
-                `,
+            `,
 
-            battery:
-                `
+            battery: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
                     <rect x="3" y="7" width="17" height="10" rx="2"></rect>
                     <path d="M21 10v4"></path>
                     <path d="M8 12h7"></path>
                 </svg>
-                `,
+            `,
 
-            charger:
-                `
+            charger: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
-                    <path d="M9 2v6"></path>
-                    <path d="M15 2v6"></path>
-                    <path d="M7 8h10"></path>
-                    <path d="M12 8v14"></path>
+                    <path d="M8 3v6"></path>
+                    <path d="M16 3v6"></path>
+                    <path d="M5 9h14"></path>
+                    <path d="M12 9v5"></path>
+                    <path d="M9 14h6"></path>
+                    <path d="M12 14v7"></path>
                 </svg>
-                `,
+            `,
 
-            powerbank:
-                `
+            power: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
-                    <rect x="4" y="4" width="16" height="16" rx="2"></rect>
-                    <path d="M8 12h8"></path>
-                    <path d="M12 8v8"></path>
+                    <rect x="4" y="6" width="16" height="12" rx="2"></rect>
+                    <path d="M9 9h6"></path>
+                    <path d="M9 12h6"></path>
+                    <path d="M9 15h3"></path>
                 </svg>
-                `,
+            `,
 
-            cable:
-                `
+            cable: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
-                    <path d="M7 3v5"></path>
-                    <path d="M17 16v5"></path>
-                    <path d="M7 8c0 5 10 3 10 8"></path>
-                    <path d="M5 3h4"></path>
-                    <path d="M15 21h4"></path>
+                    <path d="M6 8v4a6 6 0 0 0 6 6h6"></path>
+                    <path d="M4 6h4v4H4z"></path>
+                    <path d="M18 16h2v4h-4v-4"></path>
                 </svg>
-                `,
+            `,
 
-            earphone:
-                `
+            earphone: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
-                    <path d="M7 13a4 4 0 1 1 4-4v7"></path>
-                    <path d="M17 13a4 4 0 1 0-4-4v7"></path>
+                    <path d="M5 14V9a7 7 0 0 1 14 0v5"></path>
+                    <path d="M5 14H3v5h4v-4"></path>
+                    <path d="M19 14h2v5h-4v-4"></path>
                 </svg>
-                `,
+            `,
 
-            headphone:
-                `
+            headphone: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
-                    <path d="M4 15v-3a8 8 0 0 1 16 0v3"></path>
-                    <path d="M4 15h3v5H5a1 1 0 0 1-1-1z"></path>
-                    <path d="M20 15h-3v5h2a1 1 0 0 1 1-1z"></path>
+                    <path d="M4 14V11a8 8 0 0 1 16 0v3"></path>
+                    <path d="M4 14h3v6H4z"></path>
+                    <path d="M17 14h3v6h-3z"></path>
                 </svg>
-                `,
+            `,
 
-            modem:
-                `
+            router: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
-                    <rect x="4" y="9" width="16" height="9" rx="2"></rect>
-                    <path d="M8 13h.01"></path>
-                    <path d="M12 13h.01"></path>
-                    <path d="M16 13h.01"></path>
-                    <path d="M9 6h6"></path>
+                    <rect x="3" y="9" width="18" height="8" rx="2"></rect>
+                    <path d="M7 13h.01"></path>
+                    <path d="M11 13h.01"></path>
+                    <path d="M15 13h.01"></path>
+                    <path d="M8 7a6 6 0 0 1 8 0"></path>
                 </svg>
-                `,
+            `,
 
-            router:
-                `
+            laptop: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
-                    <rect x="3" y="10" width="18" height="8" rx="2"></rect>
-                    <path d="M8 10V7"></path>
-                    <path d="M16 10V7"></path>
-                    <path d="M6 14h.01"></path>
-                    <path d="M10 14h.01"></path>
-                    <path d="M14 14h.01"></path>
+                    <rect x="5" y="4" width="14" height="10" rx="1.5"></rect>
+                    <path d="M3 18h18"></path>
+                    <path d="M8 18l1-2h6l1 2"></path>
                 </svg>
-                `,
+            `,
 
-            laptop:
-                `
+            tool: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
-                    <rect x="5" y="4" width="14" height="11" rx="1.5"></rect>
-                    <path d="M3 19h18"></path>
-                    <path d="M8 19l1-3h6l1 3"></path>
+                    <path d="m14 6 4 4"></path>
+                    <path d="M8 18 18 8"></path>
+                    <path d="m5 21 3-3"></path>
+                    <path d="m4 16 4 4"></path>
                 </svg>
-                `,
+            `,
 
-            tool:
-                `
+            smart: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
-                >
-                    <path d="M14 6a5 5 0 0 0-7 7l-4 4 4 4 4-4a5 5 0 0 0 7-7"></path>
-                    <path d="m13 11 4 4"></path>
-                </svg>
-                `,
-
-            camera:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
-                    <path d="M4 7h4l2-2h4l2 2h4v12H4z"></path>
-                    <circle cx="12" cy="13" r="3"></circle>
-                </svg>
-                `,
-
-            home:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
+                    focusable="false"
                 >
                     <path d="M3 11 12 4l9 7"></path>
                     <path d="M5 10v10h14V10"></path>
                     <path d="M9 20v-5h6v5"></path>
                 </svg>
-                `,
+            `,
 
-            category:
-                `
+            camera: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
-                    <rect x="4" y="4" width="6" height="6" rx="1"></rect>
-                    <rect x="14" y="4" width="6" height="6" rx="1"></rect>
-                    <rect x="4" y="14" width="6" height="6" rx="1"></rect>
-                    <rect x="14" y="14" width="6" height="6" rx="1"></rect>
+                    <path d="M5 7h3l1.5-2h5L16 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"></path>
+                    <circle cx="12" cy="13" r="3.5"></circle>
                 </svg>
-                `,
+            `,
 
-            eye:
-                `
+            star: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"></path>
+                </svg>
+            `,
+
+            eye: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
                 >
                     <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
                     <circle cx="12" cy="12" r="2.5"></circle>
                 </svg>
-                `,
+            `,
 
-            cart:
-                `
+            add_cart: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
                     <circle cx="9" cy="20" r="1"></circle>
                     <circle cx="19" cy="20" r="1"></circle>
@@ -981,67 +673,68 @@
                     <path d="M16 4v5"></path>
                     <path d="M13.5 6.5h5"></path>
                 </svg>
-                `,
+            `,
 
-            check:
-                `
+            check: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
                     <path d="m5 12 4 4L19 6"></path>
                 </svg>
-                `,
+            `,
 
-            inventory:
-                `
+            inventory: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
                     <path d="M4 7h16v13H4z"></path>
                     <path d="M8 7V4h8v3"></path>
                     <path d="M8 11h8"></path>
                 </svg>
-                `,
+            `,
 
-            refresh:
-                `
+            refresh: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
                     <path d="M20 11a8 8 0 1 0 1 4"></path>
                     <path d="M20 4v7h-7"></path>
                 </svg>
-                `,
+            `,
 
-            error:
-                `
+            error: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
                     <circle cx="12" cy="12" r="9"></circle>
                     <path d="M12 8v5"></path>
                     <path d="M12 16h.01"></path>
                 </svg>
-                `,
+            `,
 
-            star:
-                `
+            close: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
+                    focusable="false"
                 >
-                    <path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"></path>
+                    <path d="M6 6l12 12"></path>
+                    <path d="M18 6L6 18"></path>
                 </svg>
-                `
+            `
 
         };
 
@@ -1054,71 +747,93 @@
     }
 
 
-    function categoryIcon(
-        category
+    function getCategoryIcon(
+        query
     ) {
 
-        const text =
+        const value =
             String(
-                category?.label ||
-                ""
+                query || ""
             )
                 .toLowerCase();
 
+        if (
+            value.includes(
+                "solar"
+            )
+        ) {
+            return "solar";
+        }
 
         if (
-            text.includes("solar")
-        ) return "solar";
+            value === "battery" ||
+            value.includes("battery")
+        ) {
+            return "battery";
+        }
 
         if (
-            text.includes("battery")
-        ) return "battery";
+            value.includes("charger")
+        ) {
+            return "charger";
+        }
 
         if (
-            text.includes("charger")
-        ) return "charger";
+            value.includes("power bank")
+        ) {
+            return "power";
+        }
 
         if (
-            text.includes("power bank")
-        ) return "powerbank";
+            value.includes("cable")
+        ) {
+            return "cable";
+        }
 
         if (
-            text.includes("cable")
-        ) return "cable";
+            value.includes("earphone")
+        ) {
+            return "earphone";
+        }
 
         if (
-            text.includes("earphone")
-        ) return "earphone";
+            value.includes("headphone")
+        ) {
+            return "headphone";
+        }
 
         if (
-            text.includes("headphone")
-        ) return "headphone";
+            value.includes("router") ||
+            value.includes("modem")
+        ) {
+            return "router";
+        }
 
         if (
-            text.includes("modem")
-        ) return "modem";
+            value.includes("laptop")
+        ) {
+            return "laptop";
+        }
 
         if (
-            text.includes("router")
-        ) return "router";
+            value.includes("power tool")
+        ) {
+            return "tool";
+        }
 
         if (
-            text.includes("laptop")
-        ) return "laptop";
+            value.includes("smart home")
+        ) {
+            return "smart";
+        }
 
         if (
-            text.includes("power tool")
-        ) return "tool";
+            value.includes("camera")
+        ) {
+            return "camera";
+        }
 
-        if (
-            text.includes("camera")
-        ) return "camera";
-
-        if (
-            text.includes("smart")
-        ) return "home";
-
-        return "apps";
+        return "category";
 
     }
 
@@ -1129,82 +844,104 @@
 
     function bindEvents() {
 
-        elements.searchInput?.addEventListener(
-            "input",
-            handleSearch
-        );
+        if (
+            elements.searchInput
+        ) {
+
+            elements.searchInput.addEventListener(
+                "input",
+                handleSearchInput
+            );
+
+            elements.searchInput.addEventListener(
+                "keydown",
+                handleSearchKeydown
+            );
+
+        }
 
 
-        elements.searchInput?.addEventListener(
-            "keydown",
-            event => {
+        if (
+            elements.clearSearchButton
+        ) {
 
-                if (
-                    event.key ===
-                    "Escape"
-                ) {
+            elements.clearSearchButton.addEventListener(
+                "click",
+                clearSearch
+            );
 
-                    clearSearch();
+        }
+
+
+        if (
+            elements.sortSelect
+        ) {
+
+            elements.sortSelect.addEventListener(
+                "change",
+                handleSortChange
+            );
+
+        }
+
+
+        if (
+            elements.categoriesNav
+        ) {
+
+            elements.categoriesNav.addEventListener(
+                "click",
+                handleCategoryClick
+            );
+
+        }
+
+
+        if (
+            elements.productList
+        ) {
+
+            elements.productList.addEventListener(
+                "click",
+                handleProductGridClick
+            );
+
+        }
+
+
+        if (
+            elements.modalClose
+        ) {
+
+            elements.modalClose.addEventListener(
+                "click",
+                closeProductModal
+            );
+
+        }
+
+
+        if (
+            elements.productModal
+        ) {
+
+            elements.productModal.addEventListener(
+                "click",
+                event => {
+
+                    if (
+                        event.target ===
+                        elements.productModal
+                    ) {
+
+                        closeProductModal();
+
+                    }
 
                 }
+            );
 
-            }
-        );
-
-
-        elements.clearSearchButton?.addEventListener(
-            "click",
-            clearSearch
-        );
-
-
-        elements.sortSelect?.addEventListener(
-            "change",
-            event => {
-
-                state.sortBy =
-                    event.target?.value ||
-                    "featured";
-
-                applyFiltersAndRender();
-
-            }
-        );
-
-
-        elements.categoriesNav?.addEventListener(
-            "click",
-            handleCategoryClick
-        );
-
-
-        elements.productList?.addEventListener(
-            "click",
-            handleProductGridClick
-        );
-
-
-        elements.modalClose?.addEventListener(
-            "click",
-            closeProductModal
-        );
-
-
-        elements.productModal?.addEventListener(
-            "click",
-            event => {
-
-                if (
-                    event.target ===
-                    elements.productModal
-                ) {
-
-                    closeProductModal();
-
-                }
-
-            }
-        );
+        }
 
 
         document.addEventListener(
@@ -1214,7 +951,8 @@
                 if (
                     event.key ===
                     "Escape" &&
-                    elements.productModal?.classList.contains(
+                    elements.productModal &&
+                    elements.productModal.classList.contains(
                         "is-open"
                     )
                 ) {
@@ -1230,33 +968,167 @@
 
 
     /* =========================================================================
-       10. CATEGORIES
+       10. SEARCH
        ========================================================================= */
 
-    function renderCategoryPills() {
+    function handleSearchInput(
+        event
+    ) {
+
+        state.searchQuery =
+            String(
+                event.target?.value ||
+                ""
+            ).trim();
+
+        updateClearSearchButton();
+
+        window.clearTimeout(
+            searchDebounceTimer
+        );
+
+        searchDebounceTimer =
+            window.setTimeout(
+                () => {
+
+                    state.activeCategoryQuery =
+                        "";
+
+                    highlightActiveCategoryPill(
+                        ""
+                    );
+
+                    loadProducts(
+                        state.searchQuery
+                    );
+
+                },
+                CONFIG.DEBOUNCE_DELAY
+            );
+
+    }
+
+
+    function handleSearchKeydown(
+        event
+    ) {
 
         if (
-            !elements.categoriesNav
+            event.key !==
+            "Enter"
         ) {
-
-            console.warn(
-                "[PRASUN SHOP] #products-categories not found."
-            );
 
             return;
 
         }
 
+        event.preventDefault();
 
-        elements.categoriesNav.innerHTML =
+        window.clearTimeout(
+            searchDebounceTimer
+        );
+
+        state.activeCategoryQuery =
+            "";
+
+        highlightActiveCategoryPill(
+            ""
+        );
+
+        loadProducts(
+            state.searchQuery
+        );
+
+    }
+
+
+    function clearSearch() {
+
+        window.clearTimeout(
+            searchDebounceTimer
+        );
+
+        if (
+            elements.searchInput
+        ) {
+
+            elements.searchInput.value =
+                "";
+
+            elements.searchInput.focus();
+
+        }
+
+        state.searchQuery =
+            "";
+
+        updateClearSearchButton();
+
+        loadProducts(
+            state.activeCategoryQuery ||
+            ""
+        );
+
+    }
+
+
+    function updateClearSearchButton() {
+
+        const button =
+            elements.clearSearchButton;
+
+        if (!button) {
+            return;
+        }
+
+        button.hidden =
+            state.searchQuery.length ===
+            0;
+
+    }
+
+
+    function handleSortChange(
+        event
+    ) {
+
+        state.sortBy =
+            event.target?.value ||
+            "featured";
+
+        applyFiltersAndRender();
+
+    }
+
+
+    /* =========================================================================
+       11. CATEGORY HANDLING
+       ========================================================================= */
+
+    function renderCategoryPills() {
+
+        const nav =
+            elements.categoriesNav;
+
+        if (!nav) {
+            return;
+        }
+
+        nav.innerHTML =
             CATEGORY_MAP
                 .map(
                     category => {
 
                         const active =
                             category.query ===
-                            state.activeCategory;
+                            state.activeCategoryQuery;
 
+                        const icon =
+                            category.query
+                                ? getCategoryIcon(
+                                    category.query
+                                )
+                                : "apps";
 
                         return `
 
@@ -1278,9 +1150,7 @@
                             >
 
                                 ${svgIcon(
-                                    categoryIcon(
-                                        category
-                                    ),
+                                    icon,
                                     "ui-icon ui-icon-sm"
                                 )}
 
@@ -1310,30 +1180,21 @@
                 ".category-pill"
             );
 
-
-        if (
-            !button
-        ) {
-
+        if (!button) {
             return;
-
         }
 
-
-        state.activeCategory =
+        const query =
             String(
                 button.dataset.query ||
                 ""
-            )
-                .trim();
+            ).trim();
 
+        state.activeCategoryQuery =
+            query;
 
-        /*
-         * Category selection clears search.
-         */
         state.searchQuery =
             "";
-
 
         if (
             elements.searchInput
@@ -1344,20 +1205,31 @@
 
         }
 
-
         updateClearSearchButton();
 
-        highlightCategory();
+        highlightActiveCategoryPill(
+            query
+        );
 
-        applyFiltersAndRender();
+        loadProducts(
+            query
+        );
 
     }
 
 
-    function highlightCategory() {
+    function highlightActiveCategoryPill(
+        query
+    ) {
+
+        if (
+            !elements.categoriesNav
+        ) {
+            return;
+        }
 
         elements.categoriesNav
-            ?.querySelectorAll(
+            .querySelectorAll(
                 ".category-pill"
             )
             .forEach(
@@ -1368,14 +1240,15 @@
                             button.dataset.query ||
                             ""
                         ) ===
-                        state.activeCategory;
-
+                        String(
+                            query ||
+                            ""
+                        );
 
                     button.classList.toggle(
                         "active",
                         active
                     );
-
 
                     button.setAttribute(
                         "aria-pressed",
@@ -1390,92 +1263,91 @@
     }
 
 
-    function getActiveCategory() {
-
-        return (
-            CATEGORY_MAP.find(
-                item =>
-                    item.query ===
-                    state.activeCategory
-            ) ||
-            CATEGORY_MAP[0]
-        );
-
-    }
-
-
     /* =========================================================================
-       11. CATALOG LOADING
+       12. PRODUCT API
        ========================================================================= */
 
-    async function loadCatalog() {
+    async function loadProducts(
+        query = ""
+    ) {
+
+        const requestId =
+            ++state.requestSequence;
 
         if (
-            state.loading
+            activeAbortController
         ) {
 
-            return;
+            activeAbortController.abort();
 
         }
 
+        activeAbortController =
+            new AbortController();
+
+        const controller =
+            activeAbortController;
 
         state.loading =
             true;
 
+        setLoadingState(
+            true
+        );
 
         renderLoadingState();
 
+        const cleanQuery =
+            String(
+                query ||
+                ""
+            ).trim();
 
-        const controller =
-            new AbortController();
+        let apiUrl =
+            `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`;
 
+        if (
+            cleanQuery
+        ) {
 
-        const timeout =
+            apiUrl +=
+                `?q=${encodeURIComponent(
+                    cleanQuery
+                )}`;
+
+        }
+
+        const timer =
             window.setTimeout(
                 () => {
 
                     controller.abort();
 
                 },
-
                 CONFIG.REQUEST_TIMEOUT
-
             );
-
 
         try {
 
-            const endpoint =
-                `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`;
-
-
             const response =
                 await fetch(
-                    endpoint,
+                    apiUrl,
                     {
-
                         method:
                             "GET",
 
-                        headers:
-                            {
-                                Accept:
-                                    "application/json"
-                            },
+                        headers: {
+                            Accept:
+                                "application/json"
+                        },
 
-                        /*
-                         * no-store is safer because the catalog may
-                         * change after CJ synchronization.
-                         */
                         cache:
                             "no-store",
 
                         signal:
                             controller.signal
-
                     }
                 );
-
 
             if (
                 !response.ok
@@ -1487,10 +1359,8 @@
 
             }
 
-
             const data =
                 await response.json();
-
 
             if (
                 data?.success ===
@@ -1498,72 +1368,68 @@
             ) {
 
                 throw new Error(
-                    data?.error ||
+                    data.error ||
                     "Product service returned an error."
                 );
 
             }
-
 
             const rawProducts =
                 extractProducts(
                     data
                 );
 
-
-            console.info(
-                "[PRASUN SHOP] Worker returned:",
-                rawProducts.length,
-                "products"
-            );
-
-
-            /*
-             * IMPORTANT:
-             * No 5,000 product limit.
-             */
-            state.products =
-                deduplicateProducts(
-                    rawProducts
-                )
+            const normalizedProducts =
+                rawProducts
+                    .slice(
+                        0,
+                        CONFIG.MAX_PRODUCTS
+                    )
                     .map(
                         normalizeProduct
                     )
-                    .filter(
-                        Boolean
-                    );
+                    .filter(Boolean);
 
+            if (
+                requestId !==
+                state.requestSequence
+            ) {
 
-            console.info(
-                "[PRASUN SHOP] Normalized catalog:",
-                state.products.length,
-                "products"
+                return;
+
+            }
+
+            state.products =
+                normalizedProducts;
+
+            updatePageHeading(
+                cleanQuery
             );
 
-
             applyFiltersAndRender();
-
 
         } catch (
             error
         ) {
-
-            console.error(
-                "[PRASUN SHOP] Catalog loading failed:",
-                error
-            );
-
 
             if (
                 error?.name ===
                 "AbortError"
             ) {
 
-                renderErrorState(
-                    "The catalog request timed out."
-                );
+                return;
 
-            } else {
+            }
+
+            console.error(
+                "[PRASUN SHOP] Product API error:",
+                error
+            );
+
+            if (
+                requestId ===
+                state.requestSequence
+            ) {
 
                 renderErrorState(
                     error?.message ||
@@ -1575,12 +1441,32 @@
         } finally {
 
             window.clearTimeout(
-                timeout
+                timer
             );
 
+            if (
+                requestId ===
+                state.requestSequence
+            ) {
 
-            state.loading =
-                false;
+                state.loading =
+                    false;
+
+                setLoadingState(
+                    false
+                );
+
+                if (
+                    activeAbortController ===
+                    controller
+                ) {
+
+                    activeAbortController =
+                        null;
+
+                }
+
+            }
 
         }
 
@@ -1601,7 +1487,6 @@
 
         }
 
-
         if (
             Array.isArray(
                 data?.products
@@ -1611,7 +1496,6 @@
             return data.products;
 
         }
-
 
         if (
             Array.isArray(
@@ -1623,7 +1507,6 @@
 
         }
 
-
         if (
             Array.isArray(
                 data?.data?.list
@@ -1633,7 +1516,6 @@
             return data.data.list;
 
         }
-
 
         if (
             Array.isArray(
@@ -1645,180 +1527,725 @@
 
         }
 
-
-        /*
-         * Some API wrappers may use `items`.
-         */
-        if (
-            Array.isArray(
-                data?.items
-            )
-        ) {
-
-            return data.items;
-
-        }
-
-
         return [];
 
     }
 
 
-    function deduplicateProducts(
-        products
+    /* =========================================================================
+       13. IMAGE HANDLING
+       ========================================================================= */
+
+    function normalizeImageUrl(
+        value
     ) {
 
-        const map =
-            new Map();
-
-
-        for (
-            const product
-            of products
+        if (
+            !value ||
+            typeof value !==
+            "string"
         ) {
 
-            if (
-                !product ||
-                typeof product !==
-                    "object"
-            ) {
+            return "";
 
-                continue;
+        }
 
-            }
+        let url =
+            value.trim();
+
+        if (!url) {
+            return "";
+        }
+
+        if (
+            url.startsWith(
+                "data:image/"
+            )
+        ) {
+
+            return url;
+
+        }
+
+        if (
+            url.startsWith(
+                "//"
+            )
+        ) {
+
+            url =
+                `https:${url}`;
+
+        }
+
+        if (
+            /^http:\/\//i.test(
+                url
+            )
+        ) {
+
+            url =
+                url.replace(
+                    /^http:\/\//i,
+                    "https://"
+                );
+
+        }
+
+        return url;
+
+    }
 
 
-            const key =
-                String(
+    function isProxyUrl(
+        url
+    ) {
 
-                    product.pid ||
+        return (
+            typeof url ===
+            "string" &&
+            url.includes(
+                CONFIG.IMAGE_PROXY_ENDPOINT
+            )
+        );
 
-                    product.id ||
-
-                    product.productId ||
-
-                    product.sku ||
-
-                    ""
-
-                )
-                    .trim()
-                    .toLowerCase();
+    }
 
 
-            if (
-                !key
-            ) {
+    function buildProxyUrl(
+        originalUrl
+    ) {
 
-                continue;
+        const normalized =
+            normalizeImageUrl(
+                originalUrl
+            );
 
-            }
+        if (!normalized) {
+            return "";
+        }
+
+        if (
+            normalized.startsWith(
+                "data:image/"
+            )
+        ) {
+
+            return normalized;
+
+        }
+
+        if (
+            isProxyUrl(
+                normalized
+            )
+        ) {
+
+            return normalized;
+
+        }
+
+        return (
+            `${CONFIG.API_BASE}${CONFIG.IMAGE_PROXY_ENDPOINT}` +
+            `?url=${encodeURIComponent(
+                normalized
+            )}`
+        );
+
+    }
 
 
-            /*
-             * Latest occurrence wins.
-             */
-            map.set(
-                key,
-                product
+    function collectProductImageUrls(
+        product
+    ) {
+
+        const candidates =
+            [];
+
+        if (
+            product?.image
+        ) {
+
+            candidates.push(
+                product.image
             );
 
         }
 
+        if (
+            Array.isArray(
+                product?.images
+            )
+        ) {
+
+            candidates.push(
+                ...product.images
+            );
+
+        }
+
+        if (
+            product?.originalImage
+        ) {
+
+            candidates.push(
+                product.originalImage
+            );
+
+        }
+
+        if (
+            Array.isArray(
+                product?.originalImages
+            )
+        ) {
+
+            candidates.push(
+                ...product.originalImages
+            );
+
+        }
+
+        if (
+            product?.bigImage
+        ) {
+
+            candidates.push(
+                product.bigImage
+            );
+
+        }
+
+        if (
+            product?.productImage
+        ) {
+
+            candidates.push(
+                product.productImage
+            );
+
+        }
+
+        if (
+            product?.productImg
+        ) {
+
+            candidates.push(
+                product.productImg
+            );
+
+        }
+
+        if (
+            Array.isArray(
+                product?.productImageSet
+            )
+        ) {
+
+            candidates.push(
+                ...product.productImageSet
+            );
+
+        }
+
+        if (
+            typeof product?.productImageSet ===
+            "string"
+        ) {
+
+            candidates.push(
+                ...product.productImageSet
+                    .split(",")
+                    .map(
+                        value =>
+                            value.trim()
+                    )
+            );
+
+        }
 
         return [
-            ...map.values()
+            ...new Set(
+                candidates
+                    .map(
+                        normalizeImageUrl
+                    )
+                    .filter(Boolean)
+            )
+        ];
+
+    }
+
+
+    function getPrimaryImage(
+        product
+    ) {
+
+        const images =
+            collectProductImageUrls(
+                product
+            );
+
+        const existingProxy =
+            images.find(
+                isProxyUrl
+            );
+
+        if (
+            existingProxy
+        ) {
+
+            return existingProxy;
+
+        }
+
+        if (
+            images.length
+        ) {
+
+            return buildProxyUrl(
+                images[0]
+            );
+
+        }
+
+        return PLACEHOLDER_IMAGE;
+
+    }
+
+
+    function getGalleryImages(
+        product
+    ) {
+
+        return [
+            ...new Set(
+                collectProductImageUrls(
+                    product
+                )
+                    .map(
+                        buildProxyUrl
+                    )
+                    .filter(Boolean)
+            )
         ];
 
     }
 
 
     /* =========================================================================
-       12. SEARCH
+       14. PRODUCT NORMALIZATION
        ========================================================================= */
 
-    function handleSearch(
-        event
+    function normalizeProduct(
+        raw
     ) {
 
-        state.searchQuery =
+        if (
+            !raw ||
+            typeof raw !==
+            "object"
+        ) {
+
+            return null;
+
+        }
+
+        const id =
             String(
-                event.target?.value ||
+                raw.id ??
+                raw.pid ??
+                raw.productId ??
+                raw.sku ??
                 ""
+            ).trim();
+
+        const pid =
+            String(
+                raw.pid ??
+                raw.id ??
+                raw.productId ??
+                ""
+            ).trim();
+
+        const name =
+            String(
+                raw.title ??
+                raw.name ??
+                raw.productNameEn ??
+                raw.productName ??
+                "CJ Product"
+            ).trim();
+
+        if (
+            !id ||
+            !name
+        ) {
+
+            return null;
+
+        }
+
+
+        /* ---------------------------------------------------------------------
+           PRICE
+           --------------------------------------------------------------------- */
+
+        let rawPrice =
+            raw.price ??
+            raw.sellPrice ??
+            raw.unitPrice ??
+            0;
+
+        if (
+            rawPrice &&
+            typeof rawPrice ===
+            "object"
+        ) {
+
+            rawPrice =
+                rawPrice.amount ??
+                rawPrice.value ??
+                rawPrice.raw ??
+                0;
+
+        }
+
+        const parsedPrice =
+            parseFloat(
+                String(
+                    rawPrice
+                ).replace(
+                    /[^0-9.]/g,
+                    ""
+                )
+            );
+
+        const price =
+            Number.isFinite(
+                parsedPrice
             )
-                .trim()
-                .toLowerCase();
+                ? Number(
+                    parsedPrice.toFixed(
+                        2
+                    )
+                )
+                : 0;
 
 
-        /*
-         * Searching from All Products should actually search
-         * the full catalog.
-         */
-        if (
-            state.searchQuery
-        ) {
+        /* ---------------------------------------------------------------------
+           INVENTORY
+           --------------------------------------------------------------------- */
 
-            state.activeCategory =
-                "";
+        const parsedQuantity =
+            Number(
+                raw.quantity ??
+                raw.inventory ??
+                raw.totalInventory ??
+                raw.warehouseInventoryNum ??
+                raw.totalVerifiedInventory ??
+                0
+            );
 
-            highlightCategory();
+        const quantity =
+            Number.isFinite(
+                parsedQuantity
+            )
+                ? Math.max(
+                    0,
+                    Math.floor(
+                        parsedQuantity
+                    )
+                )
+                : 0;
 
-        }
+
+        /* ---------------------------------------------------------------------
+           RATING
+           --------------------------------------------------------------------- */
+
+        const parsedRating =
+            parseFloat(
+                raw.rating
+            );
+
+        const rating =
+            Number.isFinite(
+                parsedRating
+            )
+                ? Number(
+                    Math.max(
+                        0,
+                        Math.min(
+                            5,
+                            parsedRating
+                        )
+                    ).toFixed(
+                        1
+                    )
+                )
+                : 0;
 
 
-        updateClearSearchButton();
+        /* ---------------------------------------------------------------------
+           IMAGES
+           --------------------------------------------------------------------- */
 
-        applyFiltersAndRender();
+        const image =
+            getPrimaryImage(
+                raw
+            );
+
+        const images =
+            getGalleryImages(
+                raw
+            );
+
+
+        /* ---------------------------------------------------------------------
+           VARIANTS
+           --------------------------------------------------------------------- */
+
+        const variants =
+            Array.isArray(
+                raw.variants
+            )
+                ? raw.variants
+                    .map(
+                        variant => ({
+
+                            vid:
+                                String(
+                                    variant?.vid ||
+                                    variant?.variantId ||
+                                    ""
+                                ),
+
+                            sku:
+                                String(
+                                    variant?.sku ||
+                                    variant?.variantSku ||
+                                    ""
+                                ),
+
+                            name:
+                                String(
+                                    variant?.name ||
+                                    variant?.variantNameEn ||
+                                    variant?.variantKey ||
+                                    "Default"
+                                ),
+
+                            price:
+                                normalizePrice(
+                                    variant?.price
+                                ),
+
+                            costPrice:
+                                normalizePrice(
+                                    variant?.costPrice
+                                ),
+
+                            inventory:
+                                normalizeInventory(
+                                    variant?.inventory ??
+                                    variant?.quantity ??
+                                    0
+                                )
+
+                        })
+                    )
+                : [];
+
+
+        return {
+
+            ...raw,
+
+            id,
+
+            pid,
+
+            cj_id:
+                String(
+                    raw.cj_id ||
+                    raw.cjId ||
+                    pid
+                ),
+
+            sku:
+                String(
+                    raw.sku ||
+                    raw.productSku ||
+                    ""
+                ),
+
+            title:
+                name,
+
+            name,
+
+            description:
+                String(
+                    raw.description ||
+                    ""
+                ),
+
+            category:
+                String(
+                    raw.category ||
+                    raw.categoryName ||
+                    raw.threeCategoryName ||
+                    CONFIG.DEFAULT_CATEGORY
+                ),
+
+            price,
+
+            quantity,
+
+            image,
+
+            images,
+
+            originalImage:
+                normalizeImageUrl(
+                    raw.originalImage ||
+                    raw.bigImage ||
+                    raw.productImage ||
+                    ""
+                ),
+
+            originalImages:
+                Array.isArray(
+                    raw.originalImages
+                )
+                    ? raw.originalImages
+                        .map(
+                            normalizeImageUrl
+                        )
+                        .filter(Boolean)
+                    : [],
+
+            variants,
+
+            rating,
+
+            source:
+                "CJ Dropshipping"
+
+        };
 
     }
 
 
-    function clearSearch() {
+    function normalizePrice(
+        value
+    ) {
+
+        const number =
+            Number(
+                value
+            );
 
         if (
-            elements.searchInput
+            !Number.isFinite(
+                number
+            )
         ) {
 
-            elements.searchInput.value =
-                "";
+            return 0;
 
         }
 
-
-        state.searchQuery =
-            "";
-
-
-        updateClearSearchButton();
-
-        applyFiltersAndRender();
-
-        elements.searchInput?.focus();
+        return Number(
+            number.toFixed(
+                2
+            )
+        );
 
     }
 
 
-    function updateClearSearchButton() {
+    function normalizeInventory(
+        value
+    ) {
+
+        const number =
+            Number(
+                value
+            );
 
         if (
-            !elements.clearSearchButton
+            !Number.isFinite(
+                number
+            )
+        ) {
+
+            return 0;
+
+        }
+
+        return Math.max(
+            0,
+            Math.floor(
+                number
+            )
+        );
+
+    }
+
+
+    /* =========================================================================
+       15. PAGE HEADING
+       ========================================================================= */
+
+    function updatePageHeading(
+        query
+    ) {
+
+        if (
+            !elements.pageHeading
         ) {
 
             return;
 
         }
 
+        if (!query) {
 
-        elements.clearSearchButton.hidden =
-            state.searchQuery.length ===
-            0;
+            elements.pageHeading.textContent =
+                "Featured Products";
+
+            return;
+
+        }
+
+        const category =
+            CATEGORY_MAP.find(
+                item =>
+                    item.query ===
+                    query
+            );
+
+        if (
+            category
+        ) {
+
+            elements.pageHeading.textContent =
+                category.label;
+
+            return;
+
+        }
+
+        elements.pageHeading.textContent =
+            `Search Results for "${query}"`;
 
     }
 
 
     /* =========================================================================
-       13. FILTERING
+       16. FILTER / SORT
        ========================================================================= */
 
     function applyFiltersAndRender() {
@@ -1829,39 +2256,52 @@
             ];
 
 
-        /* ---------------------------------------------------------------------
-           SEARCH
-           --------------------------------------------------------------------- */
+        const localQuery =
+            String(
+                state.searchQuery ||
+                ""
+            )
+                .trim()
+                .toLowerCase();
+
 
         if (
-            state.searchQuery
+            localQuery
         ) {
-
-            const terms =
-                state.searchQuery
-                    .split(
-                        /\s+/
-                    )
-                    .filter(
-                        Boolean
-                    );
-
 
             products =
                 products.filter(
                     product => {
 
-                        const text =
-                            buildSearchText(
-                                product
-                            );
+                        const searchable =
+                            [
 
+                                product.name,
 
-                        return terms.every(
-                            term =>
-                                text.includes(
-                                    term
+                                product.title,
+
+                                product.category,
+
+                                product.sku,
+
+                                product.pid,
+
+                                stripHtml(
+                                    product.description
                                 )
+
+                            ]
+                                .map(
+                                    value =>
+                                        String(
+                                            value ||
+                                            ""
+                                        ).toLowerCase()
+                                )
+                                .join(" ");
+
+                        return searchable.includes(
+                            localQuery
                         );
 
                     }
@@ -1870,33 +2310,60 @@
         }
 
 
-        /* ---------------------------------------------------------------------
-           CATEGORY
-           --------------------------------------------------------------------- */
-
         if (
-            state.activeCategory
+            state.activeCategoryQuery &&
+            !state.searchQuery
         ) {
 
-            const category =
-                getActiveCategory();
+            const categoryQuery =
+                state.activeCategoryQuery
+                    .toLowerCase()
+                    .trim();
 
+            if (
+                categoryQuery
+            ) {
 
-            products =
-                products.filter(
-                    product =>
-                        matchesCategory(
-                            product,
-                            category
-                        )
-                );
+                products =
+                    products.filter(
+                        product => {
+
+                            const searchable =
+                                [
+
+                                    product.name,
+
+                                    product.title,
+
+                                    product.category,
+
+                                    product.sku,
+
+                                    stripHtml(
+                                        product.description
+                                    )
+
+                                ]
+                                    .map(
+                                        value =>
+                                            String(
+                                                value ||
+                                                ""
+                                            ).toLowerCase()
+                                    )
+                                    .join(" ");
+
+                            return searchable.includes(
+                                categoryQuery
+                            );
+
+                        }
+                    );
+
+            }
 
         }
 
-
-        /* ---------------------------------------------------------------------
-           SORT
-           --------------------------------------------------------------------- */
 
         products.sort(
             compareProducts
@@ -1907,40 +2374,20 @@
             products;
 
 
-        updatePageHeading();
-
-        updateResultsCount();
-
-
         if (
             !products.length
         ) {
 
-            let message =
-                "No products are currently available.";
-
-
-            if (
-                state.searchQuery
-            ) {
-
-                message =
-                    `No products found for "${state.searchQuery}".`;
-
-            } else if (
-                state.activeCategory
-            ) {
-
-                message =
-                    `No products found in "${getActiveCategory().label}".`;
-
-            }
-
+            const query =
+                state.searchQuery ||
+                state.activeCategoryQuery ||
+                "";
 
             renderEmptyState(
-                message
+                query
+                    ? `No approved products found for "${query}".`
+                    : "No approved PRASUN SHOP products are currently available."
             );
-
 
             return;
 
@@ -1949,139 +2396,10 @@
 
         renderProductGrid();
 
-    }
-
-
-    function buildSearchText(
-        product
-    ) {
-
-        return [
-
-            product?.title,
-
-            product?.name,
-
-            product?.category,
-
-            product?.oneCategoryName,
-
-            product?.twoCategoryName,
-
-            product?.threeCategoryName,
-
-            product?.categoryPath,
-
-            product?.sku,
-
-            product?.pid,
-
-            product?.cj?.productType,
-
-            product?.cj?.supplierName,
-
-            stripHtml(
-                product?.description
-            )
-
-        ]
-
-            .map(
-                value =>
-                    String(
-                        value ||
-                        ""
-                    )
-                        .toLowerCase()
-            )
-
-            .join(
-                " "
-            );
+        updateResultsCount();
 
     }
 
-
-    function normalizeSearchText(
-        value
-    ) {
-
-        return String(
-            value ||
-            ""
-        )
-            .toLowerCase()
-            .replace(
-                /&/g,
-                " and "
-            )
-            .replace(
-                /[_\-\/]+/g,
-                " "
-            )
-            .replace(
-                /\s+/g,
-                " "
-            )
-            .trim();
-
-    }
-
-
-    function matchesCategory(
-        product,
-        category
-    ) {
-
-        if (
-            !category ||
-            !Array.isArray(
-                category.terms
-            ) ||
-            !category.terms.length
-        ) {
-
-            return true;
-
-        }
-
-
-        const searchable =
-            normalizeSearchText(
-                buildSearchText(
-                    product
-                )
-            );
-
-
-        /*
-         * Match both phrases and individual useful keywords.
-         */
-        return category.terms.some(
-            term => {
-
-                const normalizedTerm =
-                    normalizeSearchText(
-                        term
-                    );
-
-
-                return (
-                    normalizedTerm &&
-                    searchable.includes(
-                        normalizedTerm
-                    )
-                );
-
-            }
-        );
-
-    }
-
-
-    /* =========================================================================
-       14. SORTING
-       ========================================================================= */
 
     function compareProducts(
         a,
@@ -2105,12 +2423,10 @@
                 a.price
             ) || 0;
 
-
         const priceB =
             Number(
                 b.price
             ) || 0;
-
 
         const nameA =
             String(
@@ -2118,17 +2434,29 @@
                 ""
             );
 
-
         const nameB =
             String(
                 b.name ||
                 ""
             );
 
+        const ratingA =
+            Number(
+                a.rating
+            ) || 0;
+
+        const ratingB =
+            Number(
+                b.rating
+            ) || 0;
+
 
         if (
             sort.includes(
                 "lowtohigh"
+            ) ||
+            sort.includes(
+                "lowhigh"
             ) ||
             sort.includes(
                 "priceasc"
@@ -2146,6 +2474,9 @@
         if (
             sort.includes(
                 "hightolow"
+            ) ||
+            sort.includes(
+                "highlow"
             ) ||
             sort.includes(
                 "pricedesc"
@@ -2166,7 +2497,9 @@
             ) ||
             sort.includes(
                 "nameaz"
-            )
+            ) ||
+            sort ===
+            "nameasc"
         ) {
 
             return nameA.localeCompare(
@@ -2187,7 +2520,9 @@
             ) ||
             sort.includes(
                 "nameza"
-            )
+            ) ||
+            sort ===
+            "namedesc"
         ) {
 
             return nameB.localeCompare(
@@ -2202,69 +2537,66 @@
         }
 
 
-        const stockA =
-            Number(
-                a.quantity
-            ) > 0;
-
-
-        const stockB =
-            Number(
-                b.quantity
-            ) > 0;
-
-
         if (
-            stockA &&
-            !stockB
+            sort.includes(
+                "rating"
+            ) ||
+            sort.includes(
+                "toprated"
+            )
         ) {
 
-            return -1;
-
-        }
-
-
-        if (
-            !stockA &&
-            stockB
-        ) {
-
-            return 1;
+            return (
+                ratingB -
+                ratingA
+            );
 
         }
 
 
         /*
-         * CJ listed count can help prioritize products.
+         * Featured:
+         * Put in-stock products first, then products with
+         * ratings, then stable name order.
          */
-        const listedA =
+
+        const stockA =
             Number(
-                a.listedNum ||
-                a.cj?.listedNum ||
-                0
-            );
+                a.quantity
+            ) > 0
+                ? 1
+                : 0;
 
-
-        const listedB =
+        const stockB =
             Number(
-                b.listedNum ||
-                b.cj?.listedNum ||
-                0
-            );
-
+                b.quantity
+            ) > 0
+                ? 1
+                : 0;
 
         if (
-            listedA !==
-            listedB
+            stockA !==
+            stockB
         ) {
 
             return (
-                listedB -
-                listedA
+                stockB -
+                stockA
             );
 
         }
 
+        if (
+            ratingA !==
+            ratingB
+        ) {
+
+            return (
+                ratingB -
+                ratingA
+            );
+
+        }
 
         return nameA.localeCompare(
             nameB,
@@ -2279,716 +2611,7 @@
 
 
     /* =========================================================================
-       15. NORMALIZATION
-       ========================================================================= */
-
-    function normalizeProduct(
-        raw
-    ) {
-
-        if (
-            !raw ||
-            typeof raw !==
-                "object"
-        ) {
-
-            return null;
-
-        }
-
-
-        const id =
-            String(
-                raw.id ??
-                raw.pid ??
-                raw.productId ??
-                raw.sku ??
-                ""
-            )
-                .trim();
-
-
-        const pid =
-            String(
-                raw.pid ??
-                raw.id ??
-                raw.productId ??
-                ""
-            )
-                .trim();
-
-
-        const name =
-            String(
-                raw.title ??
-                raw.name ??
-                raw.productNameEn ??
-                raw.productName ??
-                "CJ Product"
-            )
-                .trim();
-
-
-        if (
-            !id ||
-            !name
-        ) {
-
-            return null;
-
-        }
-
-
-        let rawPrice =
-            raw.price ??
-            raw.sellPrice ??
-            raw.unitPrice ??
-            0;
-
-
-        if (
-            rawPrice &&
-            typeof rawPrice ===
-                "object"
-        ) {
-
-            rawPrice =
-                rawPrice.amount ??
-                rawPrice.value ??
-                rawPrice.raw ??
-                0;
-
-        }
-
-
-        const parsedPrice =
-            parseFloat(
-                String(
-                    rawPrice
-                )
-                    .replace(
-                        /[^0-9.]/g,
-                        ""
-                    )
-            );
-
-
-        const price =
-            Number.isFinite(
-                parsedPrice
-            )
-
-                ? Number(
-                    parsedPrice.toFixed(
-                        2
-                    )
-                )
-
-                : 0;
-
-
-        const quantity =
-            normalizeInventory(
-
-                raw.quantity ??
-
-                raw.inventory ??
-
-                raw.totalInventory ??
-
-                raw.warehouseInventoryNum ??
-
-                raw.totalVerifiedInventory ??
-
-                raw.totalUnVerifiedInventory
-
-            );
-
-
-        const rating =
-            normalizeRating(
-                raw.rating
-            );
-
-
-        const images =
-            getGalleryImages(
-                raw
-            );
-
-
-        const image =
-            images[0] ||
-            PLACEHOLDER_IMAGE;
-
-
-        return {
-
-            ...raw,
-
-            id,
-
-            pid,
-
-            cj_id:
-                String(
-                    raw.cj_id ||
-                    raw.cjId ||
-                    pid
-                )
-                    .trim(),
-
-            sku:
-                String(
-                    raw.sku ||
-                    raw.productSku ||
-                    ""
-                )
-                    .trim(),
-
-            title:
-                name,
-
-            name,
-
-            description:
-                String(
-                    raw.description ||
-                    ""
-                ),
-
-            category:
-                String(
-                    raw.category ||
-                    raw.categoryName ||
-                    raw.threeCategoryName ||
-                    raw.twoCategoryName ||
-                    raw.oneCategoryName ||
-                    CONFIG.DEFAULT_CATEGORY
-                )
-                    .trim(),
-
-            oneCategoryName:
-                String(
-                    raw.oneCategoryName ||
-                    ""
-                )
-                    .trim(),
-
-            twoCategoryName:
-                String(
-                    raw.twoCategoryName ||
-                    ""
-                )
-                    .trim(),
-
-            threeCategoryName:
-                String(
-                    raw.threeCategoryName ||
-                    ""
-                )
-                    .trim(),
-
-            categoryPath:
-                String(
-                    raw.categoryPath ||
-                    ""
-                )
-                    .trim(),
-
-            price,
-
-            quantity,
-
-            rating,
-
-            image,
-
-            images,
-
-            originalImage:
-                normalizeImageUrl(
-                    raw.originalImage ||
-                    raw.bigImage ||
-                    raw.productImage ||
-                    ""
-                ),
-
-            originalImages:
-                Array.isArray(
-                    raw.originalImages
-                )
-
-                    ? raw.originalImages
-                        .map(
-                            normalizeImageUrl
-                        )
-                        .filter(
-                            Boolean
-                        )
-
-                    : [],
-
-            variants:
-                normalizeVariants(
-                    raw.variants
-                ),
-
-            listedNum:
-                Number(
-                    raw.listedNum ||
-                    raw.cj?.listedNum ||
-                    0
-                ),
-
-            source:
-                "CJ Dropshipping"
-
-        };
-
-    }
-
-
-    function normalizeVariants(
-        variants
-    ) {
-
-        if (
-            !Array.isArray(
-                variants
-            )
-        ) {
-
-            return [];
-
-        }
-
-
-        return variants.map(
-            variant => {
-
-                return {
-
-                    ...variant,
-
-                    vid:
-                        String(
-                            variant?.vid ||
-                            ""
-                        )
-                            .trim(),
-
-                    sku:
-                        String(
-                            variant?.sku ||
-                            variant?.variantSku ||
-                            ""
-                        )
-                            .trim(),
-
-                    name:
-                        String(
-                            variant?.name ||
-                            variant?.variantNameEn ||
-                            variant?.variantKey ||
-                            "Default"
-                        )
-                            .trim(),
-
-                    price:
-                        normalizePrice(
-                            variant?.price
-                        ),
-
-                    costPrice:
-                        normalizePrice(
-                            variant?.costPrice
-                        ),
-
-                    inventory:
-                        normalizeInventory(
-                            variant?.inventory ??
-                            variant?.totalInventory
-                        )
-
-                };
-
-            }
-        );
-
-    }
-
-
-    function normalizeInventory(
-        value
-    ) {
-
-        const number =
-            Number(
-                value
-            );
-
-
-        if (
-            !Number.isFinite(
-                number
-            )
-        ) {
-
-            return 0;
-
-        }
-
-
-        return Math.max(
-            0,
-            Math.floor(
-                number
-            )
-        );
-
-    }
-
-
-    function normalizeRating(
-        value
-    ) {
-
-        const number =
-            Number(
-                value
-            );
-
-
-        if (
-            !Number.isFinite(
-                number
-            )
-        ) {
-
-            return 0;
-
-        }
-
-
-        return Number(
-            Math.min(
-                5,
-                Math.max(
-                    0,
-                    number
-                )
-            )
-                .toFixed(
-                    1
-                )
-        );
-
-    }
-
-
-    function normalizePrice(
-        value
-    ) {
-
-        const number =
-            Number(
-                value
-            );
-
-
-        if (
-            !Number.isFinite(
-                number
-            )
-        ) {
-
-            return 0;
-
-        }
-
-
-        return Number(
-            number.toFixed(
-                2
-            )
-        );
-
-    }
-
-
-    /* =========================================================================
-       16. IMAGE HANDLING
-       ========================================================================= */
-
-    function normalizeImageUrl(
-        value
-    ) {
-
-        if (
-            !value ||
-            typeof value !==
-                "string"
-        ) {
-
-            return "";
-
-        }
-
-
-        let url =
-            value.trim();
-
-
-        if (
-            !url
-        ) {
-
-            return "";
-
-        }
-
-
-        if (
-            url.startsWith(
-                "data:image/"
-            )
-        ) {
-
-            return url;
-
-        }
-
-
-        if (
-            url.startsWith(
-                "//"
-            )
-        ) {
-
-            url =
-                `https:${url}`;
-
-        }
-
-
-        if (
-            /^http:\/\//i.test(
-                url
-            )
-        ) {
-
-            url =
-                url.replace(
-                    /^http:\/\//i,
-                    "https://"
-                );
-
-        }
-
-
-        return url;
-
-    }
-
-
-    function isProxyUrl(
-        value
-    ) {
-
-        return (
-            typeof value ===
-                "string" &&
-            value.includes(
-                CONFIG.IMAGE_PROXY_ENDPOINT
-            )
-        );
-
-    }
-
-
-    function buildProxyUrl(
-        value
-    ) {
-
-        const normalized =
-            normalizeImageUrl(
-                value
-            );
-
-
-        if (
-            !normalized
-        ) {
-
-            return "";
-
-        }
-
-
-        if (
-            normalized.startsWith(
-                "data:image/"
-            )
-        ) {
-
-            return normalized;
-
-        }
-
-
-        if (
-            isProxyUrl(
-                normalized
-            )
-        ) {
-
-            return normalized;
-
-        }
-
-
-        return (
-            `${CONFIG.API_BASE}` +
-            `${CONFIG.IMAGE_PROXY_ENDPOINT}` +
-            `?url=` +
-            encodeURIComponent(
-                normalized
-            )
-        );
-
-    }
-
-
-    function collectProductImageUrls(
-        product
-    ) {
-
-        const candidates =
-            [];
-
-
-        candidates.push(
-            product?.image
-        );
-
-
-        if (
-            Array.isArray(
-                product?.images
-            )
-        ) {
-
-            candidates.push(
-                ...product.images
-            );
-
-        }
-
-
-        candidates.push(
-            product?.originalImage
-        );
-
-
-        if (
-            Array.isArray(
-                product?.originalImages
-            )
-        ) {
-
-            candidates.push(
-                ...product.originalImages
-            );
-
-        }
-
-
-        candidates.push(
-            product?.bigImage
-        );
-
-
-        candidates.push(
-            product?.productImage
-        );
-
-
-        candidates.push(
-            product?.productImg
-        );
-
-
-        if (
-            Array.isArray(
-                product?.productImageSet
-            )
-        ) {
-
-            candidates.push(
-                ...product.productImageSet
-            );
-
-        }
-
-
-        if (
-            typeof product?.productImageSet ===
-            "string"
-        ) {
-
-            candidates.push(
-                ...product.productImageSet
-                    .split(",")
-            );
-
-        }
-
-
-        return [
-            ...new Set(
-                candidates
-
-                    .map(
-                        normalizeImageUrl
-                    )
-
-                    .filter(
-                        Boolean
-                    )
-            )
-        ];
-
-    }
-
-
-    function getGalleryImages(
-        product
-    ) {
-
-        return [
-            ...new Set(
-
-                collectProductImageUrls(
-                    product
-                )
-
-                    .map(
-                        buildProxyUrl
-                    )
-
-                    .filter(
-                        Boolean
-                    )
-
-            )
-        ];
-
-    }
-
-
-    /* =========================================================================
-       17. GRID RENDERING
+       17. PRODUCT GRID
        ========================================================================= */
 
     function renderProductGrid() {
@@ -3001,124 +2624,25 @@
 
         }
 
-
-        const token =
-            ++state.renderToken;
-
-
         elements.productList.innerHTML =
-            "";
-
+            state.filteredProducts
+                .map(
+                    renderProductCard
+                )
+                .join("");
 
         setLoadingState(
-            true
+            false
         );
 
-
-        const products =
-            state.filteredProducts;
-
-
-        let index =
-            0;
-
-
-        const renderBatch =
-            () => {
-
-                if (
-                    token !==
-                    state.renderToken
-                ) {
-
-                    return;
-
-                }
-
-
-                const fragment =
-                    document.createDocumentFragment();
-
-
-                const end =
-                    Math.min(
-                        index +
-                        CONFIG.RENDER_BATCH_SIZE,
-
-                        products.length
-                    );
-
-
-                for (
-                    ;
-                    index < end;
-                    index++
-                ) {
-
-                    const html =
-                        renderProductCard(
-                            products[index]
-                        );
-
-
-                    const wrapper =
-                        document.createElement(
-                            "div"
-                        );
-
-
-                    wrapper.innerHTML =
-                        html;
-
-
-                    const card =
-                        wrapper.firstElementChild;
-
-
-                    if (
-                        card
-                    ) {
-
-                        fragment.appendChild(
-                            card
-                        );
-
-                    }
-
-                }
-
-
-                elements.productList.appendChild(
-                    fragment
-                );
-
-
-                if (
-                    index <
-                    products.length
-                ) {
-
-                    window.requestAnimationFrame(
-                        renderBatch
-                    );
-
-                } else {
-
-                    setLoadingState(
-                        false
-                    );
-
-                    attachProductImageFallbacks();
-
-                }
-
-            };
-
-
-        renderBatch();
+        attachProductImageFallbacks();
 
     }
 
+
+    /* =========================================================================
+       18. PRODUCT CARD
+       ========================================================================= */
 
     function renderProductCard(
         product
@@ -3129,13 +2653,11 @@
                 product.id
             );
 
-
         const title =
             escapeHTML(
                 product.name ||
                 "CJ Product"
             );
-
 
         const category =
             escapeHTML(
@@ -3143,51 +2665,56 @@
                 CONFIG.DEFAULT_CATEGORY
             );
 
-
         const image =
             escapeHTML(
                 product.image ||
                 PLACEHOLDER_IMAGE
             );
 
-
         const price =
             formatPrice(
                 product.price
             );
 
-
         const quantity =
             Number(
                 product.quantity
-            ) || 0;
-
+            );
 
         const available =
-            quantity >
-            0;
+            Number.isFinite(
+                quantity
+            ) &&
+            quantity > 0;
 
+        const productUrl =
+            `${CONFIG.PRODUCT_PAGE}?id=${encodeURIComponent(
+                String(
+                    product.id
+                )
+            )}`;
 
-        const description =
+        const rating =
+            Number(
+                product.rating
+            ) || 0;
+
+        const descriptionText =
             stripHtml(
                 product.description
             );
 
-
         const shortDescription =
-            description.length >
-                105
+            descriptionText.length >
+            120
 
-                ? (
-                    description.slice(
-                        0,
-                        105
-                    ) +
-                    "..."
-                )
+                ? `${descriptionText.slice(
+                    0,
+                    120
+                )}...`
 
                 : (
-                    description ||
+                    descriptionText ||
                     "Product information available."
                 );
 
@@ -3199,11 +2726,11 @@
                 data-product-id="${productId}"
             >
 
-                <button
-                    type="button"
+                <a
+                    href="${escapeHTML(
+                        productUrl
+                    )}"
                     class="product-card-image-wrap"
-                    data-action="view-details"
-                    data-product-id="${productId}"
                     aria-label="View ${title}"
                 >
 
@@ -3212,7 +2739,9 @@
                     >
 
                         ${svgIcon(
-                            "category",
+                            getCategoryIcon(
+                                category
+                            ),
                             "ui-icon ui-icon-sm"
                         )}
 
@@ -3236,7 +2765,7 @@
                         )}"
                     >
 
-                </button>
+                </a>
 
 
                 <div
@@ -3247,14 +2776,13 @@
                         class="product-title"
                     >
 
-                        <button
-                            type="button"
-                            class="product-title-button"
-                            data-action="view-details"
-                            data-product-id="${productId}"
+                        <a
+                            href="${escapeHTML(
+                                productUrl
+                            )}"
                         >
                             ${title}
-                        </button>
+                        </a>
 
                     </h3>
 
@@ -3269,12 +2797,13 @@
 
 
                     ${
-                        product.rating > 0
+                        rating > 0
+
                             ? `
 
                                 <div
                                     class="product-rating"
-                                    aria-label="Rating ${product.rating.toFixed(
+                                    aria-label="Rating ${rating.toFixed(
                                         1
                                     )} out of 5"
                                 >
@@ -3285,7 +2814,7 @@
                                     )}
 
                                     <span>
-                                        ${product.rating.toFixed(
+                                        ${rating.toFixed(
                                             1
                                         )}
                                     </span>
@@ -3293,6 +2822,7 @@
                                 </div>
 
                             `
+
                             : ""
                     }
 
@@ -3323,8 +2853,8 @@
                             <button
                                 type="button"
                                 class="btn-card btn-secondary view-details-btn"
-                                data-action="view-details"
                                 data-product-id="${productId}"
+                                aria-label="View details for ${title}"
                             >
 
                                 ${svgIcon(
@@ -3342,18 +2872,22 @@
                             <button
                                 type="button"
                                 class="btn-card btn-primary btn-add-to-cart add-to-cart-btn"
-                                data-action="add-cart"
                                 data-product-id="${productId}"
                                 ${
                                     available
                                         ? ""
                                         : "disabled"
                                 }
+                                aria-label="${
+                                    available
+                                        ? `Add ${title} to cart`
+                                        : `${title} is out of stock`
+                                }"
                             >
 
                                 ${svgIcon(
                                     available
-                                        ? "cart"
+                                        ? "add_cart"
                                         : "inventory",
                                     "ui-icon ui-icon-sm"
                                 )}
@@ -3382,7 +2916,88 @@
 
 
     /* =========================================================================
-       18. GRID EVENTS
+       19. IMAGE FALLBACK
+       ========================================================================= */
+
+    function attachProductImageFallbacks() {
+
+        document
+            .querySelectorAll(
+                ".product-image"
+            )
+            .forEach(
+                image => {
+
+                    image.addEventListener(
+                        "error",
+                        handleProductImageError
+                    );
+
+                }
+            );
+
+    }
+
+
+    function handleProductImageError(
+        event
+    ) {
+
+        const image =
+            event.currentTarget;
+
+        if (!image) {
+            return;
+        }
+
+        const original =
+            image.dataset.originalImage;
+
+        if (
+            original &&
+            !image.dataset.originalAttempted
+        ) {
+
+            image.dataset.originalAttempted =
+                "true";
+
+            const proxiedOriginal =
+                buildProxyUrl(
+                    original
+                );
+
+            if (
+                proxiedOriginal &&
+                proxiedOriginal !==
+                image.src
+            ) {
+
+                image.src =
+                    proxiedOriginal;
+
+                return;
+
+            }
+
+        }
+
+        if (
+            !image.dataset.placeholderUsed
+        ) {
+
+            image.dataset.placeholderUsed =
+                "true";
+
+            image.src =
+                PLACEHOLDER_IMAGE;
+
+        }
+
+    }
+
+
+    /* =========================================================================
+       20. GRID CLICK HANDLER
        ========================================================================= */
 
     function handleProductGridClick(
@@ -3391,9 +3006,8 @@
 
         const detailsButton =
             event.target.closest(
-                '[data-action="view-details"]'
+                ".view-details-btn"
             );
-
 
         if (
             detailsButton
@@ -3401,11 +3015,11 @@
 
             event.preventDefault();
 
+            event.stopPropagation();
 
             openProductModal(
                 detailsButton.dataset.productId
             );
-
 
             return;
 
@@ -3414,9 +3028,8 @@
 
         const cartButton =
             event.target.closest(
-                '[data-action="add-cart"]'
+                ".add-to-cart-btn"
             );
-
 
         if (
             !cartButton
@@ -3426,21 +3039,32 @@
 
         }
 
-
         event.preventDefault();
 
+        event.stopPropagation();
+
+        const productId =
+            String(
+                cartButton.dataset.productId ||
+                ""
+            );
+
+        if (
+            !productId
+        ) {
+
+            return;
+
+        }
 
         const product =
             state.products.find(
-                item =>
+                current =>
                     String(
-                        item.id
+                        current.id
                     ) ===
-                    String(
-                        cartButton.dataset.productId
-                    )
+                    productId
             );
-
 
         if (
             !product
@@ -3450,7 +3074,6 @@
 
         }
 
-
         if (
             Number(
                 product.quantity
@@ -3458,19 +3081,16 @@
             0
         ) {
 
-            announce(
+            announceToScreenReader(
                 `${product.name} is currently out of stock.`
             );
-
 
             return;
 
         }
 
-
         let added =
             false;
-
 
         if (
             typeof window.addToCart ===
@@ -3498,7 +3118,6 @@
                     )
                 );
 
-
                 added =
                     true;
 
@@ -3507,14 +3126,13 @@
             ) {
 
                 console.error(
-                    "[PRASUN SHOP] Cart error:",
+                    "[PRASUN SHOP] Cart event error:",
                     error
                 );
 
             }
 
         }
-
 
         if (
             !added
@@ -3524,35 +3142,29 @@
 
         }
 
-
         cartButton.disabled =
             true;
-
 
         cartButton.classList.add(
             "added"
         );
 
+        cartButton.innerHTML = `
 
-        cartButton.innerHTML =
-            `
+            ${svgIcon(
+                "check",
+                "ui-icon ui-icon-sm"
+            )}
 
-                ${svgIcon(
-                    "check",
-                    "ui-icon ui-icon-sm"
-                )}
+            <span>
+                Added
+            </span>
 
-                <span>
-                    Added
-                </span>
+        `;
 
-            `;
-
-
-        announce(
+        announceToScreenReader(
             `${product.name} added to cart.`
         );
-
 
         window.setTimeout(
             () => {
@@ -3560,163 +3172,53 @@
                 cartButton.disabled =
                     false;
 
-
                 cartButton.classList.remove(
                     "added"
                 );
 
+                cartButton.innerHTML = `
 
-                cartButton.innerHTML =
-                    `
+                    ${svgIcon(
+                        "add_cart",
+                        "ui-icon ui-icon-sm"
+                    )}
 
-                        ${svgIcon(
-                            "cart",
-                            "ui-icon ui-icon-sm"
-                        )}
+                    <span>
+                        Add to Cart
+                    </span>
 
-                        <span>
-                            Add to Cart
-                        </span>
-
-                    `;
+                `;
 
             },
-
             1200
-
         );
 
     }
 
 
     /* =========================================================================
-       19. IMAGE FALLBACK
-       ========================================================================= */
-
-    function attachProductImageFallbacks() {
-
-        elements.productList
-            ?.querySelectorAll(
-                ".product-image"
-            )
-            .forEach(
-                image => {
-
-                    image.addEventListener(
-                        "error",
-                        handleImageError,
-                        {
-                            once:
-                                false
-                        }
-                    );
-
-                }
-            );
-
-    }
-
-
-    function handleImageError(
-        event
-    ) {
-
-        const image =
-            event.currentTarget;
-
-
-        if (
-            !image
-        ) {
-
-            return;
-
-        }
-
-
-        const original =
-            image.dataset.originalImage;
-
-
-        if (
-            original &&
-            !image.dataset.originalAttempted
-        ) {
-
-            image.dataset.originalAttempted =
-                "true";
-
-
-            const proxy =
-                buildProxyUrl(
-                    original
-                );
-
-
-            if (
-                proxy &&
-                proxy !==
-                    image.src
-            ) {
-
-                image.src =
-                    proxy;
-
-
-                return;
-
-            }
-
-        }
-
-
-        if (
-            !image.dataset.placeholderUsed
-        ) {
-
-            image.dataset.placeholderUsed =
-                "true";
-
-
-            image.src =
-                PLACEHOLDER_IMAGE;
-
-        }
-
-    }
-
-
-    /* =========================================================================
-       20. MODAL
+       21. DESCRIPTION SANITIZATION
        ========================================================================= */
 
     function sanitizeDescription(
         html
     ) {
 
-        if (
-            !html
-        ) {
-
+        if (!html) {
             return "";
-
         }
-
 
         const parser =
             new DOMParser();
 
-
         const doc =
             parser.parseFromString(
-                String(
-                    html
-                ),
+                String(html),
                 "text/html"
             );
 
 
-        [
+        const dangerousTags = [
 
             "script",
             "style",
@@ -3733,27 +3235,25 @@
             "audio",
             "source"
 
-        ]
-            .forEach(
-                tag => {
+        ];
 
-                    doc
-                        .querySelectorAll(
-                            tag
-                        )
-                        .forEach(
-                            node =>
-                                node.remove()
-                        );
 
-                }
-            );
+        dangerousTags.forEach(
+            tag => {
+
+                doc
+                    .querySelectorAll(tag)
+                    .forEach(
+                        element =>
+                            element.remove()
+                    );
+
+            }
+        );
 
 
         doc
-            .querySelectorAll(
-                "*"
-            )
+            .querySelectorAll("*")
             .forEach(
                 element => {
 
@@ -3766,7 +3266,6 @@
                                 const name =
                                     attribute.name
                                         .toLowerCase();
-
 
                                 const value =
                                     attribute.value
@@ -3791,9 +3290,9 @@
                                 if (
                                     (
                                         name ===
-                                        "href" ||
+                                        "src" ||
                                         name ===
-                                        "src"
+                                        "href"
                                     ) &&
                                     /^javascript:/i.test(
                                         value
@@ -3825,38 +3324,35 @@
                             "src"
                         );
 
-
-                    if (
-                        source
-                    ) {
-
-                        const normalized =
-                            normalizeImageUrl(
-                                source
-                            );
-
-
-                        if (
-                            normalized
-                        ) {
-
-                            image.setAttribute(
-                                "src",
-                                buildProxyUrl(
-                                    normalized
-                                )
-                            );
-
-                        }
-
+                    if (!source) {
+                        return;
                     }
 
+                    const normalized =
+                        normalizeImageUrl(
+                            source
+                        );
+
+                    if (
+                        normalized &&
+                        /^https:\/\//i.test(
+                            normalized
+                        )
+                    ) {
+
+                        image.setAttribute(
+                            "src",
+                            buildProxyUrl(
+                                normalized
+                            )
+                        );
+
+                    }
 
                     image.setAttribute(
                         "loading",
                         "lazy"
                     );
-
 
                     image.setAttribute(
                         "decoding",
@@ -3867,12 +3363,14 @@
             );
 
 
-        return (
-            doc.body.innerHTML
-        );
+        return doc.body.innerHTML;
 
     }
 
+
+    /* =========================================================================
+       22. PRODUCT DETAILS MODAL
+       ========================================================================= */
 
     function openProductModal(
         productId
@@ -3884,9 +3382,8 @@
         ) {
 
             console.error(
-                "[PRASUN SHOP] Product modal is missing from index.html."
+                "[PRASUN SHOP] Product modal elements are missing."
             );
-
 
             return;
 
@@ -3903,7 +3400,6 @@
                         productId
                     )
             );
-
 
         if (
             !product
@@ -3929,6 +3425,7 @@
         const title =
             escapeHTML(
                 product.name ||
+                product.title ||
                 "CJ Product"
             );
 
@@ -3940,205 +3437,221 @@
             );
 
 
+        const price =
+            Number(
+                product.price ||
+                0
+            );
+
+
         const quantity =
             Number(
-                product.quantity
-            ) || 0;
+                product.quantity ||
+                0
+            );
 
 
-        const description =
+        const rawDescription =
+            product.description ||
+            "";
+
+
+        const descriptionHtml =
             sanitizeDescription(
-                product.description
+                rawDescription
             ) ||
             `
                 <p>
-                    Product description is currently unavailable.
+                    No detailed description is currently available
+                    for this product.
                 </p>
             `;
 
 
         const galleryHtml =
-            images.length > 1
+            images.length >
+            1
+
                 ? `
+
                     <div
                         class="modal-gallery"
+                        aria-label="Product images"
                     >
 
-                        ${images
-                            .map(
-                                (
-                                    image,
-                                    index
-                                ) => `
+                        ${
+                            images
+                                .map(
+                                    (
+                                        image,
+                                        index
+                                    ) => `
 
-                                    <button
-                                        type="button"
-                                        class="modal-gallery-thumb ${
-                                            index ===
-                                            0
-                                                ? "is-active"
-                                                : ""
-                                        }"
-                                        data-gallery-image="${escapeHTML(
-                                            image
-                                        )}"
-                                        aria-label="View product image ${
-                                            index +
-                                            1
-                                        }"
-                                    >
-
-                                        <img
-                                            src="${escapeHTML(
+                                        <button
+                                            type="button"
+                                            class="modal-gallery-thumb ${
+                                                index ===
+                                                0
+                                                    ? "is-active"
+                                                    : ""
+                                            }"
+                                            data-gallery-image="${escapeHTML(
                                                 image
                                             )}"
-                                            alt=""
-                                            loading="lazy"
-                                            decoding="async"
+                                            aria-label="View product image ${
+                                                index + 1
+                                            }"
                                         >
 
-                                    </button>
+                                            <img
+                                                src="${escapeHTML(
+                                                    image
+                                                )}"
+                                                alt=""
+                                                loading="lazy"
+                                                decoding="async"
+                                            >
 
-                                `
-                            )
-                            .join(
-                                ""
-                            )}
+                                        </button>
+
+                                    `
+                                )
+                                .join("")
+                        }
 
                     </div>
+
                 `
+
                 : "";
 
 
-        elements.modalBody.innerHTML =
-            `
+        elements.modalBody.innerHTML = `
 
-                <div
-                    class="modal-image-column"
+            <div
+                class="modal-image-column"
+            >
+
+                <img
+                    id="main-modal-img"
+                    src="${escapeHTML(
+                        primaryImage
+                    )}"
+                    alt="${title}"
+                    class="modal-product-img"
+                    loading="eager"
+                    decoding="async"
+                    referrerpolicy="no-referrer"
                 >
 
-                    <img
-                        id="main-modal-img"
-                        src="${escapeHTML(
-                            primaryImage
-                        )}"
-                        alt="${title}"
-                        class="modal-product-img"
-                        loading="eager"
-                        decoding="async"
-                        referrerpolicy="no-referrer"
-                    >
+                ${galleryHtml}
 
-                    ${galleryHtml}
+            </div>
 
-                </div>
+
+            <div
+                class="modal-details"
+            >
+
+                <span
+                    class="product-category-tag"
+                >
+                    ${category}
+                </span>
+
+
+                <h2
+                    id="modal-title"
+                    class="modal-product-title"
+                >
+                    ${title}
+                </h2>
 
 
                 <div
-                    class="modal-details"
+                    class="modal-product-price-row"
                 >
 
                     <span
-                        class="product-category-tag"
+                        class="modal-product-price"
                     >
-                        ${category}
+                        ${formatPrice(
+                            price
+                        )}
                     </span>
 
 
-                    <h2
-                        id="modal-title"
-                        class="modal-product-title"
-                    >
-                        ${title}
-                    </h2>
-
-
-                    <div
-                        class="modal-product-price-row"
+                    <span
+                        class="modal-product-stock"
                     >
 
-                        <strong
-                            class="modal-product-price"
-                        >
-                            ${formatPrice(
-                                product.price
-                            )}
-                        </strong>
-
-
-                        <span
-                            class="modal-product-stock"
-                        >
-
-                            ${
-                                quantity > 0
-
-                                    ? `In Stock: ${quantity}`
-
-                                    : "Out of Stock"
-
-                            }
-
-                        </span>
-
-                    </div>
-
-
-                    <div
-                        class="modal-description-box"
-                    >
-
-                        <strong
-                            class="modal-description-title"
-                        >
-                            Product Description
-                        </strong>
-
-
-                        <div
-                            class="cj-description-container"
-                        >
-
-                            ${description}
-
-                        </div>
-
-                    </div>
-
-
-                    <button
-                        type="button"
-                        id="modal-add-cart-btn"
-                        class="btn-primary modal-add-cart-button"
                         ${
-                            quantity <= 0
-                                ? "disabled"
-                                : ""
-                        }
-                    >
-
-                        ${svgIcon(
                             quantity > 0
-                                ? "cart"
-                                : "inventory",
-                            "ui-icon ui-icon-sm"
-                        )}
 
-                        <span>
+                                ? `In Stock: ${quantity}`
 
-                            ${
-                                quantity > 0
-                                    ? "Add to Cart"
-                                    : "Out of Stock"
-                            }
+                                : "Currently unavailable"
+                        }
 
-                        </span>
-
-                    </button>
+                    </span>
 
                 </div>
 
-            `;
+
+                <div
+                    class="modal-description-box"
+                >
+
+                    <span
+                        class="modal-description-title"
+                    >
+                        Product Description
+                    </span>
+
+
+                    <div
+                        class="cj-description-container"
+                    >
+                        ${descriptionHtml}
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    id="modal-add-cart-btn"
+                    class="btn-primary modal-add-cart-button"
+                    ${
+                        quantity <=
+                        0
+                            ? "disabled"
+                            : ""
+                    }
+                >
+
+                    ${svgIcon(
+                        quantity > 0
+                            ? "add_cart"
+                            : "inventory",
+                        "ui-icon ui-icon-sm"
+                    )}
+
+                    <span>
+                        ${
+                            quantity > 0
+
+                                ? "Add to Cart"
+
+                                : "Out of Stock"
+                        }
+                    </span>
+
+                </button>
+
+            </div>
+
+        `;
 
 
         const mainImage =
@@ -4155,13 +3668,19 @@
                 "error",
                 () => {
 
-                    mainImage.src =
-                        PLACEHOLDER_IMAGE;
+                    if (
+                        mainImage.src !==
+                        PLACEHOLDER_IMAGE
+                    ) {
+
+                        mainImage.src =
+                            PLACEHOLDER_IMAGE;
+
+                    }
 
                 },
                 {
-                    once:
-                        true
+                    once: true
                 }
             );
 
@@ -4182,7 +3701,6 @@
                             const image =
                                 button.dataset.galleryImage;
 
-
                             if (
                                 mainImage &&
                                 image
@@ -4199,8 +3717,8 @@
                                     ".modal-gallery-thumb"
                                 )
                                 .forEach(
-                                    thumbnail =>
-                                        thumbnail.classList.remove(
+                                    item =>
+                                        item.classList.remove(
                                             "is-active"
                                         )
                                 );
@@ -4262,7 +3780,6 @@
                                 )
                             );
 
-
                             added =
                                 true;
 
@@ -4292,28 +3809,24 @@
                     modalCartButton.disabled =
                         true;
 
-
                     modalCartButton.classList.add(
                         "added"
                     );
 
+                    modalCartButton.innerHTML = `
 
-                    modalCartButton.innerHTML =
-                        `
+                        ${svgIcon(
+                            "check",
+                            "ui-icon ui-icon-sm"
+                        )}
 
-                            ${svgIcon(
-                                "check",
-                                "ui-icon ui-icon-sm"
-                            )}
+                        <span>
+                            Added to Cart
+                        </span>
 
-                            <span>
-                                Added to Cart
-                            </span>
+                    `;
 
-                        `;
-
-
-                    announce(
+                    announceToScreenReader(
                         `${product.name} added to cart.`
                     );
 
@@ -4327,12 +3840,10 @@
             "is-open"
         );
 
-
         elements.productModal.setAttribute(
             "aria-hidden",
             "false"
         );
-
 
         document.body.classList.add(
             "modal-open"
@@ -4340,8 +3851,11 @@
 
 
         window.setTimeout(
-            () =>
-                elements.modalClose?.focus(),
+            () => {
+
+                elements.modalClose?.focus();
+
+            },
             50
         );
 
@@ -4358,22 +3872,18 @@
 
         }
 
-
         elements.productModal.classList.remove(
             "is-open"
         );
-
 
         elements.productModal.setAttribute(
             "aria-hidden",
             "true"
         );
 
-
         document.body.classList.remove(
             "modal-open"
         );
-
 
         if (
             elements.modalBody
@@ -4388,7 +3898,7 @@
 
 
     /* =========================================================================
-       21. UI STATES
+       23. UI STATES
        ========================================================================= */
 
     function renderLoadingState() {
@@ -4401,32 +3911,30 @@
 
         }
 
+        elements.productList.innerHTML = `
 
-        elements.productList.innerHTML =
-            `
+            <div
+                class="product-status-card"
+                role="status"
+                aria-live="polite"
+            >
 
                 <div
-                    class="product-status-card"
-                    role="status"
-                    aria-live="polite"
-                >
+                    class="spinner"
+                    aria-hidden="true"
+                ></div>
 
-                    <div
-                        class="spinner"
-                        aria-hidden="true"
-                    ></div>
+                <h3>
+                    Loading Products
+                </h3>
 
-                    <h3>
-                        Loading Products
-                    </h3>
+                <p>
+                    Fetching the latest approved products.
+                </p>
 
-                    <p>
-                        Loading the latest CJ catalog...
-                    </p>
+            </div>
 
-                </div>
-
-            `;
+        `;
 
 
         if (
@@ -4453,33 +3961,31 @@
 
         }
 
+        elements.productList.innerHTML = `
 
-        elements.productList.innerHTML =
-            `
+            <div
+                class="product-status-card"
+                role="status"
+            >
 
-                <div
-                    class="product-status-card"
-                    role="status"
-                >
+                ${svgIcon(
+                    "inventory",
+                    "ui-icon ui-icon-xl"
+                )}
 
-                    ${svgIcon(
-                        "inventory",
-                        "ui-icon ui-icon-xl"
+                <h3>
+                    No Products Found
+                </h3>
+
+                <p>
+                    ${escapeHTML(
+                        message
                     )}
+                </p>
 
-                    <h3>
-                        No Products Found
-                    </h3>
+            </div>
 
-                    <p>
-                        ${escapeHTML(
-                            message
-                        )}
-                    </p>
-
-                </div>
-
-            `;
+        `;
 
 
         if (
@@ -4490,7 +3996,6 @@
                 "0 products found";
 
         }
-
 
         setLoadingState(
             false
@@ -4511,64 +4016,48 @@
 
         }
 
+        elements.productList.innerHTML = `
 
-        elements.productList.innerHTML =
-            `
+            <div
+                class="product-status-card"
+                role="alert"
+            >
 
-                <div
-                    class="product-status-card"
-                    role="alert"
+                ${svgIcon(
+                    "error",
+                    "ui-icon ui-icon-xl"
+                )}
+
+                <h3>
+                    Unable to Load Products
+                </h3>
+
+                <p>
+                    ${escapeHTML(
+                        message
+                    )}
+                </p>
+
+                <button
+                    type="button"
+                    class="btn-primary"
+                    data-action="retry-products"
                 >
 
                     ${svgIcon(
-                        "error",
-                        "ui-icon ui-icon-xl"
+                        "refresh",
+                        "ui-icon ui-icon-sm"
                     )}
 
-                    <h3>
-                        Unable to Load Products
-                    </h3>
+                    <span>
+                        Try Again
+                    </span>
 
-                    <p>
-                        ${escapeHTML(
-                            message
-                        )}
-                    </p>
+                </button>
 
-                    <button
-                        type="button"
-                        class="btn-primary"
-                        data-action="retry"
-                    >
+            </div>
 
-                        ${svgIcon(
-                            "refresh",
-                            "ui-icon ui-icon-sm"
-                        )}
-
-                        <span>
-                            Try Again
-                        </span>
-
-                    </button>
-
-                </div>
-
-            `;
-
-
-        elements.productList
-            .querySelector(
-                '[data-action="retry"]'
-            )
-            ?.addEventListener(
-                "click",
-                loadCatalog,
-                {
-                    once:
-                        true
-                }
-            );
+        `;
 
 
         if (
@@ -4580,10 +4069,37 @@
 
         }
 
-
         setLoadingState(
             false
         );
+
+
+        const retry =
+            elements.productList.querySelector(
+                '[data-action="retry-products"]'
+            );
+
+
+        if (
+            retry
+        ) {
+
+            retry.addEventListener(
+                "click",
+                () => {
+
+                    loadProducts(
+                        state.searchQuery ||
+                        state.activeCategoryQuery
+                    );
+
+                },
+                {
+                    once: true
+                }
+            );
+
+        }
 
     }
 
@@ -4598,61 +4114,15 @@
 
         }
 
-
         const count =
             state.filteredProducts.length;
 
-
         elements.resultsCount.textContent =
             `${count} ${
-                count ===
-                1
+                count === 1
                     ? "product"
                     : "products"
             } available`;
-
-    }
-
-
-    function updatePageHeading() {
-
-        if (
-            !elements.pageHeading
-        ) {
-
-            return;
-
-        }
-
-
-        if (
-            state.activeCategory
-        ) {
-
-            elements.pageHeading.textContent =
-                getActiveCategory().label;
-
-
-            return;
-
-        }
-
-
-        if (
-            state.searchQuery
-        ) {
-
-            elements.pageHeading.textContent =
-                `Search: ${state.searchQuery}`;
-
-
-            return;
-
-        }
-
-
-        elements.pageHeading.textContent =
-            "All Products";
 
     }
 
@@ -4661,7 +4131,15 @@
         loading
     ) {
 
-        elements.productList?.setAttribute(
+        if (
+            !elements.productList
+        ) {
+
+            return;
+
+        }
+
+        elements.productList.setAttribute(
             "aria-busy",
             loading
                 ? "true"
@@ -4672,65 +4150,53 @@
 
 
     /* =========================================================================
-       22. HELPERS
+       24. TEXT HELPERS
        ========================================================================= */
 
     function stripHtml(
         value
     ) {
 
-        if (
-            !value
-        ) {
-
+        if (!value) {
             return "";
-
         }
 
-
-        const div =
+        const container =
             document.createElement(
                 "div"
             );
 
-
-        div.innerHTML =
+        container.innerHTML =
             String(
                 value
             );
 
-
         return (
-
-            div.textContent ||
-            div.innerText ||
+            container.textContent ||
+            container.innerText ||
             ""
-
         )
-
             .replace(
                 /\s+/g,
                 " "
             )
-
             .trim();
 
     }
 
 
     function formatPrice(
-        value
+        amount
     ) {
 
-        const number =
+        const value =
             Number(
-                value
+                amount
             );
-
 
         if (
             !Number.isFinite(
-                number
+                value
             )
         ) {
 
@@ -4738,11 +4204,9 @@
 
         }
 
-
         return new Intl.NumberFormat(
             "en-US",
             {
-
                 style:
                     "currency",
 
@@ -4754,12 +4218,10 @@
 
                 maximumFractionDigits:
                     2
-
             }
-        )
-            .format(
-                number
-            );
+        ).format(
+            value
+        );
 
     }
 
@@ -4772,27 +4234,22 @@
             value ??
             ""
         )
-
             .replace(
                 /&/g,
                 "&amp;"
             )
-
             .replace(
                 /</g,
                 "&lt;"
             )
-
             .replace(
                 />/g,
                 "&gt;"
             )
-
             .replace(
                 /"/g,
                 "&quot;"
             )
-
             .replace(
                 /'/g,
                 "&#039;"
@@ -4801,51 +4258,52 @@
     }
 
 
-    function announce(
+    function announceToScreenReader(
         message
     ) {
 
+        const liveRegion =
+            elements.liveRegion;
+
         if (
-            !elements.liveRegion
+            !liveRegion
         ) {
 
             return;
 
         }
 
-
-        elements.liveRegion.textContent =
+        liveRegion.textContent =
             "";
-
 
         window.setTimeout(
             () => {
 
-                elements.liveRegion.textContent =
+                liveRegion.textContent =
                     String(
                         message ||
                         ""
                     );
 
             },
-
             20
-
         );
 
     }
 
 
     /* =========================================================================
-       23. PUBLIC API
+       25. PUBLIC API
        ========================================================================= */
 
     window.PrasunProducts = {
 
         reload:
             () =>
-                loadCatalog(),
-
+                loadProducts(
+                    state.searchQuery ||
+                    state.activeCategoryQuery
+                ),
 
         search:
             query => {
@@ -4854,14 +4312,10 @@
                     String(
                         query ||
                         ""
-                    )
-                        .trim()
-                        .toLowerCase();
+                    ).trim();
 
-
-                state.activeCategory =
+                state.activeCategoryQuery =
                     "";
-
 
                 if (
                     elements.searchInput
@@ -4872,49 +4326,17 @@
 
                 }
 
-
                 updateClearSearchButton();
 
-                highlightCategory();
+                highlightActiveCategoryPill(
+                    ""
+                );
 
-                applyFiltersAndRender();
-
-            },
-
-
-        filterCategory:
-            query => {
-
-                state.activeCategory =
-                    String(
-                        query ||
-                        ""
-                    )
-                        .trim();
-
-
-                state.searchQuery =
-                    "";
-
-
-                if (
-                    elements.searchInput
-                ) {
-
-                    elements.searchInput.value =
-                        "";
-
-                }
-
-
-                updateClearSearchButton();
-
-                highlightCategory();
-
-                applyFiltersAndRender();
+                return loadProducts(
+                    state.searchQuery
+                );
 
             },
-
 
         sort:
             value => {
@@ -4922,7 +4344,6 @@
                 state.sortBy =
                     value ||
                     "featured";
-
 
                 if (
                     elements.sortSelect
@@ -4933,23 +4354,19 @@
 
                 }
 
-
                 applyFiltersAndRender();
 
             },
 
-
         openDetails:
-            id =>
+            productId =>
                 openProductModal(
-                    id
+                    productId
                 ),
-
 
         closeDetails:
             () =>
                 closeProductModal(),
-
 
         getProducts:
             () =>
@@ -4957,13 +4374,11 @@
                     ...state.products
                 ],
 
-
         getFilteredProducts:
             () =>
                 [
                     ...state.filteredProducts
                 ],
-
 
         getProductById:
             id =>
