@@ -1,77 +1,122 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
+
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"></script>
+
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
 
+    function gtag() {
+      dataLayer.push(arguments);
+    }
 
-gtag('config', 'G-D9F2VQ4247');
-
-
+    gtag("js", new Date());
+    gtag("config", "G-D9F2VQ4247");
   </script>
 
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>Contact & Support — PRASUN SHOP</title>
 
-<meta
- name="description"
- content="Contact PRASUN SHOP for product support, order assistance, technical questions, returns, or other customer service inquiries."
-/>
+  <meta
+    name="description"
+    content="Contact PRASUN SHOP for product support, order assistance, technical questions, returns, or other customer service inquiries."
+  >
 
-<meta
- name="robots"
- content="index, follow"
-/>
+  <meta
+    name="robots"
+    content="index, follow"
+  >
 
   <!-- Favicon -->
+  <link
+    rel="icon"
+    href="/favicon.ico"
+    sizes="any"
+  >
 
-  <link rel="icon" href="favicon.ico" sizes="any" />
-  <link rel="icon" href="icon.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link
+    rel="icon"
+    href="/icon.svg"
+    type="image/svg+xml"
+  >
+
+  <link
+    rel="apple-touch-icon"
+    href="/apple-touch-icon.png"
+  >
 
   <!-- Google AdSense -->
-
   <script
     async
     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168"
-    crossorigin="anonymous">
-  </script>
+    crossorigin="anonymous"
+  ></script>
+
 
   <style>
-    * {
+
+    /* ============================================================
+       RESET
+    ============================================================ */
+
+    *,
+    *::before,
+    *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
+
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+
     :root {
+
       --bg: #f8fafc;
       --surface: #ffffff;
+
       --text: #0f172a;
       --body: #334155;
       --muted: #64748b;
+
       --border: #e2e8f0;
       --border-strong: #cbd5e1;
+
       --primary: #2563eb;
       --primary-dark: #1d4ed8;
+
       --danger: #dc2626;
       --success: #15803d;
+
     }
+
+
+    /* ============================================================
+       BASE
+    ============================================================ */
 
     html {
       scroll-behavior: smooth;
     }
 
     body {
+
+      min-height: 100vh;
+
       background: var(--bg);
+
       color: var(--body);
+
       font-family:
         system-ui,
         -apple-system,
@@ -81,528 +126,937 @@ gtag('config', 'G-D9F2VQ4247');
         Helvetica,
         Arial,
         sans-serif;
+
       line-height: 1.6;
+
       -webkit-font-smoothing: antialiased;
+
       text-rendering: optimizeLegibility;
+
     }
+
 
     a {
+
       color: var(--primary);
+
       text-decoration: none;
+
     }
 
+
     a:hover {
+
       text-decoration: underline;
+
     }
+
 
     button,
     input,
     select,
     textarea {
+
       font: inherit;
+
     }
+
 
     /* ============================================================
        HEADER
     ============================================================ */
 
     .header {
+
       position: sticky;
+
       top: 0;
+
       z-index: 100;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+
+      border-bottom:
+        1px solid var(--border);
+
+      background:
+        rgba(255, 255, 255, 0.96);
+
+      backdrop-filter:
+        blur(12px);
+
+      -webkit-backdrop-filter:
+        blur(12px);
+
     }
+
 
     .header-container {
-      width: min(1080px, calc(100% - 2rem));
-      margin: 0 auto;
+
+      width:
+        min(1080px, calc(100% - 2rem));
+
       min-height: 68px;
+
+      margin: 0 auto;
+
       display: flex;
+
       align-items: center;
+
       justify-content: space-between;
+
       gap: 1.5rem;
+
     }
+
 
     .site-logo {
+
       display: inline-flex;
+
       align-items: center;
+
       gap: 10px;
+
       color: var(--text);
+
       text-decoration: none;
+
       font-size: 1.08rem;
+
       font-weight: 700;
+
       letter-spacing: -0.01em;
+
       white-space: nowrap;
+
     }
+
 
     .site-logo:hover {
+
       text-decoration: none;
+
     }
 
-    .site-logo svg {
-      flex: 0 0 auto;
+
+    .site-logo-image {
+
+      width: 44px;
+
+      height: 44px;
+
+      object-fit: contain;
+
+      border-radius: 8px;
+
+      display: block;
+
     }
+
 
     .nav-links {
+
       display: flex;
+
       align-items: center;
+
       gap: 1.75rem;
+
     }
 
+
     .nav-links a {
+
       color: var(--muted);
+
       font-size: 0.94rem;
+
       font-weight: 500;
+
       text-decoration: none;
-      transition: color 0.18s ease;
+
+      transition:
+        color 0.18s ease;
+
     }
+
 
     .nav-links a:hover,
     .nav-links a.active {
+
       color: var(--text);
+
       text-decoration: none;
+
     }
 
+
     .nav-links a.active {
+
       font-weight: 600;
+
     }
+
 
     /* ============================================================
        MAIN
     ============================================================ */
 
     .page {
-      width: min(800px, calc(100% - 2rem));
-      margin: 40px auto 0;
+
+      width:
+        min(800px, calc(100% - 2rem));
+
+      margin:
+        40px auto 0;
+
     }
 
+
     .content-card {
+
       background: var(--surface);
-      border: 1px solid var(--border);
+
+      border:
+        1px solid var(--border);
+
       border-radius: 12px;
+
       padding: 2.5rem;
+
       box-shadow:
         0 4px 6px -1px rgba(15, 23, 42, 0.04),
         0 2px 4px -2px rgba(15, 23, 42, 0.04);
+
     }
+
 
     h1 {
+
       color: var(--text);
-      font-size: clamp(1.9rem, 4vw, 2.25rem);
+
+      font-size:
+        clamp(1.9rem, 4vw, 2.25rem);
+
       line-height: 1.2;
+
       letter-spacing: -0.025em;
+
       margin-bottom: 0.6rem;
+
     }
 
+
     .subtitle {
+
       color: var(--muted);
+
       font-size: 1rem;
+
       line-height: 1.65;
+
       margin-bottom: 2rem;
+
       padding-bottom: 1.25rem;
-      border-bottom: 1px solid var(--border);
+
+      border-bottom:
+        1px solid var(--border);
+
     }
+
 
     /* ============================================================
        SUPPORT META
     ============================================================ */
 
     .support-meta {
+
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+
+      grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
       gap: 1rem;
+
       margin-bottom: 2rem;
+
     }
+
 
     .meta-item {
+
       background: var(--bg);
-      border: 1px solid var(--border);
+
+      border:
+        1px solid var(--border);
+
       border-radius: 9px;
+
       padding: 1rem;
+
     }
+
 
     .meta-item h3 {
+
       color: var(--muted);
+
       font-size: 0.72rem;
+
       font-weight: 700;
+
       letter-spacing: 0.07em;
+
       margin-bottom: 0.3rem;
+
       text-transform: uppercase;
+
     }
 
+
     .meta-item p {
+
       color: var(--text);
+
       font-size: 0.92rem;
+
       font-weight: 600;
+
       margin: 0;
+
     }
+
 
     /* ============================================================
        FORM
     ============================================================ */
 
     .form-grid {
+
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
       gap: 1.15rem;
+
     }
+
 
     .form-group {
+
       display: flex;
+
       flex-direction: column;
+
       gap: 0.38rem;
+
     }
+
 
     .form-group.full-width {
+
       grid-column: 1 / -1;
+
     }
+
 
     label {
+
       color: var(--text);
+
       font-size: 0.86rem;
+
       font-weight: 600;
+
     }
+
 
     .required {
+
       color: var(--danger);
+
     }
 
+
     .optional {
+
       color: #94a3b8;
+
       font-weight: 400;
+
       font-size: 0.8rem;
+
     }
+
 
     input,
     select,
     textarea {
+
       width: 100%;
-      border: 1px solid var(--border-strong);
+
+      border:
+        1px solid var(--border-strong);
+
       border-radius: 8px;
-      padding: 0.75rem 0.85rem;
+
+      padding:
+        0.75rem 0.85rem;
+
       background: #ffffff;
+
       color: var(--text);
+
       font-size: 0.94rem;
+
       transition:
         border-color 0.15s ease,
         box-shadow 0.15s ease;
+
     }
+
 
     input::placeholder,
     textarea::placeholder {
+
       color: #94a3b8;
+
     }
+
 
     input:focus,
     select:focus,
     textarea:focus {
+
       outline: none;
+
       border-color: var(--primary);
+
       box-shadow:
         0 0 0 3px rgba(37, 99, 235, 0.12);
+
     }
 
+
     textarea {
+
       min-height: 145px;
+
       resize: vertical;
+
     }
+
 
     /* ============================================================
        FILE INPUT
     ============================================================ */
 
     .file-upload {
-      border: 1px dashed var(--border-strong);
+
+      border:
+        1px dashed var(--border-strong);
+
       border-radius: 9px;
+
       padding: 1rem;
+
       background: #fafcff;
+
       transition:
         border-color 0.15s ease,
         background 0.15s ease;
+
     }
+
 
     .file-upload:hover {
+
       border-color: #94a3b8;
+
       background: #f8fafc;
+
     }
+
 
     .file-input {
+
       padding: 0.4rem;
+
       border: 0;
+
       box-shadow: none;
+
       background: transparent;
+
       cursor: pointer;
+
     }
+
 
     .file-input:focus {
+
       box-shadow: none;
+
     }
+
 
     .file-help {
+
       margin-top: 0.45rem;
+
       color: var(--muted);
+
       font-size: 0.78rem;
+
       line-height: 1.5;
+
     }
 
+
     .file-name {
+
       display: none;
+
       margin-top: 0.55rem;
+
       color: var(--text);
+
       font-size: 0.8rem;
+
       font-weight: 600;
+
       word-break: break-word;
+
     }
+
 
     /* ============================================================
        SUBMIT
     ============================================================ */
 
     .submit-area {
+
       display: flex;
+
       flex-direction: column;
+
       align-items: flex-start;
+
       gap: 0.5rem;
+
     }
 
+
     .btn-submit {
+
       display: inline-flex;
+
       align-items: center;
+
       justify-content: center;
+
       gap: 0.55rem;
+
       min-height: 44px;
-      padding: 0.78rem 1.35rem;
+
+      padding:
+        0.78rem 1.35rem;
+
       border: 0;
+
       border-radius: 8px;
+
       background: var(--text);
+
       color: #ffffff;
+
       cursor: pointer;
+
       font-size: 0.94rem;
+
       font-weight: 600;
+
       transition:
         background-color 0.15s ease,
         transform 0.08s ease,
         opacity 0.15s ease;
+
     }
+
 
     .btn-submit:hover:not(:disabled) {
+
       background: #1e293b;
+
     }
+
 
     .btn-submit:active:not(:disabled) {
+
       transform: scale(0.98);
+
     }
+
 
     .btn-submit:disabled {
+
       cursor: not-allowed;
+
       opacity: 0.7;
+
     }
+
 
     .btn-spinner {
+
       width: 16px;
+
       height: 16px;
+
       display: none;
-      border: 2px solid rgba(255, 255, 255, 0.35);
+
+      border:
+        2px solid rgba(255, 255, 255, 0.35);
+
       border-top-color: #ffffff;
+
       border-radius: 50%;
-      animation: f-spin 0.8s linear infinite;
+
+      animation:
+        f-spin 0.8s linear infinite;
+
     }
 
+
     @keyframes f-spin {
+
       to {
         transform: rotate(360deg);
       }
+
     }
+
 
     .error-msg {
+
       display: none;
+
       color: var(--danger);
+
       font-size: 0.84rem;
+
+      line-height: 1.5;
+
     }
 
+
     /* ============================================================
-       SUCCESS STATE
+       SUCCESS
     ============================================================ */
 
     .success-state {
+
       display: none;
-      padding: 1.5rem 0 0.5rem;
+
+      padding:
+        1.5rem 0 0.5rem;
+
       text-align: center;
+
     }
+
 
     .success-icon {
+
       width: 46px;
+
       height: 46px;
-      margin: 0 auto 0.9rem;
+
+      margin:
+        0 auto 0.9rem;
+
       display: grid;
+
       place-items: center;
+
       border-radius: 50%;
+
       background: #dcfce7;
+
       color: var(--success);
+
     }
+
 
     .success-icon svg {
+
       width: 22px;
+
       height: 22px;
+
     }
+
 
     .success-state h3 {
+
       color: var(--text);
+
       font-size: 1.4rem;
+
       margin-bottom: 0.4rem;
+
     }
 
+
     .success-state p {
+
       color: var(--muted);
+
       font-size: 0.92rem;
+
     }
+
 
     /* ============================================================
        FOOTER
     ============================================================ */
 
     .footer {
+
       margin-top: 4rem;
-      padding: 2.5rem 1rem;
-      border-top: 1px solid var(--border);
+
+      padding:
+        2.5rem 1rem;
+
+      border-top:
+        1px solid var(--border);
+
       background: #ffffff;
+
       color: var(--muted);
+
       font-size: 0.84rem;
+
       text-align: center;
+
     }
+
 
     .footer-container {
-      width: min(1080px, calc(100% - 2rem));
+
+      width:
+        min(1080px, calc(100% - 2rem));
+
       margin: 0 auto;
+
       display: flex;
+
       flex-direction: column;
+
       align-items: center;
+
       gap: 1.15rem;
+
     }
+
 
     .footer-links {
+
       display: flex;
+
       flex-wrap: wrap;
+
       align-items: center;
+
       justify-content: center;
+
       gap: 1.35rem;
+
     }
+
 
     .footer-links a {
+
       color: var(--muted);
+
       font-weight: 500;
+
       text-decoration: none;
+
     }
+
 
     .footer-links a:hover {
+
       color: var(--text);
+
       text-decoration: underline;
+
     }
 
+
     .footer p {
+
       margin: 0;
+
     }
+
 
     /* ============================================================
        RESPONSIVE
     ============================================================ */
 
     @media (max-width: 700px) {
+
       .header-container {
+
         min-height: auto;
+
         padding: 0.9rem 0;
+
         flex-direction: column;
+
         align-items: flex-start;
+
         gap: 0.7rem;
+
       }
 
+
       .nav-links {
+
         width: 100%;
+
         justify-content: space-between;
+
         gap: 1rem;
+
       }
+
 
       .support-meta {
+
         grid-template-columns: 1fr;
+
       }
+
 
       .content-card {
+
         padding: 1.5rem;
+
       }
+
     }
+
 
     @media (max-width: 560px) {
+
       .page {
-        width: min(100% - 1rem, 800px);
+
+        width:
+          min(100% - 1rem, 800px);
+
         margin-top: 20px;
+
       }
+
 
       .form-grid {
+
         grid-template-columns: 1fr;
+
       }
+
 
       .form-group.full-width {
+
         grid-column: auto;
+
       }
+
 
       .btn-submit {
+
         width: 100%;
+
       }
 
+
       .nav-links {
+
         overflow-x: auto;
+
         justify-content: flex-start;
+
       }
+
     }
+
   </style>
 
 </head>
 
+
 <body>
+
 
   <!-- ============================================================
        HEADER
   ============================================================ -->
 
   <header class="header">
+
     <div class="header-container">
 
+      <a
+        href="/"
+        class="site-logo"
+        aria-label="PRASUN SHOP home"
+      >
 
-  <a
-    href="/"
-    class="site-logo"
-    aria-label="PRASUN SHOP home"
-  >
+        <img
+          class="site-logo-image"
+          src="/logo.jpg"
+          width="44"
+          height="44"
+          alt="PRASUN SHOP"
+          decoding="async"
+        >
 
-    <img
-    class="site-logo-image"
-    src="/logo.jpg"
-    width="44"
-    height="44"
-    alt="PRASUN SHOP"
-    decoding="async"
->
+        <span>PRASUN SHOP</span>
 
-    <span>PRASUN SHOP</span>
+      </a>
 
-  </a>
 
-  <nav
-    class="nav-links"
-    aria-label="Primary navigation"
-  >
-    <a href="/">Shop</a>
-    <a href="/about.html">About</a>
-    <a href="/contact.html" class="active">Contact</a>
-  </nav>
+      <nav
+        class="nav-links"
+        aria-label="Primary navigation"
+      >
 
-</div>
+        <a href="/">
+          Shop
+        </a>
 
+        <a href="/about.html">
+          About
+        </a>
+
+        <a
+          href="/contact.html"
+          class="active"
+          aria-current="page"
+        >
+          Contact
+        </a>
+
+      </nav>
+
+    </div>
 
   </header>
+
 
   <!-- ============================================================
        MAIN
@@ -610,340 +1064,430 @@ gtag('config', 'G-D9F2VQ4247');
 
   <main class="page">
 
+    <section class="content-card">
 
-<section class="content-card">
-
-  <h1>Contact & Support</h1>
-
-  <p class="subtitle">
-    Have a question about a product, order, payment, delivery,
-    return, or anything else related to PRASUN SHOP?
-    Send us a message and our support team will review your request.
-  </p>
+      <h1>
+        Contact & Support
+      </h1>
 
 
-  <!-- ========================================================
-       SUPPORT INFORMATION
-  ======================================================== -->
-
-  <div class="support-meta">
-
-    <div class="meta-item">
-      <h3>Customer Support</h3>
-      <p>We aim to respond promptly</p>
-    </div>
-
-    <div class="meta-item">
-      <h3>Order Assistance</h3>
-      <p>Products, orders & payments</p>
-    </div>
-
-    <div class="meta-item">
-      <h3>Official Website</h3>
-      <p>
-        <a
-          href="https://prasunbarua.com"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          prasunbarua.com
-        </a>
+      <p class="subtitle">
+        Have a question about a product, order, payment, delivery,
+        return, or anything else related to PRASUN SHOP?
+        Send us a message and our support team will review your request.
       </p>
-    </div>
-
-  </div>
 
 
-  <!-- ========================================================
-       CONTACT FORM
-  ======================================================== -->
+      <!-- ========================================================
+           SUPPORT INFORMATION
+      ======================================================== -->
 
-  <form
-    id="contactForm"
-    enctype="multipart/form-data"
-    novalidate
-  >
+      <div class="support-meta">
 
-    <!-- Honeypot -->
-    <input
-      type="text"
-      name="_gotcha"
-      id="hp_check"
-      tabindex="-1"
-      autocomplete="off"
-      aria-hidden="true"
-      style="display:none !important"
-    />
+        <div class="meta-item">
+
+          <h3>
+            Customer Support
+          </h3>
+
+          <p>
+            We aim to respond promptly
+          </p>
+
+        </div>
 
 
-    <div class="form-grid">
+        <div class="meta-item">
 
-      <!-- NAME -->
+          <h3>
+            Order Assistance
+          </h3>
 
-      <div class="form-group">
+          <p>
+            Products, orders & payments
+          </p>
 
-        <label for="name">
-          Full Name
-          <span class="required" aria-hidden="true">*</span>
-        </label>
+        </div>
 
+
+        <div class="meta-item">
+
+          <h3>
+            Official Website
+          </h3>
+
+          <p>
+
+            <a
+              href="https://prasunbarua.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              prasunbarua.com
+            </a>
+
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- ========================================================
+           CONTACT FORM
+      ======================================================== -->
+
+      <form
+        id="contactForm"
+        enctype="multipart/form-data"
+        novalidate
+      >
+
+        <!-- Honeypot -->
         <input
           type="text"
-          id="name"
-          name="name"
-          placeholder="Your full name"
-          autocomplete="name"
-          required
-          aria-required="true"
-          maxlength="120"
-        />
-
-      </div>
-
-
-      <!-- EMAIL -->
-
-      <div class="form-group">
-
-        <label for="email">
-          Email Address
-          <span class="required" aria-hidden="true">*</span>
-        </label>
-
-        <input
-          type="email"
-          id="email"
-          name="email"
-          placeholder="you@example.com"
-          autocomplete="email"
-          required
-          aria-required="true"
-          maxlength="254"
-        />
-
-      </div>
-
-
-      <!-- TOPIC -->
-
-      <div class="form-group">
-
-        <label for="topic">
-          Topic
-          <span class="required" aria-hidden="true">*</span>
-        </label>
-
-        <select
-          id="topic"
-          name="topic"
-          required
-          aria-required="true"
+          name="_gotcha"
+          id="hp_check"
+          tabindex="-1"
+          autocomplete="off"
+          aria-hidden="true"
+          style="display:none !important"
         >
 
-          <option
-            value=""
-            disabled
-            selected
-          >
-            Select a topic...
-          </option>
 
-          <option value="Product Inquiry">
-            Product Inquiry
-          </option>
-
-          <option value="Order Support">
-            Order Support
-          </option>
-
-          <option value="Payment Issue">
-            Payment Issue
-          </option>
-
-          <option value="Shipping / Delivery">
-            Shipping / Delivery
-          </option>
-
-          <option value="Return / Refund">
-            Return / Refund
-          </option>
-
-          <option value="Technical Issue">
-            Technical Issue
-          </option>
-
-          <option value="General Inquiry">
-            General Inquiry
-          </option>
-
-          <option value="Business Inquiry">
-            Business Inquiry
-          </option>
-
-        </select>
-
-      </div>
+        <div class="form-grid">
 
 
-      <!-- ORDER ID -->
+          <!-- NAME -->
 
-      <div class="form-group">
+          <div class="form-group">
 
-        <label for="order_id">
-          Order ID
-          <span class="optional">(Optional)</span>
-        </label>
+            <label for="name">
 
-        <input
-          type="text"
-          id="order_id"
-          name="order_id"
-          placeholder="e.g. PS123456"
-          autocomplete="off"
-          maxlength="100"
-        />
+              Full Name
 
-      </div>
+              <span
+                class="required"
+                aria-hidden="true"
+              >
+                *
+              </span>
+
+            </label>
 
 
-      <!-- MESSAGE -->
+            <input
+              type="text"
+              id="name"
+              name="name"
+              placeholder="Your full name"
+              autocomplete="name"
+              required
+              aria-required="true"
+              maxlength="120"
+            >
 
-      <div class="form-group full-width">
-
-        <label for="message">
-          Message
-          <span class="required" aria-hidden="true">*</span>
-        </label>
-
-        <textarea
-          id="message"
-          name="message"
-          placeholder="Please describe your question or issue..."
-          required
-          aria-required="true"
-          maxlength="5000"
-        ></textarea>
-
-      </div>
-
-
-      <!-- ATTACHMENT -->
-
-      <div class="form-group full-width">
-
-        <label for="attachment">
-          Attachment
-          <span class="optional">(Optional)</span>
-        </label>
-
-        <div class="file-upload">
-
-          <input
-            type="file"
-            id="attachment"
-            name="attachment"
-            class="file-input"
-            accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.zip"
-          />
-
-          <div class="file-help">
-            Attach a screenshot, receipt, product photo, document,
-            or other relevant file. Maximum size: 10 MB.
-            Supported formats: PDF, JPG, PNG, WEBP, DOC, DOCX,
-            XLS, XLSX, ZIP.
           </div>
 
-          <div
-            class="file-name"
-            id="fileName"
-            aria-live="polite"
-          ></div>
+
+          <!-- EMAIL -->
+
+          <div class="form-group">
+
+            <label for="email">
+
+              Email Address
+
+              <span
+                class="required"
+                aria-hidden="true"
+              >
+                *
+              </span>
+
+            </label>
+
+
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+              aria-required="true"
+              maxlength="254"
+            >
+
+          </div>
+
+
+          <!-- TOPIC -->
+
+          <div class="form-group">
+
+            <label for="topic">
+
+              Topic
+
+              <span
+                class="required"
+                aria-hidden="true"
+              >
+                *
+              </span>
+
+            </label>
+
+
+            <select
+              id="topic"
+              name="topic"
+              required
+              aria-required="true"
+            >
+
+              <option
+                value=""
+                disabled
+                selected
+              >
+                Select a topic...
+              </option>
+
+              <option value="Product Inquiry">
+                Product Inquiry
+              </option>
+
+              <option value="Order Support">
+                Order Support
+              </option>
+
+              <option value="Payment Issue">
+                Payment Issue
+              </option>
+
+              <option value="Shipping / Delivery">
+                Shipping / Delivery
+              </option>
+
+              <option value="Return / Refund">
+                Return / Refund
+              </option>
+
+              <option value="Technical Issue">
+                Technical Issue
+              </option>
+
+              <option value="General Inquiry">
+                General Inquiry
+              </option>
+
+              <option value="Business Inquiry">
+                Business Inquiry
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <!-- ORDER ID -->
+
+          <div class="form-group">
+
+            <label for="order_id">
+
+              Order ID
+
+              <span class="optional">
+                (Optional)
+              </span>
+
+            </label>
+
+
+            <input
+              type="text"
+              id="order_id"
+              name="order_id"
+              placeholder="e.g. PS123456"
+              autocomplete="off"
+              maxlength="100"
+            >
+
+          </div>
+
+
+          <!-- MESSAGE -->
+
+          <div class="form-group full-width">
+
+            <label for="message">
+
+              Message
+
+              <span
+                class="required"
+                aria-hidden="true"
+              >
+                *
+              </span>
+
+            </label>
+
+
+            <textarea
+              id="message"
+              name="message"
+              placeholder="Please describe your question or issue..."
+              required
+              aria-required="true"
+              maxlength="5000"
+            ></textarea>
+
+          </div>
+
+
+          <!-- ATTACHMENT -->
+
+          <div class="form-group full-width">
+
+            <label for="attachment">
+
+              Attachment
+
+              <span class="optional">
+                (Optional)
+              </span>
+
+            </label>
+
+
+            <div class="file-upload">
+
+              <input
+                type="file"
+                id="attachment"
+                name="attachment"
+                class="file-input"
+                accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.zip"
+              >
+
+
+              <div class="file-help">
+
+                Attach a screenshot, receipt, product photo,
+                document, or other relevant file.
+
+                Maximum size: 10 MB.
+
+                Supported formats:
+                PDF, JPG, PNG, WEBP, DOC, DOCX,
+                XLS, XLSX, ZIP.
+
+              </div>
+
+
+              <div
+                class="file-name"
+                id="fileName"
+                aria-live="polite"
+              ></div>
+
+            </div>
+
+          </div>
+
+
+          <!-- SUBMIT -->
+
+          <div class="form-group full-width submit-area">
+
+            <button
+              type="submit"
+              class="btn-submit"
+              id="submitBtn"
+            >
+
+              <span id="btnText">
+                Send Message
+              </span>
+
+
+              <span
+                class="btn-spinner"
+                id="btnSpinner"
+                aria-hidden="true"
+              ></span>
+
+            </button>
+
+
+            <div
+              class="error-msg"
+              id="errorMsg"
+              role="alert"
+              aria-live="assertive"
+            >
+              Something went wrong.
+              Please try again.
+            </div>
+
+          </div>
 
         </div>
 
-      </div>
+      </form>
 
 
-      <!-- SUBMIT -->
+      <!-- ========================================================
+           SUCCESS MESSAGE
+      ======================================================== -->
 
-      <div class="form-group full-width submit-area">
-
-        <button
-          type="submit"
-          class="btn-submit"
-          id="submitBtn"
-        >
-
-          <span id="btnText">
-            Send Message
-          </span>
-
-          <span
-            class="btn-spinner"
-            id="btnSpinner"
-            aria-hidden="true"
-          ></span>
-
-        </button>
-
-
-        <div
-          class="error-msg"
-          id="errorMsg"
-          role="alert"
-        >
-          Something went wrong. Please try again.
-        </div>
-
-      </div>
-
-    </div>
-
-  </form>
-
-
-  <!-- ========================================================
-       SUCCESS MESSAGE
-  ======================================================== -->
-
-  <div
-    class="success-state"
-    id="successMessage"
-    role="status"
-    aria-live="polite"
-  >
-
-    <div class="success-icon">
-
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
+      <div
+        class="success-state"
+        id="successMessage"
+        role="status"
+        aria-live="polite"
       >
-        <path d="m5 12 4 4L19 6"></path>
-      </svg>
 
-    </div>
+        <div class="success-icon">
 
-    <h3>
-      Message Sent Successfully
-    </h3>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
 
-    <p>
-      Thank you for contacting PRASUN SHOP.
-      We have received your message and will review it as soon as possible.
-    </p>
+            <path d="m5 12 4 4L19 6"></path>
 
-  </div>
+          </svg>
 
-</section>
+        </div>
 
+
+        <h3>
+          Message Sent Successfully
+        </h3>
+
+
+        <p>
+          Thank you for contacting PRASUN SHOP.
+          We have received your message and will review it
+          as soon as possible.
+        </p>
+
+      </div>
+
+    </section>
 
   </main>
+
 
   <!-- ============================================================
        FOOTER
@@ -951,56 +1495,79 @@ gtag('config', 'G-D9F2VQ4247');
 
   <footer class="footer">
 
+    <div class="footer-container">
 
-<div class="footer-container">
+      <div class="footer-links">
 
-  <div class="footer-links">
+        <a href="/about.html">
+          About
+        </a>
 
-    <a href="/about.html">About</a>
+        <a href="/contact.html">
+          Contact
+        </a>
 
-    <a href="/contact.html">Contact</a>
+        <a href="/privacy.html">
+          Privacy Policy
+        </a>
 
-    <a href="/privacy.html">Privacy Policy</a>
+        <a href="/terms.html">
+          Terms of Service
+        </a>
 
-    <a href="/terms.html">Terms of Service</a>
+        <a href="/refund.html">
+          Refund Policy
+        </a>
 
-    <a href="/refund.html">Refund Policy</a>
+      </div>
 
-  </div>
 
-  <p>
-    &copy; 2026 PRASUN SHOP by
-    <a
-      href="https://prasunbarua.com"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      Prasun Barua
-    </a>.
-    All rights reserved.
-  </p>
+      <p>
 
-</div>
+        &copy; 2026 PRASUN SHOP by
 
+        <a
+          href="https://prasunbarua.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Prasun Barua
+        </a>.
+
+        All rights reserved.
+
+      </p>
+
+    </div>
 
   </footer>
+
 
   <!-- ============================================================
        CONTACT FORM JAVASCRIPT
   ============================================================ -->
 
   <script>
+
     "use strict";
 
+
     (() => {
+
+      /* ==========================================================
+         CONFIGURATION
+      ========================================================== */
 
       const CONTACT_WORKER_URL =
         "https://multi-site-contact-backend.prasun301.workers.dev";
 
+
       const MAX_FILE_SIZE =
         10 * 1024 * 1024;
 
+
       const ALLOWED_EXTENSIONS = [
+
         "pdf",
         "jpg",
         "jpeg",
@@ -1011,58 +1578,177 @@ gtag('config', 'G-D9F2VQ4247');
         "xls",
         "xlsx",
         "zip"
+
       ];
 
+
+      /* ==========================================================
+         DOM ELEMENTS
+      ========================================================== */
+
       const form =
-        document.getElementById("contactForm");
+        document.getElementById(
+          "contactForm"
+        );
+
 
       const attachmentInput =
-        document.getElementById("attachment");
+        document.getElementById(
+          "attachment"
+        );
+
 
       const fileName =
-        document.getElementById("fileName");
+        document.getElementById(
+          "fileName"
+        );
+
 
       const submitButton =
-        document.getElementById("submitBtn");
+        document.getElementById(
+          "submitBtn"
+        );
+
 
       const buttonText =
-        document.getElementById("btnText");
+        document.getElementById(
+          "btnText"
+        );
+
 
       const buttonSpinner =
-        document.getElementById("btnSpinner");
+        document.getElementById(
+          "btnSpinner"
+        );
+
 
       const errorMessage =
-        document.getElementById("errorMsg");
+        document.getElementById(
+          "errorMsg"
+        );
+
 
       const successMessage =
-        document.getElementById("successMessage");
+        document.getElementById(
+          "successMessage"
+        );
 
+
+      const honeypotInput =
+        document.getElementById(
+          "hp_check"
+        );
+
+
+      /* ==========================================================
+         BASIC SAFETY CHECK
+      ========================================================== */
+
+      if (
+        !form ||
+        !attachmentInput ||
+        !submitButton ||
+        !errorMessage ||
+        !successMessage
+      ) {
+
+        console.error(
+          "[PRASUN SHOP] Contact form initialization failed."
+        );
+
+        return;
+
+      }
+
+
+      /* ==========================================================
+         FILE EXTENSION
+      ========================================================== */
 
       function getFileExtension(
         filename
       ) {
 
-        const parts =
-          String(filename || "")
-            .toLowerCase()
-            .split(".");
+        const cleanName =
+          String(
+            filename || ""
+          )
+            .trim()
+            .toLowerCase();
 
-        return parts.length > 1
-          ? parts.pop()
-          : "";
+
+        const lastDot =
+          cleanName.lastIndexOf(".");
+
+
+        if (
+          lastDot === -1 ||
+          lastDot === cleanName.length - 1
+        ) {
+
+          return "";
+
+        }
+
+
+        return cleanName
+          .slice(lastDot + 1);
 
       }
 
+
+      /* ==========================================================
+         FILE SIZE
+      ========================================================== */
+
+      function formatFileSize(
+        bytes
+      ) {
+
+        if (
+          bytes < 1024
+        ) {
+
+          return `${bytes} B`;
+
+        }
+
+
+        if (
+          bytes < 1024 * 1024
+        ) {
+
+          return `${(
+            bytes / 1024
+          ).toFixed(1)} KB`;
+
+        }
+
+
+        return `${(
+          bytes / (1024 * 1024)
+        ).toFixed(1)} MB`;
+
+      }
+
+
+      /* ==========================================================
+         FILE VALIDATION
+      ========================================================== */
 
       function validateAttachment(
         file
       ) {
 
         if (!file) {
+
           return {
-            valid: true
+            valid: true,
+            message: ""
           };
+
         }
+
 
         if (
           file.size >
@@ -1077,10 +1763,12 @@ gtag('config', 'G-D9F2VQ4247');
 
         }
 
+
         const extension =
           getFileExtension(
             file.name
           );
+
 
         if (
           !ALLOWED_EXTENSIONS.includes(
@@ -1096,12 +1784,18 @@ gtag('config', 'G-D9F2VQ4247');
 
         }
 
+
         return {
-          valid: true
+          valid: true,
+          message: ""
         };
 
       }
 
+
+      /* ==========================================================
+         SHOW ERROR
+      ========================================================== */
 
       function showError(
         message
@@ -1111,11 +1805,16 @@ gtag('config', 'G-D9F2VQ4247');
           message ||
           "Something went wrong. Please try again.";
 
+
         errorMessage.style.display =
           "block";
 
       }
 
+
+      /* ==========================================================
+         CLEAR ERROR
+      ========================================================== */
 
       function clearError() {
 
@@ -1128,6 +1827,10 @@ gtag('config', 'G-D9F2VQ4247');
       }
 
 
+      /* ==========================================================
+         LOADING STATE
+      ========================================================== */
+
       function setLoading(
         loading
       ) {
@@ -1135,10 +1838,12 @@ gtag('config', 'G-D9F2VQ4247');
         submitButton.disabled =
           loading;
 
+
         buttonText.textContent =
           loading
             ? "Sending..."
             : "Send Message";
+
 
         buttonSpinner.style.display =
           loading
@@ -1148,14 +1853,23 @@ gtag('config', 'G-D9F2VQ4247');
       }
 
 
+      /* ==========================================================
+         FILE CHANGE
+      ========================================================== */
+
       attachmentInput.addEventListener(
         "change",
         () => {
 
           clearError();
 
+
           const file =
-            attachmentInput.files?.[0];
+            attachmentInput.files &&
+            attachmentInput.files.length
+              ? attachmentInput.files[0]
+              : null;
+
 
           if (!file) {
 
@@ -1169,15 +1883,20 @@ gtag('config', 'G-D9F2VQ4247');
 
           }
 
+
           const validation =
             validateAttachment(
               file
             );
 
-          if (!validation.valid) {
+
+          if (
+            !validation.valid
+          ) {
 
             attachmentInput.value =
               "";
+
 
             fileName.textContent =
               "";
@@ -1185,16 +1904,20 @@ gtag('config', 'G-D9F2VQ4247');
             fileName.style.display =
               "none";
 
+
             showError(
               validation.message
             );
+
 
             return;
 
           }
 
+
           fileName.textContent =
             `Selected file: ${file.name} (${formatFileSize(file.size)})`;
+
 
           fileName.style.display =
             "block";
@@ -1203,38 +1926,9 @@ gtag('config', 'G-D9F2VQ4247');
       );
 
 
-      function formatFileSize(
-        bytes
-      ) {
-
-        if (
-          bytes <
-          1024
-        ) {
-
-          return `${bytes} B`;
-
-        }
-
-        if (
-          bytes <
-          1024 * 1024
-        ) {
-
-          return `${(
-            bytes /
-            1024
-          ).toFixed(1)} KB`;
-
-        }
-
-        return `${(
-          bytes /
-          (1024 * 1024)
-        ).toFixed(1)} MB`;
-
-      }
-
+      /* ==========================================================
+         SUBMIT
+      ========================================================== */
 
       form.addEventListener(
         "submit",
@@ -1242,29 +1936,30 @@ gtag('config', 'G-D9F2VQ4247');
 
           event.preventDefault();
 
+
           clearError();
 
-          /*
-           * Honeypot spam check.
-           */
 
-          const honeypot =
-            document.getElementById(
-              "hp_check"
-            ).value;
+          /* ------------------------------------------------------
+             Honeypot
+          ------------------------------------------------------ */
 
           if (
-            honeypot !== ""
+            honeypotInput.value.trim() !== ""
           ) {
+
+            console.warn(
+              "[PRASUN SHOP] Honeypot triggered."
+            );
 
             return;
 
           }
 
 
-          /*
-           * Browser-native validation.
-           */
+          /* ------------------------------------------------------
+             Browser validation
+          ------------------------------------------------------ */
 
           if (
             !form.checkValidity()
@@ -1277,13 +1972,22 @@ gtag('config', 'G-D9F2VQ4247');
           }
 
 
+          /* ------------------------------------------------------
+             Attachment validation
+          ------------------------------------------------------ */
+
           const file =
-            attachmentInput.files?.[0];
+            attachmentInput.files &&
+            attachmentInput.files.length
+              ? attachmentInput.files[0]
+              : null;
+
 
           const validation =
             validateAttachment(
               file
             );
+
 
           if (
             !validation.valid
@@ -1298,6 +2002,19 @@ gtag('config', 'G-D9F2VQ4247');
           }
 
 
+          /* ------------------------------------------------------
+             Prevent duplicate submission
+          ------------------------------------------------------ */
+
+          if (
+            submitButton.disabled
+          ) {
+
+            return;
+
+          }
+
+
           setLoading(
             true
           );
@@ -1305,86 +2022,182 @@ gtag('config', 'G-D9F2VQ4247');
 
           try {
 
-            /*
-             * IMPORTANT:
-             *
-             * Use FormData rather than JSON because
-             * an attachment may be included.
-             */
+            /* ----------------------------------------------------
+               IMPORTANT
+
+               We intentionally use FormData.
+
+               DO NOT use:
+
+                 JSON.stringify()
+
+               DO NOT use:
+
+                 request.json()
+
+               on the frontend.
+
+               The browser automatically creates the correct
+               multipart/form-data boundary when FormData is used.
+            ---------------------------------------------------- */
+
             const formData =
               new FormData(
                 form
               );
 
 
-            /*
-             * Additional site identifier.
-             */
+            /* ----------------------------------------------------
+               Site identifier
+            ---------------------------------------------------- */
+
             formData.set(
               "siteName",
               "PRASUN SHOP"
             );
 
 
+            /* ----------------------------------------------------
+               Optional explicit source
+            ---------------------------------------------------- */
+
+            formData.set(
+              "source",
+              "PRASUN SHOP contact page"
+            );
+
+
+            /* ----------------------------------------------------
+               Send request
+
+               IMPORTANT:
+
+               Do NOT manually set Content-Type.
+
+               The browser must generate:
+
+               multipart/form-data;
+               boundary=...
+            ---------------------------------------------------- */
+
             const response =
               await fetch(
                 CONTACT_WORKER_URL,
                 {
-                  method:
-                    "POST",
+                  method: "POST",
 
-                  body:
-                    formData,
+                  body: formData,
 
                   headers: {
-                    Accept:
+                    "Accept":
                       "application/json"
-                  }
+                  },
+
+                  credentials:
+                    "omit"
                 }
               );
+
+
+            /* ----------------------------------------------------
+               Read response safely.
+
+               The Worker should normally return JSON, but if
+               Cloudflare returns a text error or another response,
+               we don't allow response.json() itself to hide the
+               real error.
+            ---------------------------------------------------- */
+
+            const responseText =
+              await response.text();
 
 
             let result =
               null;
 
 
-            try {
+            if (
+              responseText
+                .trim()
+                .length > 0
+            ) {
 
-              result =
-                await response.json();
+              try {
 
-            } catch {
+                result =
+                  JSON.parse(
+                    responseText
+                  );
 
-              result =
-                null;
+              } catch (
+                parseError
+              ) {
+
+                console.error(
+                  "[PRASUN SHOP] Worker returned non-JSON response:",
+                  responseText
+                );
+
+                throw new Error(
+                  response.ok
+                    ? "The support server returned an invalid response. Please try again."
+                    : `Support server error (${response.status}). Please try again later.`
+                );
+
+              }
 
             }
 
 
+            /* ----------------------------------------------------
+               Success
+            ---------------------------------------------------- */
+
             if (
               response.ok &&
-              result?.success
+              result &&
+              result.success === true
             ) {
 
               form.style.display =
                 "none";
 
+
               successMessage.style.display =
                 "block";
+
 
               successMessage.scrollIntoView({
                 behavior: "smooth",
                 block: "center"
               });
 
+
+              console.info(
+                "[PRASUN SHOP] Contact message sent successfully."
+              );
+
+
               return;
 
             }
 
 
+            /* ----------------------------------------------------
+               Worker returned an error
+            ---------------------------------------------------- */
+
+            const workerError =
+              result &&
+              (
+                result.error ||
+                result.message
+              );
+
+
             throw new Error(
-              result?.error ||
-              "The support service could not process your message."
+              workerError ||
+              `The support service could not process your message (HTTP ${response.status}).`
             );
 
           } catch (
@@ -1396,18 +2209,33 @@ gtag('config', 'G-D9F2VQ4247');
               error
             );
 
+
+            let message =
+              "Unable to send your message. Please try again.";
+
+
+            if (
+              error &&
+              typeof error.message === "string" &&
+              error.message.trim()
+            ) {
+
+              message =
+                error.message.trim();
+
+            }
+
+
             showError(
-              error?.message ||
-              "Unable to send your message. Please try again."
+              message
             );
 
           } finally {
 
-            /*
-             * Do not re-enable the form after
-             * successful submission because the
-             * form has been replaced by the success state.
-             */
+            /* ----------------------------------------------------
+               Re-enable only when submission did not succeed.
+            ---------------------------------------------------- */
+
             if (
               successMessage.style.display !==
               "block"
@@ -1424,7 +2252,19 @@ gtag('config', 'G-D9F2VQ4247');
         }
       );
 
+
+      /* ==========================================================
+         INITIALIZATION
+      ========================================================== */
+
+      clearError();
+
+      console.info(
+        "[PRASUN SHOP] Contact form initialized."
+      );
+
     })();
+
   </script>
 
 </body>
