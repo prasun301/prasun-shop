@@ -5,38 +5,39 @@
  *
  * js/products.js
  *
- * PRASUN SHOP storefront product manager.
+ * CJ Dropshipping + Cloudflare Worker storefront manager.
  *
- * ARCHITECTURE
- *
- *     Cloudflare Worker
- *            ↓
- *     /api/products
- *            ↓
- *     Full available catalog
- *            ↓
- *     Local category/search filtering
- *            ↓
- *     Product grid
- *
+ * APPROVED STORE CATEGORIES
+ * - All Products
+ * - Solar Lights
+ * - Battery
+ * - Chargers
+ * - Power Bank
+ * - Cables
+ * - Earphones
+ * - Headphones
+ * - Modem
+ * - Routers
+ * - Laptops
+ * - Power Tools
+ * - Smart Home
+ * - Camera
  *
  * FEATURES
- * - Loads the full available catalog from Cloudflare Worker
- * - Displays all available products
- * - Category filtering from the loaded catalog
- * - Search across the loaded catalog
- * - Sorting
- * - CJ descriptions
- * - CJ images through Worker proxy
- * - CJ image galleries
+ * - Loads products from Cloudflare Worker
+ * - Uses CJ images through Worker proxy
+ * - Displays full CJ descriptions
+ * - Product details modal
+ * - CJ image gallery
  * - CJ PID / SKU / VID / variants preserved
- * - View Details modal
- * - Add to Cart integration
+ * - Search
+ * - Category filtering
+ * - Sorting
+ * - Cart integration
+ * - Inline SVG icons only
  * - No Material Symbols
  * - No emoji
- * - Inline SVG icons only
- * - No external stock images
- *
+ * - No stock-image services
  * ============================================================================
  */
 
@@ -66,19 +67,19 @@
             15000,
 
         DEBOUNCE_DELAY:
-            280,
+            300,
 
         MAX_PRODUCTS:
-            5000,
+            1000,
 
         DEFAULT_CATEGORY:
-            "General"
+            "Home Improvement / Solar"
 
     };
 
 
     /* =========================================================================
-       2. LOCAL PLACEHOLDER
+       2. PLACEHOLDER IMAGE
        ========================================================================= */
 
     const PLACEHOLDER_IMAGE =
@@ -141,278 +142,79 @@
 
 
     /* =========================================================================
-       3. STORE CATEGORIES
+       3. APPROVED CATEGORIES
        ========================================================================= */
-
-    /*
-     * Important:
-     *
-     * These categories are NOT sent to the Worker individually.
-     *
-     * The Worker loads the full catalog once.
-     * Category buttons then filter the complete catalog locally.
-     *
-     * This prevents:
-     *
-     *     Solar = 4 products
-     *     Battery = 0 products
-     *     Camera = 0 products
-     *
-     * caused by narrow server keyword searches.
-     */
 
     const CATEGORY_MAP = [
 
         {
-            id:
-                "all",
-
-            label:
-                "All Products",
-
-            keywords:
-                []
+            label: "All Products",
+            query: ""
         },
 
         {
-            id:
-                "solar-lights",
-
-            label:
-                "Solar Lights",
-
-            keywords: [
-                "solar",
-                "solar light",
-                "solar lamp",
-                "solar lighting",
-                "outdoor solar",
-                "garden solar",
-                "solar led"
-            ]
+            label: "Solar Lights",
+            query: "solar light"
         },
 
         {
-            id:
-                "battery",
-
-            label:
-                "Battery",
-
-            keywords: [
-                "battery",
-                "rechargeable battery",
-                "lithium battery",
-                "battery pack",
-                "power battery",
-                "18650",
-                "lifepo4"
-            ]
+            label: "Battery",
+            query: "battery"
         },
 
         {
-            id:
-                "chargers",
-
-            label:
-                "Chargers",
-
-            keywords: [
-                "charger",
-                "charging",
-                "fast charger",
-                "wall charger",
-                "usb charger",
-                "phone charger",
-                "wireless charger",
-                "charging station"
-            ]
+            label: "Chargers",
+            query: "charger"
         },
 
         {
-            id:
-                "power-bank",
-
-            label:
-                "Power Bank",
-
-            keywords: [
-                "power bank",
-                "powerbank",
-                "portable charger",
-                "portable power",
-                "battery bank"
-            ]
+            label: "Power Bank",
+            query: "power bank"
         },
 
         {
-            id:
-                "cables",
-
-            label:
-                "Cables",
-
-            keywords: [
-                "cable",
-                "cables",
-                "usb cable",
-                "type-c",
-                "type c",
-                "lightning cable",
-                "hdmi",
-                "ethernet cable",
-                "data cable",
-                "charging cable"
-            ]
+            label: "Cables",
+            query: "cable"
         },
 
         {
-            id:
-                "earphones",
-
-            label:
-                "Earphones",
-
-            keywords: [
-                "earphone",
-                "earphones",
-                "earbud",
-                "earbuds",
-                "wireless earbuds",
-                "bluetooth earphone",
-                "tws"
-            ]
+            label: "Earphones",
+            query: "earphone"
         },
 
         {
-            id:
-                "headphones",
-
-            label:
-                "Headphones",
-
-            keywords: [
-                "headphone",
-                "headphones",
-                "gaming headset",
-                "bluetooth headset",
-                "wireless headset",
-                "headset"
-            ]
+            label: "Headphones",
+            query: "headphone"
         },
 
         {
-            id:
-                "modem",
-
-            label:
-                "Modem",
-
-            keywords: [
-                "modem",
-                "4g modem",
-                "5g modem",
-                "usb modem",
-                "lte modem",
-                "mobile modem"
-            ]
+            label: "Modem",
+            query: "modem"
         },
 
         {
-            id:
-                "routers",
-
-            label:
-                "Routers",
-
-            keywords: [
-                "router",
-                "wifi router",
-                "wi-fi router",
-                "4g router",
-                "5g router",
-                "wireless router",
-                "network router"
-            ]
+            label: "Routers",
+            query: "router"
         },
 
         {
-            id:
-                "laptops",
-
-            label:
-                "Laptops",
-
-            keywords: [
-                "laptop",
-                "notebook",
-                "notebook computer",
-                "ultrabook",
-                "chromebook"
-            ]
+            label: "Laptops",
+            query: "laptop"
         },
 
         {
-            id:
-                "power-tools",
-
-            label:
-                "Power Tools",
-
-            keywords: [
-                "power tool",
-                "power tools",
-                "drill",
-                "cordless drill",
-                "impact drill",
-                "grinder",
-                "saw",
-                "jigsaw",
-                "sander",
-                "driver",
-                "rotary tool"
-            ]
+            label: "Power Tools",
+            query: "power tool"
         },
 
         {
-            id:
-                "smart-home",
-
-            label:
-                "Smart Home",
-
-            keywords: [
-                "smart home",
-                "smart device",
-                "smart light",
-                "smart switch",
-                "smart plug",
-                "smart sensor",
-                "home automation",
-                "wifi switch",
-                "wi-fi switch"
-            ]
+            label: "Smart Home",
+            query: "smart home"
         },
 
         {
-            id:
-                "camera",
-
-            label:
-                "Camera",
-
-            keywords: [
-                "camera",
-                "security camera",
-                "cctv",
-                "ip camera",
-                "wifi camera",
-                "wi-fi camera",
-                "surveillance camera",
-                "webcam",
-                "doorbell camera",
-                "video camera"
-            ]
+            label: "Camera",
+            query: "camera"
         }
 
     ];
@@ -424,26 +226,19 @@
 
     const state = {
 
-        products:
-            [],
+        products: [],
 
-        filteredProducts:
-            [],
+        filteredProducts: [],
 
-        activeCategoryId:
-            "all",
+        activeCategoryQuery: "",
 
-        searchQuery:
-            "",
+        searchQuery: "",
 
-        sortBy:
-            "featured",
+        sortBy: "featured",
 
-        loading:
-            false,
+        loading: false,
 
-        requestSequence:
-            0
+        requestSequence: 0
 
     };
 
@@ -456,43 +251,32 @@
 
 
     /* =========================================================================
-       5. DOM
+       5. DOM ELEMENTS
        ========================================================================= */
 
     const elements = {
 
-        productList:
-            null,
+        productList: null,
 
-        resultsCount:
-            null,
+        resultsCount: null,
 
-        searchInput:
-            null,
+        searchInput: null,
 
-        clearSearchButton:
-            null,
+        clearSearchButton: null,
 
-        sortSelect:
-            null,
+        sortSelect: null,
 
-        categoriesNav:
-            null,
+        categoriesNav: null,
 
-        pageHeading:
-            null,
+        pageHeading: null,
 
-        liveRegion:
-            null,
+        liveRegion: null,
 
-        productModal:
-            null,
+        productModal: null,
 
-        modalBody:
-            null,
+        modalBody: null,
 
-        modalClose:
-            null
+        modalClose: null
 
     };
 
@@ -510,8 +294,7 @@
             "DOMContentLoaded",
             initialize,
             {
-                once:
-                    true
+                once: true
             }
         );
 
@@ -534,7 +317,7 @@
 
         updateClearSearchButton();
 
-        updatePageHeading();
+        updatePageHeading("");
 
         loadProducts();
 
@@ -552,58 +335,48 @@
                 "product-list"
             );
 
-
         elements.resultsCount =
             document.getElementById(
                 "results-count"
             );
-
 
         elements.searchInput =
             document.getElementById(
                 "product-search"
             );
 
-
         elements.clearSearchButton =
             document.getElementById(
                 "clear-search"
             );
 
-
         elements.sortSelect =
             findSortSelect();
-
 
         elements.categoriesNav =
             document.getElementById(
                 "products-categories"
             );
 
-
         elements.pageHeading =
             document.getElementById(
                 "page-heading"
             );
-
 
         elements.liveRegion =
             document.getElementById(
                 "aria-live-region"
             );
 
-
         elements.productModal =
             document.getElementById(
                 "product-modal"
             );
 
-
         elements.modalBody =
             document.getElementById(
                 "modal-body"
             );
-
 
         elements.modalClose =
             document.getElementById(
@@ -616,6 +389,7 @@
     function findSortSelect() {
 
         return (
+
             document.getElementById(
                 "product-sort"
             ) ||
@@ -627,6 +401,7 @@
             document.querySelector(
                 "select[name='sort']"
             )
+
         );
 
     }
@@ -636,7 +411,6 @@
 
         const sort =
             findSortSelect();
-
 
         if (
             sort &&
@@ -665,7 +439,6 @@
                 className
             );
 
-
         const icons = {
 
             apps: `
@@ -675,41 +448,12 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-                    <rect
-                        x="4"
-                        y="4"
-                        width="6"
-                        height="6"
-                        rx="1"
-                    ></rect>
-
-                    <rect
-                        x="14"
-                        y="4"
-                        width="6"
-                        height="6"
-                        rx="1"
-                    ></rect>
-
-                    <rect
-                        x="4"
-                        y="14"
-                        width="6"
-                        height="6"
-                        rx="1"
-                    ></rect>
-
-                    <rect
-                        x="14"
-                        y="14"
-                        width="6"
-                        height="6"
-                        rx="1"
-                    ></rect>
-
+                    <rect x="4" y="4" width="6" height="6" rx="1"></rect>
+                    <rect x="14" y="4" width="6" height="6" rx="1"></rect>
+                    <rect x="4" y="14" width="6" height="6" rx="1"></rect>
+                    <rect x="14" y="14" width="6" height="6" rx="1"></rect>
                 </svg>
             `,
-
 
             category: `
                 <svg
@@ -718,80 +462,31 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-                    <rect
-                        x="4"
-                        y="4"
-                        width="6"
-                        height="6"
-                        rx="1"
-                    ></rect>
-
-                    <rect
-                        x="14"
-                        y="4"
-                        width="6"
-                        height="6"
-                        rx="1"
-                    ></rect>
-
-                    <rect
-                        x="4"
-                        y="14"
-                        width="6"
-                        height="6"
-                        rx="1"
-                    ></rect>
-
-                    <rect
-                        x="14"
-                        y="14"
-                        width="6"
-                        height="6"
-                        rx="1"
-                    ></rect>
-
+                    <rect x="4" y="4" width="6" height="6" rx="1"></rect>
+                    <rect x="14" y="4" width="6" height="6" rx="1"></rect>
+                    <rect x="4" y="14" width="6" height="6" rx="1"></rect>
+                    <rect x="14" y="14" width="6" height="6" rx="1"></rect>
                 </svg>
             `,
 
-
-            light_mode: `
+            solar: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="4"
-                    ></circle>
-
+                    <circle cx="12" cy="12" r="4"></circle>
                     <path d="M12 2v2"></path>
                     <path d="M12 20v2"></path>
                     <path d="M2 12h2"></path>
                     <path d="M20 12h2"></path>
-
-                    <path
-                        d="m4.93 4.93 1.41 1.41"
-                    ></path>
-
-                    <path
-                        d="m17.66 17.66 1.41 1.41"
-                    ></path>
-
-                    <path
-                        d="m17.66 6.34 1.41-1.41"
-                    ></path>
-
-                    <path
-                        d="m6.34 17.66-1.41 1.41"
-                    ></path>
-
+                    <path d="m4.9 4.9 1.4 1.4"></path>
+                    <path d="m17.7 17.7 1.4 1.4"></path>
+                    <path d="m19.1 4.9-1.4 1.4"></path>
+                    <path d="m6.3 17.7-1.4 1.4"></path>
                 </svg>
             `,
-
 
             battery: `
                 <svg
@@ -800,24 +495,11 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <rect
-                        x="3"
-                        y="7"
-                        width="17"
-                        height="10"
-                        rx="2"
-                    ></rect>
-
+                    <rect x="3" y="7" width="17" height="10" rx="2"></rect>
                     <path d="M21 10v4"></path>
-
                     <path d="M8 12h7"></path>
-
-                    <path d="M12 9v6"></path>
-
                 </svg>
             `,
-
 
             charger: `
                 <svg
@@ -826,22 +508,28 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <rect
-                        x="5"
-                        y="3"
-                        width="14"
-                        height="18"
-                        rx="3"
-                    ></rect>
-
-                    <path d="M9 7h6"></path>
-                    <path d="M9 11h6"></path>
-                    <path d="M12 15v3"></path>
-
+                    <path d="M8 3v6"></path>
+                    <path d="M16 3v6"></path>
+                    <path d="M5 9h14"></path>
+                    <path d="M12 9v5"></path>
+                    <path d="M9 14h6"></path>
+                    <path d="M12 14v7"></path>
                 </svg>
             `,
 
+            power: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <rect x="4" y="6" width="16" height="12" rx="2"></rect>
+                    <path d="M9 9h6"></path>
+                    <path d="M9 12h6"></path>
+                    <path d="M9 15h3"></path>
+                </svg>
+            `,
 
             cable: `
                 <svg
@@ -850,98 +538,52 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <path
-                        d="
-                            M7 4v6
-                            a5 5 0 0 0 5 5
-                            h5
-                        "
-                    ></path>
-
-                    <path d="M5 3h4"></path>
-                    <path d="M15 13h5"></path>
-                    <path d="M5 3v3"></path>
-                    <path d="M17 11v4"></path>
-
+                    <path d="M6 8v4a6 6 0 0 0 6 6h6"></path>
+                    <path d="M4 6h4v4H4z"></path>
+                    <path d="M18 16h2v4h-4v-4"></path>
                 </svg>
             `,
 
-
-            audio: `
+            earphone: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <path
-                        d="M4 14v-2
-                           a8 8 0 0 1 16 0v2"
-                    ></path>
-
-                    <rect
-                        x="3"
-                        y="13"
-                        width="4"
-                        height="7"
-                        rx="2"
-                    ></rect>
-
-                    <rect
-                        x="17"
-                        y="13"
-                        width="4"
-                        height="7"
-                        rx="2"
-                    ></rect>
-
+                    <path d="M5 14V9a7 7 0 0 1 14 0v5"></path>
+                    <path d="M5 14H3v5h4v-4"></path>
+                    <path d="M19 14h2v5h-4v-4"></path>
                 </svg>
             `,
 
-
-            network: `
+            headphone: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <rect
-                        x="4"
-                        y="7"
-                        width="16"
-                        height="10"
-                        rx="2"
-                    ></rect>
-
-                    <path d="M8 17v3"></path>
-                    <path d="M12 17v3"></path>
-                    <path d="M16 17v3"></path>
-
-                    <circle
-                        cx="8"
-                        cy="12"
-                        r="1"
-                    ></circle>
-
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="1"
-                    ></circle>
-
-                    <circle
-                        cx="16"
-                        cy="12"
-                        r="1"
-                    ></circle>
-
+                    <path d="M4 14V11a8 8 0 0 1 16 0v3"></path>
+                    <path d="M4 14h3v6H4z"></path>
+                    <path d="M17 14h3v6h-3z"></path>
                 </svg>
             `,
 
+            router: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <rect x="3" y="9" width="18" height="8" rx="2"></rect>
+                    <path d="M7 13h.01"></path>
+                    <path d="M11 13h.01"></path>
+                    <path d="M15 13h.01"></path>
+                    <path d="M8 7a6 6 0 0 1 8 0"></path>
+                </svg>
+            `,
 
             laptop: `
                 <svg
@@ -950,26 +592,11 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <rect
-                        x="4"
-                        y="4"
-                        width="16"
-                        height="11"
-                        rx="2"
-                    ></rect>
-
-                    <path
-                        d="M2 19h20"
-                    ></path>
-
-                    <path
-                        d="M8 19h8"
-                    ></path>
-
+                    <rect x="5" y="4" width="14" height="10" rx="1.5"></rect>
+                    <path d="M3 18h18"></path>
+                    <path d="M8 18l1-2h6l1 2"></path>
                 </svg>
             `,
-
 
             tool: `
                 <svg
@@ -978,33 +605,25 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <path
-                        d="
-                            M14 5
-                            a5 5 0 0 0 5 5
-                            l-4 4
-                            -5-5
-                            4-4
-                        "
-                    ></path>
-
-                    <path
-                        d="
-                            M5 19
-                            l5-5
-                        "
-                    ></path>
-
-                    <circle
-                        cx="5"
-                        cy="19"
-                        r="2"
-                    ></circle>
-
+                    <path d="m14 6 4 4"></path>
+                    <path d="M8 18 18 8"></path>
+                    <path d="m5 21 3-3"></path>
+                    <path d="m4 16 4 4"></path>
                 </svg>
             `,
 
+            smart: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="M3 11 12 4l9 7"></path>
+                    <path d="M5 10v10h14V10"></path>
+                    <path d="M9 20v-5h6v5"></path>
+                </svg>
+            `,
 
             camera: `
                 <svg
@@ -1013,52 +632,10 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <path
-                        d="
-                            M4 7
-                            h4
-                            l1.5-2h5L16 7h4
-                            a2 2 0 0 1 2 2v9
-                            a2 2 0 0 1-2 2H4
-                            a2 2 0 0 1-2-2V9
-                            a2 2 0 0 1 2-2
-                        "
-                    ></path>
-
-                    <circle
-                        cx="12"
-                        cy="13"
-                        r="4"
-                    ></circle>
-
+                    <path d="M5 7h3l1.5-2h5L16 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"></path>
+                    <circle cx="12" cy="13" r="3.5"></circle>
                 </svg>
             `,
-
-
-            home: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
-
-                    <path
-                        d="M3 11 12 4l9 7"
-                    ></path>
-
-                    <path
-                        d="M5 10v10h14V10"
-                    ></path>
-
-                    <path
-                        d="M9 20v-5h6v5"
-                    ></path>
-
-                </svg>
-            `,
-
 
             star: `
                 <svg
@@ -1067,26 +644,9 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <path
-                        d="
-                            m12 3
-                            2.9 5.9
-                            6.5.9
-                            -4.7 4.6
-                            1.1 6.5
-                            -5.8-3.1
-                            -5.8 3.1
-                            1.1-6.5
-                            -4.7-4.6
-                            6.5-.9
-                            z
-                        "
-                    ></path>
-
+                    <path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"></path>
                 </svg>
             `,
-
 
             eye: `
                 <svg
@@ -1095,29 +655,10 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <path
-                        d="
-                            M2 12
-                            s3.5-6
-                            10-6
-                            10 6
-                            10 6
-                            -3.5 6
-                            -10 6
-                            S2 12 2 12Z
-                        "
-                    ></path>
-
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="2.5"
-                    ></circle>
-
+                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
+                    <circle cx="12" cy="12" r="2.5"></circle>
                 </svg>
             `,
-
 
             add_cart: `
                 <svg
@@ -1126,37 +667,13 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <circle
-                        cx="9"
-                        cy="20"
-                        r="1"
-                    ></circle>
-
-                    <circle
-                        cx="19"
-                        cy="20"
-                        r="1"
-                    ></circle>
-
-                    <path
-                        d="
-                            M3 4h2
-                            l2.4 11.2
-                            a2 2 0 0 0 2 1.6
-                            h8.8
-                            a2 2 0 0 0 1.9-1.4
-                            L22 8H6
-                        "
-                    ></path>
-
+                    <circle cx="9" cy="20" r="1"></circle>
+                    <circle cx="19" cy="20" r="1"></circle>
+                    <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"></path>
                     <path d="M16 4v5"></path>
-
                     <path d="M13.5 6.5h5"></path>
-
                 </svg>
             `,
-
 
             check: `
                 <svg
@@ -1165,14 +682,9 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <path
-                        d="m5 12 4 4L19 6"
-                    ></path>
-
+                    <path d="m5 12 4 4L19 6"></path>
                 </svg>
             `,
-
 
             inventory: `
                 <svg
@@ -1181,22 +693,11 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <path
-                        d="M4 7h16v13H4z"
-                    ></path>
-
-                    <path
-                        d="M8 7V4h8v3"
-                    ></path>
-
-                    <path
-                        d="M8 11h8"
-                    ></path>
-
+                    <path d="M4 7h16v13H4z"></path>
+                    <path d="M8 7V4h8v3"></path>
+                    <path d="M8 11h8"></path>
                 </svg>
             `,
-
 
             refresh: `
                 <svg
@@ -1205,18 +706,10 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <path
-                        d="M20 11a8 8 0 1 0 1 4"
-                    ></path>
-
-                    <path
-                        d="M20 4v7h-7"
-                    ></path>
-
+                    <path d="M20 11a8 8 0 1 0 1 4"></path>
+                    <path d="M20 4v7h-7"></path>
                 </svg>
             `,
-
 
             error: `
                 <svg
@@ -1225,24 +718,11 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
-                    <circle
-                        cx="12"
-                        cy="12"
-                        r="9"
-                    ></circle>
-
-                    <path
-                        d="M12 8v5"
-                    ></path>
-
-                    <path
-                        d="M12 16h.01"
-                    ></path>
-
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 8v5"></path>
+                    <path d="M12 16h.01"></path>
                 </svg>
             `,
-
 
             close: `
                 <svg
@@ -1251,27 +731,8 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-
                     <path d="M6 6l12 12"></path>
-
                     <path d="M18 6L6 18"></path>
-
-                </svg>
-            `,
-
-
-            plus: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
-
-                    <path d="M12 5v14"></path>
-
-                    <path d="M5 12h14"></path>
-
                 </svg>
             `
 
@@ -1286,59 +747,93 @@
     }
 
 
-    function getCategoryIcon(categoryId) {
+    function getCategoryIcon(
+        query
+    ) {
 
-        const map = {
+        const value =
+            String(
+                query || ""
+            )
+                .toLowerCase();
 
-            "all":
-                "apps",
+        if (
+            value.includes(
+                "solar"
+            )
+        ) {
+            return "solar";
+        }
 
-            "solar-lights":
-                "light_mode",
+        if (
+            value === "battery" ||
+            value.includes("battery")
+        ) {
+            return "battery";
+        }
 
-            "battery":
-                "battery",
+        if (
+            value.includes("charger")
+        ) {
+            return "charger";
+        }
 
-            "chargers":
-                "charger",
+        if (
+            value.includes("power bank")
+        ) {
+            return "power";
+        }
 
-            "power-bank":
-                "battery",
+        if (
+            value.includes("cable")
+        ) {
+            return "cable";
+        }
 
-            "cables":
-                "cable",
+        if (
+            value.includes("earphone")
+        ) {
+            return "earphone";
+        }
 
-            "earphones":
-                "audio",
+        if (
+            value.includes("headphone")
+        ) {
+            return "headphone";
+        }
 
-            "headphones":
-                "audio",
+        if (
+            value.includes("router") ||
+            value.includes("modem")
+        ) {
+            return "router";
+        }
 
-            "modem":
-                "network",
+        if (
+            value.includes("laptop")
+        ) {
+            return "laptop";
+        }
 
-            "routers":
-                "network",
+        if (
+            value.includes("power tool")
+        ) {
+            return "tool";
+        }
 
-            "laptops":
-                "laptop",
+        if (
+            value.includes("smart home")
+        ) {
+            return "smart";
+        }
 
-            "power-tools":
-                "tool",
+        if (
+            value.includes("camera")
+        ) {
+            return "camera";
+        }
 
-            "smart-home":
-                "home",
-
-            "camera":
-                "camera"
-
-        };
-
-
-        return (
-            map[categoryId] ||
-            "category"
-        );
+        return "category";
 
     }
 
@@ -1357,7 +852,6 @@
                 "input",
                 handleSearchInput
             );
-
 
             elements.searchInput.addEventListener(
                 "keydown",
@@ -1456,7 +950,7 @@
 
                 if (
                     event.key ===
-                        "Escape" &&
+                    "Escape" &&
                     elements.productModal &&
                     elements.productModal.classList.contains(
                         "is-open"
@@ -1487,20 +981,26 @@
                 ""
             ).trim();
 
-
         updateClearSearchButton();
-
 
         window.clearTimeout(
             searchDebounceTimer
         );
 
-
         searchDebounceTimer =
             window.setTimeout(
                 () => {
 
-                    applyFiltersAndRender();
+                    state.activeCategoryQuery =
+                        "";
+
+                    highlightActiveCategoryPill(
+                        ""
+                    );
+
+                    loadProducts(
+                        state.searchQuery
+                    );
 
                 },
                 CONFIG.DEBOUNCE_DELAY
@@ -1522,16 +1022,22 @@
 
         }
 
-
         event.preventDefault();
-
 
         window.clearTimeout(
             searchDebounceTimer
         );
 
+        state.activeCategoryQuery =
+            "";
 
-        applyFiltersAndRender();
+        highlightActiveCategoryPill(
+            ""
+        );
+
+        loadProducts(
+            state.searchQuery
+        );
 
     }
 
@@ -1541,7 +1047,6 @@
         window.clearTimeout(
             searchDebounceTimer
         );
-
 
         if (
             elements.searchInput
@@ -1554,15 +1059,15 @@
 
         }
 
-
         state.searchQuery =
             "";
 
-
         updateClearSearchButton();
 
-
-        applyFiltersAndRender();
+        loadProducts(
+            state.activeCategoryQuery ||
+            ""
+        );
 
     }
 
@@ -1572,15 +1077,9 @@
         const button =
             elements.clearSearchButton;
 
-
-        if (
-            !button
-        ) {
-
+        if (!button) {
             return;
-
         }
-
 
         button.hidden =
             state.searchQuery.length ===
@@ -1597,7 +1096,6 @@
             event.target?.value ||
             "featured";
 
-
         applyFiltersAndRender();
 
     }
@@ -1612,15 +1110,9 @@
         const nav =
             elements.categoriesNav;
 
-
-        if (
-            !nav
-        ) {
-
+        if (!nav) {
             return;
-
         }
-
 
         nav.innerHTML =
             CATEGORY_MAP
@@ -1628,9 +1120,15 @@
                     category => {
 
                         const active =
-                            category.id ===
-                            state.activeCategoryId;
+                            category.query ===
+                            state.activeCategoryQuery;
 
+                        const icon =
+                            category.query
+                                ? getCategoryIcon(
+                                    category.query
+                                )
+                                : "apps";
 
                         return `
 
@@ -1641,8 +1139,8 @@
                                         ? " active"
                                         : ""
                                 }"
-                                data-category-id="${escapeHTML(
-                                    category.id
+                                data-query="${escapeHTML(
+                                    category.query
                                 )}"
                                 aria-pressed="${
                                     active
@@ -1652,9 +1150,7 @@
                             >
 
                                 ${svgIcon(
-                                    getCategoryIcon(
-                                        category.id
-                                    ),
+                                    icon,
                                     "ui-icon ui-icon-sm"
                                 )}
 
@@ -1684,52 +1180,53 @@
                 ".category-pill"
             );
 
+        if (!button) {
+            return;
+        }
+
+        const query =
+            String(
+                button.dataset.query ||
+                ""
+            ).trim();
+
+        state.activeCategoryQuery =
+            query;
+
+        state.searchQuery =
+            "";
 
         if (
-            !button
+            elements.searchInput
         ) {
 
-            return;
+            elements.searchInput.value =
+                "";
 
         }
 
-
-        const categoryId =
-            String(
-                button.dataset.categoryId ||
-                "all"
-            );
-
-
-        state.activeCategoryId =
-            categoryId;
-
-
         updateClearSearchButton();
 
-
         highlightActiveCategoryPill(
-            categoryId
+            query
         );
 
-
-        applyFiltersAndRender();
+        loadProducts(
+            query
+        );
 
     }
 
 
     function highlightActiveCategoryPill(
-        categoryId
+        query
     ) {
 
         if (
             !elements.categoriesNav
         ) {
-
             return;
-
         }
-
 
         elements.categoriesNav
             .querySelectorAll(
@@ -1740,20 +1237,18 @@
 
                     const active =
                         String(
-                            button.dataset.categoryId ||
-                            "all"
+                            button.dataset.query ||
+                            ""
                         ) ===
                         String(
-                            categoryId ||
-                            "all"
+                            query ||
+                            ""
                         );
-
 
                     button.classList.toggle(
                         "active",
                         active
                     );
-
 
                     button.setAttribute(
                         "aria-pressed",
@@ -1772,11 +1267,12 @@
        12. PRODUCT API
        ========================================================================= */
 
-    async function loadProducts() {
+    async function loadProducts(
+        query = ""
+    ) {
 
         const requestId =
             ++state.requestSequence;
-
 
         if (
             activeAbortController
@@ -1786,30 +1282,40 @@
 
         }
 
-
         activeAbortController =
             new AbortController();
-
 
         const controller =
             activeAbortController;
 
-
         state.loading =
             true;
-
 
         setLoadingState(
             true
         );
 
-
         renderLoadingState();
 
+        const cleanQuery =
+            String(
+                query ||
+                ""
+            ).trim();
 
-        const apiUrl =
+        let apiUrl =
             `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`;
 
+        if (
+            cleanQuery
+        ) {
+
+            apiUrl +=
+                `?q=${encodeURIComponent(
+                    cleanQuery
+                )}`;
+
+        }
 
         const timer =
             window.setTimeout(
@@ -1821,7 +1327,6 @@
                 CONFIG.REQUEST_TIMEOUT
             );
 
-
         try {
 
             const response =
@@ -1832,10 +1337,8 @@
                             "GET",
 
                         headers: {
-
                             Accept:
                                 "application/json"
-
                         },
 
                         cache:
@@ -1843,10 +1346,8 @@
 
                         signal:
                             controller.signal
-
                     }
                 );
-
 
             if (
                 !response.ok
@@ -1858,14 +1359,12 @@
 
             }
 
-
             const data =
                 await response.json();
 
-
             if (
                 data?.success ===
-                    false
+                false
             ) {
 
                 throw new Error(
@@ -1875,12 +1374,10 @@
 
             }
 
-
             const rawProducts =
                 extractProducts(
                     data
                 );
-
 
             const normalizedProducts =
                 rawProducts
@@ -1893,7 +1390,6 @@
                     )
                     .filter(Boolean);
 
-
             if (
                 requestId !==
                 state.requestSequence
@@ -1903,22 +1399,14 @@
 
             }
 
-
             state.products =
                 normalizedProducts;
 
-
-            state.products =
-                deduplicateProducts(
-                    state.products
-                );
-
-
-            updatePageHeading();
-
+            updatePageHeading(
+                cleanQuery
+            );
 
             applyFiltersAndRender();
-
 
         } catch (
             error
@@ -1933,12 +1421,10 @@
 
             }
 
-
             console.error(
                 "[PRASUN SHOP] Product API error:",
                 error
             );
-
 
             if (
                 requestId ===
@@ -1958,7 +1444,6 @@
                 timer
             );
 
-
             if (
                 requestId ===
                 state.requestSequence
@@ -1967,11 +1452,9 @@
                 state.loading =
                     false;
 
-
                 setLoadingState(
                     false
                 );
-
 
                 if (
                     activeAbortController ===
@@ -1995,13 +1478,14 @@
     ) {
 
         if (
-            Array.isArray(data)
+            Array.isArray(
+                data
+            )
         ) {
 
             return data;
 
         }
-
 
         if (
             Array.isArray(
@@ -2013,7 +1497,6 @@
 
         }
 
-
         if (
             Array.isArray(
                 data?.data?.products
@@ -2023,7 +1506,6 @@
             return data.data.products;
 
         }
-
 
         if (
             Array.isArray(
@@ -2035,7 +1517,6 @@
 
         }
 
-
         if (
             Array.isArray(
                 data?.data
@@ -2046,62 +1527,7 @@
 
         }
 
-
         return [];
-
-    }
-
-
-    function deduplicateProducts(
-        products
-    ) {
-
-        const map =
-            new Map();
-
-
-        for (
-            const product
-            of products
-        ) {
-
-            const key =
-                String(
-                    product.pid ||
-                    product.id ||
-                    product.sku ||
-                    ""
-                ).trim();
-
-
-            if (
-                !key
-            ) {
-
-                continue;
-
-            }
-
-
-            if (
-                !map.has(
-                    key
-                )
-            ) {
-
-                map.set(
-                    key,
-                    product
-                );
-
-            }
-
-        }
-
-
-        return [
-            ...map.values()
-        ];
 
     }
 
@@ -2117,26 +1543,19 @@
         if (
             !value ||
             typeof value !==
-                "string"
+            "string"
         ) {
 
             return "";
 
         }
-
 
         let url =
             value.trim();
 
-
-        if (
-            !url
-        ) {
-
+        if (!url) {
             return "";
-
         }
-
 
         if (
             url.startsWith(
@@ -2148,7 +1567,6 @@
 
         }
 
-
         if (
             url.startsWith(
                 "//"
@@ -2159,7 +1577,6 @@
                 `https:${url}`;
 
         }
-
 
         if (
             /^http:\/\//i.test(
@@ -2175,7 +1592,6 @@
 
         }
 
-
         return url;
 
     }
@@ -2187,8 +1603,7 @@
 
         return (
             typeof url ===
-                "string" &&
-
+            "string" &&
             url.includes(
                 CONFIG.IMAGE_PROXY_ENDPOINT
             )
@@ -2206,15 +1621,9 @@
                 originalUrl
             );
 
-
-        if (
-            !normalized
-        ) {
-
+        if (!normalized) {
             return "";
-
         }
-
 
         if (
             normalized.startsWith(
@@ -2226,7 +1635,6 @@
 
         }
 
-
         if (
             isProxyUrl(
                 normalized
@@ -2236,7 +1644,6 @@
             return normalized;
 
         }
-
 
         return (
             `${CONFIG.API_BASE}${CONFIG.IMAGE_PROXY_ENDPOINT}` +
@@ -2255,11 +1662,15 @@
         const candidates =
             [];
 
-
-        candidates.push(
+        if (
             product?.image
-        );
+        ) {
 
+            candidates.push(
+                product.image
+            );
+
+        }
 
         if (
             Array.isArray(
@@ -2273,11 +1684,15 @@
 
         }
 
-
-        candidates.push(
+        if (
             product?.originalImage
-        );
+        ) {
 
+            candidates.push(
+                product.originalImage
+            );
+
+        }
 
         if (
             Array.isArray(
@@ -2291,21 +1706,35 @@
 
         }
 
-
-        candidates.push(
+        if (
             product?.bigImage
-        );
+        ) {
 
+            candidates.push(
+                product.bigImage
+            );
 
-        candidates.push(
+        }
+
+        if (
             product?.productImage
-        );
+        ) {
 
+            candidates.push(
+                product.productImage
+            );
 
-        candidates.push(
+        }
+
+        if (
             product?.productImg
-        );
+        ) {
 
+            candidates.push(
+                product.productImg
+            );
+
+        }
 
         if (
             Array.isArray(
@@ -2319,10 +1748,9 @@
 
         }
 
-
         if (
             typeof product?.productImageSet ===
-                "string"
+            "string"
         ) {
 
             candidates.push(
@@ -2335,7 +1763,6 @@
             );
 
         }
-
 
         return [
             ...new Set(
@@ -2359,12 +1786,10 @@
                 product
             );
 
-
         const existingProxy =
             images.find(
                 isProxyUrl
             );
-
 
         if (
             existingProxy
@@ -2373,7 +1798,6 @@
             return existingProxy;
 
         }
-
 
         if (
             images.length
@@ -2384,7 +1808,6 @@
             );
 
         }
-
 
         return PLACEHOLDER_IMAGE;
 
@@ -2421,13 +1844,12 @@
         if (
             !raw ||
             typeof raw !==
-                "object"
+            "object"
         ) {
 
             return null;
 
         }
-
 
         const id =
             String(
@@ -2438,7 +1860,6 @@
                 ""
             ).trim();
 
-
         const pid =
             String(
                 raw.pid ??
@@ -2446,7 +1867,6 @@
                 raw.productId ??
                 ""
             ).trim();
-
 
         const name =
             String(
@@ -2456,7 +1876,6 @@
                 raw.productName ??
                 "CJ Product"
             ).trim();
-
 
         if (
             !id ||
@@ -2476,15 +1895,12 @@
             raw.price ??
             raw.sellPrice ??
             raw.unitPrice ??
-            raw.nowPrice ??
-            raw.discountPrice ??
             0;
-
 
         if (
             rawPrice &&
             typeof rawPrice ===
-                "object"
+            "object"
         ) {
 
             rawPrice =
@@ -2495,7 +1911,6 @@
 
         }
 
-
         const parsedPrice =
             parseFloat(
                 String(
@@ -2505,7 +1920,6 @@
                     ""
                 )
             );
-
 
         const price =
             Number.isFinite(
@@ -2530,11 +1944,8 @@
                 raw.totalInventory ??
                 raw.warehouseInventoryNum ??
                 raw.totalVerifiedInventory ??
-                raw.cj?.totalInventory ??
-                raw.cj?.warehouseInventoryNum ??
                 0
             );
-
 
         const quantity =
             Number.isFinite(
@@ -2557,7 +1968,6 @@
             parseFloat(
                 raw.rating
             );
-
 
         const rating =
             Number.isFinite(
@@ -2586,7 +1996,6 @@
                 raw
             );
 
-
         const images =
             getGalleryImages(
                 raw
@@ -2608,7 +2017,7 @@
                             vid:
                                 String(
                                     variant?.vid ||
-                                    variant?.id ||
+                                    variant?.variantId ||
                                     ""
                                 ),
 
@@ -2616,7 +2025,6 @@
                                 String(
                                     variant?.sku ||
                                     variant?.variantSku ||
-                                    variant?.variantKey ||
                                     ""
                                 ),
 
@@ -2630,48 +2038,24 @@
 
                             price:
                                 normalizePrice(
-                                    variant?.price ??
-                                    variant?.sellPrice ??
-                                    0
+                                    variant?.price
                                 ),
 
                             costPrice:
                                 normalizePrice(
-                                    variant?.costPrice ??
-                                    0
+                                    variant?.costPrice
                                 ),
 
                             inventory:
                                 normalizeInventory(
                                     variant?.inventory ??
-                                    variant?.totalInventory ??
+                                    variant?.quantity ??
                                     0
                                 )
 
                         })
                     )
-                    .filter(
-                        variant =>
-                            variant.vid ||
-                            variant.sku ||
-                            variant.name
-                    )
-
                 : [];
-
-
-        /* ---------------------------------------------------------------------
-           CATEGORY
-           --------------------------------------------------------------------- */
-
-        const category =
-            cleanCategoryText(
-                raw.category ||
-                raw.categoryName ||
-                raw.threeCategoryName ||
-                raw.twoCategoryName ||
-                CONFIG.DEFAULT_CATEGORY
-            );
 
 
         return {
@@ -2693,7 +2077,6 @@
                 String(
                     raw.sku ||
                     raw.productSku ||
-                    raw.spu ||
                     ""
                 ),
 
@@ -2708,7 +2091,13 @@
                     ""
                 ),
 
-            category,
+            category:
+                String(
+                    raw.category ||
+                    raw.categoryName ||
+                    raw.threeCategoryName ||
+                    CONFIG.DEFAULT_CATEGORY
+                ),
 
             price,
 
@@ -2749,23 +2138,6 @@
     }
 
 
-    function cleanCategoryText(
-        value
-    ) {
-
-        return String(
-            value ??
-            CONFIG.DEFAULT_CATEGORY
-        )
-            .replace(
-                /\s+/g,
-                " "
-            )
-            .trim();
-
-    }
-
-
     function normalizePrice(
         value
     ) {
@@ -2774,7 +2146,6 @@
             Number(
                 value
             );
-
 
         if (
             !Number.isFinite(
@@ -2785,7 +2156,6 @@
             return 0;
 
         }
-
 
         return Number(
             number.toFixed(
@@ -2805,7 +2175,6 @@
                 value
             );
 
-
         if (
             !Number.isFinite(
                 number
@@ -2815,7 +2184,6 @@
             return 0;
 
         }
-
 
         return Math.max(
             0,
@@ -2828,95 +2196,12 @@
 
 
     /* =========================================================================
-       15. CATEGORY MATCHING
+       15. PAGE HEADING
        ========================================================================= */
 
-    function getActiveCategory() {
-
-        return (
-            CATEGORY_MAP.find(
-                category =>
-                    category.id ===
-                    state.activeCategoryId
-            ) ||
-            CATEGORY_MAP[0]
-        );
-
-    }
-
-
-    function getSearchableProductText(
-        product
+    function updatePageHeading(
+        query
     ) {
-
-        return [
-
-            product.name,
-
-            product.title,
-
-            product.category,
-
-            product.sku,
-
-            product.pid,
-
-            product.cj_id,
-
-            stripHtml(
-                product.description
-            )
-
-        ]
-            .map(
-                value =>
-                    String(
-                        value ||
-                        ""
-                    ).toLowerCase()
-            )
-            .join(" ");
-
-    }
-
-
-    function matchesCategory(
-        product,
-        category
-    ) {
-
-        if (
-            !category ||
-            category.id ===
-                "all"
-        ) {
-
-            return true;
-
-        }
-
-
-        const searchable =
-            getSearchableProductText(
-                product
-            );
-
-
-        return category.keywords.some(
-            keyword =>
-                searchable.includes(
-                    keyword.toLowerCase()
-                )
-        );
-
-    }
-
-
-    /* =========================================================================
-       16. PAGE HEADING
-       ========================================================================= */
-
-    function updatePageHeading() {
 
         if (
             !elements.pageHeading
@@ -2926,31 +2211,41 @@
 
         }
 
-
-        const category =
-            getActiveCategory();
-
-
-        if (
-            state.searchQuery
-        ) {
+        if (!query) {
 
             elements.pageHeading.textContent =
-                `Search Results for "${state.searchQuery}"`;
+                "Featured Products";
 
             return;
 
         }
 
+        const category =
+            CATEGORY_MAP.find(
+                item =>
+                    item.query ===
+                    query
+            );
+
+        if (
+            category
+        ) {
+
+            elements.pageHeading.textContent =
+                category.label;
+
+            return;
+
+        }
 
         elements.pageHeading.textContent =
-            category.label;
+            `Search Results for "${query}"`;
 
     }
 
 
     /* =========================================================================
-       17. FILTER / SORT
+       16. FILTER / SORT
        ========================================================================= */
 
     function applyFiltersAndRender() {
@@ -2960,31 +2255,6 @@
                 ...state.products
             ];
 
-
-        const category =
-            getActiveCategory();
-
-
-        /*
-         * CATEGORY FILTER
-         */
-
-        products =
-            products.filter(
-                product =>
-                    matchesCategory(
-                        product,
-                        category
-                    )
-            );
-
-
-        /*
-         * SEARCH FILTER
-         *
-         * Search ALWAYS searches within the complete
-         * catalog or selected category.
-         */
 
         const localQuery =
             String(
@@ -2999,29 +2269,39 @@
             localQuery
         ) {
 
-            const terms =
-                localQuery
-                    .split(
-                        /\s+/
-                    )
-                    .filter(Boolean);
-
-
             products =
                 products.filter(
                     product => {
 
                         const searchable =
-                            getSearchableProductText(
-                                product
-                            );
+                            [
 
+                                product.name,
 
-                        return terms.every(
-                            term =>
-                                searchable.includes(
-                                    term
+                                product.title,
+
+                                product.category,
+
+                                product.sku,
+
+                                product.pid,
+
+                                stripHtml(
+                                    product.description
                                 )
+
+                            ]
+                                .map(
+                                    value =>
+                                        String(
+                                            value ||
+                                            ""
+                                        ).toLowerCase()
+                                )
+                                .join(" ");
+
+                        return searchable.includes(
+                            localQuery
                         );
 
                     }
@@ -3030,9 +2310,60 @@
         }
 
 
-        /*
-         * SORT
-         */
+        if (
+            state.activeCategoryQuery &&
+            !state.searchQuery
+        ) {
+
+            const categoryQuery =
+                state.activeCategoryQuery
+                    .toLowerCase()
+                    .trim();
+
+            if (
+                categoryQuery
+            ) {
+
+                products =
+                    products.filter(
+                        product => {
+
+                            const searchable =
+                                [
+
+                                    product.name,
+
+                                    product.title,
+
+                                    product.category,
+
+                                    product.sku,
+
+                                    stripHtml(
+                                        product.description
+                                    )
+
+                                ]
+                                    .map(
+                                        value =>
+                                            String(
+                                                value ||
+                                                ""
+                                            ).toLowerCase()
+                                    )
+                                    .join(" ");
+
+                            return searchable.includes(
+                                categoryQuery
+                            );
+
+                        }
+                    );
+
+            }
+
+        }
+
 
         products.sort(
             compareProducts
@@ -3043,14 +2374,20 @@
             products;
 
 
-        updatePageHeading();
-
-
         if (
             !products.length
         ) {
 
-            renderEmptyState();
+            const query =
+                state.searchQuery ||
+                state.activeCategoryQuery ||
+                "";
+
+            renderEmptyState(
+                query
+                    ? `No approved products found for "${query}".`
+                    : "No approved PRASUN SHOP products are currently available."
+            );
 
             return;
 
@@ -3084,16 +2421,12 @@
         const priceA =
             Number(
                 a.price
-            ) ||
-            0;
-
+            ) || 0;
 
         const priceB =
             Number(
                 b.price
-            ) ||
-            0;
-
+            ) || 0;
 
         const nameA =
             String(
@@ -3101,40 +2434,21 @@
                 ""
             );
 
-
         const nameB =
             String(
                 b.name ||
                 ""
             );
 
-
         const ratingA =
             Number(
                 a.rating
-            ) ||
-            0;
-
+            ) || 0;
 
         const ratingB =
             Number(
                 b.rating
-            ) ||
-            0;
-
-
-        const quantityA =
-            Number(
-                a.quantity
-            ) ||
-            0;
-
-
-        const quantityB =
-            Number(
-                b.quantity
-            ) ||
-            0;
+            ) || 0;
 
 
         if (
@@ -3185,7 +2499,7 @@
                 "nameaz"
             ) ||
             sort ===
-                "nameasc"
+            "nameasc"
         ) {
 
             return nameA.localeCompare(
@@ -3208,7 +2522,7 @@
                 "nameza"
             ) ||
             sort ===
-                "namedesc"
+            "namedesc"
         ) {
 
             return nameB.localeCompare(
@@ -3242,68 +2556,35 @@
 
         /*
          * Featured:
-         *
-         * 1. In-stock products first
-         * 2. Higher listed count if supplied
-         * 3. Higher rating
-         * 4. Stable name sort
+         * Put in-stock products first, then products with
+         * ratings, then stable name order.
          */
 
-        const inStockA =
-            quantityA > 0
+        const stockA =
+            Number(
+                a.quantity
+            ) > 0
                 ? 1
                 : 0;
 
-
-        const inStockB =
-            quantityB > 0
+        const stockB =
+            Number(
+                b.quantity
+            ) > 0
                 ? 1
                 : 0;
 
-
         if (
-            inStockA !==
-            inStockB
+            stockA !==
+            stockB
         ) {
 
             return (
-                inStockB -
-                inStockA
+                stockB -
+                stockA
             );
 
         }
-
-
-        const listedA =
-            Number(
-                a?.listedNum ||
-                a?.cj?.listedNum ||
-                0
-            ) ||
-            0;
-
-
-        const listedB =
-            Number(
-                b?.listedNum ||
-                b?.cj?.listedNum ||
-                0
-            ) ||
-            0;
-
-
-        if (
-            listedA !==
-            listedB
-        ) {
-
-            return (
-                listedB -
-                listedA
-            );
-
-        }
-
 
         if (
             ratingA !==
@@ -3316,7 +2597,6 @@
             );
 
         }
-
 
         return nameA.localeCompare(
             nameB,
@@ -3331,7 +2611,7 @@
 
 
     /* =========================================================================
-       18. PRODUCT GRID
+       17. PRODUCT GRID
        ========================================================================= */
 
     function renderProductGrid() {
@@ -3344,7 +2624,6 @@
 
         }
 
-
         elements.productList.innerHTML =
             state.filteredProducts
                 .map(
@@ -3352,11 +2631,9 @@
                 )
                 .join("");
 
-
         setLoadingState(
             false
         );
-
 
         attachProductImageFallbacks();
 
@@ -3364,7 +2641,7 @@
 
 
     /* =========================================================================
-       19. PRODUCT CARD
+       18. PRODUCT CARD
        ========================================================================= */
 
     function renderProductCard(
@@ -3376,13 +2653,11 @@
                 product.id
             );
 
-
         const title =
             escapeHTML(
                 product.name ||
                 "CJ Product"
             );
-
 
         const category =
             escapeHTML(
@@ -3390,31 +2665,27 @@
                 CONFIG.DEFAULT_CATEGORY
             );
 
-
         const image =
             escapeHTML(
                 product.image ||
                 PLACEHOLDER_IMAGE
             );
 
-
         const price =
             formatPrice(
                 product.price
             );
 
-
         const quantity =
             Number(
                 product.quantity
-            ) ||
-            0;
-
+            );
 
         const available =
-            quantity >
-            0;
-
+            Number.isFinite(
+                quantity
+            ) &&
+            quantity > 0;
 
         const productUrl =
             `${CONFIG.PRODUCT_PAGE}?id=${encodeURIComponent(
@@ -3423,23 +2694,19 @@
                 )
             )}`;
 
-
         const rating =
             Number(
                 product.rating
-            ) ||
-            0;
-
+            ) || 0;
 
         const descriptionText =
             stripHtml(
                 product.description
             );
 
-
         const shortDescription =
             descriptionText.length >
-                120
+            120
 
                 ? `${descriptionText.slice(
                     0,
@@ -3472,7 +2739,9 @@
                     >
 
                         ${svgIcon(
-                            "category",
+                            getCategoryIcon(
+                                category
+                            ),
                             "ui-icon ui-icon-sm"
                         )}
 
@@ -3555,7 +2824,6 @@
                             `
 
                             : ""
-
                     }
 
 
@@ -3648,7 +2916,7 @@
 
 
     /* =========================================================================
-       20. IMAGE FALLBACK
+       19. IMAGE FALLBACK
        ========================================================================= */
 
     function attachProductImageFallbacks() {
@@ -3678,19 +2946,12 @@
         const image =
             event.currentTarget;
 
-
-        if (
-            !image
-        ) {
-
+        if (!image) {
             return;
-
         }
-
 
         const original =
             image.dataset.originalImage;
-
 
         if (
             original &&
@@ -3700,17 +2961,15 @@
             image.dataset.originalAttempted =
                 "true";
 
-
             const proxiedOriginal =
                 buildProxyUrl(
                     original
                 );
 
-
             if (
                 proxiedOriginal &&
                 proxiedOriginal !==
-                    image.src
+                image.src
             ) {
 
                 image.src =
@@ -3722,14 +2981,12 @@
 
         }
 
-
         if (
             !image.dataset.placeholderUsed
         ) {
 
             image.dataset.placeholderUsed =
                 "true";
-
 
             image.src =
                 PLACEHOLDER_IMAGE;
@@ -3740,7 +2997,7 @@
 
 
     /* =========================================================================
-       21. PRODUCT GRID CLICK HANDLER
+       20. GRID CLICK HANDLER
        ========================================================================= */
 
     function handleProductGridClick(
@@ -3752,7 +3009,6 @@
                 ".view-details-btn"
             );
 
-
         if (
             detailsButton
         ) {
@@ -3761,11 +3017,9 @@
 
             event.stopPropagation();
 
-
             openProductModal(
                 detailsButton.dataset.productId
             );
-
 
             return;
 
@@ -3777,7 +3031,6 @@
                 ".add-to-cart-btn"
             );
 
-
         if (
             !cartButton
         ) {
@@ -3786,18 +3039,15 @@
 
         }
 
-
         event.preventDefault();
 
         event.stopPropagation();
-
 
         const productId =
             String(
                 cartButton.dataset.productId ||
                 ""
             );
-
 
         if (
             !productId
@@ -3806,7 +3056,6 @@
             return;
 
         }
-
 
         const product =
             state.products.find(
@@ -3817,7 +3066,6 @@
                     productId
             );
 
-
         if (
             !product
         ) {
@@ -3825,7 +3073,6 @@
             return;
 
         }
-
 
         if (
             Number(
@@ -3838,15 +3085,12 @@
                 `${product.name} is currently out of stock.`
             );
 
-
             return;
 
         }
 
-
         let added =
             false;
-
 
         if (
             typeof window.addToCart ===
@@ -3874,7 +3118,6 @@
                     )
                 );
 
-
                 added =
                     true;
 
@@ -3887,14 +3130,9 @@
                     error
                 );
 
-
-                added =
-                    false;
-
             }
 
         }
-
 
         if (
             !added
@@ -3904,15 +3142,12 @@
 
         }
 
-
         cartButton.disabled =
             true;
-
 
         cartButton.classList.add(
             "added"
         );
-
 
         cartButton.innerHTML = `
 
@@ -3927,11 +3162,9 @@
 
         `;
 
-
         announceToScreenReader(
             `${product.name} added to cart.`
         );
-
 
         window.setTimeout(
             () => {
@@ -3939,11 +3172,9 @@
                 cartButton.disabled =
                     false;
 
-
                 cartButton.classList.remove(
                     "added"
                 );
-
 
                 cartButton.innerHTML = `
 
@@ -3966,31 +3197,23 @@
 
 
     /* =========================================================================
-       22. PRODUCT DETAILS MODAL
+       21. DESCRIPTION SANITIZATION
        ========================================================================= */
 
     function sanitizeDescription(
         html
     ) {
 
-        if (
-            !html
-        ) {
-
+        if (!html) {
             return "";
-
         }
-
 
         const parser =
             new DOMParser();
 
-
         const doc =
             parser.parseFromString(
-                String(
-                    html
-                ),
+                String(html),
                 "text/html"
             );
 
@@ -4019,9 +3242,7 @@
             tag => {
 
                 doc
-                    .querySelectorAll(
-                        tag
-                    )
+                    .querySelectorAll(tag)
                     .forEach(
                         element =>
                             element.remove()
@@ -4032,9 +3253,7 @@
 
 
         doc
-            .querySelectorAll(
-                "*"
-            )
+            .querySelectorAll("*")
             .forEach(
                 element => {
 
@@ -4047,7 +3266,6 @@
                                 const name =
                                     attribute.name
                                         .toLowerCase();
-
 
                                 const value =
                                     attribute.value
@@ -4072,12 +3290,10 @@
                                 if (
                                     (
                                         name ===
-                                            "src" ||
-
+                                        "src" ||
                                         name ===
-                                            "href"
+                                        "href"
                                     ) &&
-
                                     /^javascript:/i.test(
                                         value
                                     )
@@ -4108,21 +3324,14 @@
                             "src"
                         );
 
-
-                    if (
-                        !source
-                    ) {
-
+                    if (!source) {
                         return;
-
                     }
-
 
                     const normalized =
                         normalizeImageUrl(
                             source
                         );
-
 
                     if (
                         normalized &&
@@ -4140,12 +3349,10 @@
 
                     }
 
-
                     image.setAttribute(
                         "loading",
                         "lazy"
                     );
-
 
                     image.setAttribute(
                         "decoding",
@@ -4161,6 +3368,10 @@
     }
 
 
+    /* =========================================================================
+       22. PRODUCT DETAILS MODAL
+       ========================================================================= */
+
     function openProductModal(
         productId
     ) {
@@ -4173,7 +3384,6 @@
             console.error(
                 "[PRASUN SHOP] Product modal elements are missing."
             );
-
 
             return;
 
@@ -4190,7 +3400,6 @@
                         productId
                     )
             );
-
 
         if (
             !product
@@ -4247,15 +3456,10 @@
             "";
 
 
-        const sanitizedDescription =
+        const descriptionHtml =
             sanitizeDescription(
                 rawDescription
-            );
-
-
-        const descriptionHtml =
-            sanitizedDescription ||
-
+            ) ||
             `
                 <p>
                     No detailed description is currently available
@@ -4266,7 +3470,7 @@
 
         const galleryHtml =
             images.length >
-                1
+            1
 
                 ? `
 
@@ -4275,42 +3479,45 @@
                         aria-label="Product images"
                     >
 
-                        ${images
-                            .map(
-                                (
-                                    image,
-                                    index
-                                ) => `
+                        ${
+                            images
+                                .map(
+                                    (
+                                        image,
+                                        index
+                                    ) => `
 
-                                    <button
-                                        type="button"
-                                        class="modal-gallery-thumb ${
-                                            index === 0
-                                                ? "is-active"
-                                                : ""
-                                        }"
-                                        data-gallery-image="${escapeHTML(
-                                            image
-                                        )}"
-                                        aria-label="View product image ${
-                                            index + 1
-                                        }"
-                                    >
-
-                                        <img
-                                            src="${escapeHTML(
+                                        <button
+                                            type="button"
+                                            class="modal-gallery-thumb ${
+                                                index ===
+                                                0
+                                                    ? "is-active"
+                                                    : ""
+                                            }"
+                                            data-gallery-image="${escapeHTML(
                                                 image
                                             )}"
-                                            alt=""
-                                            loading="lazy"
-                                            decoding="async"
+                                            aria-label="View product image ${
+                                                index + 1
+                                            }"
                                         >
 
-                                    </button>
+                                            <img
+                                                src="${escapeHTML(
+                                                    image
+                                                )}"
+                                                alt=""
+                                                loading="lazy"
+                                                decoding="async"
+                                            >
 
-                                `
-                            )
-                            .join("")}
+                                        </button>
+
+                                    `
+                                )
+                                .join("")
+                        }
 
                     </div>
 
@@ -4380,8 +3587,10 @@
 
                         ${
                             quantity > 0
+
                                 ? `In Stock: ${quantity}`
-                                : "Out of Stock"
+
+                                : "Currently unavailable"
                         }
 
                     </span>
@@ -4414,7 +3623,8 @@
                     id="modal-add-cart-btn"
                     class="btn-primary modal-add-cart-button"
                     ${
-                        quantity <= 0
+                        quantity <=
+                        0
                             ? "disabled"
                             : ""
                     }
@@ -4428,13 +3638,13 @@
                     )}
 
                     <span>
-
                         ${
                             quantity > 0
+
                                 ? "Add to Cart"
+
                                 : "Out of Stock"
                         }
-
                     </span>
 
                 </button>
@@ -4470,8 +3680,7 @@
 
                 },
                 {
-                    once:
-                        true
+                    once: true
                 }
             );
 
@@ -4491,7 +3700,6 @@
 
                             const image =
                                 button.dataset.galleryImage;
-
 
                             if (
                                 mainImage &&
@@ -4572,7 +3780,6 @@
                                 )
                             );
 
-
                             added =
                                 true;
 
@@ -4602,11 +3809,9 @@
                     modalCartButton.disabled =
                         true;
 
-
                     modalCartButton.classList.add(
                         "added"
                     );
-
 
                     modalCartButton.innerHTML = `
 
@@ -4620,7 +3825,6 @@
                         </span>
 
                     `;
-
 
                     announceToScreenReader(
                         `${product.name} added to cart.`
@@ -4636,12 +3840,10 @@
             "is-open"
         );
 
-
         elements.productModal.setAttribute(
             "aria-hidden",
             "false"
         );
-
 
         document.body.classList.add(
             "modal-open"
@@ -4670,22 +3872,18 @@
 
         }
 
-
         elements.productModal.classList.remove(
             "is-open"
         );
-
 
         elements.productModal.setAttribute(
             "aria-hidden",
             "true"
         );
 
-
         document.body.classList.remove(
             "modal-open"
         );
-
 
         if (
             elements.modalBody
@@ -4713,7 +3911,6 @@
 
         }
 
-
         elements.productList.innerHTML = `
 
             <div
@@ -4727,14 +3924,12 @@
                     aria-hidden="true"
                 ></div>
 
-
                 <h3>
                     Loading Products
                 </h3>
 
-
                 <p>
-                    Loading the available catalog.
+                    Fetching the latest approved products.
                 </p>
 
             </div>
@@ -4754,7 +3949,9 @@
     }
 
 
-    function renderEmptyState() {
+    function renderEmptyState(
+        message
+    ) {
 
         if (
             !elements.productList
@@ -4763,44 +3960,6 @@
             return;
 
         }
-
-
-        const category =
-            getActiveCategory();
-
-
-        const query =
-            String(
-                state.searchQuery ||
-                ""
-            ).trim();
-
-
-        let message;
-
-
-        if (
-            query
-        ) {
-
-            message =
-                `No products found for "${query}".`;
-
-        } else if (
-            category.id !==
-            "all"
-        ) {
-
-            message =
-                `No available products are currently listed in ${category.label}.`;
-
-        } else {
-
-            message =
-                "No available products are currently listed.";
-
-        }
-
 
         elements.productList.innerHTML = `
 
@@ -4814,38 +3973,15 @@
                     "ui-icon ui-icon-xl"
                 )}
 
-
                 <h3>
                     No Products Found
                 </h3>
-
 
                 <p>
                     ${escapeHTML(
                         message
                     )}
                 </p>
-
-
-                ${
-                    category.id !==
-                    "all"
-
-                        ? `
-
-                            <button
-                                type="button"
-                                class="btn-primary"
-                                data-action="show-all-products"
-                            >
-                                Show All Products
-                            </button>
-
-                        `
-
-                        : ""
-
-                }
 
             </div>
 
@@ -4861,39 +3997,9 @@
 
         }
 
-
         setLoadingState(
             false
         );
-
-
-        const showAllButton =
-            elements.productList.querySelector(
-                '[data-action="show-all-products"]'
-            );
-
-
-        if (
-            showAllButton
-        ) {
-
-            showAllButton.addEventListener(
-                "click",
-                () => {
-
-                    state.activeCategoryId =
-                        "all";
-
-                    highlightActiveCategoryPill(
-                        "all"
-                    );
-
-                    applyFiltersAndRender();
-
-                }
-            );
-
-        }
 
     }
 
@@ -4910,7 +4016,6 @@
 
         }
 
-
         elements.productList.innerHTML = `
 
             <div
@@ -4923,18 +4028,15 @@
                     "ui-icon ui-icon-xl"
                 )}
 
-
                 <h3>
                     Unable to Load Products
                 </h3>
-
 
                 <p>
                     ${escapeHTML(
                         message
                     )}
                 </p>
-
 
                 <button
                     type="button"
@@ -4967,7 +4069,6 @@
 
         }
 
-
         setLoadingState(
             false
         );
@@ -4987,12 +4088,14 @@
                 "click",
                 () => {
 
-                    loadProducts();
+                    loadProducts(
+                        state.searchQuery ||
+                        state.activeCategoryQuery
+                    );
 
                 },
                 {
-                    once:
-                        true
+                    once: true
                 }
             );
 
@@ -5011,18 +4114,15 @@
 
         }
 
-
         const count =
             state.filteredProducts.length;
 
-
         elements.resultsCount.textContent =
             `${count} ${
-                count ===
-                    1
+                count === 1
                     ? "product"
                     : "products"
-            }`;
+            } available`;
 
     }
 
@@ -5038,7 +4138,6 @@
             return;
 
         }
-
 
         elements.productList.setAttribute(
             "aria-busy",
@@ -5058,26 +4157,19 @@
         value
     ) {
 
-        if (
-            !value
-        ) {
-
+        if (!value) {
             return "";
-
         }
-
 
         const container =
             document.createElement(
                 "div"
             );
 
-
         container.innerHTML =
             String(
                 value
             );
-
 
         return (
             container.textContent ||
@@ -5102,7 +4194,6 @@
                 amount
             );
 
-
         if (
             !Number.isFinite(
                 value
@@ -5112,7 +4203,6 @@
             return "$0.00";
 
         }
-
 
         return new Intl.NumberFormat(
             "en-US",
@@ -5128,12 +4218,10 @@
 
                 maximumFractionDigits:
                     2
-
             }
-        )
-            .format(
-                value
-            );
+        ).format(
+            value
+        );
 
     }
 
@@ -5177,7 +4265,6 @@
         const liveRegion =
             elements.liveRegion;
 
-
         if (
             !liveRegion
         ) {
@@ -5186,10 +4273,8 @@
 
         }
 
-
         liveRegion.textContent =
             "";
-
 
         window.setTimeout(
             () => {
@@ -5215,8 +4300,10 @@
 
         reload:
             () =>
-                loadProducts(),
-
+                loadProducts(
+                    state.searchQuery ||
+                    state.activeCategoryQuery
+                ),
 
         search:
             query => {
@@ -5227,10 +4314,8 @@
                         ""
                     ).trim();
 
-
-                state.activeCategoryId =
-                    "all";
-
+                state.activeCategoryQuery =
+                    "";
 
                 if (
                     elements.searchInput
@@ -5241,19 +4326,17 @@
 
                 }
 
-
                 updateClearSearchButton();
 
-
                 highlightActiveCategoryPill(
-                    "all"
+                    ""
                 );
 
-
-                applyFiltersAndRender();
+                return loadProducts(
+                    state.searchQuery
+                );
 
             },
-
 
         sort:
             value => {
@@ -5261,7 +4344,6 @@
                 state.sortBy =
                     value ||
                     "featured";
-
 
                 if (
                     elements.sortSelect
@@ -5272,11 +4354,9 @@
 
                 }
 
-
                 applyFiltersAndRender();
 
             },
-
 
         openDetails:
             productId =>
@@ -5284,11 +4364,9 @@
                     productId
                 ),
 
-
         closeDetails:
             () =>
                 closeProductModal(),
-
 
         getProducts:
             () =>
@@ -5296,13 +4374,11 @@
                     ...state.products
                 ],
 
-
         getFilteredProducts:
             () =>
                 [
                     ...state.filteredProducts
                 ],
-
 
         getProductById:
             id =>
@@ -5318,6 +4394,5 @@
                 null
 
     };
-
 
 })();
