@@ -5,49 +5,55 @@
  *
  * js/products.js
  *
- * IMPORTANT ARCHITECTURE
+ * IMPORTANT
  * ============================================================================
  *
- * /api/products returns the COMPLETE synchronized CJ catalog.
+ * This file MUST contain JavaScript only.
  *
- * Main page:
- *     - displays ALL returned CJ products
- *     - does NOT send a category query to the Worker
+ * Do NOT put:
+ * <!DOCTYPE html>
+ * <html>
+ * <head>
+ * <body>
+ * <pre>
+ * <code>
  *
- * Category buttons:
- *     - filter the already-loaded catalog locally
- *     - no additional API request
+ * inside this file.
  *
- * Search:
- *     - searches the already-loaded catalog locally
- *     - no API request while typing
+ * ARCHITECTURE
+ * ============================================================================
  *
- * This avoids:
- *     - catalog shrinking to 4 products
- *     - unnecessary CJ requests
- *     - QPS problems
- *     - category-dependent server results
+ * Cloudflare Worker
+ *        ↓
+ * /api/products
+ *        ↓
+ * products.js
+ *        ↓
+ * local catalog
+ *        ↓
+ * category/search/sort
+ *
+ * The Worker supplies the synchronized CJ catalog.
+ *
+ * Categories are filtered locally.
  *
  * Categories:
  *
- *     All Products
- *     Solar Lights
- *     Battery
- *     Chargers
- *     Power Bank
- *     Cables
- *     Earphones
- *     Headphones
- *     Modem
- *     Routers
- *     Laptops
- *     Power Tools
- *     Camera
- *     Smart Home
+ * All Products
+ * Solar Lights
+ * Battery
+ * Chargers
+ * Power Bank
+ * Cables
+ * Earphones
+ * Headphones
+ * Modem
+ * Routers
+ * Laptops
+ * Power Tools
+ * Camera
+ * Smart Home
  *
- * No emoji.
- * No Material Symbols.
- * Inline SVG only.
  * ============================================================================
  */
 
@@ -67,11 +73,11 @@
         PRODUCTS_ENDPOINT:
             "/api/products",
 
-        PRODUCT_PAGE:
-            "/product.html",
-
         IMAGE_PROXY_ENDPOINT:
             "/api/image-proxy",
+
+        PRODUCT_PAGE:
+            "/product.html",
 
         REQUEST_TIMEOUT:
             20000,
@@ -79,8 +85,8 @@
         MAX_PRODUCTS:
             5000,
 
-        SEARCH_MIN_LENGTH:
-            1,
+        MAX_VISIBLE_PRODUCTS:
+            5000,
 
         DEFAULT_CATEGORY:
             "General"
@@ -89,7 +95,7 @@
 
 
     /* =========================================================================
-       2. PLACEHOLDER
+       2. PLACEHOLDER IMAGE
        ========================================================================= */
 
     const PLACEHOLDER_IMAGE =
@@ -101,6 +107,7 @@
                 height="600"
                 viewBox="0 0 600 600"
             >
+
                 <rect
                     width="600"
                     height="600"
@@ -145,6 +152,7 @@
                 >
                     Image Unavailable
                 </text>
+
             </svg>
         `);
 
@@ -181,7 +189,8 @@
                     "solar floodlight",
                     "solar street light",
                     "solar wall light",
-                    "solar garden light"
+                    "solar garden light",
+                    "solar outdoor light"
                 ]
         },
 
@@ -219,7 +228,9 @@
                     "wall charger",
                     "usb charger",
                     "wireless charger",
-                    "car charger"
+                    "car charger",
+                    "phone charger",
+                    "power adapter"
                 ]
         },
 
@@ -234,8 +245,8 @@
                 [
                     "power bank",
                     "powerbank",
-                    "portable charger",
-                    "portable power bank"
+                    "portable power bank",
+                    "portable charger"
                 ]
         },
 
@@ -253,10 +264,12 @@
                     "charging cable",
                     "data cable",
                     "type c cable",
+                    "type-c cable",
                     "usb-c cable",
                     "lightning cable",
                     "hdmi cable",
-                    "network cable"
+                    "network cable",
+                    "ethernet cable"
                 ]
         },
 
@@ -359,6 +372,7 @@
             terms:
                 [
                     "power tool",
+                    "power tools",
                     "drill",
                     "impact driver",
                     "grinder",
@@ -407,7 +421,8 @@
                     "smart lock",
                     "smart bulb",
                     "wifi smart",
-                    "wi-fi smart"
+                    "wi-fi smart",
+                    "smart socket"
                 ]
         }
 
@@ -426,10 +441,10 @@
         filteredProducts:
             [],
 
-        searchQuery:
+        activeCategory:
             "",
 
-        activeCategory:
+        searchQuery:
             "",
 
         sortBy:
@@ -445,7 +460,7 @@
 
 
     /* =========================================================================
-       5. DOM
+       5. DOM REFERENCES
        ========================================================================= */
 
     const elements = {
@@ -487,7 +502,7 @@
 
 
     /* =========================================================================
-       6. INIT
+       6. INITIALIZATION
        ========================================================================= */
 
     if (
@@ -528,25 +543,45 @@
 
         cacheDOM();
 
+
         loadInitialSort();
+
+
+        /*
+         * IMPORTANT:
+         * Render categories BEFORE catalog request.
+         */
 
         renderCategoryPills();
 
+
         bindEvents();
+
 
         updateClearSearchButton();
 
+
         updatePageHeading();
+
 
         renderLoadingState();
 
-        loadCatalog();
+
+        /*
+         * Start catalog loading after the initial
+         * page paint so the categories appear immediately.
+         */
+
+        window.setTimeout(
+            loadCatalog,
+            0
+        );
 
     }
 
 
     /* =========================================================================
-       7. CACHE DOM
+       7. DOM CACHE
        ========================================================================= */
 
     function cacheDOM() {
@@ -622,7 +657,8 @@
     function loadInitialSort() {
 
         if (
-            elements.sortSelect?.value
+            elements.sortSelect &&
+            elements.sortSelect.value
         ) {
 
             state.sortBy =
@@ -634,7 +670,7 @@
 
 
     /* =========================================================================
-       8. INLINE SVG
+       8. SVG ICONS
        ========================================================================= */
 
     function svgIcon(
@@ -652,10 +688,12 @@
 
             apps:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true"
-                     focusable="false">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
                     <rect x="4" y="4" width="6" height="6" rx="1"></rect>
                     <rect x="14" y="4" width="6" height="6" rx="1"></rect>
                     <rect x="4" y="14" width="6" height="6" rx="1"></rect>
@@ -665,9 +703,12 @@
 
             solar:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
                     <circle cx="12" cy="12" r="4"></circle>
                     <path d="M12 2v2"></path>
                     <path d="M12 20v2"></path>
@@ -682,9 +723,11 @@
 
             battery:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <rect x="3" y="7" width="17" height="10" rx="2"></rect>
                     <path d="M21 10v4"></path>
                     <path d="M8 12h7"></path>
@@ -693,9 +736,11 @@
 
             charger:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <path d="M9 2v6"></path>
                     <path d="M15 2v6"></path>
                     <path d="M7 8h10"></path>
@@ -705,9 +750,11 @@
 
             powerbank:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <rect x="4" y="4" width="16" height="16" rx="2"></rect>
                     <path d="M8 12h8"></path>
                     <path d="M12 8v8"></path>
@@ -716,9 +763,11 @@
 
             cable:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <path d="M7 3v5"></path>
                     <path d="M17 16v5"></path>
                     <path d="M7 8c0 5 10 3 10 8"></path>
@@ -729,9 +778,11 @@
 
             earphone:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <path d="M7 13a4 4 0 1 1 4-4v7"></path>
                     <path d="M17 13a4 4 0 1 0-4-4v7"></path>
                 </svg>
@@ -739,9 +790,11 @@
 
             headphone:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <path d="M4 15v-3a8 8 0 0 1 16 0v3"></path>
                     <path d="M4 15h3v5H5a1 1 0 0 1-1-1z"></path>
                     <path d="M20 15h-3v5h2a1 1 0 0 0 1-1z"></path>
@@ -750,9 +803,11 @@
 
             modem:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <rect x="4" y="9" width="16" height="9" rx="2"></rect>
                     <path d="M8 13h.01"></path>
                     <path d="M12 13h.01"></path>
@@ -763,9 +818,11 @@
 
             router:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <rect x="3" y="10" width="18" height="8" rx="2"></rect>
                     <path d="M8 10V7"></path>
                     <path d="M16 10V7"></path>
@@ -777,9 +834,11 @@
 
             laptop:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <rect x="5" y="4" width="14" height="11" rx="1.5"></rect>
                     <path d="M3 19h18"></path>
                     <path d="M8 19l1-3h6l1 3"></path>
@@ -788,9 +847,11 @@
 
             tool:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <path d="M14 6a5 5 0 0 0-7 7l-4 4 4 4 4-4a5 5 0 0 0 7-7"></path>
                     <path d="m13 11 4 4"></path>
                 </svg>
@@ -798,9 +859,11 @@
 
             camera:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <path d="M4 7h4l2-2h4l2 2h4v12H4z"></path>
                     <circle cx="12" cy="13" r="3"></circle>
                 </svg>
@@ -808,9 +871,11 @@
 
             home:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <path d="M3 11 12 4l9 7"></path>
                     <path d="M5 10v10h14V10"></path>
                     <path d="M9 20v-5h6v5"></path>
@@ -819,9 +884,11 @@
 
             category:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <rect x="4" y="4" width="6" height="6" rx="1"></rect>
                     <rect x="14" y="4" width="6" height="6" rx="1"></rect>
                     <rect x="4" y="14" width="6" height="6" rx="1"></rect>
@@ -831,9 +898,11 @@
 
             eye:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
                     <circle cx="12" cy="12" r="2.5"></circle>
                 </svg>
@@ -841,9 +910,11 @@
 
             cart:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <circle cx="9" cy="20" r="1"></circle>
                     <circle cx="19" cy="20" r="1"></circle>
                     <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"></path>
@@ -854,39 +925,35 @@
 
             check:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <path d="m5 12 4 4L19 6"></path>
                 </svg>
                 `,
 
             inventory:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <path d="M4 7h16v13H4z"></path>
                     <path d="M8 7V4h8v3"></path>
                     <path d="M8 11h8"></path>
                 </svg>
                 `,
 
-            close:
-                `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
-                    <path d="M6 6l12 12"></path>
-                    <path d="M18 6L6 18"></path>
-                </svg>
-                `,
-
             refresh:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <path d="M20 11a8 8 0 1 0 1 4"></path>
                     <path d="M20 4v7h-7"></path>
                 </svg>
@@ -894,9 +961,11 @@
 
             error:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <circle cx="12" cy="12" r="9"></circle>
                     <path d="M12 8v5"></path>
                     <path d="M12 16h.01"></path>
@@ -905,9 +974,11 @@
 
             star:
                 `
-                <svg class="${safeClass}"
-                     viewBox="0 0 24 24"
-                     aria-hidden="true">
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
                     <path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"></path>
                 </svg>
                 `
@@ -930,7 +1001,6 @@
         const text =
             String(
                 category?.label ||
-                category?.query ||
                 ""
             )
                 .toLowerCase();
@@ -944,7 +1014,6 @@
 
         }
 
-
         if (
             text.includes("battery")
         ) {
@@ -952,7 +1021,6 @@
             return "battery";
 
         }
-
 
         if (
             text.includes("charger")
@@ -962,7 +1030,6 @@
 
         }
 
-
         if (
             text.includes("power bank")
         ) {
@@ -970,7 +1037,6 @@
             return "powerbank";
 
         }
-
 
         if (
             text.includes("cable")
@@ -980,7 +1046,6 @@
 
         }
 
-
         if (
             text.includes("earphone")
         ) {
@@ -988,7 +1053,6 @@
             return "earphone";
 
         }
-
 
         if (
             text.includes("headphone")
@@ -998,7 +1062,6 @@
 
         }
 
-
         if (
             text.includes("modem")
         ) {
@@ -1006,7 +1069,6 @@
             return "modem";
 
         }
-
 
         if (
             text.includes("router")
@@ -1016,7 +1078,6 @@
 
         }
 
-
         if (
             text.includes("laptop")
         ) {
@@ -1024,7 +1085,6 @@
             return "laptop";
 
         }
-
 
         if (
             text.includes("power tool")
@@ -1034,7 +1094,6 @@
 
         }
 
-
         if (
             text.includes("camera")
         ) {
@@ -1043,7 +1102,6 @@
 
         }
 
-
         if (
             text.includes("smart")
         ) {
@@ -1051,7 +1109,6 @@
             return "home";
 
         }
-
 
         return "category";
 
@@ -1083,6 +1140,15 @@
 
                 }
 
+                if (
+                    event.key ===
+                    "Enter"
+                ) {
+
+                    event.preventDefault();
+
+                }
+
             }
         );
 
@@ -1098,7 +1164,7 @@
             event => {
 
                 state.sortBy =
-                    event.target.value ||
+                    event.target?.value ||
                     "featured";
 
                 applyFiltersAndRender();
@@ -1161,37 +1227,177 @@
             }
         );
 
+    }
 
-        document.addEventListener(
-            "visibilitychange",
-            () => {
 
-                if (
-                    document.visibilityState ===
-                    "visible"
-                ) {
+    /* =========================================================================
+       10. CATEGORY UI
+       ========================================================================= */
 
-                    updateCartCount();
+    function renderCategoryPills() {
+
+        if (
+            !elements.categoriesNav
+        ) {
+
+            console.warn(
+                "[PRASUN SHOP] #products-categories not found."
+            );
+
+            return;
+
+        }
+
+
+        elements.categoriesNav.innerHTML =
+            CATEGORY_MAP
+                .map(
+                    category => {
+
+                        const active =
+                            category.query ===
+                            state.activeCategory;
+
+
+                        return `
+                            <button
+                                type="button"
+                                class="category-pill${
+                                    active
+                                        ? " active"
+                                        : ""
+                                }"
+                                data-query="${escapeHTML(
+                                    category.query
+                                )}"
+                                aria-pressed="${
+                                    active
+                                        ? "true"
+                                        : "false"
+                                }"
+                            >
+
+                                ${svgIcon(
+                                    categoryIcon(
+                                        category
+                                    ),
+                                    "ui-icon ui-icon-sm"
+                                )}
+
+                                <span>
+                                    ${escapeHTML(
+                                        category.label
+                                    )}
+                                </span>
+
+                            </button>
+                        `;
+
+                    }
+                )
+                .join("");
+
+    }
+
+
+    function handleCategoryClick(
+        event
+    ) {
+
+        const button =
+            event.target.closest(
+                ".category-pill"
+            );
+
+
+        if (
+            !button
+        ) {
+
+            return;
+
+        }
+
+
+        state.activeCategory =
+            String(
+                button.dataset.query ||
+                ""
+            );
+
+
+        highlightCategory();
+
+
+        applyFiltersAndRender();
+
+    }
+
+
+    function highlightCategory() {
+
+        elements.categoriesNav
+            ?.querySelectorAll(
+                ".category-pill"
+            )
+            .forEach(
+                button => {
+
+                    const active =
+                        String(
+                            button.dataset.query ||
+                            ""
+                        ) ===
+                        state.activeCategory;
+
+
+                    button.classList.toggle(
+                        "active",
+                        active
+                    );
+
+
+                    button.setAttribute(
+                        "aria-pressed",
+                        active
+                            ? "true"
+                            : "false"
+                    );
 
                 }
+            );
 
-            }
-        );
+    }
 
 
-        window.addEventListener(
-            "prasunCartUpdated",
-            updateCartCount
+    function getActiveCategory() {
+
+        return (
+            CATEGORY_MAP.find(
+                item =>
+                    item.query ===
+                    state.activeCategory
+            ) ||
+            CATEGORY_MAP[0]
         );
 
     }
 
 
     /* =========================================================================
-       10. LOAD COMPLETE CATALOG
+       11. CATALOG LOAD
        ========================================================================= */
 
     async function loadCatalog() {
+
+        if (
+            state.loading
+        ) {
+
+            return;
+
+        }
+
 
         state.loading =
             true;
@@ -1206,8 +1412,11 @@
 
         const timeout =
             window.setTimeout(
-                () =>
-                    controller.abort(),
+                () => {
+
+                    controller.abort();
+
+                },
                 CONFIG.REQUEST_TIMEOUT
             );
 
@@ -1228,8 +1437,14 @@
                                     "application/json"
                             },
 
+                        /*
+                         * Allow normal browser/CDN caching.
+                         * The catalog does not need to be force-fetched
+                         * every single page load.
+                         */
+
                         cache:
-                            "no-store",
+                            "default",
 
                         signal:
                             controller.signal
@@ -1286,12 +1501,23 @@
                     );
 
 
+            console.info(
+                `[PRASUN SHOP] Loaded ${state.products.length} products.`
+            );
+
+
             applyFiltersAndRender();
 
 
         } catch (
             error
         ) {
+
+            console.error(
+                "[PRASUN SHOP] Catalog loading failed:",
+                error
+            );
+
 
             if (
                 error?.name ===
@@ -1303,12 +1529,6 @@
                 );
 
             } else {
-
-                console.error(
-                    "[PRASUN SHOP] Catalog error:",
-                    error
-                );
-
 
                 renderErrorState(
                     error?.message ||
@@ -1397,7 +1617,7 @@
 
 
     /* =========================================================================
-       11. SEARCH
+       12. SEARCH
        ========================================================================= */
 
     function handleSearch(
@@ -1415,6 +1635,7 @@
 
         updateClearSearchButton();
 
+
         applyFiltersAndRender();
 
     }
@@ -1429,17 +1650,20 @@
             elements.searchInput.value =
                 "";
 
-            elements.searchInput.focus();
-
         }
 
 
         state.searchQuery =
             "";
 
+
         updateClearSearchButton();
 
+
         applyFiltersAndRender();
+
+
+        elements.searchInput?.focus();
 
     }
 
@@ -1447,217 +1671,23 @@
     function updateClearSearchButton() {
 
         if (
-            elements.clearSearchButton
+            !elements.clearSearchButton
         ) {
 
-            elements.clearSearchButton.hidden =
-                !state.searchQuery;
+            return;
 
         }
+
+
+        elements.clearSearchButton.hidden =
+            state.searchQuery.length ===
+            0;
 
     }
 
 
     /* =========================================================================
-       12. CATEGORIES
-       ========================================================================= */
-
-    function renderCategoryPills() {
-
-        if (
-            !elements.categoriesNav
-        ) {
-
-            return;
-
-        }
-
-
-        elements.categoriesNav.innerHTML =
-            CATEGORY_MAP
-                .map(
-                    category => {
-
-                        const active =
-                            category.query ===
-                            state.activeCategory;
-
-
-                        return `
-
-                            <button
-                                type="button"
-                                class="category-pill${
-                                    active
-                                        ? " active"
-                                        : ""
-                                }"
-                                data-query="${escapeHTML(
-                                    category.query
-                                )}"
-                                aria-pressed="${
-                                    active
-                                        ? "true"
-                                        : "false"
-                                }"
-                            >
-
-                                ${svgIcon(
-                                    categoryIcon(
-                                        category
-                                    ),
-                                    "ui-icon ui-icon-sm"
-                                )}
-
-                                <span>
-                                    ${escapeHTML(
-                                        category.label
-                                    )}
-                                </span>
-
-                            </button>
-
-                        `;
-
-                    }
-                )
-                .join("");
-
-    }
-
-
-    function handleCategoryClick(
-        event
-    ) {
-
-        const button =
-            event.target.closest(
-                ".category-pill"
-            );
-
-
-        if (
-            !button
-        ) {
-
-            return;
-
-        }
-
-
-        state.activeCategory =
-            String(
-                button.dataset.query ||
-                ""
-            );
-
-
-        highlightCategory();
-
-        updatePageHeading();
-
-        applyFiltersAndRender();
-
-    }
-
-
-    function highlightCategory() {
-
-        elements.categoriesNav
-            ?.querySelectorAll(
-                ".category-pill"
-            )
-            .forEach(
-                button => {
-
-                    const active =
-                        String(
-                            button.dataset.query ||
-                            ""
-                        ) ===
-                        state.activeCategory;
-
-
-                    button.classList.toggle(
-                        "active",
-                        active
-                    );
-
-
-                    button.setAttribute(
-                        "aria-pressed",
-                        active
-                            ? "true"
-                            : "false"
-                    );
-
-                }
-            );
-
-    }
-
-
-    function getActiveCategory() {
-
-        return (
-            CATEGORY_MAP.find(
-                item =>
-                    item.query ===
-                    state.activeCategory
-            ) ||
-            CATEGORY_MAP[0]
-        );
-
-    }
-
-
-    function updatePageHeading() {
-
-        if (
-            !elements.pageHeading
-        ) {
-
-            return;
-
-        }
-
-
-        const category =
-            getActiveCategory();
-
-
-        if (
-            category.query
-        ) {
-
-            elements.pageHeading.textContent =
-                category.label;
-
-            return;
-
-        }
-
-
-        if (
-            state.searchQuery
-        ) {
-
-            elements.pageHeading.textContent =
-                `Search: ${state.searchQuery}`;
-
-            return;
-
-        }
-
-
-        elements.pageHeading.textContent =
-            "All Products";
-
-    }
-
-
-    /* =========================================================================
-       13. FILTERING
+       13. LOCAL FILTERING
        ========================================================================= */
 
     function applyFiltersAndRender() {
@@ -1668,25 +1698,19 @@
             ];
 
 
-        const search =
-            state.searchQuery
-                .trim()
-                .toLowerCase();
-
-
         /*
-         * LOCAL SEARCH
+         * SEARCH
          */
 
         if (
-            search.length >=
-            CONFIG.SEARCH_MIN_LENGTH
+            state.searchQuery
         ) {
 
             const terms =
-                search.split(
-                    /\s+/
-                )
+                state.searchQuery
+                    .split(
+                        /\s+/
+                    )
                     .filter(
                         Boolean
                     );
@@ -1696,7 +1720,7 @@
                 products.filter(
                     product => {
 
-                        const searchable =
+                        const text =
                             buildSearchText(
                                 product
                             );
@@ -1704,7 +1728,7 @@
 
                         return terms.every(
                             term =>
-                                searchable.includes(
+                                text.includes(
                                     term
                                 )
                         );
@@ -1716,7 +1740,7 @@
 
 
         /*
-         * LOCAL CATEGORY
+         * CATEGORY
          */
 
         if (
@@ -1739,30 +1763,52 @@
         }
 
 
+        /*
+         * SORT
+         */
+
         products.sort(
             compareProducts
         );
 
 
         state.filteredProducts =
-            products;
+            products.slice(
+                0,
+                CONFIG.MAX_VISIBLE_PRODUCTS
+            );
 
 
         updatePageHeading();
+
 
         updateResultsCount();
 
 
         if (
-            !products.length
+            state.filteredProducts.length ===
+            0
         ) {
 
-            const message =
+            let message =
+                "No products are currently available.";
+
+
+            if (
                 state.searchQuery
-                    ? `No products found for "${state.searchQuery}".`
-                    : state.activeCategory
-                        ? `No products found in ${getActiveCategory().label}.`
-                        : "No products are currently available.";
+            ) {
+
+                message =
+                    `No products found for "${state.searchQuery}".`;
+
+            } else if (
+                state.activeCategory
+            ) {
+
+                message =
+                    `No products found in "${getActiveCategory().label}".`;
+
+            }
 
 
             renderEmptyState(
@@ -1815,7 +1861,9 @@
                     )
                         .toLowerCase()
             )
-            .join(" ");
+            .join(
+                " "
+            );
 
     }
 
@@ -1827,7 +1875,8 @@
 
         if (
             !category ||
-            !category.terms?.length
+            !category.terms ||
+            !category.terms.length
         ) {
 
             return true;
@@ -1835,7 +1884,7 @@
         }
 
 
-        const text =
+        const searchable =
             buildSearchText(
                 product
             );
@@ -1843,8 +1892,11 @@
 
         return category.terms.some(
             term =>
-                text.includes(
-                    term.toLowerCase()
+                searchable.includes(
+                    String(
+                        term
+                    )
+                        .toLowerCase()
                 )
         );
 
@@ -1898,46 +1950,17 @@
             );
 
 
-        const ratingA =
-            Number(
-                a.rating
-            ) || 0;
-
-
-        const ratingB =
-            Number(
-                b.rating
-            ) || 0;
-
-
-        const inventoryA =
-            Number(
-                a.quantity
-            ) || 0;
-
-
-        const inventoryB =
-            Number(
-                b.quantity
-            ) || 0;
-
-
         if (
             sort.includes(
                 "lowtohigh"
-            ) ||
-            sort.includes(
-                "lowhigh"
             ) ||
             sort.includes(
                 "priceasc"
             )
         ) {
 
-            return (
-                priceA -
-                priceB
-            );
+            return priceA -
+                priceB;
 
         }
 
@@ -1947,17 +1970,12 @@
                 "hightolow"
             ) ||
             sort.includes(
-                "highlow"
-            ) ||
-            sort.includes(
                 "pricedesc"
             )
         ) {
 
-            return (
-                priceB -
-                priceA
-            );
+            return priceB -
+                priceA;
 
         }
 
@@ -1968,9 +1986,7 @@
             ) ||
             sort.includes(
                 "nameaz"
-            ) ||
-            sort ===
-                "nameasc"
+            )
         ) {
 
             return nameA.localeCompare(
@@ -1991,9 +2007,7 @@
             ) ||
             sort.includes(
                 "nameza"
-            ) ||
-            sort ===
-                "namedesc"
+            )
         ) {
 
             return nameB.localeCompare(
@@ -2008,34 +2022,21 @@
         }
 
 
-        if (
-            sort.includes(
-                "rating"
-            ) ||
-            sort.includes(
-                "toprated"
-            )
-        ) {
-
-            return (
-                ratingB -
-                ratingA
-            );
-
-        }
+        const stockA =
+            Number(
+                a.quantity
+            ) > 0;
 
 
-        /*
-         * Featured:
-         *
-         * 1. In-stock products
-         * 2. Listed products
-         * 3. Stable name order
-         */
+        const stockB =
+            Number(
+                b.quantity
+            ) > 0;
+
 
         if (
-            inventoryA > 0 &&
-            inventoryB <= 0
+            stockA &&
+            !stockB
         ) {
 
             return -1;
@@ -2044,40 +2045,11 @@
 
 
         if (
-            inventoryA <= 0 &&
-            inventoryB > 0
+            !stockA &&
+            stockB
         ) {
 
             return 1;
-
-        }
-
-
-        const listedA =
-            Number(
-                a.listedNum ||
-                a.cj?.listedNum ||
-                0
-            );
-
-
-        const listedB =
-            Number(
-                b.listedNum ||
-                b.cj?.listedNum ||
-                0
-            );
-
-
-        if (
-            listedA !==
-            listedB
-        ) {
-
-            return (
-                listedB -
-                listedA
-            );
 
         }
 
@@ -2217,22 +2189,15 @@
             );
 
 
-        const image =
-            getPrimaryImage(
-                raw
-            );
-
-
         const images =
             getGalleryImages(
                 raw
             );
 
 
-        const variants =
-            normalizeVariants(
-                raw.variants
-            );
+        const image =
+            images[0] ||
+            PLACEHOLDER_IMAGE;
 
 
         return {
@@ -2248,14 +2213,16 @@
                     raw.cj_id ||
                     raw.cjId ||
                     pid
-                ).trim(),
+                )
+                    .trim(),
 
             sku:
                 String(
                     raw.sku ||
                     raw.productSku ||
                     ""
-                ).trim(),
+                )
+                    .trim(),
 
             title:
                 name,
@@ -2304,6 +2271,8 @@
 
             quantity,
 
+            rating,
+
             image,
 
             images,
@@ -2329,15 +2298,9 @@
                         )
                     : [],
 
-            variants,
-
-            rating,
-
-            listedNum:
-                Number(
-                    raw.listedNum ||
-                    raw.cj?.listedNum ||
-                    0
+            variants:
+                normalizeVariants(
+                    raw.variants
                 ),
 
             source:
@@ -2363,9 +2326,10 @@
         }
 
 
-        return variants
-            .map(
-                variant => ({
+        return variants.map(
+            variant => {
+
+                return {
 
                     ...variant,
 
@@ -2373,21 +2337,24 @@
                         String(
                             variant?.vid ||
                             ""
-                        ).trim(),
+                        )
+                            .trim(),
 
                     sku:
                         String(
                             variant?.sku ||
                             variant?.variantSku ||
                             ""
-                        ).trim(),
+                        )
+                            .trim(),
 
                     name:
                         String(
                             variant?.name ||
                             variant?.variantNameEn ||
                             "Default"
-                        ).trim(),
+                        )
+                            .trim(),
 
                     price:
                         normalizePrice(
@@ -2404,8 +2371,10 @@
                             variant?.inventory
                         )
 
-                })
-            );
+                };
+
+            }
+        );
 
     }
 
@@ -2509,7 +2478,7 @@
 
 
     /* =========================================================================
-       16. IMAGES
+       16. IMAGE HANDLING
        ========================================================================= */
 
     function normalizeImageUrl(
@@ -2599,12 +2568,12 @@
 
 
     function buildProxyUrl(
-        url
+        value
     ) {
 
         const normalized =
             normalizeImageUrl(
-                url
+                value
             );
 
 
@@ -2659,35 +2628,54 @@
             [];
 
 
-        const values = [
+        candidates.push(
+            product?.image
+        );
 
-            product?.image,
 
-            ...(Array.isArray(
+        if (
+            Array.isArray(
                 product?.images
             )
-                ? product.images
-                : []),
+        ) {
 
-            product?.originalImage,
+            candidates.push(
+                ...product.images
+            );
 
-            ...(Array.isArray(
-                product?.originalImages
-            )
-                ? product.originalImages
-                : []),
-
-            product?.bigImage,
-
-            product?.productImage,
-
-            product?.productImg
-
-        ];
+        }
 
 
         candidates.push(
-            ...values
+            product?.originalImage
+        );
+
+
+        if (
+            Array.isArray(
+                product?.originalImages
+            )
+        ) {
+
+            candidates.push(
+                ...product.originalImages
+            );
+
+        }
+
+
+        candidates.push(
+            product?.bigImage
+        );
+
+
+        candidates.push(
+            product?.productImage
+        );
+
+
+        candidates.push(
+            product?.productImg
         );
 
 
@@ -2706,12 +2694,11 @@
 
         if (
             typeof product?.productImageSet ===
-            "string"
+                "string"
         ) {
 
             candidates.push(
-                ...product
-                    .productImageSet
+                ...product.productImageSet
                     .split(",")
             );
 
@@ -2729,47 +2716,6 @@
                     )
             )
         ];
-
-    }
-
-
-    function getPrimaryImage(
-        product
-    ) {
-
-        const images =
-            collectProductImageUrls(
-                product
-            );
-
-
-        const proxy =
-            images.find(
-                isProxyUrl
-            );
-
-
-        if (
-            proxy
-        ) {
-
-            return proxy;
-
-        }
-
-
-        if (
-            images.length
-        ) {
-
-            return buildProxyUrl(
-                images[0]
-            );
-
-        }
-
-
-        return PLACEHOLDER_IMAGE;
 
     }
 
@@ -2796,7 +2742,7 @@
 
 
     /* =========================================================================
-       17. GRID
+       17. PRODUCT GRID
        ========================================================================= */
 
     function renderProductGrid() {
@@ -2825,8 +2771,6 @@
 
         attachProductImageFallbacks();
 
-        updateCartCount();
-
     }
 
 
@@ -2834,7 +2778,7 @@
         product
     ) {
 
-        const id =
+        const productId =
             escapeHTML(
                 product.id
             );
@@ -2886,11 +2830,11 @@
 
         const shortDescription =
             description.length >
-            100
+                105
                 ? (
                     description.slice(
                         0,
-                        100
+                        105
                     ) +
                     "..."
                 )
@@ -2900,28 +2844,24 @@
                 );
 
 
-        const rating =
-            Number(
-                product.rating
-            ) || 0;
-
-
         return `
 
             <article
                 class="product-card"
-                data-product-id="${id}"
+                data-product-id="${productId}"
             >
 
                 <button
                     type="button"
                     class="product-card-image-wrap"
                     data-action="view-details"
-                    data-product-id="${id}"
+                    data-product-id="${productId}"
                     aria-label="View ${title}"
                 >
 
-                    <span class="product-badge">
+                    <span
+                        class="product-badge"
+                    >
 
                         ${svgIcon(
                             "category",
@@ -2951,15 +2891,19 @@
                 </button>
 
 
-                <div class="product-card-body">
+                <div
+                    class="product-card-body"
+                >
 
-                    <h3 class="product-title">
+                    <h3
+                        class="product-title"
+                    >
 
                         <button
                             type="button"
                             class="product-title-button"
                             data-action="view-details"
-                            data-product-id="${id}"
+                            data-product-id="${productId}"
                         >
                             ${title}
                         </button>
@@ -2977,12 +2921,11 @@
 
 
                     ${
-                        rating > 0
+                        product.rating > 0
                             ? `
-
                                 <div
                                     class="product-rating"
-                                    aria-label="Rating ${rating.toFixed(
+                                    aria-label="Rating ${product.rating.toFixed(
                                         1
                                     )} out of 5"
                                 >
@@ -2993,23 +2936,28 @@
                                     )}
 
                                     <span>
-                                        ${rating.toFixed(
+                                        ${product.rating.toFixed(
                                             1
                                         )}
                                     </span>
 
                                 </div>
-
                             `
                             : ""
                     }
 
 
-                    <div class="product-card-footer">
+                    <div
+                        class="product-card-footer"
+                    >
 
-                        <div class="price-container">
+                        <div
+                            class="price-container"
+                        >
 
-                            <span class="product-price">
+                            <span
+                                class="product-price"
+                            >
                                 ${escapeHTML(
                                     price
                                 )}
@@ -3018,14 +2966,15 @@
                         </div>
 
 
-                        <div class="product-actions-group">
+                        <div
+                            class="product-actions-group"
+                        >
 
                             <button
                                 type="button"
                                 class="btn-card btn-secondary view-details-btn"
                                 data-action="view-details"
-                                data-product-id="${id}"
-                                aria-label="View details for ${title}"
+                                data-product-id="${productId}"
                             >
 
                                 ${svgIcon(
@@ -3044,17 +2993,12 @@
                                 type="button"
                                 class="btn-card btn-primary btn-add-to-cart add-to-cart-btn"
                                 data-action="add-cart"
-                                data-product-id="${id}"
+                                data-product-id="${productId}"
                                 ${
                                     available
                                         ? ""
                                         : "disabled"
                                 }
-                                aria-label="${
-                                    available
-                                        ? `Add ${title} to cart`
-                                        : `${title} is out of stock`
-                                }"
                             >
 
                                 ${svgIcon(
@@ -3095,21 +3039,21 @@
         event
     ) {
 
-        const details =
+        const detailsButton =
             event.target.closest(
                 '[data-action="view-details"]'
             );
 
 
         if (
-            details
+            detailsButton
         ) {
 
             event.preventDefault();
 
 
             openProductModal(
-                details.dataset.productId
+                detailsButton.dataset.productId
             );
 
 
@@ -3118,14 +3062,14 @@
         }
 
 
-        const addButton =
+        const cartButton =
             event.target.closest(
                 '[data-action="add-cart"]'
             );
 
 
         if (
-            !addButton
+            !cartButton
         ) {
 
             return;
@@ -3143,7 +3087,7 @@
                         item.id
                     ) ===
                     String(
-                        addButton.dataset.productId
+                        cartButton.dataset.productId
                     )
             );
 
@@ -3160,12 +3104,11 @@
         if (
             Number(
                 product.quantity
-            ) <=
-            0
+            ) <= 0
         ) {
 
             announce(
-                `${product.name} is out of stock.`
+                `${product.name} is currently out of stock.`
             );
 
 
@@ -3231,11 +3174,16 @@
         }
 
 
-        addButton.disabled =
+        cartButton.disabled =
             true;
 
 
-        addButton.innerHTML =
+        cartButton.classList.add(
+            "added"
+        );
+
+
+        cartButton.innerHTML =
             `
                 ${svgIcon(
                     "check",
@@ -3256,11 +3204,16 @@
         window.setTimeout(
             () => {
 
-                addButton.disabled =
+                cartButton.disabled =
                     false;
 
 
-                addButton.innerHTML =
+                cartButton.classList.remove(
+                    "added"
+                );
+
+
+                cartButton.innerHTML =
                     `
                         ${svgIcon(
                             "cart",
@@ -3280,7 +3233,100 @@
 
 
     /* =========================================================================
-       19. MODAL
+       19. IMAGE FALLBACK
+       ========================================================================= */
+
+    function attachProductImageFallbacks() {
+
+        document
+            .querySelectorAll(
+                ".product-image"
+            )
+            .forEach(
+                image => {
+
+                    image.addEventListener(
+                        "error",
+                        handleImageError
+                    );
+
+                }
+            );
+
+    }
+
+
+    function handleImageError(
+        event
+    ) {
+
+        const image =
+            event.currentTarget;
+
+
+        if (
+            !image
+        ) {
+
+            return;
+
+        }
+
+
+        const original =
+            image.dataset.originalImage;
+
+
+        if (
+            original &&
+            !image.dataset.originalAttempted
+        ) {
+
+            image.dataset.originalAttempted =
+                "true";
+
+
+            const proxy =
+                buildProxyUrl(
+                    original
+                );
+
+
+            if (
+                proxy &&
+                proxy !==
+                    image.src
+            ) {
+
+                image.src =
+                    proxy;
+
+
+                return;
+
+            }
+
+        }
+
+
+        if (
+            !image.dataset.placeholderUsed
+        ) {
+
+            image.dataset.placeholderUsed =
+                "true";
+
+
+            image.src =
+                PLACEHOLDER_IMAGE;
+
+        }
+
+    }
+
+
+    /* =========================================================================
+       20. MODAL
        ========================================================================= */
 
     function sanitizeDescription(
@@ -3300,7 +3346,7 @@
             new DOMParser();
 
 
-        const doc =
+        const documentFragment =
             parser.parseFromString(
                 String(
                     html
@@ -3309,42 +3355,39 @@
             );
 
 
-        const dangerous =
-            [
-                "script",
-                "style",
-                "iframe",
-                "object",
-                "embed",
-                "form",
-                "input",
-                "button",
-                "textarea",
-                "select",
-                "option",
-                "video",
-                "audio",
-                "source"
-            ];
+        [
+            "script",
+            "style",
+            "iframe",
+            "object",
+            "embed",
+            "form",
+            "input",
+            "button",
+            "textarea",
+            "select",
+            "option",
+            "video",
+            "audio",
+            "source"
+        ]
+            .forEach(
+                tag => {
+
+                    documentFragment
+                        .querySelectorAll(
+                            tag
+                        )
+                        .forEach(
+                            node =>
+                                node.remove()
+                        );
+
+                }
+            );
 
 
-        dangerous.forEach(
-            tag => {
-
-                doc
-                    .querySelectorAll(
-                        tag
-                    )
-                    .forEach(
-                        node =>
-                            node.remove()
-                    );
-
-            }
-        );
-
-
-        doc
+        documentFragment
             .querySelectorAll(
                 "*"
             )
@@ -3385,9 +3428,9 @@
                                 if (
                                     (
                                         name ===
-                                        "href" ||
+                                        "src" ||
                                         name ===
-                                        "src"
+                                        "href"
                                     ) &&
                                     /^javascript:/i.test(
                                         value
@@ -3407,7 +3450,7 @@
             );
 
 
-        doc
+        documentFragment
             .querySelectorAll(
                 "img"
             )
@@ -3461,7 +3504,9 @@
             );
 
 
-        return doc.body.innerHTML;
+        return documentFragment
+            .body
+            .innerHTML;
 
     }
 
@@ -3474,6 +3519,11 @@
             !elements.productModal ||
             !elements.modalBody
         ) {
+
+            console.error(
+                "[PRASUN SHOP] Product modal is missing from index.html."
+            );
+
 
             return;
 
@@ -3527,12 +3577,6 @@
             );
 
 
-        const price =
-            formatPrice(
-                product.price
-            );
-
-
         const quantity =
             Number(
                 product.quantity
@@ -3550,7 +3594,7 @@
             `;
 
 
-        const gallery =
+        const galleryHtml =
             images.length > 1
                 ? `
                     <div
@@ -3563,7 +3607,6 @@
                                     image,
                                     index
                                 ) => `
-
                                     <button
                                         type="button"
                                         class="modal-gallery-thumb ${
@@ -3575,6 +3618,10 @@
                                         data-gallery-image="${escapeHTML(
                                             image
                                         )}"
+                                        aria-label="View product image ${
+                                            index +
+                                            1
+                                        }"
                                     >
 
                                         <img
@@ -3587,12 +3634,9 @@
                                         >
 
                                     </button>
-
                                 `
                             )
-                            .join(
-                                ""
-                            )}
+                            .join("")}
 
                     </div>
                 `
@@ -3618,7 +3662,7 @@
                         referrerpolicy="no-referrer"
                     >
 
-                    ${gallery}
+                    ${galleryHtml}
 
                 </div>
 
@@ -3649,7 +3693,9 @@
                         <strong
                             class="modal-product-price"
                         >
-                            ${price}
+                            ${formatPrice(
+                                product.price
+                            )}
                         </strong>
 
 
@@ -3871,6 +3917,11 @@
                         true;
 
 
+                    modalCartButton.classList.add(
+                        "added"
+                    );
+
+
                     modalCartButton.innerHTML =
                         `
                             ${svgIcon(
@@ -3913,7 +3964,7 @@
         window.setTimeout(
             () =>
                 elements.modalClose?.focus(),
-            40
+            50
         );
 
     }
@@ -3959,104 +4010,7 @@
 
 
     /* =========================================================================
-       20. IMAGE FALLBACK
-       ========================================================================= */
-
-    function attachProductImageFallbacks() {
-
-        document
-            .querySelectorAll(
-                ".product-image"
-            )
-            .forEach(
-                image => {
-
-                    image.addEventListener(
-                        "error",
-                        handleImageError,
-                        {
-                            once:
-                                false
-                        }
-                    );
-
-                }
-            );
-
-    }
-
-
-    function handleImageError(
-        event
-    ) {
-
-        const image =
-            event.currentTarget;
-
-
-        if (
-            !image
-        ) {
-
-            return;
-
-        }
-
-
-        const original =
-            image.dataset.originalImage;
-
-
-        if (
-            original &&
-            !image.dataset.originalAttempted
-        ) {
-
-            image.dataset.originalAttempted =
-                "true";
-
-
-            const proxy =
-                buildProxyUrl(
-                    original
-                );
-
-
-            if (
-                proxy &&
-                proxy !==
-                    image.src
-            ) {
-
-                image.src =
-                    proxy;
-
-
-                return;
-
-            }
-
-        }
-
-
-        if (
-            !image.dataset.placeholderUsed
-        ) {
-
-            image.dataset.placeholderUsed =
-                "true";
-
-
-            image.src =
-                PLACEHOLDER_IMAGE;
-
-        }
-
-    }
-
-
-    /* =========================================================================
-       21. UI
+       21. UI STATES
        ========================================================================= */
 
     function renderLoadingState() {
@@ -4075,6 +4029,7 @@
                 <div
                     class="product-status-card"
                     role="status"
+                    aria-live="polite"
                 >
 
                     <div
@@ -4087,7 +4042,7 @@
                     </h3>
 
                     <p>
-                        Loading the complete catalog.
+                        Loading the latest catalog...
                     </p>
 
                 </div>
@@ -4121,7 +4076,6 @@
 
         elements.productList.innerHTML =
             `
-
                 <div
                     class="product-status-card"
                     role="status"
@@ -4143,7 +4097,6 @@
                     </p>
 
                 </div>
-
             `;
 
 
@@ -4179,7 +4132,6 @@
 
         elements.productList.innerHTML =
             `
-
                 <div
                     class="product-status-card"
                     role="alert"
@@ -4218,7 +4170,6 @@
                     </button>
 
                 </div>
-
             `;
 
 
@@ -4228,8 +4179,7 @@
             )
             ?.addEventListener(
                 "click",
-                () =>
-                    loadCatalog(),
+                loadCatalog,
                 {
                     once:
                         true
@@ -4275,7 +4225,50 @@
                 1
                     ? "product"
                     : "products"
-            }`;
+            } available`;
+
+    }
+
+
+    function updatePageHeading() {
+
+        if (
+            !elements.pageHeading
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            state.activeCategory
+        ) {
+
+            elements.pageHeading.textContent =
+                getActiveCategory().label;
+
+
+            return;
+
+        }
+
+
+        if (
+            state.searchQuery
+        ) {
+
+            elements.pageHeading.textContent =
+                `Search: ${state.searchQuery}`;
+
+
+            return;
+
+        }
+
+
+        elements.pageHeading.textContent =
+            "All Products";
 
     }
 
@@ -4290,43 +4283,6 @@
                 ? "true"
                 : "false"
         );
-
-    }
-
-
-    function updateCartCount() {
-
-        const count =
-            Number(
-                window.PrasunCart?.getCount?.() ||
-                0
-            );
-
-
-        const badge =
-            document.getElementById(
-                "cart-count"
-            );
-
-
-        if (
-            !badge
-        ) {
-
-            return;
-
-        }
-
-
-        badge.textContent =
-            String(
-                count
-            );
-
-
-        badge.hidden =
-            count <=
-            0;
 
     }
 
@@ -4375,18 +4331,18 @@
 
 
     function formatPrice(
-        amount
+        value
     ) {
 
-        const value =
+        const number =
             Number(
-                amount
+                value
             );
 
 
         if (
             !Number.isFinite(
-                value
+                number
             )
         ) {
 
@@ -4409,11 +4365,10 @@
 
                 maximumFractionDigits:
                     2
-
             }
         )
             .format(
-                value
+                number
             );
 
     }
@@ -4598,4 +4553,3 @@
     };
 
 })();
-
