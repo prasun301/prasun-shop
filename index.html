@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>PRASUN SHOP — Home Improvement & Solar</title>
+    <title>PRASUN SHOP — Home Improvement &amp; Solar</title>
 
     <meta
         name="description"
@@ -43,13 +43,29 @@
         sizes="any"
     >
 
+
+    <!-- ================================================================
+         PERFORMANCE HINTS
+         ================================================================ -->
+
+    <link
+        rel="preconnect"
+        href="https://www.googletagmanager.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://pagead2.googlesyndication.com"
+    >
+
+
     <!-- ================================================================
          MAIN STYLESHEET
          ================================================================ -->
 
     <link
         rel="stylesheet"
-        href="/css/style.css?v=20260821-07"
+        href="/css/style.css?v=20260821-08"
     >
 
 
@@ -63,21 +79,14 @@
     ></script>
 
     <script>
-
-        window.dataLayer =
-            window.dataLayer || [];
+        window.dataLayer = window.dataLayer || [];
 
         function gtag() {
             dataLayer.push(arguments);
         }
 
         gtag("js", new Date());
-
-        gtag(
-            "config",
-            "G-D9F2VQ4247"
-        );
-
+        gtag("config", "G-D9F2VQ4247");
     </script>
 
 
@@ -105,6 +114,8 @@
 
         <div class="container">
 
+            <!-- BRAND -->
+
             <a
                 href="/"
                 class="site-logo"
@@ -125,19 +136,17 @@
                 >
 
                     <path d="M3 9l9-6 9 6"></path>
-
                     <path d="M5 10v10h14V10"></path>
-
                     <path d="M9 20v-6h6v6"></path>
 
                 </svg>
 
-                <span>
-                    PRASUN SHOP
-                </span>
+                <span>PRASUN SHOP</span>
 
             </a>
 
+
+            <!-- NAVIGATION -->
 
             <nav
                 class="nav-links"
@@ -261,125 +270,141 @@
 
 
             <!-- ========================================================
-                 SEARCH AND SORT
+                 SEARCH / SORT
                  ======================================================== -->
 
             <section
-    class="search-filter-bar products-toolbar"
-    aria-label="Product search and sorting"
->
-
-    <div class="search-container product-search-container">
-
-        <label
-            for="product-search"
-            class="visually-hidden"
-        >
-            Search products
-        </label>
-
-        <svg
-            class="ui-icon ui-icon-sm"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-        >
-            <circle
-                cx="11"
-                cy="11"
-                r="6.5"
-            ></circle>
-
-            <path
-                d="m16 16 5 5"
-            ></path>
-        </svg>
-
-        <input
-            id="product-search"
-            class="products-search-input"
-            type="search"
-            placeholder="Search products..."
-            autocomplete="off"
-            spellcheck="false"
-            enterkeyhint="search"
-            aria-label="Search products"
-        >
-
-        <button
-            id="clear-search"
-            type="button"
-            aria-label="Clear search"
-            title="Clear search"
-            hidden
-        >
-
-            <svg
-                class="ui-icon ui-icon-sm"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
+                class="search-filter-bar products-toolbar"
+                aria-label="Product search and sorting"
             >
-                <path d="M6 6l12 12"></path>
-                <path d="M18 6L6 18"></path>
-            </svg>
 
-        </button>
+                <div
+                    class="search-container product-search-container"
+                >
 
-    </div>
+                    <label
+                        for="product-search"
+                        class="visually-hidden"
+                    >
+                        Search products
+                    </label>
 
 
-    <label
-        for="product-sort"
-        class="visually-hidden"
-    >
-        Sort products
-    </label>
+                    <!-- Search icon intentionally inside the field -->
 
-    <select
-        id="product-sort"
-        class="product-sort"
-        aria-label="Sort products"
-    >
+                    <svg
+                        class="ui-icon ui-icon-sm"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
 
-        <option value="featured">
-            Featured
-        </option>
+                        <circle
+                            cx="11"
+                            cy="11"
+                            r="6.5"
+                        ></circle>
 
-        <option value="Price: Low to High">
-            Price: Low to High
-        </option>
+                        <path
+                            d="m16 16 5 5"
+                        ></path>
 
-        <option value="Price: High to Low">
-            Price: High to Low
-        </option>
+                    </svg>
 
-        <option value="A to Z">
-            Name: A to Z
-        </option>
 
-        <option value="Z to A">
-            Name: Z to A
-        </option>
+                    <input
+                        id="product-search"
+                        class="products-search-input"
+                        type="search"
+                        inputmode="search"
+                        placeholder="Search products..."
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        enterkeyhint="search"
+                        aria-label="Search products"
+                    >
 
-    </select>
 
-</section>
+                    <button
+                        id="clear-search"
+                        type="button"
+                        aria-label="Clear search"
+                        title="Clear search"
+                        hidden
+                    >
+
+                        <svg
+                            class="ui-icon ui-icon-sm"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                            focusable="false"
+                        >
+
+                            <path d="M6 6l12 12"></path>
+                            <path d="M18 6L6 18"></path>
+
+                        </svg>
+
+                    </button>
+
+                </div>
+
+
+                <label
+                    for="product-sort"
+                    class="visually-hidden"
+                >
+                    Sort products
+                </label>
+
+
+                <select
+                    id="product-sort"
+                    class="product-sort"
+                    aria-label="Sort products"
+                >
+
+                    <option value="featured">
+                        Featured
+                    </option>
+
+                    <option value="Price: Low to High">
+                        Price: Low to High
+                    </option>
+
+                    <option value="Price: High to Low">
+                        Price: High to Low
+                    </option>
+
+                    <option value="A to Z">
+                        Name: A to Z
+                    </option>
+
+                    <option value="Z to A">
+                        Name: Z to A
+                    </option>
+
+                </select>
+
+            </section>
 
 
             <!-- ========================================================
                  CATEGORIES
 
-                 products.js replaces these dynamically.
-                 Keeping one initial button prevents an empty flash.
+                 products.js replaces the contents dynamically.
                  ======================================================== -->
 
             <nav
@@ -401,7 +426,7 @@
 
 
             <!-- ========================================================
-                 RESULTS BAR
+                 RESULTS
                  ======================================================== -->
 
             <div
@@ -446,11 +471,9 @@
                         aria-hidden="true"
                     ></div>
 
-
                     <h3>
                         Loading Products
                     </h3>
-
 
                     <p>
                         Fetching the latest catalog.
@@ -468,18 +491,7 @@
     <!-- ================================================================
          PRODUCT DETAILS MODAL
 
-         REQUIRED BY products.js
-
-         The modal is empty initially.
-         products.js inserts:
-         - product image
-         - gallery
-         - product title
-         - category
-         - price
-         - stock
-         - full CJ description
-         - Add to Cart button
+         products.js populates this dynamically.
          ================================================================ -->
 
     <div
@@ -516,7 +528,6 @@
                 >
 
                     <path d="M6 6l12 12"></path>
-
                     <path d="M18 6L6 18"></path>
 
                 </svg>
@@ -535,7 +546,7 @@
 
 
     <!-- ================================================================
-         ACCESSIBILITY LIVE REGION
+         ACCESSIBILITY
          ================================================================ -->
 
     <div
@@ -595,21 +606,17 @@
 
 
     <!-- ================================================================
-         CART SYSTEM
+         APPLICATION JAVASCRIPT
+         defer prevents blocking HTML parsing.
          ================================================================ -->
 
     <script
-        src="/js/cart.js?v=20260821-06"
+        src="/js/cart.js?v=20260821-07"
         defer
     ></script>
 
-
-    <!-- ================================================================
-         PRODUCT SYSTEM
-         ================================================================ -->
-
     <script
-        src="/js/products.js?v=20260821-07"
+        src="/js/products.js?v=20260821-08"
         defer
     ></script>
 
