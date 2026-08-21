@@ -217,12 +217,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchTimeout = null;
 
   function getProxiedImageUrl(rawUrl) {
-    if (!rawUrl) return FALLBACK_IMAGE;
-    let target = rawUrl;
-    if (target.startsWith("//")) target = `https:${target}`;
-    if (target.startsWith("http://")) target = target.replace("http://", "https://");
-    return `${PROXY_ENDPOINT}?url=${encodeURIComponent(target)}`;
-  }
+  if (!rawUrl) return FALLBACK_IMAGE;
+  let target = rawUrl;
+  // If the URL is already routed through worker proxy, return as is
+  if (target.includes("/image-proxy")) return target;
+  if (target.startsWith("//")) target = `https:${target}`;
+  if (target.startsWith("http://")) target = target.replace("http://", "https://");
+  return `${PROXY_ENDPOINT}?url=${encodeURIComponent(target)}`;
+}
 
   function getSortedProducts(products, sortBy) {
     const list = [...products];
