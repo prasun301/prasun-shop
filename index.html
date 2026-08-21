@@ -72,7 +72,7 @@
 
     <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL,GRAD,opsz,wght,ROND@0..1,-25..200,20..48,300..700,0..100&icon_names=add_shopping_cart,apps,category,check,devices,home_iot_device,inventory_2,light_mode,refresh,search,shopping_cart,star,visibility&display=block"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL,GRAD,opsz,wght,ROND@0..1,-25..200,20..48,300..700,0..100&display=block"
     >
 
 
@@ -82,7 +82,7 @@
 
     <link
         rel="stylesheet"
-        href="/css/style.css?v=20260821-04"
+        href="/css/style.css?v=20260821-05"
     >
 
 
@@ -130,37 +130,6 @@
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168"
         crossorigin="anonymous"
     ></script>
-
-
-    <!-- ================================================================
-         PAGE-SPECIFIC ACCESSIBILITY
-         ================================================================ -->
-
-    <style>
-
-        .visually-hidden {
-
-            position: absolute !important;
-
-            width: 1px !important;
-            height: 1px !important;
-
-            padding: 0 !important;
-            margin: -1px !important;
-
-            overflow: hidden !important;
-
-            clip: rect(0, 0, 0, 0) !important;
-
-            clip-path: inset(50%) !important;
-
-            white-space: nowrap !important;
-
-            border: 0 !important;
-
-        }
-
-    </style>
 
 </head>
 
@@ -302,34 +271,18 @@
 
 
             <!-- ========================================================
-                 HERO / PAGE HEADER
+                 PAGE HEADER
                  ======================================================== -->
 
             <header
                 class="products-header shop-header"
             >
 
-                <div
-                    style="
-                        display:flex;
-                        align-items:flex-start;
-                        gap:12px;
-                    "
-                >
+                <div class="shop-hero">
 
                     <div
+                        class="shop-hero-icon"
                         aria-hidden="true"
-                        style="
-                            width:44px;
-                            height:44px;
-                            flex:0 0 44px;
-                            display:inline-flex;
-                            align-items:center;
-                            justify-content:center;
-                            border-radius:50%;
-                            background:#eff6ff;
-                            color:#2563eb;
-                        "
                     >
 
                         <span
@@ -341,7 +294,7 @@
                     </div>
 
 
-                    <div>
+                    <div class="shop-hero-content">
 
                         <h1
                             id="products-heading"
@@ -365,16 +318,13 @@
 
 
             <!-- ========================================================
-                 SEARCH / SORT TOOLBAR
+                 SEARCH / SORT
                  ======================================================== -->
 
             <section
                 class="search-filter-bar products-toolbar"
                 aria-label="Product search and sorting"
             >
-
-
-                <!-- SEARCH -->
 
                 <div
                     class="search-container product-search-container"
@@ -391,13 +341,6 @@
                     <span
                         class="material-symbols-rounded icon-sm"
                         aria-hidden="true"
-                        style="
-                            position:absolute;
-                            left:15px;
-                            z-index:2;
-                            color:#64748b;
-                            pointer-events:none;
-                        "
                     >
                         search
                     </span>
@@ -434,8 +377,6 @@
 
                 </div>
 
-
-                <!-- SORT -->
 
                 <label
                     for="product-sort"
@@ -510,7 +451,7 @@
 
 
             <!-- ========================================================
-                 RESULT INFORMATION
+                 RESULTS
                  ======================================================== -->
 
             <div
@@ -581,27 +522,11 @@
                 aria-labelledby="store-info-title"
             >
 
-                <div
-                    style="
-                        display:flex;
-                        align-items:flex-start;
-                        gap:12px;
-                    "
-                >
+                <div class="store-info-content">
 
                     <div
+                        class="store-info-icon"
                         aria-hidden="true"
-                        style="
-                            width:40px;
-                            height:40px;
-                            flex:0 0 40px;
-                            display:inline-flex;
-                            align-items:center;
-                            justify-content:center;
-                            border-radius:50%;
-                            background:#f8fafc;
-                            color:#475569;
-                        "
                     >
 
                         <span
@@ -613,7 +538,7 @@
                     </div>
 
 
-                    <div>
+                    <div class="store-info-copy">
 
                         <h2
                             id="store-info-title"
@@ -659,35 +584,24 @@
 
         <div class="container">
 
+            <div class="footer-links">
 
-            <div
-                class="footer-links"
-            >
-
-                <a
-                    href="/privacy.html"
-                >
+                <a href="/privacy.html">
                     Privacy Policy
                 </a>
 
 
-                <a
-                    href="/terms.html"
-                >
+                <a href="/terms.html">
                     Terms of Service
                 </a>
 
 
-                <a
-                    href="/refund.html"
-                >
+                <a href="/refund.html">
                     Refund Policy
                 </a>
 
 
-                <a
-                    href="/contact.html"
-                >
+                <a href="/contact.html">
                     Contact
                 </a>
 
@@ -716,21 +630,21 @@
 
 
     <!-- ================================================================
-         CART SYSTEM
+         CART
          ================================================================ -->
 
     <script
-        src="/js/cart.js?v=20260821-03"
+        src="/js/cart.js?v=20260821-04"
         defer
     ></script>
 
 
     <!-- ================================================================
-         PRODUCT MANAGER
+         PRODUCTS
          ================================================================ -->
 
     <script
-        src="/js/products.js?v=20260821-04"
+        src="/js/products.js?v=20260821-05"
         defer
     ></script>
 
