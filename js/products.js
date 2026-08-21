@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * PRASUN SHOP — PRODUCTS MANAGER (UPDATED & FIXED)
+ * PRASUN SHOP — PRODUCTS MANAGER (FULL UPDATED CODE)
  * js/products.js
  * ============================================================================
  */
@@ -23,6 +23,7 @@
     PRODUCT_PAGE:
       "/product.html",
 
+    // Default fallback image if an item has no image or a broken link
     PLACEHOLDER_IMAGE:
       "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=500&auto=format&fit=crop",
 
@@ -30,7 +31,7 @@
       15000,
 
     DEBOUNCE_DELAY:
-      400
+      300
   };
 
   const CATEGORY_MAP = [
@@ -43,7 +44,7 @@
 
 
   /* ==========================================================================
-     2. STATE
+     2. STATE & REQUEST CONTROLLER
      ========================================================================== */
 
   const state = {
@@ -55,9 +56,12 @@
     loading: false
   };
 
+  let activeFetchController = null;
+  let searchDebounceTimer = null;
+
 
   /* ==========================================================================
-     3. DOM ELEMENTS & TIMERS
+     3. DOM ELEMENTS
      ========================================================================== */
 
   const elements = {
@@ -71,23 +75,24 @@
     liveRegion: null
   };
 
-  let searchDebounceTimer = null;
-
 
   /* ==========================================================================
-     4. INITIALIZATION
+     4. INITIALIZATION (SAFE DOMREADY CHECK)
      ========================================================================== */
 
-  document.addEventListener("DOMContentLoaded", init);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 
   function init() {
     cacheDOMElements();
 
-    // Read initial HTML select state if present
-    const currentSelect = elements.sortSelect || document.getElementById("product-sort") || document.querySelector("select[name='sort']");
+    // Sync initial sort state from select input if present
+    const currentSelect = getSortSelectElement();
     if (currentSelect && currentSelect.value) {
       state.sortBy = currentSelect.value;
-      console.log("[PRASUN SHOP] Initialized sort state from DOM:", state.sortBy);
     }
 
     bindEvents();
@@ -98,7 +103,7 @@
 
 
   /* ==========================================================================
-     5. CACHE DOM
+     5. CACHE DOM ELEMENTS & GETTERS
      ========================================================================== */
 
   function cacheDOMElements() {
@@ -106,15 +111,21 @@
     elements.resultsCount = document.getElementById("results-count");
     elements.searchInput = document.getElementById("product-search");
     elements.clearSearchBtn = document.getElementById("clear-search");
-    elements.sortSelect = document.getElementById("product-sort") || document.querySelector("select.product-sort");
+    elements.sortSelect = getSortSelectElement();
     elements.categoriesNav = document.getElementById("products-categories");
     elements.pageHeading = document.getElementById("page-heading");
     elements.liveRegion = document.getElementById("aria-live-region");
   }
 
+  function getSortSelectElement() {
+    return document.getElementById("product-sort") || 
+           document.querySelector("select.product-sort") || 
+           document.querySelector("select[name='sort']");
+  }
+
 
   /* ==========================================================================
-     6. EVENTS (INCLUDES GLOBAL DELEGATION FALLBACK)
+     6. EVENTS & DELEGATION
      ========================================================================== */
 
   function bindEvents() {
@@ -127,12 +138,12 @@
       elements.clearSearchBtn.addEventListener("click", clearSearch);
     }
 
-    // Direct listener
-    if (elements.sortSelect) {
-      elements.sortSelect.addEventListener("change", handleSortChange);
+    const sortEl = getSortSelectElement();
+    if (sortEl) {
+      sortEl.addEventListener("change", handleSortChange);
     }
 
-    // Global Document Delegation fallback for dynamically inserted/re-rendered select inputs
+    // Delegation fallback for dynamically added/updated select controls
     document.addEventListener("change", (e) => {
       if (e.target && (e.target.id === "product-sort" || e.target.classList.contains("product-sort") || e.target.name === "sort")) {
         handleSortChange(e);
@@ -151,7 +162,6 @@
   function handleSortChange(e) {
     const val = e.target.value || "featured";
     state.sortBy = val;
-    console.log("[PRASUN SHOP] Sort changed to:", state.sortBy);
     applyFiltersAndRender();
   }
 
@@ -183,9 +193,10 @@
   }
 
   function clearSearch() {
-    if (elements.searchInput) {
-      elements.searchInput.value = "";
-      elements.searchInput.focus();
+    const searchInput = elements.searchInput || document.getElementById("product-search");
+    if (searchInput) {
+      searchInput.value = "";
+      searchInput.focus();
     }
     state.searchQuery = "";
     updateClearSearchButton();
@@ -193,16 +204,25 @@
   }
 
   function updateClearSearchButton() {
-    if (!elements.clearSearchBtn) return;
-    elements.clearSearchBtn.hidden = state.searchQuery.length === 0;
+    const clearBtn = elements.clearSearchBtn || document.getElementById("clear-search");
+    if (!clearBtn) return;
+    clearBtn.hidden = state.searchQuery.length === 0;
   }
 
 
   /* ==========================================================================
-     8. FETCH PRODUCTS FROM CLOUDFLARE WORKER
+     8. FETCH PRODUCTS WITH RACE-CONDITION CANCELLATION
      ========================================================================== */
 
   async function loadProducts(query = state.searchQuery || state.activeCategoryQuery) {
+    // Abort previous pending fetch request to prevent stale overwrites
+    if (activeFetchController) {
+      activeFetchController.abort();
+    }
+
+    activeFetchController = new AbortController();
+    const currentController = activeFetchController;
+
     state.loading = true;
     setLoadingState(true);
     showLoadingState();
@@ -212,24 +232,19 @@
       apiUrl += `?q=${encodeURIComponent(query.trim())}`;
     }
 
-    try {
-      const controller = new AbortController();
-      const timeout = window.setTimeout(
-        () => controller.abort(),
-        CONFIG.REQUEST_TIMEOUT
-      );
+    const timeout = window.setTimeout(() => {
+      currentController.abort();
+    }, CONFIG.REQUEST_TIMEOUT);
 
-      let response;
-      try {
-        response = await fetch(apiUrl, {
-          method: "GET",
-          headers: { "Accept": "application/json" },
-          cache: "no-store",
-          signal: controller.signal
-        });
-      } finally {
-        window.clearTimeout(timeout);
-      }
+    try {
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: { "Accept": "application/json" },
+        cache: "no-store",
+        signal: currentController.signal
+      });
+
+      window.clearTimeout(timeout);
 
       if (!response.ok) {
         throw new Error(`Server returned HTTP status ${response.status}`);
@@ -242,36 +257,33 @@
         .map(normalizeProduct)
         .filter(product => product !== null && product.id);
 
-      if (state.products.length === 0) {
-        renderEmptyState(
-          query
-            ? `No available items found matching "${escapeHtml(query)}".`
-            : "No active products available at the moment."
-        );
-        return;
-      }
-
       updatePageHeading(query);
       applyFiltersAndRender();
 
     } catch (error) {
-      console.error("[PRASUN SHOP] Product load error:", error);
+      window.clearTimeout(timeout);
 
-      let message = error?.message || "Unable to load products. Please try again.";
+      // Silently ignore manual aborts triggered by new user input
       if (error?.name === "AbortError") {
-        message = "The product request timed out. Please try again.";
+        return;
       }
 
+      console.error("[PRASUN SHOP] Product load error:", error);
+      const message = error?.message || "Unable to load products. Please try again.";
       renderErrorState(message);
+
     } finally {
-      state.loading = false;
-      setLoadingState(false);
+      if (activeFetchController === currentController) {
+        state.loading = false;
+        setLoadingState(false);
+        activeFetchController = null;
+      }
     }
   }
 
 
   /* ==========================================================================
-     9. EXTRACT & NORMALIZE PRODUCT PAYLOAD (ROBUST PRICE PARSING)
+     9. EXTRACT & NORMALIZE PRODUCT PAYLOAD (CJ-COMPATIBLE)
      ========================================================================== */
 
   function extractProducts(data) {
@@ -301,13 +313,11 @@
       "Unnamed Product"
     ).trim();
 
-    // Deep object check for nested price values like { price: { amount: 19.99 } }
     let rawPrice = product.price ?? product.sellPrice ?? product.unitPrice ?? product.cost ?? 0;
     if (typeof rawPrice === "object" && rawPrice !== null) {
       rawPrice = rawPrice.amount ?? rawPrice.value ?? rawPrice.raw ?? 0;
     }
 
-    // Convert string currencies like "$19.99" to float 19.99
     let price = parseFloat(
       String(rawPrice).replace(/[^0-9.]/g, "")
     );
@@ -316,7 +326,28 @@
     if (!id || !name) return null;
 
     const category = String(product.category || "General");
-    const image = product.image || product.productImage || CONFIG.PLACEHOLDER_IMAGE;
+
+    // Extract image with support for standard keys & CJ Dropshipping keys
+    let rawImage = 
+      product.image || 
+      product.productImage || 
+      product.productImg || 
+      product.bigImage || 
+      CONFIG.PLACEHOLDER_IMAGE;
+
+    if (typeof rawImage !== "string" || !rawImage.trim()) {
+      rawImage = CONFIG.PLACEHOLDER_IMAGE;
+    }
+
+    let image = rawImage.trim();
+
+    // Protocol normalization for CJ image CDN paths
+    if (image.startsWith("//")) {
+      image = `https:${image}`;
+    } else if (image.startsWith("http://")) {
+      image = image.replace("http://", "https://");
+    }
+
     const rating = parseFloat(product.rating) || 4.8;
 
     return {
@@ -339,9 +370,10 @@
      ========================================================================== */
 
   function renderCategoryPills() {
-    if (!elements.categoriesNav) return;
+    const categoriesNav = elements.categoriesNav || document.getElementById("products-categories");
+    if (!categoriesNav) return;
 
-    elements.categoriesNav.innerHTML = CATEGORY_MAP.map(item => {
+    categoriesNav.innerHTML = CATEGORY_MAP.map(item => {
       const isActive = item.query === state.activeCategoryQuery;
       return `
         <button
@@ -363,8 +395,9 @@
     const query = button.dataset.query ?? "";
     state.activeCategoryQuery = query;
 
-    if (elements.searchInput) {
-      elements.searchInput.value = "";
+    const searchInput = elements.searchInput || document.getElementById("product-search");
+    if (searchInput) {
+      searchInput.value = "";
       state.searchQuery = "";
       updateClearSearchButton();
     }
@@ -374,9 +407,10 @@
   }
 
   function highlightActiveCategoryPill(activeQuery) {
-    if (!elements.categoriesNav) return;
+    const categoriesNav = elements.categoriesNav || document.getElementById("products-categories");
+    if (!categoriesNav) return;
 
-    elements.categoriesNav
+    categoriesNav
       .querySelectorAll(".category-pill")
       .forEach(pill => {
         const isMatch = pill.dataset.query === activeQuery;
@@ -387,30 +421,51 @@
 
 
   /* ==========================================================================
-     11. PAGE HEADING & COMPREHENSIVE SORT COMPARISON
+     11. FILTERING, SORTING & PAGE HEADING
      ========================================================================== */
 
   function updatePageHeading(query) {
-    if (!elements.pageHeading) return;
+    const pageHeading = elements.pageHeading || document.getElementById("page-heading");
+    if (!pageHeading) return;
 
     if (!query) {
-      elements.pageHeading.textContent = "Featured Products";
+      pageHeading.textContent = "Featured Products";
       return;
     }
 
     const matchedCategory = CATEGORY_MAP.find(cat => cat.query === query);
     if (matchedCategory && matchedCategory.label !== "All Items") {
-      elements.pageHeading.textContent = matchedCategory.label;
+      pageHeading.textContent = matchedCategory.label;
     } else {
-      elements.pageHeading.textContent = `Search: "${query}"`;
+      pageHeading.textContent = `Search: "${query}"`;
     }
   }
 
   function applyFiltersAndRender() {
     let result = [...state.products];
 
+    // Client-side query filter fallback
+    const activeQuery = (state.searchQuery || state.activeCategoryQuery || "").toLowerCase().trim();
+    if (activeQuery) {
+      result = result.filter(item => {
+        const name = String(item.name || "").toLowerCase();
+        const category = String(item.category || "").toLowerCase();
+        return name.includes(activeQuery) || category.includes(activeQuery);
+      });
+    }
+
     result.sort(sortProducts);
     state.filteredProducts = result;
+
+    if (state.filteredProducts.length === 0) {
+      const q = state.searchQuery || state.activeCategoryQuery;
+      renderEmptyState(
+        q
+          ? `No available items found matching "${escapeHtml(q)}".`
+          : "No active products available at the moment."
+      );
+      return;
+    }
 
     renderProductGrid();
     updateResultsCount();
@@ -424,7 +479,6 @@
     const ratingA = Number(a.rating) || 0;
     const ratingB = Number(b.rating) || 0;
 
-    // Normalize state key into lowercase alphanumeric string
     const key = String(state.sortBy || "")
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "");
@@ -490,18 +544,14 @@
 
 
   /* ==========================================================================
-     12. RENDER PRODUCT GRID & CARDS
+     12. RENDER GRID & CARDS
      ========================================================================== */
 
   function renderProductGrid() {
-    if (!elements.productList) return;
+    const productList = elements.productList || document.getElementById("product-list");
+    if (!productList) return;
 
-    if (state.filteredProducts.length === 0) {
-      renderEmptyState("No products match your current criteria.");
-      return;
-    }
-
-    elements.productList.innerHTML = state.filteredProducts
+    productList.innerHTML = state.filteredProducts
       .map(renderProductCard)
       .join("");
 
@@ -591,7 +641,9 @@
     if (typeof window.addToCart === "function") {
       window.addToCart(product);
     } else {
-      document.dispatchEvent(new CustomEvent("cart:add", { detail: product }));
+      const cartEvent = new CustomEvent("cart:add", { detail: product });
+      document.dispatchEvent(cartEvent);
+      window.dispatchEvent(cartEvent);
     }
 
     const originalText = button.textContent;
@@ -612,56 +664,67 @@
      ========================================================================== */
 
   function showLoadingState() {
-    if (!elements.productList) return;
-    elements.productList.innerHTML = `
+    const productList = elements.productList || document.getElementById("product-list");
+    if (!productList) return;
+
+    productList.innerHTML = `
       <div class="product-status-card products-empty" role="status">
         <div class="spinner" aria-hidden="true"></div>
         <h3>Fetching available products...</h3>
         <p>Connecting to catalog...</p>
       </div>
     `;
-    if (elements.resultsCount) elements.resultsCount.textContent = "Loading...";
+    const resultsCount = elements.resultsCount || document.getElementById("results-count");
+    if (resultsCount) resultsCount.textContent = "Loading...";
   }
 
   function setLoadingState(isLoading) {
-    if (!elements.productList) return;
-    elements.productList.setAttribute("aria-busy", isLoading ? "true" : "false");
+    const productList = elements.productList || document.getElementById("product-list");
+    if (!productList) return;
+    productList.setAttribute("aria-busy", isLoading ? "true" : "false");
   }
 
   function renderEmptyState(message) {
-    if (!elements.productList) return;
-    elements.productList.innerHTML = `
+    const productList = elements.productList || document.getElementById("product-list");
+    if (!productList) return;
+
+    productList.innerHTML = `
       <div class="product-status-card products-empty" role="status">
         <h3>No Products Found</h3>
         <p>${escapeHtml(message)}</p>
       </div>
     `;
-    if (elements.resultsCount) elements.resultsCount.textContent = "0 products found";
+    const resultsCount = elements.resultsCount || document.getElementById("results-count");
+    if (resultsCount) resultsCount.textContent = "0 products found";
     setLoadingState(false);
   }
 
   function renderErrorState(message) {
-    if (!elements.productList) return;
-    elements.productList.innerHTML = `
+    const productList = elements.productList || document.getElementById("product-list");
+    if (!productList) return;
+
+    productList.innerHTML = `
       <div class="product-status-card products-error" role="alert">
         <h3>Unable to Load Products</h3>
         <p>${escapeHtml(message)}</p>
         <button type="button" class="button" data-action="retry-products">Try Again</button>
       </div>
     `;
-    if (elements.resultsCount) elements.resultsCount.textContent = "Error loading products";
+    const resultsCount = elements.resultsCount || document.getElementById("results-count");
+    if (resultsCount) resultsCount.textContent = "Error loading products";
     setLoadingState(false);
 
-    const retryBtn = elements.productList.querySelector('[data-action="retry-products"]');
+    const retryBtn = productList.querySelector('[data-action="retry-products"]');
     if (retryBtn) {
       retryBtn.addEventListener("click", () => loadProducts(), { once: true });
     }
   }
 
   function updateResultsCount() {
-    if (!elements.resultsCount) return;
+    const resultsCount = elements.resultsCount || document.getElementById("results-count");
+    if (!resultsCount) return;
     const count = state.filteredProducts.length;
-    elements.resultsCount.textContent = `${count} ${count === 1 ? "product" : "products"} available`;
+    resultsCount.textContent = `${count} ${count === 1 ? "product" : "products"} available`;
   }
 
   function formatPrice(amount) {
@@ -680,10 +743,11 @@
   }
 
   function announceToScreenReader(message) {
-    if (!elements.liveRegion) return;
-    elements.liveRegion.textContent = "";
+    const liveRegion = elements.liveRegion || document.getElementById("aria-live-region");
+    if (!liveRegion) return;
+    liveRegion.textContent = "";
     window.setTimeout(() => {
-      elements.liveRegion.textContent = String(message || "");
+      liveRegion.textContent = String(message || "");
     }, 30);
   }
 
