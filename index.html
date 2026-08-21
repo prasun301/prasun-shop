@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -13,7 +14,7 @@
 
     <meta
         name="description"
-        content="Shop Home Improvement, Solar, lighting and smart home products at PRASUN SHOP."
+        content="Shop Home Improvement, Solar, lighting, smart home and practical products at PRASUN SHOP."
     >
 
     <meta
@@ -42,30 +43,48 @@
         sizes="any"
     >
 
-    <!-- Main stylesheet -->
+    <!-- ================================================================
+         MAIN STYLESHEET
+         ================================================================ -->
+
     <link
         rel="stylesheet"
-        href="/css/style.css?v=20260821-06"
+        href="/css/style.css?v=20260821-07"
     >
 
-    <!-- Google Analytics -->
+
+    <!-- ================================================================
+         GOOGLE ANALYTICS
+         ================================================================ -->
+
     <script
         async
         src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"
     ></script>
 
     <script>
-        window.dataLayer = window.dataLayer || [];
+
+        window.dataLayer =
+            window.dataLayer || [];
 
         function gtag() {
             dataLayer.push(arguments);
         }
 
         gtag("js", new Date());
-        gtag("config", "G-D9F2VQ4247");
+
+        gtag(
+            "config",
+            "G-D9F2VQ4247"
+        );
+
     </script>
 
-    <!-- Google AdSense -->
+
+    <!-- ================================================================
+         GOOGLE ADSENSE
+         ================================================================ -->
+
     <script
         async
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168"
@@ -77,6 +96,7 @@
 
 <body>
 
+
     <!-- ================================================================
          HEADER
          ================================================================ -->
@@ -87,8 +107,8 @@
 
             <a
                 href="/"
-                class="site-logo logo"
-                aria-label="PRASUN SHOP Home"
+                class="site-logo"
+                aria-label="PRASUN SHOP home"
             >
 
                 <svg
@@ -101,13 +121,20 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     aria-hidden="true"
+                    focusable="false"
                 >
+
                     <path d="M3 9l9-6 9 6"></path>
+
                     <path d="M5 10v10h14V10"></path>
+
                     <path d="M9 20v-6h6v6"></path>
+
                 </svg>
 
-                <span>PRASUN SHOP</span>
+                <span>
+                    PRASUN SHOP
+                </span>
 
             </a>
 
@@ -125,23 +152,46 @@
                     Shop
                 </a>
 
+
                 <a
                     href="/cart.html"
                     class="cart-link"
-                    aria-label="View shopping cart"
+                    aria-label="Shopping cart"
                 >
 
                     <svg
                         class="ui-icon ui-icon-sm"
                         viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                         aria-hidden="true"
+                        focusable="false"
                     >
-                        <circle cx="9" cy="20" r="1.5"></circle>
-                        <circle cx="18" cy="20" r="1.5"></circle>
-                        <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.5a2 2 0 0 0 1.9-1.5L21 8H6"></path>
+
+                        <circle
+                            cx="9"
+                            cy="20"
+                            r="1.25"
+                        ></circle>
+
+                        <circle
+                            cx="18"
+                            cy="20"
+                            r="1.25"
+                        ></circle>
+
+                        <path
+                            d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.5a2 2 0 0 0 1.9-1.5L21 8H6"
+                        ></path>
+
                     </svg>
 
-                    <span>Cart</span>
+                    <span class="cart-link-label">
+                        Cart
+                    </span>
 
                     <span
                         id="cart-count"
@@ -154,12 +204,14 @@
 
                 </a>
 
+
                 <a
                     href="/about.html"
                     class="nav-link"
                 >
                     About
                 </a>
+
 
                 <a
                     href="/contact.html"
@@ -176,7 +228,7 @@
 
 
     <!-- ================================================================
-         MAIN
+         MAIN SHOP
          ================================================================ -->
 
     <main
@@ -188,7 +240,7 @@
 
 
             <!-- ========================================================
-                 PAGE HEADER
+                 PAGE INTRO
                  ======================================================== -->
 
             <header class="products-header">
@@ -197,18 +249,19 @@
                     id="products-heading"
                     class="shop-title"
                 >
-                    Home Improvement & Solar
+                    Home Improvement &amp; Solar
                 </h1>
 
                 <p class="shop-subtitle">
-                    Practical products for your home, solar and everyday needs.
+                    Practical products for home, solar, lighting,
+                    smart home and everyday needs.
                 </p>
 
             </header>
 
 
             <!-- ========================================================
-                 SEARCH / SORT
+                 SEARCH AND SORT
                  ======================================================== -->
 
             <section
@@ -227,16 +280,43 @@
                         Search products
                     </label>
 
+
+                    <svg
+                        class="ui-icon ui-icon-sm search-input-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+
+                        <circle
+                            cx="11"
+                            cy="11"
+                            r="7"
+                        ></circle>
+
+                        <path
+                            d="m20 20-4-4"
+                        ></path>
+
+                    </svg>
+
+
                     <input
                         id="product-search"
                         class="products-search-input"
                         type="search"
-                        placeholder="Search products..."
+                        placeholder="Search products"
                         autocomplete="off"
                         spellcheck="false"
                         enterkeyhint="search"
                         aria-label="Search products"
                     >
+
 
                     <button
                         id="clear-search"
@@ -249,10 +329,19 @@
                         <svg
                             class="ui-icon ui-icon-sm"
                             viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
                             aria-hidden="true"
+                            focusable="false"
                         >
+
                             <path d="M6 6l12 12"></path>
+
                             <path d="M18 6L6 18"></path>
+
                         </svg>
 
                     </button>
@@ -267,11 +356,13 @@
                     Sort products
                 </label>
 
+
                 <select
                     id="product-sort"
                     class="product-sort"
                     aria-label="Sort products"
                 >
+
                     <option value="featured">
                         Featured
                     </option>
@@ -291,6 +382,7 @@
                     <option value="Z to A">
                         Name: Z to A
                     </option>
+
                 </select>
 
             </section>
@@ -298,6 +390,9 @@
 
             <!-- ========================================================
                  CATEGORIES
+
+                 products.js replaces these dynamically.
+                 Keeping one initial button prevents an empty flash.
                  ======================================================== -->
 
             <nav
@@ -315,47 +410,11 @@
                     All Items
                 </button>
 
-                <button
-                    type="button"
-                    class="category-pill"
-                    data-query="solar light"
-                    aria-pressed="false"
-                >
-                    Solar Lights
-                </button>
-
-                <button
-                    type="button"
-                    class="category-pill"
-                    data-query="consumer electronics"
-                    aria-pressed="false"
-                >
-                    Consumer Electronics
-                </button>
-
-                <button
-                    type="button"
-                    class="category-pill"
-                    data-query="wireless charger"
-                    aria-pressed="false"
-                >
-                    Wireless Chargers
-                </button>
-
-                <button
-                    type="button"
-                    class="category-pill"
-                    data-query="smart home"
-                    aria-pressed="false"
-                >
-                    Smart Home
-                </button>
-
             </nav>
 
 
             <!-- ========================================================
-                 RESULTS
+                 RESULTS BAR
                  ======================================================== -->
 
             <div
@@ -366,6 +425,7 @@
                 <span id="page-heading">
                     Featured Products
                 </span>
+
 
                 <span
                     id="results-count"
@@ -399,12 +459,14 @@
                         aria-hidden="true"
                     ></div>
 
+
                     <h3>
                         Loading Products
                     </h3>
 
+
                     <p>
-                        Loading the latest products.
+                        Fetching the latest catalog.
                     </p>
 
                 </div>
@@ -414,6 +476,75 @@
         </div>
 
     </main>
+
+
+    <!-- ================================================================
+         PRODUCT DETAILS MODAL
+
+         REQUIRED BY products.js
+
+         The modal is empty initially.
+         products.js inserts:
+         - product image
+         - gallery
+         - product title
+         - category
+         - price
+         - stock
+         - full CJ description
+         - Add to Cart button
+         ================================================================ -->
+
+    <div
+        id="product-modal"
+        class="product-modal"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-content-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+        >
+
+            <button
+                id="modal-close"
+                class="modal-close-btn"
+                type="button"
+                aria-label="Close product details"
+                title="Close"
+            >
+
+                <svg
+                    class="ui-icon ui-icon-md"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+
+                    <path d="M6 6l12 12"></path>
+
+                    <path d="M18 6L6 18"></path>
+
+                </svg>
+
+            </button>
+
+
+            <div
+                id="modal-body"
+                class="modal-grid"
+            ></div>
+
+        </div>
+
+    </div>
 
 
     <!-- ================================================================
@@ -456,8 +587,10 @@
 
             </div>
 
+
             <p>
                 &copy; 2026 PRASUN SHOP by
+
                 <a
                     href="https://prasunbarua.com"
                     target="_blank"
@@ -465,6 +598,7 @@
                 >
                     Prasun Barua
                 </a>.
+
                 All rights reserved.
             </p>
 
@@ -474,21 +608,21 @@
 
 
     <!-- ================================================================
-         CART
+         CART SYSTEM
          ================================================================ -->
 
     <script
-        src="/js/cart.js?v=20260821-05"
+        src="/js/cart.js?v=20260821-06"
         defer
     ></script>
 
 
     <!-- ================================================================
-         PRODUCTS
+         PRODUCT SYSTEM
          ================================================================ -->
 
     <script
-        src="/js/products.js?v=20260821-06"
+        src="/js/products.js?v=20260821-07"
         defer
     ></script>
 
