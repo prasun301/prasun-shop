@@ -5,48 +5,24 @@
  *
  * js/products.js
  *
- * Production-ready CJ Dropshipping storefront product manager.
+ * CJ Dropshipping + Cloudflare Worker storefront manager.
  *
- * DATA FLOW
- *
- *     CJ Dropshipping
- *            ↓
- *     Cloudflare Worker
- *            ↓
- *     /api/products
- *            ↓
- *     products.js
- *            ↓
- *     Product grid
- *            ↓
- *     window.addToCart()
- *
- *
- * IMAGE FLOW
- *
- *     CJ original image
- *            ↓
- *     Cloudflare Worker image proxy
- *            ↓
- *     product.image
- *            ↓
- *     Product card
- *
- *
- * IMPORTANT
- *
- * - No Unsplash.
- * - No stock-photo URLs.
- * - No hard-coded product images.
- * - CJ images are the only real product images used.
- * - Local inline SVG is used only as a neutral final placeholder.
- * - No CJ credentials are exposed in the browser.
- * - Product price and stock remain server-authoritative.
- * - CJ PID / VID / SKU / variants are preserved.
- * - No emoji.
- * - No Material Symbols dependency.
- * - All dynamic UI icons use inline SVG.
- *
+ * FEATURES
+ * - Loads products from Cloudflare Worker
+ * - Uses original CJ product images through Worker proxy
+ * - Displays CJ descriptions
+ * - Restores View Details modal
+ * - Supports CJ image galleries
+ * - Supports CJ PID / SKU / VID / variants
+ * - Search
+ * - Category filtering
+ * - Sorting
+ * - Cart integration
+ * - No Unsplash
+ * - No external stock images
+ * - No Material Symbols dependency
+ * - No emoji
+ * - Inline SVG icons only
  * ============================================================================
  */
 
@@ -59,7 +35,6 @@
        ========================================================================= */
 
     const CONFIG = {
-
         API_BASE:
             "https://prasun-shop-api.prasun301.workers.dev",
 
@@ -83,23 +58,20 @@
 
         DEFAULT_CATEGORY:
             "Home Improvement / Solar"
-
     };
 
 
     /* =========================================================================
-       2. LOCAL IMAGE PLACEHOLDER
+       2. LOCAL PLACEHOLDER
        ========================================================================= */
 
     const PLACEHOLDER_IMAGE =
         "data:image/svg+xml;charset=UTF-8," +
         encodeURIComponent(`
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="600"
-                height="600"
-                viewBox="0 0 600 600"
-            >
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 width="600"
+                 height="600"
+                 viewBox="0 0 600 600">
 
                 <rect
                     width="600"
@@ -124,14 +96,7 @@
                 />
 
                 <path
-                    d="
-                        M180 335
-                        L265 255
-                        L325 315
-                        L385 270
-                        L430 335
-                        Z
-                    "
+                    d="M180 335 L265 255 L325 315 L385 270 L430 335 Z"
                     fill="#cbd5e1"
                 />
 
@@ -151,51 +116,30 @@
 
 
     /* =========================================================================
-       3. CATEGORY MAP
+       3. CATEGORIES
        ========================================================================= */
 
     const CATEGORY_MAP = [
-
         {
-            label:
-                "All Items",
-
-            query:
-                ""
+            label: "All Items",
+            query: ""
         },
-
         {
-            label:
-                "Solar Lights",
-
-            query:
-                "solar light"
+            label: "Solar Lights",
+            query: "solar light"
         },
-
         {
-            label:
-                "Consumer Electronics",
-
-            query:
-                "consumer electronics"
+            label: "Consumer Electronics",
+            query: "consumer electronics"
         },
-
         {
-            label:
-                "Wireless Chargers",
-
-            query:
-                "wireless charger"
+            label: "Wireless Chargers",
+            query: "wireless charger"
         },
-
         {
-            label:
-                "Smart Home",
-
-            query:
-                "smart home"
+            label: "Smart Home",
+            query: "smart home"
         }
-
     ];
 
 
@@ -204,68 +148,36 @@
        ========================================================================= */
 
     const state = {
-
-        products:
-            [],
-
-        filteredProducts:
-            [],
-
-        activeCategoryQuery:
-            "",
-
-        searchQuery:
-            "",
-
-        sortBy:
-            "featured",
-
-        loading:
-            false,
-
-        requestSequence:
-            0
-
+        products: [],
+        filteredProducts: [],
+        activeCategoryQuery: "",
+        searchQuery: "",
+        sortBy: "featured",
+        loading: false,
+        requestSequence: 0
     };
 
-
-    let activeAbortController =
-        null;
-
-    let searchDebounceTimer =
-        null;
+    let activeAbortController = null;
+    let searchDebounceTimer = null;
 
 
     /* =========================================================================
-       5. DOM ELEMENTS
+       5. DOM
        ========================================================================= */
 
     const elements = {
+        productList: null,
+        resultsCount: null,
+        searchInput: null,
+        clearSearchButton: null,
+        sortSelect: null,
+        categoriesNav: null,
+        pageHeading: null,
+        liveRegion: null,
 
-        productList:
-            null,
-
-        resultsCount:
-            null,
-
-        searchInput:
-            null,
-
-        clearSearchButton:
-            null,
-
-        sortSelect:
-            null,
-
-        categoriesNav:
-            null,
-
-        pageHeading:
-            null,
-
-        liveRegion:
-            null
-
+        productModal: null,
+        modalBody: null,
+        modalClose: null
     };
 
 
@@ -273,18 +185,12 @@
        6. INITIALIZATION
        ========================================================================= */
 
-    if (
-        document.readyState ===
-        "loading"
-    ) {
+    if (document.readyState === "loading") {
 
         document.addEventListener(
             "DOMContentLoaded",
             initialize,
-            {
-                once:
-                    true
-            }
+            { once: true }
         );
 
     } else {
@@ -306,9 +212,7 @@
 
         updateClearSearchButton();
 
-        updatePageHeading(
-            ""
-        );
+        updatePageHeading("");
 
         loadProducts();
 
@@ -322,69 +226,46 @@
     function cacheDOM() {
 
         elements.productList =
-            document.getElementById(
-                "product-list"
-            );
-
+            document.getElementById("product-list");
 
         elements.resultsCount =
-            document.getElementById(
-                "results-count"
-            );
-
+            document.getElementById("results-count");
 
         elements.searchInput =
-            document.getElementById(
-                "product-search"
-            );
-
+            document.getElementById("product-search");
 
         elements.clearSearchButton =
-            document.getElementById(
-                "clear-search"
-            );
-
+            document.getElementById("clear-search");
 
         elements.sortSelect =
             findSortSelect();
 
-
         elements.categoriesNav =
-            document.getElementById(
-                "products-categories"
-            );
-
+            document.getElementById("products-categories");
 
         elements.pageHeading =
-            document.getElementById(
-                "page-heading"
-            );
-
+            document.getElementById("page-heading");
 
         elements.liveRegion =
-            document.getElementById(
-                "aria-live-region"
-            );
+            document.getElementById("aria-live-region");
 
+        elements.productModal =
+            document.getElementById("product-modal");
+
+        elements.modalBody =
+            document.getElementById("modal-body");
+
+        elements.modalClose =
+            document.getElementById("modal-close");
     }
 
 
     function findSortSelect() {
 
         return (
-
-            document.getElementById(
-                "product-sort"
-            ) ||
-
-            document.querySelector(
-                "select.product-sort"
-            ) ||
-
-            document.querySelector(
-                "select[name='sort']"
-            )
-
+            document.getElementById("product-sort") ||
+            document.querySelector("select.product-sort") ||
+            document.querySelector("select[name='sort']")
         );
 
     }
@@ -392,48 +273,33 @@
 
     function loadInitialSort() {
 
-        const sort =
-            findSortSelect();
+        const sort = findSortSelect();
 
-
-        if (
-            sort &&
-            sort.value
-        ) {
-
-            state.sortBy =
-                sort.value;
-
+        if (sort && sort.value) {
+            state.sortBy = sort.value;
         }
 
     }
 
 
     /* =========================================================================
-       8. INLINE SVG ICON SYSTEM
+       8. INLINE SVG ICONS
        ========================================================================= */
 
     function svgIcon(
         name,
-        className =
-            "ui-icon"
+        className = "ui-icon"
     ) {
 
-        const safeClass =
-            escapeHTML(
-                className
-            );
-
+        const safeClass = escapeHTML(className);
 
         const icons = {
 
             apps: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
                     <rect x="4" y="4" width="6" height="6" rx="1"></rect>
                     <rect x="14" y="4" width="6" height="6" rx="1"></rect>
                     <rect x="4" y="14" width="6" height="6" rx="1"></rect>
@@ -442,45 +308,39 @@
             `,
 
             category: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
-                    <path d="M4 5h6v6H4z"></path>
-                    <path d="M14 5h6v6h-6z"></path>
-                    <path d="M4 15h6v4H4z"></path>
-                    <path d="M14 15h6v4h-6z"></path>
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
+                    <rect x="4" y="4" width="6" height="6" rx="1"></rect>
+                    <rect x="14" y="4" width="6" height="6" rx="1"></rect>
+                    <rect x="4" y="14" width="6" height="6" rx="1"></rect>
+                    <rect x="14" y="14" width="6" height="6" rx="1"></rect>
                 </svg>
             `,
 
             light_mode: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
                     <circle cx="12" cy="12" r="4"></circle>
                     <path d="M12 2v2"></path>
                     <path d="M12 20v2"></path>
-                    <path d="m4.93 4.93 1.41 1.41"></path>
-                    <path d="m17.66 17.66 1.41 1.41"></path>
                     <path d="M2 12h2"></path>
                     <path d="M20 12h2"></path>
+                    <path d="m4.93 4.93 1.41 1.41"></path>
+                    <path d="m17.66 17.66 1.41 1.41"></path>
+                    <path d="m17.66 6.34 1.41-1.41"></path>
                     <path d="m6.34 17.66-1.41 1.41"></path>
-                    <path d="m19.07 4.93-1.41 1.41"></path>
                 </svg>
             `,
 
             devices: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
                     <rect x="3" y="4" width="14" height="11" rx="2"></rect>
                     <path d="M7 20h6"></path>
                     <path d="M10 15v5"></path>
@@ -489,218 +349,147 @@
             `,
 
             battery: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
                     <rect x="3" y="7" width="17" height="10" rx="2"></rect>
                     <path d="M21 10v4"></path>
                     <path d="M8 12h7"></path>
-                    <path d="M11.5 9.5 10 12h3.5L12 14.5"></path>
                 </svg>
             `,
 
             smart_home: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
                     <path d="M3 11 12 4l9 7"></path>
                     <path d="M5 10v10h14V10"></path>
                     <path d="M9 20v-5h6v5"></path>
-                    <circle cx="17" cy="8" r="2"></circle>
                 </svg>
             `,
 
             star: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
-                    <path
-                        d="
-                            m12 3
-                            2.9 5.9
-                            6.5.9
-                            -4.7 4.6
-                            1.1 6.5
-                            -5.8-3.1
-                            -5.8 3.1
-                            1.1-6.5
-                            -4.7-4.6
-                            6.5-.9
-                            z
-                        "
-                    ></path>
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
+                    <path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"></path>
                 </svg>
             `,
 
             eye: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
-                    <path
-                        d="
-                            M2 12
-                            s3.5-6
-                            10-6
-                            10 6
-                            10 6
-                            -3.5 6
-                            -10 6
-                            S2 12 2 12Z
-                        "
-                    ></path>
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
+                    <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
                     <circle cx="12" cy="12" r="2.5"></circle>
                 </svg>
             `,
 
             add_cart: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
                     <circle cx="9" cy="20" r="1"></circle>
                     <circle cx="19" cy="20" r="1"></circle>
-                    <path
-                        d="
-                            M3 4h2
-                            l2.4 11.2
-                            a2 2 0 0 0 2 1.6h8.8
-                            a2 2 0 0 0 1.9-1.4L22 8H6
-                        "
-                    ></path>
+                    <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"></path>
                     <path d="M16 4v5"></path>
                     <path d="M13.5 6.5h5"></path>
                 </svg>
             `,
 
             check: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
                     <path d="m5 12 4 4L19 6"></path>
                 </svg>
             `,
 
             inventory: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
                     <path d="M4 7h16v13H4z"></path>
                     <path d="M8 7V4h8v3"></path>
                     <path d="M8 11h8"></path>
-                    <path d="M8 15h5"></path>
                 </svg>
             `,
 
             refresh: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
                     <path d="M20 11a8 8 0 1 0 1 4"></path>
                     <path d="M20 4v7h-7"></path>
                 </svg>
             `,
 
             error: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
                     <circle cx="12" cy="12" r="9"></circle>
                     <path d="M12 8v5"></path>
                     <path d="M12 16h.01"></path>
+                </svg>
+            `,
+
+            close: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
+                    <path d="M6 6l12 12"></path>
+                    <path d="M18 6L6 18"></path>
+                </svg>
+            `,
+
+            plus: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true"
+                     focusable="false">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
                 </svg>
             `
 
         };
 
-
-        return (
-            icons[name] ||
-            icons.category
-        );
+        return icons[name] || icons.category;
 
     }
 
 
-    function getCategoryIcon(
-        query
-    ) {
+    function getCategoryIcon(query) {
 
         const value =
-            String(
-                query ||
-                ""
-            ).toLowerCase();
+            String(query || "").toLowerCase();
 
-
-        if (
-            value.includes(
-                "solar"
-            )
-        ) {
-
+        if (value.includes("solar")) {
             return "light_mode";
-
         }
 
-
-        if (
-            value.includes(
-                "electronic"
-            )
-        ) {
-
+        if (value.includes("electronic")) {
             return "devices";
-
         }
 
-
-        if (
-            value.includes(
-                "wireless"
-            )
-        ) {
-
+        if (value.includes("wireless")) {
             return "battery";
-
         }
 
-
-        if (
-            value.includes(
-                "smart"
-            )
-        ) {
-
+        if (value.includes("smart")) {
             return "smart_home";
-
         }
-
 
         return "category";
 
@@ -713,15 +502,12 @@
 
     function bindEvents() {
 
-        if (
-            elements.searchInput
-        ) {
+        if (elements.searchInput) {
 
             elements.searchInput.addEventListener(
                 "input",
                 handleSearchInput
             );
-
 
             elements.searchInput.addEventListener(
                 "keydown",
@@ -730,10 +516,7 @@
 
         }
 
-
-        if (
-            elements.clearSearchButton
-        ) {
+        if (elements.clearSearchButton) {
 
             elements.clearSearchButton.addEventListener(
                 "click",
@@ -742,10 +525,7 @@
 
         }
 
-
-        if (
-            elements.sortSelect
-        ) {
+        if (elements.sortSelect) {
 
             elements.sortSelect.addEventListener(
                 "change",
@@ -754,49 +534,7 @@
 
         }
 
-
-        document.addEventListener(
-            "change",
-            event => {
-
-                const target =
-                    event.target;
-
-
-                if (
-                    !target
-                ) {
-
-                    return;
-
-                }
-
-
-                if (
-                    target.id ===
-                        "product-sort" ||
-
-                    target.classList.contains(
-                        "product-sort"
-                    ) ||
-
-                    target.name ===
-                        "sort"
-                ) {
-
-                    handleSortChange(
-                        event
-                    );
-
-                }
-
-            }
-        );
-
-
-        if (
-            elements.categoriesNav
-        ) {
+        if (elements.categoriesNav) {
 
             elements.categoriesNav.addEventListener(
                 "click",
@@ -805,10 +543,7 @@
 
         }
 
-
-        if (
-            elements.productList
-        ) {
+        if (elements.productList) {
 
             elements.productList.addEventListener(
                 "click",
@@ -817,6 +552,54 @@
 
         }
 
+        if (elements.modalClose) {
+
+            elements.modalClose.addEventListener(
+                "click",
+                closeProductModal
+            );
+
+        }
+
+        if (elements.productModal) {
+
+            elements.productModal.addEventListener(
+                "click",
+                event => {
+
+                    if (
+                        event.target ===
+                        elements.productModal
+                    ) {
+
+                        closeProductModal();
+
+                    }
+
+                }
+            );
+
+        }
+
+        document.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "Escape" &&
+                    elements.productModal &&
+                    elements.productModal.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    closeProductModal();
+
+                }
+
+            }
+        );
+
     }
 
 
@@ -824,36 +607,26 @@
        10. SEARCH
        ========================================================================= */
 
-    function handleSearchInput(
-        event
-    ) {
+    function handleSearchInput(event) {
 
         state.searchQuery =
             String(
-                event.target?.value ||
-                ""
+                event.target?.value || ""
             ).trim();
 
-
         updateClearSearchButton();
-
 
         window.clearTimeout(
             searchDebounceTimer
         );
 
-
         searchDebounceTimer =
             window.setTimeout(
                 () => {
 
-                    state.activeCategoryQuery =
-                        "";
+                    state.activeCategoryQuery = "";
 
-                    highlightActiveCategoryPill(
-                        ""
-                    );
-
+                    highlightActiveCategoryPill("");
 
                     loadProducts(
                         state.searchQuery
@@ -866,36 +639,21 @@
     }
 
 
-    function handleSearchKeydown(
-        event
-    ) {
+    function handleSearchKeydown(event) {
 
-        if (
-            event.key !==
-            "Enter"
-        ) {
-
+        if (event.key !== "Enter") {
             return;
-
         }
 
-
         event.preventDefault();
-
 
         window.clearTimeout(
             searchDebounceTimer
         );
 
+        state.activeCategoryQuery = "";
 
-        state.activeCategoryQuery =
-            "";
-
-
-        highlightActiveCategoryPill(
-            ""
-        );
-
+        highlightActiveCategoryPill("");
 
         loadProducts(
             state.searchQuery
@@ -910,29 +668,20 @@
             searchDebounceTimer
         );
 
+        if (elements.searchInput) {
 
-        if (
-            elements.searchInput
-        ) {
-
-            elements.searchInput.value =
-                "";
+            elements.searchInput.value = "";
 
             elements.searchInput.focus();
 
         }
 
-
-        state.searchQuery =
-            "";
-
+        state.searchQuery = "";
 
         updateClearSearchButton();
 
-
         loadProducts(
-            state.activeCategoryQuery ||
-            ""
+            state.activeCategoryQuery || ""
         );
 
     }
@@ -941,36 +690,23 @@
     function updateClearSearchButton() {
 
         const button =
-            elements.clearSearchButton ||
-            document.getElementById(
-                "clear-search"
-            );
+            elements.clearSearchButton;
 
-
-        if (
-            !button
-        ) {
-
+        if (!button) {
             return;
-
         }
 
-
         button.hidden =
-            state.searchQuery.length ===
-            0;
+            state.searchQuery.length === 0;
 
     }
 
 
-    function handleSortChange(
-        event
-    ) {
+    function handleSortChange(event) {
 
         state.sortBy =
             event.target?.value ||
             "featured";
-
 
         applyFiltersAndRender();
 
@@ -978,186 +714,131 @@
 
 
     /* =========================================================================
-       11. CATEGORY HANDLING
+       11. CATEGORY
        ========================================================================= */
 
     function renderCategoryPills() {
 
         const nav =
-            elements.categoriesNav ||
-            document.getElementById(
-                "products-categories"
-            );
+            elements.categoriesNav;
 
-
-        if (
-            !nav
-        ) {
-
+        if (!nav) {
             return;
-
         }
-
 
         nav.innerHTML =
             CATEGORY_MAP
-                .map(
-                    category => {
+                .map(category => {
 
-                        const active =
-                            category.query ===
-                            state.activeCategoryQuery;
+                    const active =
+                        category.query ===
+                        state.activeCategoryQuery;
 
+                    const icon =
+                        category.query
+                            ? getCategoryIcon(
+                                category.query
+                            )
+                            : "apps";
 
-                        const icon =
-                            category.query
-                                ? getCategoryIcon(
-                                    category.query
-                                )
-                                : "apps";
+                    return `
+                        <button
+                            type="button"
+                            class="category-pill${
+                                active
+                                    ? " active"
+                                    : ""
+                            }"
+                            data-query="${escapeHTML(
+                                category.query
+                            )}"
+                            aria-pressed="${
+                                active
+                                    ? "true"
+                                    : "false"
+                            }"
+                        >
 
+                            ${svgIcon(
+                                icon,
+                                "ui-icon ui-icon-sm"
+                            )}
 
-                        return `
-
-                            <button
-                                type="button"
-                                class="category-pill${
-                                    active
-                                        ? " active"
-                                        : ""
-                                }"
-                                data-query="${escapeHTML(
-                                    category.query
-                                )}"
-                                aria-pressed="${
-                                    active
-                                        ? "true"
-                                        : "false"
-                                }"
-                            >
-
-                                ${svgIcon(
-                                    icon,
-                                    "ui-icon ui-icon-sm"
+                            <span>
+                                ${escapeHTML(
+                                    category.label
                                 )}
+                            </span>
 
-                                <span>
-                                    ${escapeHTML(
-                                        category.label
-                                    )}
-                                </span>
+                        </button>
+                    `;
 
-                            </button>
-
-                        `;
-
-                    }
-                )
+                })
                 .join("");
 
     }
 
 
-    function handleCategoryClick(
-        event
-    ) {
+    function handleCategoryClick(event) {
 
         const button =
             event.target.closest(
                 ".category-pill"
             );
 
-
-        if (
-            !button
-        ) {
-
+        if (!button) {
             return;
-
         }
-
 
         const query =
             String(
-                button.dataset.query ||
-                ""
+                button.dataset.query || ""
             ).trim();
-
 
         state.activeCategoryQuery =
             query;
 
+        state.searchQuery = "";
 
-        state.searchQuery =
-            "";
-
-
-        if (
-            elements.searchInput
-        ) {
-
-            elements.searchInput.value =
-                "";
-
+        if (elements.searchInput) {
+            elements.searchInput.value = "";
         }
 
-
         updateClearSearchButton();
-
 
         highlightActiveCategoryPill(
             query
         );
 
-
-        loadProducts(
-            query
-        );
+        loadProducts(query);
 
     }
 
 
-    function highlightActiveCategoryPill(
-        query
-    ) {
+    function highlightActiveCategoryPill(query) {
 
-        const nav =
-            elements.categoriesNav ||
-            document.getElementById(
-                "products-categories"
-            );
-
-
-        if (
-            !nav
-        ) {
-
+        if (!elements.categoriesNav) {
             return;
-
         }
 
-
-        nav.querySelectorAll(
-            ".category-pill"
-        ).forEach(
-            button => {
+        elements.categoriesNav
+            .querySelectorAll(
+                ".category-pill"
+            )
+            .forEach(button => {
 
                 const active =
                     String(
-                        button.dataset.query ||
-                        ""
+                        button.dataset.query || ""
                     ) ===
                     String(
-                        query ||
-                        ""
+                        query || ""
                     );
-
 
                 button.classList.toggle(
                     "active",
                     active
                 );
-
 
                 button.setAttribute(
                     "aria-pressed",
@@ -1166,67 +847,45 @@
                         : "false"
                 );
 
-            }
-        );
+            });
 
     }
 
 
     /* =========================================================================
-       12. API
+       12. PRODUCT API
        ========================================================================= */
 
-    async function loadProducts(
-        query = ""
-    ) {
+    async function loadProducts(query = "") {
 
         const requestId =
             ++state.requestSequence;
 
-
-        if (
-            activeAbortController
-        ) {
-
+        if (activeAbortController) {
             activeAbortController.abort();
-
         }
-
 
         activeAbortController =
             new AbortController();
 
-
         const controller =
             activeAbortController;
 
+        state.loading = true;
 
-        state.loading =
-            true;
-
-
-        setLoadingState(
-            true
-        );
-
+        setLoadingState(true);
 
         renderLoadingState();
 
-
         const cleanQuery =
             String(
-                query ||
-                ""
+                query || ""
             ).trim();
-
 
         let apiUrl =
             `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`;
 
-
-        if (
-            cleanQuery
-        ) {
+        if (cleanQuery) {
 
             apiUrl +=
                 `?q=${encodeURIComponent(
@@ -1235,17 +894,11 @@
 
         }
 
-
         const timer =
             window.setTimeout(
-                () => {
-
-                    controller.abort();
-
-                },
+                () => controller.abort(),
                 CONFIG.REQUEST_TIMEOUT
             );
-
 
         try {
 
@@ -1253,27 +906,18 @@
                 await fetch(
                     apiUrl,
                     {
-                        method:
-                            "GET",
-
-                        headers:
-                            {
-                                Accept:
-                                    "application/json"
-                            },
-
-                        cache:
-                            "no-store",
-
+                        method: "GET",
+                        headers: {
+                            Accept:
+                                "application/json"
+                        },
+                        cache: "no-store",
                         signal:
                             controller.signal
                     }
                 );
 
-
-            if (
-                !response.ok
-            ) {
+            if (!response.ok) {
 
                 throw new Error(
                     `Product service returned HTTP ${response.status}.`
@@ -1281,15 +925,10 @@
 
             }
 
-
             const data =
                 await response.json();
 
-
-            if (
-                data?.success ===
-                false
-            ) {
+            if (data?.success === false) {
 
                 throw new Error(
                     data.error ||
@@ -1298,12 +937,8 @@
 
             }
 
-
             const rawProducts =
-                extractProducts(
-                    data
-                );
-
+                extractProducts(data);
 
             const normalizedProducts =
                 rawProducts
@@ -1314,10 +949,7 @@
                     .map(
                         normalizeProduct
                     )
-                    .filter(
-                        Boolean
-                    );
-
+                    .filter(Boolean);
 
             if (
                 requestId !==
@@ -1328,22 +960,16 @@
 
             }
 
-
             state.products =
                 normalizedProducts;
-
 
             updatePageHeading(
                 cleanQuery
             );
 
-
             applyFiltersAndRender();
 
-
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             if (
                 error?.name ===
@@ -1354,12 +980,10 @@
 
             }
 
-
             console.error(
                 "[PRASUN SHOP] Product API error:",
                 error
             );
-
 
             if (
                 requestId ===
@@ -1379,19 +1003,14 @@
                 timer
             );
 
-
             if (
                 requestId ===
                 state.requestSequence
             ) {
 
-                state.loading =
-                    false;
+                state.loading = false;
 
-                setLoadingState(
-                    false
-                );
-
+                setLoadingState(false);
 
                 if (
                     activeAbortController ===
@@ -1410,64 +1029,27 @@
     }
 
 
-    function extractProducts(
-        data
-    ) {
+    function extractProducts(data) {
 
-        if (
-            Array.isArray(
-                data
-            )
-        ) {
-
+        if (Array.isArray(data)) {
             return data;
-
         }
 
-
-        if (
-            Array.isArray(
-                data?.products
-            )
-        ) {
-
+        if (Array.isArray(data?.products)) {
             return data.products;
-
         }
 
-
-        if (
-            Array.isArray(
-                data?.data?.products
-            )
-        ) {
-
+        if (Array.isArray(data?.data?.products)) {
             return data.data.products;
-
         }
 
-
-        if (
-            Array.isArray(
-                data?.data?.list
-            )
-        ) {
-
+        if (Array.isArray(data?.data?.list)) {
             return data.data.list;
-
         }
 
-
-        if (
-            Array.isArray(
-                data?.data
-            )
-        ) {
-
+        if (Array.isArray(data?.data)) {
             return data.data;
-
         }
-
 
         return [];
 
@@ -1475,88 +1057,55 @@
 
 
     /* =========================================================================
-       13. IMAGE NORMALIZATION
+       13. IMAGE HANDLING
        ========================================================================= */
 
-    function normalizeImageUrl(
-        value
-    ) {
+    function normalizeImageUrl(value) {
 
         if (
             !value ||
-            typeof value !==
-                "string"
+            typeof value !== "string"
         ) {
-
             return "";
-
         }
-
 
         let url =
             value.trim();
 
-
-        if (
-            !url
-        ) {
-
+        if (!url) {
             return "";
-
         }
-
 
         if (
             url.startsWith(
                 "data:image/"
             )
         ) {
-
             return url;
-
         }
 
-
-        if (
-            url.startsWith(
-                "//"
-            )
-        ) {
-
+        if (url.startsWith("//")) {
             url =
                 `https:${url}`;
-
         }
 
-
-        if (
-            /^http:\/\//i.test(
-                url
-            )
-        ) {
-
+        if (/^http:\/\//i.test(url)) {
             url =
                 url.replace(
                     /^http:\/\//i,
                     "https://"
                 );
-
         }
-
 
         return url;
 
     }
 
 
-    function isProxyUrl(
-        url
-    ) {
+    function isProxyUrl(url) {
 
         return (
-            typeof url ===
-                "string" &&
-
+            typeof url === "string" &&
             url.includes(
                 CONFIG.IMAGE_PROXY_ENDPOINT
             )
@@ -1565,24 +1114,16 @@
     }
 
 
-    function buildProxyUrl(
-        originalUrl
-    ) {
+    function buildProxyUrl(originalUrl) {
 
         const normalized =
             normalizeImageUrl(
                 originalUrl
             );
 
-
-        if (
-            !normalized
-        ) {
-
+        if (!normalized) {
             return "";
-
         }
-
 
         if (
             normalized.startsWith(
@@ -1594,17 +1135,9 @@
 
         }
 
-
-        if (
-            isProxyUrl(
-                normalized
-            )
-        ) {
-
+        if (isProxyUrl(normalized)) {
             return normalized;
-
         }
-
 
         return (
             `${CONFIG.API_BASE}${CONFIG.IMAGE_PROXY_ENDPOINT}` +
@@ -1616,70 +1149,53 @@
     }
 
 
-    function collectProductImageUrls(
-        product
-    ) {
+    function collectProductImageUrls(product) {
 
-        const candidates =
-            [];
+        const candidates = [];
 
+        if (product?.image) {
+            candidates.push(
+                product.image
+            );
+        }
 
-        candidates.push(
-            product?.image
-        );
-
-
-        if (
-            Array.isArray(
-                product?.images
-            )
-        ) {
-
+        if (Array.isArray(product?.images)) {
             candidates.push(
                 ...product.images
             );
-
         }
 
+        if (product?.originalImage) {
+            candidates.push(
+                product.originalImage
+            );
+        }
 
-        candidates.push(
-            product?.originalImage
-        );
-
-
-        if (
-            Array.isArray(
-                product?.originalImages
-            )
-        ) {
-
+        if (Array.isArray(product?.originalImages)) {
             candidates.push(
                 ...product.originalImages
             );
-
         }
 
+        if (product?.bigImage) {
+            candidates.push(
+                product.bigImage
+            );
+        }
 
-        candidates.push(
-            product?.bigImage
-        );
+        if (product?.productImage) {
+            candidates.push(
+                product.productImage
+            );
+        }
 
+        if (product?.productImg) {
+            candidates.push(
+                product.productImg
+            );
+        }
 
-        candidates.push(
-            product?.productImage
-        );
-
-
-        candidates.push(
-            product?.productImg
-        );
-
-
-        if (
-            Array.isArray(
-                product?.productImageSet
-            )
-        ) {
+        if (Array.isArray(product?.productImageSet)) {
 
             candidates.push(
                 ...product.productImageSet
@@ -1687,15 +1203,13 @@
 
         }
 
-
         if (
             typeof product?.productImageSet ===
-                "string"
+            "string"
         ) {
 
             candidates.push(
-                ...product
-                    .productImageSet
+                ...product.productImageSet
                     .split(",")
                     .map(
                         value =>
@@ -1705,66 +1219,47 @@
 
         }
 
-
         return [
             ...new Set(
                 candidates
                     .map(
                         normalizeImageUrl
                     )
-                    .filter(
-                        Boolean
-                    )
+                    .filter(Boolean)
             )
         ];
 
     }
 
 
-    function getPrimaryImage(
-        product
-    ) {
+    function getPrimaryImage(product) {
 
         const images =
             collectProductImageUrls(
                 product
             );
 
-
         const existingProxy =
             images.find(
                 isProxyUrl
             );
 
-
-        if (
-            existingProxy
-        ) {
-
+        if (existingProxy) {
             return existingProxy;
-
         }
 
-
-        if (
-            images.length > 0
-        ) {
-
+        if (images.length) {
             return buildProxyUrl(
                 images[0]
             );
-
         }
-
 
         return PLACEHOLDER_IMAGE;
 
     }
 
 
-    function getGalleryImages(
-        product
-    ) {
+    function getGalleryImages(product) {
 
         return [
             ...new Set(
@@ -1774,9 +1269,7 @@
                     .map(
                         buildProxyUrl
                     )
-                    .filter(
-                        Boolean
-                    )
+                    .filter(Boolean)
             )
         ];
 
@@ -1787,20 +1280,16 @@
        14. PRODUCT NORMALIZATION
        ========================================================================= */
 
-    function normalizeProduct(
-        raw
-    ) {
+    function normalizeProduct(raw) {
 
         if (
             !raw ||
-            typeof raw !==
-                "object"
+            typeof raw !== "object"
         ) {
 
             return null;
 
         }
-
 
         const id =
             String(
@@ -1811,7 +1300,6 @@
                 ""
             ).trim();
 
-
         const pid =
             String(
                 raw.pid ??
@@ -1819,7 +1307,6 @@
                 raw.productId ??
                 ""
             ).trim();
-
 
         const name =
             String(
@@ -1830,20 +1317,12 @@
                 "CJ Product"
             ).trim();
 
-
-        if (
-            !id ||
-            !name
-        ) {
-
+        if (!id || !name) {
             return null;
-
         }
 
 
-        /* ---------------------------------------------------------------------
-           Price
-           --------------------------------------------------------------------- */
+        /* PRICE */
 
         let rawPrice =
             raw.price ??
@@ -1851,11 +1330,9 @@
             raw.unitPrice ??
             0;
 
-
         if (
             rawPrice &&
-            typeof rawPrice ===
-                "object"
+            typeof rawPrice === "object"
         ) {
 
             rawPrice =
@@ -1865,7 +1342,6 @@
                 0;
 
         }
-
 
         const parsedPrice =
             parseFloat(
@@ -1877,22 +1353,15 @@
                 )
             );
 
-
         const price =
-            Number.isFinite(
-                parsedPrice
-            )
+            Number.isFinite(parsedPrice)
                 ? Number(
-                    parsedPrice.toFixed(
-                        2
-                    )
+                    parsedPrice.toFixed(2)
                 )
                 : 0;
 
 
-        /* ---------------------------------------------------------------------
-           Inventory
-           --------------------------------------------------------------------- */
+        /* INVENTORY */
 
         const parsedQuantity =
             Number(
@@ -1903,7 +1372,6 @@
                 raw.totalVerifiedInventory ??
                 0
             );
-
 
         const quantity =
             Number.isFinite(
@@ -1918,15 +1386,12 @@
                 : 0;
 
 
-        /* ---------------------------------------------------------------------
-           Rating
-           --------------------------------------------------------------------- */
+        /* RATING */
 
         const parsedRating =
             parseFloat(
                 raw.rating
             );
-
 
         const rating =
             Number.isFinite(
@@ -1939,37 +1404,24 @@
                             5,
                             parsedRating
                         )
-                    ).toFixed(
-                        1
-                    )
+                    ).toFixed(1)
                 )
                 : 0;
 
 
-        /* ---------------------------------------------------------------------
-           Images
-           --------------------------------------------------------------------- */
+        /* IMAGES */
 
         const image =
-            getPrimaryImage(
-                raw
-            );
-
+            getPrimaryImage(raw);
 
         const images =
-            getGalleryImages(
-                raw
-            );
+            getGalleryImages(raw);
 
 
-        /* ---------------------------------------------------------------------
-           Variants
-           --------------------------------------------------------------------- */
+        /* VARIANTS */
 
         const variants =
-            Array.isArray(
-                raw.variants
-            )
+            Array.isArray(raw.variants)
                 ? raw.variants.map(
                     variant => ({
 
@@ -2086,68 +1538,43 @@
 
             source:
                 "CJ Dropshipping"
-
         };
 
     }
 
 
-    function normalizePrice(
-        value
-    ) {
+    function normalizePrice(value) {
 
         const number =
-            Number(
-                value
-            );
-
+            Number(value);
 
         if (
-            !Number.isFinite(
-                number
-            )
+            !Number.isFinite(number)
         ) {
-
             return 0;
-
         }
 
-
         return Number(
-            number.toFixed(
-                2
-            )
+            number.toFixed(2)
         );
 
     }
 
 
-    function normalizeInventory(
-        value
-    ) {
+    function normalizeInventory(value) {
 
         const number =
-            Number(
-                value
-            );
-
+            Number(value);
 
         if (
-            !Number.isFinite(
-                number
-            )
+            !Number.isFinite(number)
         ) {
-
             return 0;
-
         }
-
 
         return Math.max(
             0,
-            Math.floor(
-                number
-            )
+            Math.floor(number)
         );
 
     }
@@ -2157,37 +1584,20 @@
        15. PAGE HEADING
        ========================================================================= */
 
-    function updatePageHeading(
-        query
-    ) {
+    function updatePageHeading(query) {
 
-        const heading =
-            elements.pageHeading ||
-            document.getElementById(
-                "page-heading"
-            );
-
-
-        if (
-            !heading
-        ) {
-
+        if (!elements.pageHeading) {
             return;
-
         }
 
+        if (!query) {
 
-        if (
-            !query
-        ) {
-
-            heading.textContent =
+            elements.pageHeading.textContent =
                 "Featured Products";
 
             return;
 
         }
-
 
         const category =
             CATEGORY_MAP.find(
@@ -2196,17 +1606,14 @@
                     query
             );
 
+        if (category) {
 
-        if (
-            category
-        ) {
-
-            heading.textContent =
+            elements.pageHeading.textContent =
                 category.label;
 
         } else {
 
-            heading.textContent =
+            elements.pageHeading.textContent =
                 `Search Results for "${query}"`;
 
         }
@@ -2221,28 +1628,16 @@
     function applyFiltersAndRender() {
 
         let products =
-            [
-                ...state.products
-            ];
-
+            [...state.products];
 
         const localQuery =
             String(
-                state.searchQuery ||
-                ""
+                state.searchQuery || ""
             )
                 .trim()
                 .toLowerCase();
 
-
-        /*
-         * Worker performs the primary search.
-         * Local filtering is only a compatibility fallback.
-         */
-
-        if (
-            localQuery
-        ) {
+        if (localQuery) {
 
             products =
                 products.filter(
@@ -2250,31 +1645,22 @@
 
                         const searchable =
                             [
-
                                 product.name,
-
                                 product.title,
-
                                 product.category,
-
                                 product.sku,
-
                                 product.pid,
-
                                 stripHtml(
                                     product.description
                                 )
-
                             ]
                                 .map(
                                     value =>
                                         String(
-                                            value ||
-                                            ""
+                                            value || ""
                                         ).toLowerCase()
                                 )
                                 .join(" ");
-
 
                         return searchable.includes(
                             localQuery
@@ -2286,13 +1672,6 @@
         }
 
 
-        /*
-         * Category local filtering.
-         *
-         * Normally the Worker already returns the category-filtered
-         * data because the category uses a search query.
-         */
-
         if (
             state.activeCategoryQuery &&
             !state.searchQuery
@@ -2303,38 +1682,27 @@
                     .toLowerCase()
                     .trim();
 
-
-            if (
-                categoryQuery
-            ) {
+            if (categoryQuery) {
 
                 products =
                     products.filter(
                         product => {
 
                             const searchable =
-                                (
-
-                                    String(
-                                        product.name ||
-                                        ""
-                                    ) +
-
-                                    " " +
-
-                                    String(
-                                        product.category ||
-                                        ""
-                                    ) +
-
-                                    " " +
-
+                                [
+                                    product.name,
+                                    product.category,
                                     stripHtml(
                                         product.description
                                     )
-
-                                ).toLowerCase();
-
+                                ]
+                                    .map(
+                                        value =>
+                                            String(
+                                                value || ""
+                                            ).toLowerCase()
+                                    )
+                                    .join(" ");
 
                             return searchable.includes(
                                 categoryQuery
@@ -2352,21 +1720,15 @@
             compareProducts
         );
 
-
         state.filteredProducts =
             products;
 
-
-        if (
-            products.length ===
-            0
-        ) {
+        if (!products.length) {
 
             const query =
                 state.searchQuery ||
                 state.activeCategoryQuery ||
                 "";
-
 
             renderEmptyState(
                 query
@@ -2374,11 +1736,9 @@
                     : "No active CJ products are available."
             );
 
-
             return;
 
         }
-
 
         renderProductGrid();
 
@@ -2387,15 +1747,11 @@
     }
 
 
-    function compareProducts(
-        a,
-        b
-    ) {
+    function compareProducts(a, b) {
 
         const sort =
             String(
-                state.sortBy ||
-                "featured"
+                state.sortBy || "featured"
             )
                 .toLowerCase()
                 .replace(
@@ -2403,156 +1759,71 @@
                     ""
                 );
 
-
         const priceA =
-            Number(
-                a.price
-            ) || 0;
-
+            Number(a.price) || 0;
 
         const priceB =
-            Number(
-                b.price
-            ) || 0;
-
+            Number(b.price) || 0;
 
         const nameA =
-            String(
-                a.name ||
-                ""
-            );
-
+            String(a.name || "");
 
         const nameB =
-            String(
-                b.name ||
-                ""
-            );
-
+            String(b.name || "");
 
         const ratingA =
-            Number(
-                a.rating
-            ) || 0;
-
+            Number(a.rating) || 0;
 
         const ratingB =
-            Number(
-                b.rating
-            ) || 0;
+            Number(b.rating) || 0;
 
 
         if (
-            sort.includes(
-                "lowtohigh"
-            ) ||
-
-            sort.includes(
-                "lowhigh"
-            ) ||
-
-            sort.includes(
-                "priceasc"
-            )
+            sort.includes("lowtohigh") ||
+            sort.includes("lowhigh") ||
+            sort.includes("priceasc")
         ) {
-
-            return (
-                priceA -
-                priceB
-            );
-
+            return priceA - priceB;
         }
 
-
         if (
-            sort.includes(
-                "hightolow"
-            ) ||
-
-            sort.includes(
-                "highlow"
-            ) ||
-
-            sort.includes(
-                "pricedesc"
-            )
+            sort.includes("hightolow") ||
+            sort.includes("highlow") ||
+            sort.includes("pricedesc")
         ) {
-
-            return (
-                priceB -
-                priceA
-            );
-
+            return priceB - priceA;
         }
 
-
         if (
-            sort.includes(
-                "atoz"
-            ) ||
-
-            sort.includes(
-                "nameaz"
-            ) ||
-
-            sort ===
-                "nameasc"
+            sort.includes("atoz") ||
+            sort.includes("nameaz") ||
+            sort === "nameasc"
         ) {
-
             return nameA.localeCompare(
                 nameB,
                 undefined,
-                {
-                    sensitivity:
-                        "base"
-                }
+                { sensitivity: "base" }
             );
-
         }
 
-
         if (
-            sort.includes(
-                "ztoa"
-            ) ||
-
-            sort.includes(
-                "nameza"
-            ) ||
-
-            sort ===
-                "namedesc"
+            sort.includes("ztoa") ||
+            sort.includes("nameza") ||
+            sort === "namedesc"
         ) {
-
             return nameB.localeCompare(
                 nameA,
                 undefined,
-                {
-                    sensitivity:
-                        "base"
-                }
+                { sensitivity: "base" }
             );
-
         }
-
 
         if (
-            sort.includes(
-                "rating"
-            ) ||
-
-            sort.includes(
-                "toprated"
-            )
+            sort.includes("rating") ||
+            sort.includes("toprated")
         ) {
-
-            return (
-                ratingB -
-                ratingA
-            );
-
+            return ratingB - ratingA;
         }
-
 
         return 0;
 
@@ -2565,34 +1836,18 @@
 
     function renderProductGrid() {
 
-        const productList =
-            elements.productList ||
-            document.getElementById(
-                "product-list"
-            );
-
-
-        if (
-            !productList
-        ) {
-
+        if (!elements.productList) {
             return;
-
         }
 
-
-        productList.innerHTML =
+        elements.productList.innerHTML =
             state.filteredProducts
                 .map(
                     renderProductCard
                 )
                 .join("");
 
-
-        setLoadingState(
-            false
-        );
-
+        setLoadingState(false);
 
         attachProductImageFallbacks();
 
@@ -2603,15 +1858,12 @@
        18. PRODUCT CARD
        ========================================================================= */
 
-    function renderProductCard(
-        product
-    ) {
+    function renderProductCard(product) {
 
         const productId =
             escapeHTML(
                 product.id
             );
-
 
         const title =
             escapeHTML(
@@ -2619,13 +1871,11 @@
                 "CJ Product"
             );
 
-
         const category =
             escapeHTML(
                 product.category ||
                 CONFIG.DEFAULT_CATEGORY
             );
-
 
         const image =
             escapeHTML(
@@ -2633,52 +1883,38 @@
                 PLACEHOLDER_IMAGE
             );
 
-
         const price =
             formatPrice(
                 product.price
             );
-
 
         const quantity =
             Number(
                 product.quantity
             );
 
-
         const available =
-            Number.isFinite(
-                quantity
-            ) &&
+            Number.isFinite(quantity) &&
             quantity > 0;
-
 
         const productUrl =
             `${CONFIG.PRODUCT_PAGE}?id=${encodeURIComponent(
-                String(
-                    product.id
-                )
+                String(product.id)
             )}`;
-
 
         const rating =
             Number(
                 product.rating
             ) || 0;
 
-
         const descriptionText =
             stripHtml(
                 product.description
             );
 
-
         const shortDescription =
             descriptionText.length > 120
-                ? `${descriptionText.slice(
-                    0,
-                    120
-                )}...`
+                ? `${descriptionText.slice(0, 120)}...`
                 : (
                     descriptionText ||
                     "CJ product information available."
@@ -2693,16 +1929,12 @@
             >
 
                 <a
-                    href="${escapeHTML(
-                        productUrl
-                    )}"
+                    href="${escapeHTML(productUrl)}"
                     class="product-card-image-wrap"
                     aria-label="View ${title}"
                 >
 
-                    <span
-                        class="product-badge"
-                    >
+                    <span class="product-badge">
 
                         ${svgIcon(
                             "category",
@@ -2715,7 +1947,6 @@
 
                     </span>
 
-
                     <img
                         src="${image}"
                         alt="${title}"
@@ -2724,26 +1955,19 @@
                         decoding="async"
                         referrerpolicy="no-referrer"
                         data-original-image="${escapeHTML(
-                            product.originalImage ||
-                            ""
+                            product.originalImage || ""
                         )}"
                     >
 
                 </a>
 
 
-                <div
-                    class="product-card-body"
-                >
+                <div class="product-card-body">
 
-                    <h3
-                        class="product-title"
-                    >
+                    <h3 class="product-title">
 
                         <a
-                            href="${escapeHTML(
-                                productUrl
-                            )}"
+                            href="${escapeHTML(productUrl)}"
                         >
                             ${title}
                         </a>
@@ -2751,19 +1975,14 @@
                     </h3>
 
 
-                    <p
-                        class="product-card-description"
-                    >
-                        ${escapeHTML(
-                            shortDescription
-                        )}
+                    <p class="product-card-description">
+                        ${escapeHTML(shortDescription)}
                     </p>
 
 
                     ${
                         rating > 0
                             ? `
-
                                 <div
                                     class="product-rating"
                                     aria-label="Rating ${rating.toFixed(
@@ -2777,46 +1996,35 @@
                                     )}
 
                                     <span>
-                                        ${rating.toFixed(
-                                            1
-                                        )}
+                                        ${rating.toFixed(1)}
                                     </span>
 
                                 </div>
-
                             `
                             : ""
                     }
 
 
-                    <div
-                        class="product-card-footer"
-                    >
+                    <div class="product-card-footer">
 
-                        <div
-                            class="price-container"
-                        >
+                        <div class="price-container">
 
-                            <span
-                                class="product-price"
-                            >
-                                ${escapeHTML(
-                                    price
-                                )}
+                            <span class="product-price">
+                                ${escapeHTML(price)}
                             </span>
 
                         </div>
 
 
-                        <div
-                            class="product-actions-group"
-                        >
+                        <div class="product-actions-group">
 
-                            <a
-                                href="${escapeHTML(
-                                    productUrl
-                                )}"
-                                class="btn-card btn-secondary"
+                            <!-- RESTORED MODAL DETAILS BUTTON -->
+
+                            <button
+                                type="button"
+                                class="btn-card btn-secondary view-details-btn"
+                                data-product-id="${productId}"
+                                aria-label="View details for ${title}"
                             >
 
                                 ${svgIcon(
@@ -2828,7 +2036,7 @@
                                     View Details
                                 </span>
 
-                            </a>
+                            </button>
 
 
                             <button
@@ -2878,55 +2086,40 @@
 
 
     /* =========================================================================
-       19. IMAGE FALLBACKS
+       19. IMAGE FALLBACK
        ========================================================================= */
 
     function attachProductImageFallbacks() {
 
-        const images =
-            document.querySelectorAll(
+        document
+            .querySelectorAll(
                 ".product-image"
+            )
+            .forEach(
+                image => {
+
+                    image.addEventListener(
+                        "error",
+                        handleProductImageError
+                    );
+
+                }
             );
-
-
-        images.forEach(
-            image => {
-
-                image.addEventListener(
-                    "error",
-                    handleProductImageError
-                );
-
-            }
-        );
 
     }
 
 
-    function handleProductImageError(
-        event
-    ) {
+    function handleProductImageError(event) {
 
         const image =
             event.currentTarget;
 
-
-        if (
-            !image
-        ) {
-
+        if (!image) {
             return;
-
         }
-
-
-        /*
-         * Try original CJ image through Cloudflare Worker.
-         */
 
         const original =
             image.dataset.originalImage;
-
 
         if (
             original &&
@@ -2936,17 +2129,14 @@
             image.dataset.originalAttempted =
                 "true";
 
-
             const proxiedOriginal =
                 buildProxyUrl(
                     original
                 );
 
-
             if (
                 proxiedOriginal &&
-                proxiedOriginal !==
-                    image.src
+                proxiedOriginal !== image.src
             ) {
 
                 image.src =
@@ -2957,11 +2147,6 @@
             }
 
         }
-
-
-        /*
-         * Final local placeholder.
-         */
 
         if (
             !image.dataset.placeholderUsed
@@ -2979,88 +2164,75 @@
 
 
     /* =========================================================================
-       20. CART INTEGRATION
+       20. PRODUCT GRID CLICK HANDLER
        ========================================================================= */
 
-    function handleProductGridClick(
-        event
-    ) {
+    function handleProductGridClick(event) {
 
-        const button =
+        const detailsButton =
+            event.target.closest(
+                ".view-details-btn"
+            );
+
+        if (detailsButton) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            openProductModal(
+                detailsButton.dataset.productId
+            );
+
+            return;
+
+        }
+
+
+        const cartButton =
             event.target.closest(
                 ".add-to-cart-btn"
             );
 
-
-        if (
-            !button
-        ) {
-
+        if (!cartButton) {
             return;
-
         }
 
-
         event.preventDefault();
-
         event.stopPropagation();
-
 
         const productId =
             String(
-                button.dataset.productId ||
-                ""
+                cartButton.dataset.productId || ""
             );
 
-
-        if (
-            !productId
-        ) {
-
+        if (!productId) {
             return;
-
         }
-
 
         const product =
             state.products.find(
                 current =>
-                    String(
-                        current.id
-                    ) ===
+                    String(current.id) ===
                     productId
             );
 
-
-        if (
-            !product
-        ) {
-
+        if (!product) {
             return;
-
         }
 
-
         if (
-            Number(
-                product.quantity
-            ) <=
-            0
+            Number(product.quantity) <= 0
         ) {
 
             announceToScreenReader(
                 `${product.name} is currently out of stock.`
             );
 
-
             return;
 
         }
 
-
-        let added =
-            false;
-
+        let added = false;
 
         if (
             typeof window.addToCart ===
@@ -3078,101 +2250,68 @@
 
             try {
 
-                const customEvent =
+                document.dispatchEvent(
                     new CustomEvent(
                         "cart:add",
                         {
-                            detail:
-                                product
+                            detail: product
                         }
-                    );
-
-
-                document.dispatchEvent(
-                    customEvent
+                    )
                 );
 
+                added = true;
 
-                added =
-                    true;
-
-            } catch (
-                error
-            ) {
+            } catch (error) {
 
                 console.error(
                     "[PRASUN SHOP] Cart event error:",
                     error
                 );
 
-                added =
-                    false;
+                added = false;
 
             }
 
         }
 
-
-        if (
-            !added
-        ) {
-
+        if (!added) {
             return;
-
         }
 
+        cartButton.disabled = true;
 
-        button.disabled =
-            true;
-
-
-        button.classList.add(
+        cartButton.classList.add(
             "added"
         );
 
-
-        button.innerHTML = `
-
+        cartButton.innerHTML = `
             ${svgIcon(
                 "check",
                 "ui-icon ui-icon-sm"
             )}
-
-            <span>
-                Added
-            </span>
-
+            <span>Added</span>
         `;
-
 
         announceToScreenReader(
             `${product.name} added to cart.`
         );
 
-
         window.setTimeout(
             () => {
 
-                button.disabled =
+                cartButton.disabled =
                     false;
 
-
-                button.classList.remove(
+                cartButton.classList.remove(
                     "added"
                 );
 
-
-                button.innerHTML = `
-
+                cartButton.innerHTML = `
                     ${svgIcon(
                         "add_cart",
                         "ui-icon ui-icon-sm"
                     )}
-
-                    <span>
-                        Add to Cart
-                    </span>
-
+                    <span>Add to Cart</span>
                 `;
 
             },
@@ -3183,31 +2322,655 @@
 
 
     /* =========================================================================
-       21. UI STATES
+       21. PRODUCT DETAILS MODAL
        ========================================================================= */
 
-    function renderLoadingState() {
+    function sanitizeDescription(html) {
 
-        const productList =
-            elements.productList ||
-            document.getElementById(
-                "product-list"
+        if (!html) {
+            return "";
+        }
+
+        const parser =
+            new DOMParser();
+
+        const doc =
+            parser.parseFromString(
+                String(html),
+                "text/html"
             );
 
 
+        const dangerousTags = [
+            "script",
+            "style",
+            "iframe",
+            "object",
+            "embed",
+            "form",
+            "input",
+            "button",
+            "textarea",
+            "select",
+            "option",
+            "video",
+            "audio",
+            "source"
+        ];
+
+
+        dangerousTags.forEach(
+            tag => {
+
+                doc
+                    .querySelectorAll(tag)
+                    .forEach(
+                        element =>
+                            element.remove()
+                    );
+
+            }
+        );
+
+
+        doc
+            .querySelectorAll("*")
+            .forEach(
+                element => {
+
+                    [...element.attributes]
+                        .forEach(
+                            attribute => {
+
+                                const name =
+                                    attribute.name
+                                        .toLowerCase();
+
+                                const value =
+                                    attribute.value
+                                        .trim();
+
+
+                                if (
+                                    name.startsWith("on")
+                                ) {
+
+                                    element.removeAttribute(
+                                        attribute.name
+                                    );
+
+                                    return;
+
+                                }
+
+
+                                if (
+                                    (
+                                        name === "src" ||
+                                        name === "href"
+                                    ) &&
+                                    /^javascript:/i.test(
+                                        value
+                                    )
+                                ) {
+
+                                    element.removeAttribute(
+                                        attribute.name
+                                    );
+
+                                }
+
+                            }
+                        );
+
+                }
+            );
+
+
+        /*
+         * CJ description images also pass through
+         * the Cloudflare Worker image proxy.
+         */
+
+        doc
+            .querySelectorAll("img")
+            .forEach(
+                image => {
+
+                    const source =
+                        image.getAttribute("src");
+
+                    if (!source) {
+                        return;
+                    }
+
+                    const normalized =
+                        normalizeImageUrl(
+                            source
+                        );
+
+                    if (
+                        normalized &&
+                        /^https:\/\//i.test(
+                            normalized
+                        )
+                    ) {
+
+                        image.setAttribute(
+                            "src",
+                            buildProxyUrl(
+                                normalized
+                            )
+                        );
+
+                    }
+
+                    image.setAttribute(
+                        "loading",
+                        "lazy"
+                    );
+
+                    image.setAttribute(
+                        "decoding",
+                        "async"
+                    );
+
+                }
+            );
+
+
+        return doc.body.innerHTML;
+
+    }
+
+
+    function openProductModal(productId) {
+
         if (
-            !productList
+            !elements.productModal ||
+            !elements.modalBody
         ) {
+
+            console.error(
+                "[PRASUN SHOP] Product modal elements are missing from index.html."
+            );
 
             return;
 
         }
 
 
-        productList.innerHTML = `
+        const product =
+            state.products.find(
+                item =>
+                    String(item.id) ===
+                    String(productId)
+            );
 
+
+        if (!product) {
+            return;
+        }
+
+
+        const images =
+            getGalleryImages(
+                product
+            );
+
+
+        const primaryImage =
+            product.image ||
+            images[0] ||
+            PLACEHOLDER_IMAGE;
+
+
+        const title =
+            escapeHTML(
+                product.name ||
+                product.title ||
+                "CJ Product"
+            );
+
+
+        const category =
+            escapeHTML(
+                product.category ||
+                CONFIG.DEFAULT_CATEGORY
+            );
+
+
+        const price =
+            Number(
+                product.price || 0
+            );
+
+
+        const quantity =
+            Number(
+                product.quantity || 0
+            );
+
+
+        const rawDescription =
+            product.description ||
+            "";
+
+
+        const sanitizedDescription =
+            sanitizeDescription(
+                rawDescription
+            );
+
+
+        const descriptionHtml =
+            sanitizedDescription ||
+            `
+                <p>
+                    No detailed description is currently available
+                    for this product.
+                </p>
+            `;
+
+
+        const galleryHtml =
+            images.length > 1
+                ? `
+                    <div
+                        class="modal-gallery"
+                        aria-label="Product images"
+                    >
+
+                        ${images
+                            .map(
+                                (
+                                    image,
+                                    index
+                                ) => `
+
+                                    <button
+                                        type="button"
+                                        class="modal-gallery-thumb ${
+                                            index === 0
+                                                ? "is-active"
+                                                : ""
+                                        }"
+                                        data-gallery-image="${escapeHTML(
+                                            image
+                                        )}"
+                                        aria-label="View product image ${
+                                            index + 1
+                                        }"
+                                    >
+
+                                        <img
+                                            src="${escapeHTML(
+                                                image
+                                            )}"
+                                            alt=""
+                                            loading="lazy"
+                                            decoding="async"
+                                        >
+
+                                    </button>
+
+                                `
+                            )
+                            .join("")}
+
+                    </div>
+                `
+                : "";
+
+
+        elements.modalBody.innerHTML = `
+
+            <div class="modal-image-column">
+
+                <img
+                    id="main-modal-img"
+                    src="${escapeHTML(
+                        primaryImage
+                    )}"
+                    alt="${title}"
+                    class="modal-product-img"
+                    loading="eager"
+                    decoding="async"
+                    referrerpolicy="no-referrer"
+                >
+
+                ${galleryHtml}
+
+            </div>
+
+
+            <div class="modal-details">
+
+                <span class="product-category-tag">
+                    ${category}
+                </span>
+
+
+                <h2
+                    id="modal-title"
+                    class="modal-product-title"
+                >
+                    ${title}
+                </h2>
+
+
+                <div
+                    class="modal-product-price-row"
+                >
+
+                    <span class="modal-product-price">
+                        ${formatPrice(price)}
+                    </span>
+
+
+                    <span class="modal-product-stock">
+
+                        ${
+                            quantity > 0
+                                ? `In Stock: ${quantity}`
+                                : "Available"
+                        }
+
+                    </span>
+
+                </div>
+
+
+                <div
+                    class="modal-description-box"
+                >
+
+                    <span
+                        class="modal-description-title"
+                    >
+                        Product Description
+                    </span>
+
+
+                    <div
+                        class="cj-description-container"
+                    >
+                        ${descriptionHtml}
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    id="modal-add-cart-btn"
+                    class="btn-primary modal-add-cart-button"
+                    ${
+                        quantity <= 0
+                            ? "disabled"
+                            : ""
+                    }
+                >
+
+                    ${svgIcon(
+                        quantity > 0
+                            ? "add_cart"
+                            : "inventory",
+                        "ui-icon ui-icon-sm"
+                    )}
+
+                    <span>
+                        ${
+                            quantity > 0
+                                ? "Add to Cart"
+                                : "Out of Stock"
+                        }
+                    </span>
+
+                </button>
+
+            </div>
+
+        `;
+
+
+        const mainImage =
+            document.getElementById(
+                "main-modal-img"
+            );
+
+
+        if (mainImage) {
+
+            mainImage.addEventListener(
+                "error",
+                () => {
+
+                    if (
+                        mainImage.src !==
+                        PLACEHOLDER_IMAGE
+                    ) {
+
+                        mainImage.src =
+                            PLACEHOLDER_IMAGE;
+
+                    }
+
+                },
+                { once: true }
+            );
+
+        }
+
+
+        elements.modalBody
+            .querySelectorAll(
+                ".modal-gallery-thumb"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        () => {
+
+                            const image =
+                                button.dataset.galleryImage;
+
+                            if (
+                                mainImage &&
+                                image
+                            ) {
+
+                                mainImage.src =
+                                    image;
+
+                            }
+
+
+                            elements.modalBody
+                                .querySelectorAll(
+                                    ".modal-gallery-thumb"
+                                )
+                                .forEach(
+                                    item =>
+                                        item.classList.remove(
+                                            "is-active"
+                                        )
+                                );
+
+
+                            button.classList.add(
+                                "is-active"
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+
+        const modalCartButton =
+            document.getElementById(
+                "modal-add-cart-btn"
+            );
+
+
+        if (
+            modalCartButton &&
+            quantity > 0
+        ) {
+
+            modalCartButton.addEventListener(
+                "click",
+                () => {
+
+                    let added = false;
+
+
+                    if (
+                        typeof window.addToCart ===
+                        "function"
+                    ) {
+
+                        added =
+                            Boolean(
+                                window.addToCart(
+                                    product
+                                )
+                            );
+
+                    } else {
+
+                        try {
+
+                            document.dispatchEvent(
+                                new CustomEvent(
+                                    "cart:add",
+                                    {
+                                        detail:
+                                            product
+                                    }
+                                )
+                            );
+
+                            added = true;
+
+                        } catch (
+                            error
+                        ) {
+
+                            console.error(
+                                "[PRASUN SHOP] Modal cart error:",
+                                error
+                            );
+
+                        }
+
+                    }
+
+
+                    if (!added) {
+                        return;
+                    }
+
+
+                    modalCartButton.disabled =
+                        true;
+
+
+                    modalCartButton.classList.add(
+                        "added"
+                    );
+
+
+                    modalCartButton.innerHTML = `
+                        ${svgIcon(
+                            "check",
+                            "ui-icon ui-icon-sm"
+                        )}
+                        <span>Added to Cart</span>
+                    `;
+
+
+                    announceToScreenReader(
+                        `${product.name} added to cart.`
+                    );
+
+                }
+            );
+
+        }
+
+
+        elements.productModal.classList.add(
+            "is-open"
+        );
+
+
+        elements.productModal.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
+
+        document.body.classList.add(
+            "modal-open"
+        );
+
+
+        window.setTimeout(
+            () => {
+
+                elements.modalClose?.focus();
+
+            },
+            50
+        );
+
+    }
+
+
+    function closeProductModal() {
+
+        if (!elements.productModal) {
+            return;
+        }
+
+        elements.productModal.classList.remove(
+            "is-open"
+        );
+
+        elements.productModal.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        document.body.classList.remove(
+            "modal-open"
+        );
+
+        if (elements.modalBody) {
+            elements.modalBody.innerHTML = "";
+        }
+
+    }
+
+
+    /* =========================================================================
+       22. UI STATES
+       ========================================================================= */
+
+    function renderLoadingState() {
+
+        if (!elements.productList) {
+            return;
+        }
+
+        elements.productList.innerHTML = `
             <div
-                class="product-status-card products-empty"
+                class="product-status-card"
                 role="status"
                 aria-live="polite"
             >
@@ -3217,24 +2980,19 @@
                     aria-hidden="true"
                 ></div>
 
-
                 <h3>
                     Loading Products
                 </h3>
-
 
                 <p>
                     Fetching the latest available products.
                 </p>
 
             </div>
-
         `;
 
 
-        if (
-            elements.resultsCount
-        ) {
+        if (elements.resultsCount) {
 
             elements.resultsCount.textContent =
                 "Loading...";
@@ -3244,30 +3002,15 @@
     }
 
 
-    function renderEmptyState(
-        message
-    ) {
+    function renderEmptyState(message) {
 
-        const productList =
-            elements.productList ||
-            document.getElementById(
-                "product-list"
-            );
-
-
-        if (
-            !productList
-        ) {
-
+        if (!elements.productList) {
             return;
-
         }
 
-
-        productList.innerHTML = `
-
+        elements.productList.innerHTML = `
             <div
-                class="product-status-card products-empty"
+                class="product-status-card"
                 role="status"
             >
 
@@ -3276,64 +3019,39 @@
                     "ui-icon ui-icon-xl"
                 )}
 
-
                 <h3>
                     No Products Found
                 </h3>
 
-
                 <p>
-                    ${escapeHTML(
-                        message
-                    )}
+                    ${escapeHTML(message)}
                 </p>
 
             </div>
-
         `;
 
 
-        if (
-            elements.resultsCount
-        ) {
+        if (elements.resultsCount) {
 
             elements.resultsCount.textContent =
                 "0 products found";
 
         }
 
-
-        setLoadingState(
-            false
-        );
+        setLoadingState(false);
 
     }
 
 
-    function renderErrorState(
-        message
-    ) {
+    function renderErrorState(message) {
 
-        const productList =
-            elements.productList ||
-            document.getElementById(
-                "product-list"
-            );
-
-
-        if (
-            !productList
-        ) {
-
+        if (!elements.productList) {
             return;
-
         }
 
-
-        productList.innerHTML = `
-
+        elements.productList.innerHTML = `
             <div
-                class="product-status-card products-error"
+                class="product-status-card"
                 role="alert"
             >
 
@@ -3342,18 +3060,13 @@
                     "ui-icon ui-icon-xl"
                 )}
 
-
                 <h3>
                     Unable to Load Products
                 </h3>
 
-
                 <p>
-                    ${escapeHTML(
-                        message
-                    )}
+                    ${escapeHTML(message)}
                 </p>
-
 
                 <button
                     type="button"
@@ -3373,13 +3086,10 @@
                 </button>
 
             </div>
-
         `;
 
 
-        if (
-            elements.resultsCount
-        ) {
+        if (elements.resultsCount) {
 
             elements.resultsCount.textContent =
                 "Unable to load products";
@@ -3387,20 +3097,16 @@
         }
 
 
-        setLoadingState(
-            false
-        );
+        setLoadingState(false);
 
 
         const retry =
-            productList.querySelector(
+            elements.productList.querySelector(
                 '[data-action="retry-products"]'
             );
 
 
-        if (
-            retry
-        ) {
+        if (retry) {
 
             retry.addEventListener(
                 "click",
@@ -3412,10 +3118,7 @@
                     );
 
                 },
-                {
-                    once:
-                        true
-                }
+                { once: true }
             );
 
         }
@@ -3425,18 +3128,12 @@
 
     function updateResultsCount() {
 
-        if (
-            !elements.resultsCount
-        ) {
-
+        if (!elements.resultsCount) {
             return;
-
         }
-
 
         const count =
             state.filteredProducts.length;
-
 
         elements.resultsCount.textContent =
             `${count} ${
@@ -3448,18 +3145,11 @@
     }
 
 
-    function setLoadingState(
-        loading
-    ) {
+    function setLoadingState(loading) {
 
-        if (
-            !elements.productList
-        ) {
-
+        if (!elements.productList) {
             return;
-
         }
-
 
         elements.productList.setAttribute(
             "aria-busy",
@@ -3472,33 +3162,20 @@
 
 
     /* =========================================================================
-       22. TEXT HELPERS
+       23. TEXT HELPERS
        ========================================================================= */
 
-    function stripHtml(
-        value
-    ) {
+    function stripHtml(value) {
 
-        if (
-            !value
-        ) {
-
+        if (!value) {
             return "";
-
         }
 
-
         const container =
-            document.createElement(
-                "div"
-            );
-
+            document.createElement("div");
 
         container.innerHTML =
-            String(
-                value
-            );
-
+            String(value);
 
         return (
             container.textContent ||
@@ -3514,56 +3191,32 @@
     }
 
 
-    function formatPrice(
-        amount
-    ) {
+    function formatPrice(amount) {
 
         const value =
-            Number(
-                amount
-            );
+            Number(amount);
 
-
-        if (
-            !Number.isFinite(
-                value
-            )
-        ) {
-
+        if (!Number.isFinite(value)) {
             return "$0.00";
-
         }
-
 
         return new Intl.NumberFormat(
             "en-US",
             {
-                style:
-                    "currency",
-
-                currency:
-                    "USD",
-
-                minimumFractionDigits:
-                    2,
-
-                maximumFractionDigits:
-                    2
+                style: "currency",
+                currency: "USD",
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             }
-        ).format(
-            value
-        );
+        ).format(value);
 
     }
 
 
-    function escapeHTML(
-        value
-    ) {
+    function escapeHTML(value) {
 
         return String(
-            value ??
-            ""
+            value ?? ""
         )
             .replace(
                 /&/g,
@@ -3589,37 +3242,23 @@
     }
 
 
-    function announceToScreenReader(
-        message
-    ) {
+    function announceToScreenReader(message) {
 
         const liveRegion =
-            elements.liveRegion ||
-            document.getElementById(
-                "aria-live-region"
-            );
+            elements.liveRegion;
 
-
-        if (
-            !liveRegion
-        ) {
-
+        if (!liveRegion) {
             return;
-
         }
 
-
-        liveRegion.textContent =
-            "";
-
+        liveRegion.textContent = "";
 
         window.setTimeout(
             () => {
 
                 liveRegion.textContent =
                     String(
-                        message ||
-                        ""
+                        message || ""
                     );
 
             },
@@ -3630,7 +3269,7 @@
 
 
     /* =========================================================================
-       23. PUBLIC API
+       24. PUBLIC API
        ========================================================================= */
 
     window.PrasunProducts = {
@@ -3642,45 +3281,33 @@
                     state.activeCategoryQuery
                 ),
 
-
         search:
             query => {
 
                 state.searchQuery =
                     String(
-                        query ||
-                        ""
+                        query || ""
                     ).trim();
-
 
                 state.activeCategoryQuery =
                     "";
 
-
-                if (
-                    elements.searchInput
-                ) {
+                if (elements.searchInput) {
 
                     elements.searchInput.value =
                         state.searchQuery;
 
                 }
 
-
                 updateClearSearchButton();
 
-
-                highlightActiveCategoryPill(
-                    ""
-                );
-
+                highlightActiveCategoryPill("");
 
                 return loadProducts(
                     state.searchQuery
                 );
 
             },
-
 
         sort:
             value => {
@@ -3689,50 +3316,41 @@
                     value ||
                     "featured";
 
-
-                if (
-                    elements.sortSelect
-                ) {
+                if (elements.sortSelect) {
 
                     elements.sortSelect.value =
                         state.sortBy;
 
                 }
 
-
                 applyFiltersAndRender();
 
             },
 
+        openDetails:
+            productId =>
+                openProductModal(productId),
+
+        closeDetails:
+            () =>
+                closeProductModal(),
 
         getProducts:
             () =>
-                [
-                    ...state.products
-                ],
-
+                [...state.products],
 
         getFilteredProducts:
             () =>
-                [
-                    ...state.filteredProducts
-                ],
-
+                [...state.filteredProducts],
 
         getProductById:
             id =>
                 state.products.find(
                     product =>
-                        String(
-                            product.id
-                        ) ===
-                        String(
-                            id
-                        )
-                ) ||
-                null
+                        String(product.id) ===
+                        String(id)
+                ) || null
 
     };
-
 
 })();
