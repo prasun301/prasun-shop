@@ -11,18 +11,18 @@
     gtag('config', 'G-D9F2VQ4247');
   </script>
 
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <meta
     name="description"
-    content="Learn about PRASUN SHOP, an online store for technology, electronics, smart devices, renewable energy products, and everyday essentials."
-  />
+    content="About PRASUN SHOP — a clean online store for technology, electronics, smart devices, renewable energy products, and everyday essentials."
+  >
 
   <meta
     name="robots"
     content="index, follow"
-  />
+  >
 
   <title>About — PRASUN SHOP</title>
 
@@ -33,7 +33,12 @@
     crossorigin="anonymous">
   </script>
 
+
   <style>
+
+    /* =======================================================================
+       RESET
+       ======================================================================= */
 
     * {
       box-sizing: border-box;
@@ -41,25 +46,41 @@
       padding: 0;
     }
 
+
+    /* =======================================================================
+       DESIGN TOKENS
+       ======================================================================= */
+
     :root {
-      --bg: #f8fafc;
+      --page-bg: #f8fafc;
       --surface: #ffffff;
       --border: #e2e8f0;
-      --text: #0f172a;
-      --body: #334155;
-      --muted: #64748b;
+
+      --text-dark: #0f172a;
+      --text-body: #334155;
+      --text-muted: #64748b;
+
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
+
       --max-width: 1080px;
     }
+
+
+    /* =======================================================================
+       BODY
+       ======================================================================= */
 
     html {
       scroll-behavior: smooth;
     }
 
     body {
-      background: var(--bg);
-      color: var(--body);
+      min-height: 100vh;
+
+      background: var(--page-bg);
+      color: var(--text-body);
+
       font-family:
         system-ui,
         -apple-system,
@@ -69,10 +90,13 @@
         Helvetica,
         Arial,
         sans-serif;
+
       line-height: 1.65;
+
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
     }
+
 
     a {
       color: var(--primary);
@@ -101,6 +125,7 @@
       -webkit-backdrop-filter: blur(12px);
     }
 
+
     .header-container {
       width: 100%;
       max-width: var(--max-width);
@@ -113,38 +138,39 @@
 
       gap: 24px;
 
-      padding: 16px 24px;
+      padding: 15px 24px;
     }
 
 
     /* =======================================================================
-       PRASUN SHOP HOME PAGE LOGO
+       PRASUN SHOP LOGO
        ======================================================================= */
 
-    .logo {
+    .site-logo {
       display: inline-flex;
       align-items: center;
+
       gap: 10px;
 
-      color: var(--text);
+      color: var(--text-dark);
 
       text-decoration: none;
 
       font-size: 1.08rem;
       font-weight: 700;
+
       letter-spacing: -0.01em;
 
       white-space: nowrap;
     }
 
-    .logo:hover {
-      color: var(--text);
+
+    .site-logo:hover {
+      color: var(--text-dark);
     }
 
-    /*
-     * Same simple book-style icon used by the home-page version.
-     */
-    .logo-icon {
+
+    .site-logo svg {
       width: 22px;
       height: 22px;
 
@@ -161,24 +187,29 @@
     .nav-links {
       display: flex;
       align-items: center;
+
       gap: 28px;
     }
 
+
     .nav-links a {
-      color: var(--muted);
+      color: var(--text-muted);
 
       font-size: 0.93rem;
       font-weight: 500;
 
       text-decoration: none;
 
-      transition: color 0.18s ease;
+      transition:
+        color 0.18s ease;
     }
+
 
     .nav-links a:hover,
     .nav-links a.active {
-      color: var(--text);
+      color: var(--text-dark);
     }
+
 
     .nav-links a.active {
       font-weight: 600;
@@ -186,12 +217,13 @@
 
 
     /* =======================================================================
-       MAIN CONTENT
+       MAIN
        ======================================================================= */
 
     main {
       width: 100%;
     }
+
 
     .content-card {
       width: calc(100% - 32px);
@@ -211,10 +243,15 @@
         0 8px 24px rgba(15, 23, 42, 0.04);
     }
 
-    h1 {
-      color: var(--text);
 
-      font-size: clamp(1.9rem, 4vw, 2.35rem);
+    h1 {
+      color: var(--text-dark);
+
+      font-size: clamp(
+        1.9rem,
+        4vw,
+        2.35rem
+      );
 
       line-height: 1.2;
 
@@ -223,8 +260,9 @@
       margin-bottom: 10px;
     }
 
+
     .subtitle {
-      color: var(--muted);
+      color: var(--text-muted);
 
       font-size: 1rem;
 
@@ -237,8 +275,9 @@
       border-bottom: 1px solid var(--border);
     }
 
+
     h2 {
-      color: var(--text);
+      color: var(--text-dark);
 
       font-size: 1.22rem;
 
@@ -249,16 +288,18 @@
       letter-spacing: -0.01em;
     }
 
+
     p {
-      color: var(--body);
+      color: var(--text-body);
 
       font-size: 0.97rem;
 
       margin-bottom: 16px;
     }
 
+
     strong {
-      color: var(--text);
+      color: var(--text-dark);
       font-weight: 650;
     }
 
@@ -276,10 +317,11 @@
 
       text-align: center;
 
-      color: var(--muted);
+      color: var(--text-muted);
 
       font-size: 0.86rem;
     }
+
 
     .footer-container {
       width: 100%;
@@ -294,32 +336,38 @@
       gap: 16px;
     }
 
+
     .footer-links {
       display: flex;
       flex-wrap: wrap;
+
       justify-content: center;
 
       gap: 10px 22px;
     }
 
+
     .footer-links a {
-      color: var(--muted);
+      color: var(--text-muted);
 
       font-weight: 500;
 
       text-decoration: none;
 
-      transition: color 0.18s ease;
+      transition:
+        color 0.18s ease;
     }
 
+
     .footer-links a:hover {
-      color: var(--text);
+      color: var(--text-dark);
     }
+
 
     .footer p {
       margin: 0;
 
-      color: var(--muted);
+      color: var(--text-muted);
 
       font-size: 0.86rem;
     }
@@ -336,17 +384,27 @@
         gap: 16px;
       }
 
-      .logo {
+
+      .site-logo {
         font-size: 1rem;
       }
+
+
+      .site-logo svg {
+        width: 22px;
+        height: 22px;
+      }
+
 
       .nav-links {
         gap: 16px;
       }
 
+
       .nav-links a {
         font-size: 0.86rem;
       }
+
 
       .content-card {
         width: calc(100% - 24px);
@@ -358,25 +416,31 @@
         border-radius: 12px;
       }
 
+
       h1 {
         font-size: 1.85rem;
       }
+
 
       .subtitle {
         font-size: 0.95rem;
       }
 
+
       h2 {
         font-size: 1.15rem;
       }
+
 
       p {
         font-size: 0.94rem;
       }
 
+
       .footer {
         padding: 28px 16px;
       }
+
 
       .footer-links {
         gap: 8px 16px;
@@ -391,8 +455,10 @@
 
     :focus-visible {
       outline: 2px solid var(--primary);
+
       outline-offset: 3px;
     }
+
 
     @media (prefers-reduced-motion: reduce) {
 
@@ -412,40 +478,42 @@
 
 </head>
 
+
 <body>
 
-  <!-- =======================================================================
+  <!-- =====================================================================
        HEADER
-       ======================================================================= -->
+       ===================================================================== -->
 
   <header class="header">
 
     <div class="header-container">
 
-       <a
-                href="/"
-                class="site-logo"
-                aria-label="PRASUN SHOP home"
-            >
+      <a
+        href="/"
+        class="site-logo"
+        aria-label="PRASUN SHOP home"
+      >
 
-                <svg
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    focusable="false"
-                >
+        <!-- EXACT HOME-PAGE ICON PROVIDED -->
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          focusable="false"
+        >
 
-                    <path d="M3 9l9-6 9 6"></path>
-                    <path d="M5 10v10h14V10"></path>
-                    <path d="M9 20v-6h6v6"></path>
+          <path d="M3 9l9-6 9 6"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
 
-                </svg>
+        </svg>
 
         <span>PRASUN SHOP</span>
 
@@ -457,7 +525,7 @@
         aria-label="Primary navigation"
       >
 
-        <a href="index.html">
+        <a href="/">
           Shop
         </a>
 
@@ -480,9 +548,9 @@
   </header>
 
 
-  <!-- =======================================================================
-       MAIN
-       ======================================================================= -->
+  <!-- =====================================================================
+       MAIN CONTENT
+       ===================================================================== -->
 
   <main>
 
@@ -491,6 +559,7 @@
       <h1>
         About PRASUN SHOP
       </h1>
+
 
       <p class="subtitle">
         A simple online store for useful technology, electronics,
@@ -514,6 +583,7 @@
         Our Approach
       </h2>
 
+
       <p>
         We aim to keep online shopping straightforward:
         useful products, clear product information, simple navigation,
@@ -524,8 +594,9 @@
 
 
       <h2>
-        Technology & Renewable Energy
+        Technology &amp; Renewable Energy
       </h2>
+
 
       <p>
         With a professional background in electrical engineering
@@ -540,6 +611,7 @@
         Product Fulfillment
       </h2>
 
+
       <p>
         PRASUN SHOP works with third-party suppliers and fulfillment
         partners to make selected products available to customers
@@ -552,6 +624,7 @@
       <h2>
         Customer Support
       </h2>
+
 
       <p>
         We value clear communication and practical customer support.
@@ -578,9 +651,9 @@
   </main>
 
 
-  <!-- =======================================================================
+  <!-- =====================================================================
        FOOTER
-       ======================================================================= -->
+       ===================================================================== -->
 
   <footer class="footer">
 
