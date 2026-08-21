@@ -3,56 +3,48 @@
  * PRASUN SHOP — PRODUCTS MANAGER
  * ============================================================================
  *
- * js/products.js
+ * File:
+ *     js/products.js
+ *
+ * JavaScript only.
+ *
+ * Compatible with the production PRASUN SHOP Cloudflare Worker:
+ *
+ *     GET /api/products?limit=100&page=1
+ *     GET /api/products?limit=100&page=2
+ *     GET /api/products?q=...
+ *     GET /api/products?pid=...
+ *     GET /api/products?sku=...
  *
  * IMPORTANT
  * ============================================================================
  *
- * This file MUST contain JavaScript only.
+ * The Worker is now PAGINATED.
  *
- * Do NOT put:
- * <!DOCTYPE html>
- * <html>
- * <head>
- * <body>
- * <pre>
- * <code>
+ * The old products.js made one request:
  *
- * inside this file.
+ *     /api/products
  *
- * ARCHITECTURE
- * ============================================================================
+ * which only returned the first page of the new Worker catalog.
  *
- * Cloudflare Worker
- *        ↓
- * /api/products
- *        ↓
- * products.js
- *        ↓
- * local catalog
- *        ↓
- * category/search/sort
+ * This version automatically follows:
  *
- * The Worker supplies the synchronized CJ catalog.
+ *     page=1
+ *     page=2
+ *     page=3
+ *     ...
  *
- * Categories are filtered locally.
+ * until the Worker reports:
  *
- * Categories:
+ *     hasMore === false
  *
- * All Products
- * Solar Lights
- * Battery
- * Chargers
- * Power Bank
- * Cables
- * Earphones
- * Headphones
- * Modem
- * Routers
- * Laptops
- * Power Tools
- * Camera
- * Smart Home
+ * The browser keeps the complete loaded catalog in memory and performs:
+ *
+ *     search
+ *     category filtering
+ *     sorting
+ *
+ * locally.
  *
  * ============================================================================
  */
@@ -82,6 +74,9 @@
         REQUEST_TIMEOUT:
             20000,
 
+        PAGE_SIZE:
+            100,
+
         MAX_PRODUCTS:
             5000,
 
@@ -89,7 +84,16 @@
             5000,
 
         DEFAULT_CATEGORY:
-            "General"
+            "General",
+
+        DEFAULT_SORT:
+            "featured",
+
+        CACHE_MODE:
+            "default",
+
+        IMAGE_LOAD_TIMEOUT:
+            15000
 
     };
 
@@ -448,12 +452,27 @@
             "",
 
         sortBy:
-            "featured",
+            CONFIG.DEFAULT_SORT,
 
         loading:
             false,
 
         initialized:
+            false,
+
+        loadController:
+            null,
+
+        loadSequence:
+            0,
+
+        totalServerProducts:
+            0,
+
+        loadedPages:
+            0,
+
+        hasMoreServerProducts:
             false
 
     };
@@ -536,44 +555,30 @@
 
         }
 
-
         state.initialized =
             true;
 
-
         cacheDOM();
-
 
         loadInitialSort();
 
-
-        /*
-         * IMPORTANT:
-         * Render categories BEFORE catalog request.
-         */
-
         renderCategoryPills();
-
 
         bindEvents();
 
-
         updateClearSearchButton();
-
 
         updatePageHeading();
 
-
         renderLoadingState();
 
-
         /*
-         * Start catalog loading after the initial
-         * page paint so the categories appear immediately.
+         * Start after initial paint.
          */
-
         window.setTimeout(
-            loadCatalog,
+            () => {
+                loadCatalog();
+            },
             0
         );
 
@@ -591,60 +596,50 @@
                 "product-list"
             );
 
-
         elements.resultsCount =
             document.getElementById(
                 "results-count"
             );
-
 
         elements.searchInput =
             document.getElementById(
                 "product-search"
             );
 
-
         elements.clearSearchButton =
             document.getElementById(
                 "clear-search"
             );
-
 
         elements.sortSelect =
             document.getElementById(
                 "product-sort"
             );
 
-
         elements.categoriesNav =
             document.getElementById(
                 "products-categories"
             );
-
 
         elements.pageHeading =
             document.getElementById(
                 "page-heading"
             );
 
-
         elements.liveRegion =
             document.getElementById(
                 "aria-live-region"
             );
-
 
         elements.productModal =
             document.getElementById(
                 "product-modal"
             );
 
-
         elements.modalBody =
             document.getElementById(
                 "modal-body"
             );
-
 
         elements.modalClose =
             document.getElementById(
@@ -657,12 +652,16 @@
     function loadInitialSort() {
 
         if (
-            elements.sortSelect &&
-            elements.sortSelect.value
+            elements.sortSelect?.value
         ) {
 
             state.sortBy =
                 elements.sortSelect.value;
+
+        } else {
+
+            state.sortBy =
+                CONFIG.DEFAULT_SORT;
 
         }
 
@@ -682,7 +681,6 @@
             escapeHTML(
                 className
             );
-
 
         const icons = {
 
@@ -985,7 +983,6 @@
 
         };
 
-
         return (
             icons[name] ||
             icons.category
@@ -1005,109 +1002,82 @@
             )
                 .toLowerCase();
 
-
         if (
             text.includes("solar")
         ) {
-
             return "solar";
-
         }
 
         if (
             text.includes("battery")
         ) {
-
             return "battery";
-
         }
 
         if (
             text.includes("charger")
         ) {
-
             return "charger";
-
         }
 
         if (
             text.includes("power bank")
         ) {
-
             return "powerbank";
-
         }
 
         if (
             text.includes("cable")
         ) {
-
             return "cable";
-
         }
 
         if (
             text.includes("earphone")
         ) {
-
             return "earphone";
-
         }
 
         if (
             text.includes("headphone")
         ) {
-
             return "headphone";
-
         }
 
         if (
             text.includes("modem")
         ) {
-
             return "modem";
-
         }
 
         if (
             text.includes("router")
         ) {
-
             return "router";
-
         }
 
         if (
             text.includes("laptop")
         ) {
-
             return "laptop";
-
         }
 
         if (
             text.includes("power tool")
         ) {
-
             return "tool";
-
         }
 
         if (
             text.includes("camera")
         ) {
-
             return "camera";
-
         }
 
         if (
             text.includes("smart")
         ) {
-
             return "home";
-
         }
 
         return "category";
@@ -1126,7 +1096,6 @@
             handleSearch
         );
 
-
         elements.searchInput?.addEventListener(
             "keydown",
             event => {
@@ -1135,29 +1104,23 @@
                     event.key ===
                     "Escape"
                 ) {
-
                     clearSearch();
-
                 }
 
                 if (
                     event.key ===
                     "Enter"
                 ) {
-
                     event.preventDefault();
-
                 }
 
             }
         );
 
-
         elements.clearSearchButton?.addEventListener(
             "click",
             clearSearch
         );
-
 
         elements.sortSelect?.addEventListener(
             "change",
@@ -1165,31 +1128,27 @@
 
                 state.sortBy =
                     event.target?.value ||
-                    "featured";
+                    CONFIG.DEFAULT_SORT;
 
                 applyFiltersAndRender();
 
             }
         );
 
-
         elements.categoriesNav?.addEventListener(
             "click",
             handleCategoryClick
         );
-
 
         elements.productList?.addEventListener(
             "click",
             handleProductGridClick
         );
 
-
         elements.modalClose?.addEventListener(
             "click",
             closeProductModal
         );
-
 
         elements.productModal?.addEventListener(
             "click",
@@ -1199,14 +1158,11 @@
                     event.target ===
                     elements.productModal
                 ) {
-
                     closeProductModal();
-
                 }
 
             }
         );
-
 
         document.addEventListener(
             "keydown",
@@ -1219,9 +1175,7 @@
                         "is-open"
                     )
                 ) {
-
                     closeProductModal();
-
                 }
 
             }
@@ -1248,7 +1202,6 @@
 
         }
 
-
         elements.categoriesNav.innerHTML =
             CATEGORY_MAP
                 .map(
@@ -1257,7 +1210,6 @@
                         const active =
                             category.query ===
                             state.activeCategory;
-
 
                         return `
                             <button
@@ -1309,15 +1261,11 @@
                 ".category-pill"
             );
 
-
         if (
             !button
         ) {
-
             return;
-
         }
-
 
         state.activeCategory =
             String(
@@ -1325,9 +1273,7 @@
                 ""
             );
 
-
         highlightCategory();
-
 
         applyFiltersAndRender();
 
@@ -1350,12 +1296,10 @@
                         ) ===
                         state.activeCategory;
 
-
                     button.classList.toggle(
                         "active",
                         active
                     );
-
 
                     button.setAttribute(
                         "aria-pressed",
@@ -1390,109 +1334,81 @@
 
     async function loadCatalog() {
 
-        if (
-            state.loading
-        ) {
-
-            return;
-
-        }
-
+        /*
+         * Prevent overlapping requests.
+         *
+         * A manual retry cancels the previous load first.
+         */
+        cancelCurrentLoad();
 
         state.loading =
             true;
 
-
-        renderLoadingState();
-
-
         const controller =
             new AbortController();
 
+        state.loadController =
+            controller;
 
-        const timeout =
-            window.setTimeout(
-                () => {
+        const loadId =
+            ++state.loadSequence;
 
-                    controller.abort();
-
-                },
-                CONFIG.REQUEST_TIMEOUT
-            );
-
+        renderLoadingState();
 
         try {
 
-            const response =
-                await fetch(
-                    `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`,
-                    {
-
-                        method:
-                            "GET",
-
-                        headers:
-                            {
-                                Accept:
-                                    "application/json"
-                            },
-
-                        /*
-                         * Allow normal browser/CDN caching.
-                         * The catalog does not need to be force-fetched
-                         * every single page load.
-                         */
-
-                        cache:
-                            "default",
-
-                        signal:
-                            controller.signal
-
-                    }
+            const result =
+                await fetchAllCatalogPages(
+                    controller.signal,
+                    loadId
                 );
-
 
             if (
-                !response.ok
+                loadId !==
+                state.loadSequence
             ) {
-
-                throw new Error(
-                    `Product service returned HTTP ${response.status}.`
-                );
-
+                return;
             }
-
-
-            const data =
-                await response.json();
-
-
-            if (
-                data?.success ===
-                false
-            ) {
-
-                throw new Error(
-                    data?.error ||
-                    "Product service returned an error."
-                );
-
-            }
-
-
-            const rawProducts =
-                extractProducts(
-                    data
-                );
-
 
             state.products =
-                rawProducts
+                deduplicateProducts(
+                    result.products
+                )
                     .slice(
                         0,
                         CONFIG.MAX_PRODUCTS
-                    )
+                    );
+
+            state.totalServerProducts =
+                result.totalProducts;
+
+            state.loadedPages =
+                result.pagesLoaded;
+
+            state.hasMoreServerProducts =
+                result.hasMore;
+
+            console.info(
+                "[PRASUN SHOP] Catalog loaded.",
+                {
+                    products:
+                        state.products.length,
+                    serverTotal:
+                        result.totalProducts,
+                    pages:
+                        result.pagesLoaded,
+                    hasMore:
+                        result.hasMore
+                }
+            );
+
+            /*
+             * Normalize before rendering.
+             *
+             * fetchAllCatalogPages() already returns raw products.
+             */
+            state.products =
+                state.products
                     .map(
                         normalizeProduct
                     )
@@ -1500,24 +1416,33 @@
                         Boolean
                     );
 
-
-            console.info(
-                `[PRASUN SHOP] Loaded ${state.products.length} products.`
-            );
-
-
             applyFiltersAndRender();
 
+            if (
+                state.hasMoreServerProducts
+            ) {
+
+                console.warn(
+                    `[PRASUN SHOP] Catalog reached MAX_PRODUCTS (${CONFIG.MAX_PRODUCTS}). More products exist on the server.`
+                );
+
+            }
 
         } catch (
             error
         ) {
 
+            if (
+                loadId !==
+                state.loadSequence
+            ) {
+                return;
+            }
+
             console.error(
                 "[PRASUN SHOP] Catalog loading failed:",
                 error
             );
-
 
             if (
                 error?.name ===
@@ -1525,7 +1450,7 @@
             ) {
 
                 renderErrorState(
-                    "The catalog request timed out."
+                    "The catalog request was cancelled or timed out."
                 );
 
             } else {
@@ -1539,15 +1464,346 @@
 
         } finally {
 
-            window.clearTimeout(
-                timeout
-            );
+            if (
+                loadId ===
+                state.loadSequence
+            ) {
 
+                state.loading =
+                    false;
 
-            state.loading =
-                false;
+                state.loadController =
+                    null;
+
+            }
 
         }
+
+    }
+
+
+    function cancelCurrentLoad() {
+
+        if (
+            state.loadController
+        ) {
+
+            try {
+                state.loadController.abort();
+            } catch {
+                /* Ignore abort errors. */
+            }
+
+        }
+
+        state.loadController =
+            null;
+
+    }
+
+
+    async function fetchAllCatalogPages(
+        signal,
+        loadId
+    ) {
+
+        const collected =
+            [];
+
+        const seenPids =
+            new Set();
+
+        let page =
+            1;
+
+        let pagesLoaded =
+            0;
+
+        let totalProducts =
+            0;
+
+        let hasMore =
+            true;
+
+        while (
+            hasMore &&
+            collected.length <
+                CONFIG.MAX_PRODUCTS
+        ) {
+
+            if (
+                loadId !==
+                state.loadSequence
+            ) {
+
+                throw new DOMException(
+                    "Stale catalog load.",
+                    "AbortError"
+                );
+
+            }
+
+            const endpoint =
+                buildProductsPageUrl(
+                    page
+                );
+
+            const data =
+                await fetchProductsPage(
+                    endpoint,
+                    signal
+                );
+
+            const pageProducts =
+                extractProducts(
+                    data
+                );
+
+            const normalizedServerCount =
+                Number(
+                    data?.totalMatches ??
+                    data?.count ??
+                    0
+                );
+
+            if (
+                Number.isFinite(
+                    normalizedServerCount
+                ) &&
+                normalizedServerCount >
+                    totalProducts
+            ) {
+
+                totalProducts =
+                    normalizedServerCount;
+
+            }
+
+            pagesLoaded++;
+
+            for (
+                const product
+                of pageProducts
+            ) {
+
+                const pid =
+                    getProductIdentity(
+                        product
+                    );
+
+                if (
+                    !pid ||
+                    seenPids.has(
+                        pid
+                    )
+                ) {
+                    continue;
+                }
+
+                seenPids.add(
+                    pid
+                );
+
+                collected.push(
+                    product
+                );
+
+                if (
+                    collected.length >=
+                    CONFIG.MAX_PRODUCTS
+                ) {
+                    break;
+                }
+
+            }
+
+            /*
+             * Worker returns:
+             *
+             * hasMore
+             * nextCursor
+             *
+             * We use the explicit hasMore value when available.
+             */
+            if (
+                typeof data?.hasMore ===
+                "boolean"
+            ) {
+
+                hasMore =
+                    data.hasMore;
+
+            } else {
+
+                /*
+                 * Compatibility fallback for older Worker responses.
+                 */
+                hasMore =
+                    pageProducts.length >=
+                    CONFIG.PAGE_SIZE;
+
+            }
+
+            if (
+                !pageProducts.length
+            ) {
+
+                hasMore =
+                    false;
+
+            }
+
+            if (
+                hasMore
+            ) {
+
+                page++;
+
+            }
+
+            /*
+             * Safety guard against a malformed Worker response that keeps
+             * returning identical pages forever.
+             */
+            if (
+                pagesLoaded >
+                Math.ceil(
+                    CONFIG.MAX_PRODUCTS /
+                        CONFIG.PAGE_SIZE
+                ) +
+                5
+            ) {
+
+                console.warn(
+                    "[PRASUN SHOP] Catalog pagination safety limit reached."
+                );
+
+                hasMore =
+                    false;
+
+            }
+
+            /*
+             * Let the browser update between pages.
+             */
+            await yieldToBrowser();
+
+        }
+
+        return {
+            products:
+                collected,
+
+            totalProducts:
+                Math.max(
+                    totalProducts,
+                    collected.length
+                ),
+
+            pagesLoaded,
+
+            hasMore:
+                hasMore &&
+                collected.length >=
+                    CONFIG.MAX_PRODUCTS
+
+        };
+
+    }
+
+
+    function buildProductsPageUrl(
+        page
+    ) {
+
+        const url =
+            new URL(
+                `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`
+            );
+
+        url.searchParams.set(
+            "limit",
+            String(
+                CONFIG.PAGE_SIZE
+            )
+        );
+
+        url.searchParams.set(
+            "page",
+            String(
+                page
+            )
+        );
+
+        return url.toString();
+
+    }
+
+
+    async function fetchProductsPage(
+        endpoint,
+        signal
+    ) {
+
+        const response =
+            await fetch(
+                endpoint,
+                {
+                    method:
+                        "GET",
+
+                    headers:
+                        {
+                            Accept:
+                                "application/json"
+                        },
+
+                    cache:
+                        CONFIG.CACHE_MODE,
+
+                    signal
+
+                }
+            );
+
+        if (
+            !response.ok
+        ) {
+
+            throw new Error(
+                `Product service returned HTTP ${response.status}.`
+            );
+
+        }
+
+        let data;
+
+        try {
+
+            data =
+                await response.json();
+
+        } catch {
+
+            throw new Error(
+                "Product service returned invalid JSON."
+            );
+
+        }
+
+        if (
+            data?.success ===
+            false
+        ) {
+
+            throw new Error(
+                data?.error ||
+                "Product service returned an error."
+            );
+
+        }
+
+        return data;
 
     }
 
@@ -1566,7 +1822,6 @@
 
         }
 
-
         if (
             Array.isArray(
                 data?.products
@@ -1576,7 +1831,6 @@
             return data.products;
 
         }
-
 
         if (
             Array.isArray(
@@ -1588,7 +1842,6 @@
 
         }
 
-
         if (
             Array.isArray(
                 data?.data?.list
@@ -1598,7 +1851,6 @@
             return data.data.list;
 
         }
-
 
         if (
             Array.isArray(
@@ -1610,8 +1862,94 @@
 
         }
 
-
         return [];
+
+    }
+
+
+    function getProductIdentity(
+        product
+    ) {
+
+        const value =
+            product?.pid ??
+            product?.cj_id ??
+            product?.id ??
+            product?.productId ??
+            product?.sku ??
+            "";
+
+        return String(
+            value
+        )
+            .trim();
+
+    }
+
+
+    function deduplicateProducts(
+        products
+    ) {
+
+        const map =
+            new Map();
+
+        for (
+            const product
+            of products
+        ) {
+
+            const id =
+                getProductIdentity(
+                    product
+                );
+
+            if (
+                !id
+            ) {
+                continue;
+            }
+
+            map.set(
+                id,
+                product
+            );
+
+        }
+
+        return [
+            ...map.values()
+        ];
+
+    }
+
+
+    function yieldToBrowser() {
+
+        return new Promise(
+            resolve => {
+
+                if (
+                    typeof window.requestAnimationFrame ===
+                    "function"
+                ) {
+
+                    window.requestAnimationFrame(
+                        () =>
+                            resolve()
+                    );
+
+                } else {
+
+                    window.setTimeout(
+                        resolve,
+                        0
+                    );
+
+                }
+
+            }
+        );
 
     }
 
@@ -1625,16 +1963,12 @@
     ) {
 
         state.searchQuery =
-            String(
+            normalizeSearchQuery(
                 event.target?.value ||
                 ""
-            )
-                .trim()
-                .toLowerCase();
-
+            );
 
         updateClearSearchButton();
-
 
         applyFiltersAndRender();
 
@@ -1652,16 +1986,12 @@
 
         }
 
-
         state.searchQuery =
             "";
 
-
         updateClearSearchButton();
 
-
         applyFiltersAndRender();
-
 
         elements.searchInput?.focus();
 
@@ -1673,15 +2003,30 @@
         if (
             !elements.clearSearchButton
         ) {
-
             return;
-
         }
-
 
         elements.clearSearchButton.hidden =
             state.searchQuery.length ===
             0;
+
+    }
+
+
+    function normalizeSearchQuery(
+        value
+    ) {
+
+        return String(
+            value ||
+            ""
+        )
+            .toLowerCase()
+            .replace(
+                /\s+/g,
+                " "
+            )
+            .trim();
 
     }
 
@@ -1697,9 +2042,10 @@
                 ...state.products
             ];
 
-
         /*
+         * ---------------------------------------------------------------
          * SEARCH
+         * ---------------------------------------------------------------
          */
 
         if (
@@ -1715,7 +2061,6 @@
                         Boolean
                     );
 
-
             products =
                 products.filter(
                     product => {
@@ -1724,7 +2069,6 @@
                             buildSearchText(
                                 product
                             );
-
 
                         return terms.every(
                             term =>
@@ -1738,9 +2082,10 @@
 
         }
 
-
         /*
+         * ---------------------------------------------------------------
          * CATEGORY
+         * ---------------------------------------------------------------
          */
 
         if (
@@ -1749,7 +2094,6 @@
 
             const category =
                 getActiveCategory();
-
 
             products =
                 products.filter(
@@ -1762,15 +2106,15 @@
 
         }
 
-
         /*
+         * ---------------------------------------------------------------
          * SORT
+         * ---------------------------------------------------------------
          */
 
         products.sort(
             compareProducts
         );
-
 
         state.filteredProducts =
             products.slice(
@@ -1778,12 +2122,9 @@
                 CONFIG.MAX_VISIBLE_PRODUCTS
             );
 
-
         updatePageHeading();
 
-
         updateResultsCount();
-
 
         if (
             state.filteredProducts.length ===
@@ -1792,7 +2133,6 @@
 
             let message =
                 "No products are currently available.";
-
 
             if (
                 state.searchQuery
@@ -1810,16 +2150,13 @@
 
             }
 
-
             renderEmptyState(
                 message
             );
 
-
             return;
 
         }
-
 
         renderProductGrid();
 
@@ -1847,6 +2184,12 @@
             product?.sku,
 
             product?.pid,
+
+            product?.cj_id,
+
+            product?.variantSku,
+
+            product?.variantOptions,
 
             stripHtml(
                 product?.description
@@ -1883,12 +2226,10 @@
 
         }
 
-
         const searchable =
             buildSearchText(
                 product
             );
-
 
         return category.terms.some(
             term =>
@@ -1915,7 +2256,7 @@
         const sort =
             String(
                 state.sortBy ||
-                "featured"
+                CONFIG.DEFAULT_SORT
             )
                 .toLowerCase()
                 .replace(
@@ -1923,32 +2264,29 @@
                     ""
                 );
 
-
         const priceA =
             Number(
-                a.price
+                a?.price
             ) || 0;
-
 
         const priceB =
             Number(
-                b.price
+                b?.price
             ) || 0;
-
 
         const nameA =
             String(
-                a.name ||
+                a?.name ||
+                a?.title ||
                 ""
             );
-
 
         const nameB =
             String(
-                b.name ||
+                b?.name ||
+                b?.title ||
                 ""
             );
-
 
         if (
             sort.includes(
@@ -1959,11 +2297,12 @@
             )
         ) {
 
-            return priceA -
-                priceB;
+            return (
+                priceA -
+                priceB
+            );
 
         }
-
 
         if (
             sort.includes(
@@ -1974,11 +2313,12 @@
             )
         ) {
 
-            return priceB -
-                priceA;
+            return (
+                priceB -
+                priceA
+            );
 
         }
-
 
         if (
             sort.includes(
@@ -2000,7 +2340,6 @@
 
         }
 
-
         if (
             sort.includes(
                 "ztoa"
@@ -2021,18 +2360,21 @@
 
         }
 
+        /*
+         * FEATURED
+         *
+         * In-stock products first, then alphabetical order.
+         */
 
         const stockA =
             Number(
-                a.quantity
+                a?.quantity
             ) > 0;
-
 
         const stockB =
             Number(
-                b.quantity
+                b?.quantity
             ) > 0;
-
 
         if (
             stockA &&
@@ -2043,7 +2385,6 @@
 
         }
 
-
         if (
             !stockA &&
             stockB
@@ -2052,7 +2393,6 @@
             return 1;
 
         }
-
 
         return nameA.localeCompare(
             nameB,
@@ -2067,7 +2407,7 @@
 
 
     /* =========================================================================
-       15. NORMALIZATION
+       15. PRODUCT NORMALIZATION
        ========================================================================= */
 
     function normalizeProduct(
@@ -2084,6 +2424,14 @@
 
         }
 
+        const pid =
+            String(
+                raw.pid ??
+                raw.productId ??
+                raw.id ??
+                ""
+            )
+                .trim();
 
         const id =
             String(
@@ -2095,17 +2443,6 @@
             )
                 .trim();
 
-
-        const pid =
-            String(
-                raw.pid ??
-                raw.id ??
-                raw.productId ??
-                ""
-            )
-                .trim();
-
-
         const name =
             String(
                 raw.title ??
@@ -2114,8 +2451,11 @@
                 raw.productName ??
                 "CJ Product"
             )
+                .replace(
+                    /\s+/g,
+                    " "
+                )
                 .trim();
-
 
         if (
             !id ||
@@ -2126,79 +2466,68 @@
 
         }
 
-
-        let rawPrice =
-            raw.price ??
-            raw.sellPrice ??
-            raw.unitPrice ??
-            0;
-
-
-        if (
-            rawPrice &&
-            typeof rawPrice ===
-                "object"
-        ) {
-
-            rawPrice =
-                rawPrice.amount ??
-                rawPrice.value ??
-                rawPrice.raw ??
-                0;
-
-        }
-
-
-        const parsedPrice =
-            parseFloat(
-                String(
-                    rawPrice
-                )
-                    .replace(
-                        /[^0-9.]/g,
-                        ""
-                    )
-            );
-
-
+        /*
+         * Worker already returns the final storefront selling price.
+         */
         const price =
-            Number.isFinite(
-                parsedPrice
-            )
-                ? Number(
-                    parsedPrice.toFixed(
-                        2
-                    )
-                )
-                : 0;
-
+            normalizePrice(
+                raw.price ??
+                raw.salePrice ??
+                raw.sellPrice ??
+                raw.unitPrice ??
+                0
+            );
 
         const quantity =
             normalizeInventory(
-                raw.quantity ??
-                raw.inventory ??
-                raw.totalInventory ??
-                raw.warehouseInventoryNum ??
-                raw.totalVerifiedInventory
+                firstDefined(
+                    raw.quantity,
+                    raw.inventory,
+                    raw.totalInventory,
+                    raw.warehouseInventoryNum,
+                    raw.totalVerifiedInventory,
+                    raw.totalUnVerifiedInventory,
+                    0
+                )
             );
-
 
         const rating =
             normalizeRating(
                 raw.rating
             );
 
-
         const images =
             getGalleryImages(
                 raw
             );
 
-
         const image =
+            normalizeImageUrl(
+                raw.image
+            ) ||
             images[0] ||
             PLACEHOLDER_IMAGE;
 
+        const originalImage =
+            normalizeImageUrl(
+                raw.originalImage
+            ) ||
+            normalizeImageUrl(
+                raw.bigImage
+            ) ||
+            normalizeImageUrl(
+                raw.productImage
+            );
+
+        const originalImages =
+            normalizeOriginalImages(
+                raw
+            );
+
+        const variants =
+            normalizeVariants(
+                raw.variants
+            );
 
         return {
 
@@ -2244,6 +2573,10 @@
                     raw.oneCategoryName ||
                     CONFIG.DEFAULT_CATEGORY
                 )
+                    .replace(
+                        /\s+/g,
+                        " "
+                    )
                     .trim(),
 
             oneCategoryName:
@@ -2277,31 +2610,11 @@
 
             images,
 
-            originalImage:
-                normalizeImageUrl(
-                    raw.originalImage ||
-                    raw.bigImage ||
-                    raw.productImage ||
-                    ""
-                ),
+            originalImage,
 
-            originalImages:
-                Array.isArray(
-                    raw.originalImages
-                )
-                    ? raw.originalImages
-                        .map(
-                            normalizeImageUrl
-                        )
-                        .filter(
-                            Boolean
-                        )
-                    : [],
+            originalImages,
 
-            variants:
-                normalizeVariants(
-                    raw.variants
-                ),
+            variants,
 
             source:
                 "CJ Dropshipping"
@@ -2325,56 +2638,85 @@
 
         }
 
+        return variants
+            .map(
+                variant => {
 
-        return variants.map(
-            variant => {
+                    if (
+                        !variant ||
+                        typeof variant !==
+                            "object"
+                    ) {
 
-                return {
+                        return null;
 
-                    ...variant,
+                    }
 
-                    vid:
-                        String(
-                            variant?.vid ||
-                            ""
-                        )
-                            .trim(),
+                    return {
 
-                    sku:
-                        String(
-                            variant?.sku ||
-                            variant?.variantSku ||
-                            ""
-                        )
-                            .trim(),
+                        ...variant,
 
-                    name:
-                        String(
-                            variant?.name ||
-                            variant?.variantNameEn ||
-                            "Default"
-                        )
-                            .trim(),
+                        vid:
+                            String(
+                                variant?.vid ||
+                                variant?.variantId ||
+                                ""
+                            )
+                                .trim(),
 
-                    price:
-                        normalizePrice(
-                            variant?.price
-                        ),
+                        pid:
+                            String(
+                                variant?.pid ||
+                                ""
+                            )
+                                .trim(),
 
-                    costPrice:
-                        normalizePrice(
-                            variant?.costPrice
-                        ),
+                        sku:
+                            String(
+                                variant?.sku ||
+                                variant?.variantSku ||
+                                ""
+                            )
+                                .trim(),
 
-                    inventory:
-                        normalizeInventory(
-                            variant?.inventory
-                        )
+                        name:
+                            String(
+                                variant?.name ||
+                                variant?.variantNameEn ||
+                                variant?.variantName ||
+                                "Default"
+                            )
+                                .trim(),
 
-                };
+                        variantKey:
+                            String(
+                                variant?.variantKey ||
+                                ""
+                            )
+                                .trim(),
 
-            }
-        );
+                        price:
+                            normalizePrice(
+                                variant?.price
+                            ),
+
+                        costPrice:
+                            normalizePrice(
+                                variant?.costPrice
+                            ),
+
+                        inventory:
+                            normalizeInventory(
+                                variant?.inventory
+                            )
+
+                    };
+
+                }
+            )
+            .filter(
+                Boolean
+            );
 
     }
 
@@ -2383,11 +2725,48 @@
         value
     ) {
 
+        /*
+         * Already-number values.
+         */
+        if (
+            typeof value ===
+            "number"
+        ) {
+
+            return Number.isFinite(
+                value
+            )
+                ? Math.max(
+                    0,
+                    Math.floor(
+                        value
+                    )
+                )
+                : 0;
+
+        }
+
+        /*
+         * Strings such as:
+         *
+         * "1,250"
+         * "1250 pcs"
+         */
         const number =
             Number(
-                value
+                String(
+                    value ??
+                    ""
+                )
+                    .replace(
+                        /,/g,
+                        ""
+                    )
+                    .replace(
+                        /[^0-9.-]/g,
+                        ""
+                    )
             );
-
 
         if (
             !Number.isFinite(
@@ -2398,7 +2777,6 @@
             return 0;
 
         }
-
 
         return Math.max(
             0,
@@ -2419,7 +2797,6 @@
                 value
             );
 
-
         if (
             !Number.isFinite(
                 number
@@ -2429,7 +2806,6 @@
             return 0;
 
         }
-
 
         return Number(
             Math.min(
@@ -2451,11 +2827,35 @@
         value
     ) {
 
+        if (
+            typeof value ===
+            "object" &&
+            value !== null
+        ) {
+
+            value =
+                value.amount ??
+                value.value ??
+                value.price ??
+                0;
+
+        }
+
         const number =
             Number(
-                value
+                String(
+                    value ??
+                    0
+                )
+                    .replace(
+                        /,/g,
+                        ""
+                    )
+                    .replace(
+                        /[^0-9.-]/g,
+                        ""
+                    )
             );
-
 
         if (
             !Number.isFinite(
@@ -2466,7 +2866,6 @@
             return 0;
 
         }
-
 
         return Number(
             number.toFixed(
@@ -2495,10 +2894,8 @@
 
         }
 
-
         let url =
             value.trim();
-
 
         if (
             !url
@@ -2507,7 +2904,6 @@
             return "";
 
         }
-
 
         if (
             url.startsWith(
@@ -2519,7 +2915,6 @@
 
         }
 
-
         if (
             url.startsWith(
                 "//"
@@ -2530,7 +2925,6 @@
                 `https:${url}`;
 
         }
-
 
         if (
             /^http:\/\//i.test(
@@ -2546,6 +2940,21 @@
 
         }
 
+        /*
+         * Only allow absolute HTTPS URLs.
+         *
+         * Relative paths are intentionally ignored because the Worker
+         * normalizes CJ images into absolute HTTPS URLs.
+         */
+        if (
+            !/^https:\/\//i.test(
+                url
+            )
+        ) {
+
+            return "";
+
+        }
 
         return url;
 
@@ -2556,13 +2965,34 @@
         url
     ) {
 
-        return (
-            typeof url ===
-                "string" &&
-            url.includes(
-                CONFIG.IMAGE_PROXY_ENDPOINT
-            )
-        );
+        if (
+            typeof url !==
+                "string"
+        ) {
+
+            return false;
+
+        }
+
+        try {
+
+            const parsed =
+                new URL(
+                    url
+                );
+
+            return (
+                parsed.pathname ===
+                    CONFIG.IMAGE_PROXY_ENDPOINT ||
+                parsed.pathname ===
+                    "/image-proxy"
+            );
+
+        } catch {
+
+            return false;
+
+        }
 
     }
 
@@ -2576,7 +3006,6 @@
                 value
             );
 
-
         if (
             !normalized
         ) {
@@ -2584,7 +3013,6 @@
             return "";
 
         }
-
 
         if (
             normalized.startsWith(
@@ -2596,7 +3024,6 @@
 
         }
 
-
         if (
             isProxyUrl(
                 normalized
@@ -2606,7 +3033,6 @@
             return normalized;
 
         }
-
 
         return (
             `${CONFIG.API_BASE}` +
@@ -2627,11 +3053,20 @@
         const candidates =
             [];
 
+        /*
+         * The Worker already provides:
+         *
+         *     image
+         *     images
+         *     originalImage
+         *     originalImages
+         *
+         * Keep the older CJ fields as compatibility fallbacks.
+         */
 
         candidates.push(
             product?.image
         );
-
 
         if (
             Array.isArray(
@@ -2645,11 +3080,9 @@
 
         }
 
-
         candidates.push(
             product?.originalImage
         );
-
 
         if (
             Array.isArray(
@@ -2663,21 +3096,21 @@
 
         }
 
-
         candidates.push(
             product?.bigImage
         );
-
 
         candidates.push(
             product?.productImage
         );
 
-
         candidates.push(
             product?.productImg
         );
 
+        candidates.push(
+            product?.mainImage
+        );
 
         if (
             Array.isArray(
@@ -2691,10 +3124,9 @@
 
         }
 
-
         if (
             typeof product?.productImageSet ===
-                "string"
+            "string"
         ) {
 
             candidates.push(
@@ -2704,6 +3136,94 @@
 
         }
 
+        if (
+            Array.isArray(
+                product?.imageList
+            )
+        ) {
+
+            for (
+                const item
+                of product.imageList
+            ) {
+
+                if (
+                    typeof item ===
+                    "string"
+                ) {
+
+                    candidates.push(
+                        item
+                    );
+
+                } else if (
+                    item &&
+                    typeof item ===
+                        "object"
+                ) {
+
+                    candidates.push(
+                        item.url,
+                        item.imageUrl,
+                        item.bigImage,
+                        item.productImage
+                    );
+
+                }
+
+            }
+
+        }
+
+        return [
+            ...new Set(
+                candidates
+                    .map(
+                        normalizeImageUrl
+                    )
+                    .filter(
+                        Boolean
+                    )
+            )
+        ];
+
+    }
+
+
+    function normalizeOriginalImages(
+        product
+    ) {
+
+        const candidates =
+            [];
+
+        candidates.push(
+            product?.originalImage
+        );
+
+        if (
+            Array.isArray(
+                product?.originalImages
+            )
+        ) {
+
+            candidates.push(
+                ...product.originalImages
+            );
+
+        }
+
+        candidates.push(
+            product?.bigImage
+        );
+
+        candidates.push(
+            product?.productImage
+        );
+
+        candidates.push(
+            product?.productImg
+        );
 
         return [
             ...new Set(
@@ -2724,19 +3244,40 @@
         product
     ) {
 
-        return [
-            ...new Set(
-                collectProductImageUrls(
-                    product
+        const rawImages =
+            collectProductImageUrls(
+                product
+            );
+
+        const result =
+            [];
+
+        for (
+            const image
+            of rawImages
+        ) {
+
+            const proxied =
+                buildProxyUrl(
+                    image
+                );
+
+            if (
+                proxied &&
+                !result.includes(
+                    proxied
                 )
-                    .map(
-                        buildProxyUrl
-                    )
-                    .filter(
-                        Boolean
-                    )
-            )
-        ];
+            ) {
+
+                result.push(
+                    proxied
+                );
+
+            }
+
+        }
+
+        return result;
 
     }
 
@@ -2755,7 +3296,6 @@
 
         }
 
-
         elements.productList.innerHTML =
             state.filteredProducts
                 .map(
@@ -2763,11 +3303,9 @@
                 )
                 .join("");
 
-
         setLoadingState(
             false
         );
-
 
         attachProductImageFallbacks();
 
@@ -2783,13 +3321,11 @@
                 product.id
             );
 
-
         const title =
             escapeHTML(
                 product.name ||
                 "CJ Product"
             );
-
 
         const category =
             escapeHTML(
@@ -2797,36 +3333,36 @@
                 CONFIG.DEFAULT_CATEGORY
             );
 
-
         const image =
             escapeHTML(
                 product.image ||
                 PLACEHOLDER_IMAGE
             );
 
+        const originalImage =
+            escapeHTML(
+                product.originalImage ||
+                ""
+            );
 
         const price =
             formatPrice(
                 product.price
             );
 
-
         const quantity =
             Number(
                 product.quantity
             ) || 0;
 
-
         const available =
             quantity >
             0;
-
 
         const description =
             stripHtml(
                 product.description
             );
-
 
         const shortDescription =
             description.length >
@@ -2843,6 +3379,12 @@
                     "Product information available."
                 );
 
+        const variantCount =
+            Array.isArray(
+                product.variants
+            )
+                ? product.variants.length
+                : 0;
 
         return `
 
@@ -2882,10 +3424,7 @@
                         loading="lazy"
                         decoding="async"
                         referrerpolicy="no-referrer"
-                        data-original-image="${escapeHTML(
-                            product.originalImage ||
-                            ""
-                        )}"
+                        data-original-image="${originalImage}"
                     >
 
                 </button>
@@ -2941,6 +3480,25 @@
                                         )}
                                     </span>
 
+                                </div>
+                            `
+                            : ""
+                    }
+
+
+                    ${
+                        variantCount > 0
+                            ? `
+                                <div
+                                    class="product-variant-count"
+                                    aria-label="${variantCount} variants available"
+                                >
+                                    ${variantCount}
+                                    ${
+                                        variantCount === 1
+                                            ? "variant"
+                                            : "variants"
+                                    }
                                 </div>
                             `
                             : ""
@@ -3044,29 +3602,24 @@
                 '[data-action="view-details"]'
             );
 
-
         if (
             detailsButton
         ) {
 
             event.preventDefault();
 
-
             openProductModal(
                 detailsButton.dataset.productId
             );
-
 
             return;
 
         }
 
-
         const cartButton =
             event.target.closest(
                 '[data-action="add-cart"]'
             );
-
 
         if (
             !cartButton
@@ -3076,9 +3629,15 @@
 
         }
 
-
         event.preventDefault();
 
+        if (
+            cartButton.disabled
+        ) {
+
+            return;
+
+        }
 
         const product =
             state.products.find(
@@ -3091,7 +3650,6 @@
                     )
             );
 
-
         if (
             !product
         ) {
@@ -3099,7 +3657,6 @@
             return;
 
         }
-
 
         if (
             Number(
@@ -3111,59 +3668,14 @@
                 `${product.name} is currently out of stock.`
             );
 
-
             return;
 
         }
 
-
-        let added =
-            false;
-
-
-        if (
-            typeof window.addToCart ===
-            "function"
-        ) {
-
-            added =
-                Boolean(
-                    window.addToCart(
-                        product
-                    )
-                );
-
-        } else {
-
-            try {
-
-                document.dispatchEvent(
-                    new CustomEvent(
-                        "cart:add",
-                        {
-                            detail:
-                                product
-                        }
-                    )
-                );
-
-
-                added =
-                    true;
-
-            } catch (
-                error
-            ) {
-
-                console.error(
-                    "[PRASUN SHOP] Cart error:",
-                    error
-                );
-
-            }
-
-        }
-
+        const added =
+            invokeAddToCart(
+                product
+            );
 
         if (
             !added
@@ -3173,15 +3685,12 @@
 
         }
 
-
         cartButton.disabled =
             true;
-
 
         cartButton.classList.add(
             "added"
         );
-
 
         cartButton.innerHTML =
             `
@@ -3195,23 +3704,29 @@
                 </span>
             `;
 
-
         announce(
             `${product.name} added to cart.`
         );
 
-
         window.setTimeout(
             () => {
+
+                /*
+                 * The button may have been removed from the DOM by another
+                 * render between click and timeout.
+                 */
+                if (
+                    !cartButton.isConnected
+                ) {
+                    return;
+                }
 
                 cartButton.disabled =
                     false;
 
-
                 cartButton.classList.remove(
                     "added"
                 );
-
 
                 cartButton.innerHTML =
                     `
@@ -3232,6 +3747,82 @@
     }
 
 
+    function invokeAddToCart(
+        product
+    ) {
+
+        if (
+            typeof window.addToCart ===
+            "function"
+        ) {
+
+            try {
+
+                const result =
+                    window.addToCart(
+                        product
+                    );
+
+                /*
+                 * Many cart implementations return nothing on success.
+                 *
+                 * Only an explicit false means failure.
+                 */
+                return result !== false;
+
+            } catch (
+                error
+            ) {
+
+                console.error(
+                    "[PRASUN SHOP] addToCart() failed:",
+                    error
+                );
+
+                announce(
+                    "Unable to add this product to the cart."
+                );
+
+                return false;
+
+            }
+
+        }
+
+        try {
+
+            document.dispatchEvent(
+                new CustomEvent(
+                    "cart:add",
+                    {
+                        detail:
+                            product
+                    }
+                )
+            );
+
+            return true;
+
+        } catch (
+            error
+        ) {
+
+            console.error(
+                "[PRASUN SHOP] Cart event failed:",
+                error
+            );
+
+            announce(
+                "Unable to add this product to the cart."
+            );
+
+            return false;
+
+        }
+
+    }
+
+
     /* =========================================================================
        19. IMAGE FALLBACK
        ========================================================================= */
@@ -3244,6 +3835,16 @@
             )
             .forEach(
                 image => {
+
+                    if (
+                        image.dataset.fallbackBound ===
+                        "true"
+                    ) {
+                        return;
+                    }
+
+                    image.dataset.fallbackBound =
+                        "true";
 
                     image.addEventListener(
                         "error",
@@ -3263,20 +3864,21 @@
         const image =
             event.currentTarget;
 
-
         if (
             !image
         ) {
-
             return;
-
         }
-
 
         const original =
             image.dataset.originalImage;
 
-
+        /*
+         * First fallback:
+         *
+         * current proxied URL failed
+         * -> try original CJ HTTPS URL
+         */
         if (
             original &&
             !image.dataset.originalAttempted
@@ -3285,22 +3887,19 @@
             image.dataset.originalAttempted =
                 "true";
 
-
-            const proxy =
-                buildProxyUrl(
+            const normalizedOriginal =
+                normalizeImageUrl(
                     original
                 );
 
-
             if (
-                proxy &&
-                proxy !==
+                normalizedOriginal &&
+                normalizedOriginal !==
                     image.src
             ) {
 
                 image.src =
-                    proxy;
-
+                    normalizedOriginal;
 
                 return;
 
@@ -3308,14 +3907,16 @@
 
         }
 
-
+        /*
+         * Final fallback:
+         * local placeholder.
+         */
         if (
             !image.dataset.placeholderUsed
         ) {
 
             image.dataset.placeholderUsed =
                 "true";
-
 
             image.src =
                 PLACEHOLDER_IMAGE;
@@ -3341,12 +3942,10 @@
 
         }
 
-
         const parser =
             new DOMParser();
 
-
-        const documentFragment =
+        const parsed =
             parser.parseFromString(
                 String(
                     html
@@ -3354,8 +3953,7 @@
                 "text/html"
             );
 
-
-        [
+        const forbiddenTags = [
             "script",
             "style",
             "iframe",
@@ -3369,25 +3967,28 @@
             "option",
             "video",
             "audio",
-            "source"
-        ]
-            .forEach(
-                tag => {
+            "source",
+            "link",
+            "meta",
+            "base"
+        ];
 
-                    documentFragment
-                        .querySelectorAll(
-                            tag
-                        )
-                        .forEach(
-                            node =>
-                                node.remove()
-                        );
+        forbiddenTags.forEach(
+            tag => {
 
-                }
-            );
+                parsed
+                    .querySelectorAll(
+                        tag
+                    )
+                    .forEach(
+                        node =>
+                            node.remove()
+                    );
 
+            }
+        );
 
-        documentFragment
+        parsed
             .querySelectorAll(
                 "*"
             )
@@ -3404,12 +4005,13 @@
                                     attribute.name
                                         .toLowerCase();
 
-
                                 const value =
                                     attribute.value
                                         .trim();
 
-
+                                /*
+                                 * Remove all event handlers.
+                                 */
                                 if (
                                     name.startsWith(
                                         "on"
@@ -3424,22 +4026,91 @@
 
                                 }
 
-
+                                /*
+                                 * Remove style attributes.
+                                 *
+                                 * This prevents CJ HTML from overriding
+                                 * storefront styles.
+                                 */
                                 if (
-                                    (
-                                        name ===
-                                        "src" ||
-                                        name ===
-                                        "href"
-                                    ) &&
-                                    /^javascript:/i.test(
-                                        value
-                                    )
+                                    name ===
+                                    "style"
                                 ) {
 
                                     element.removeAttribute(
                                         attribute.name
                                     );
+
+                                    return;
+
+                                }
+
+                                /*
+                                 * Validate links.
+                                 */
+                                if (
+                                    name ===
+                                    "href"
+                                ) {
+
+                                    if (
+                                        !isSafeHref(
+                                            value
+                                        )
+                                    ) {
+
+                                        element.removeAttribute(
+                                            "href"
+                                        );
+
+                                    } else {
+
+                                        element.setAttribute(
+                                            "target",
+                                            "_blank"
+                                        );
+
+                                        element.setAttribute(
+                                            "rel",
+                                            "noopener noreferrer nofollow"
+                                        );
+
+                                    }
+
+                                }
+
+                                /*
+                                 * Images are normalized and routed through
+                                 * the Worker proxy.
+                                 */
+                                if (
+                                    name ===
+                                    "src"
+                                ) {
+
+                                    const normalized =
+                                        normalizeImageUrl(
+                                            value
+                                        );
+
+                                    if (
+                                        normalized
+                                    ) {
+
+                                        element.setAttribute(
+                                            "src",
+                                            buildProxyUrl(
+                                                normalized
+                                            )
+                                        );
+
+                                    } else {
+
+                                        element.removeAttribute(
+                                            "src"
+                                        );
+
+                                    }
 
                                 }
 
@@ -3449,64 +4120,76 @@
                 }
             );
 
-
-        documentFragment
+        parsed
             .querySelectorAll(
                 "img"
             )
             .forEach(
                 image => {
 
-                    const source =
-                        image.getAttribute(
-                            "src"
-                        );
-
-
-                    if (
-                        source
-                    ) {
-
-                        const normalized =
-                            normalizeImageUrl(
-                                source
-                            );
-
-
-                        if (
-                            normalized
-                        ) {
-
-                            image.setAttribute(
-                                "src",
-                                buildProxyUrl(
-                                    normalized
-                                )
-                            );
-
-                        }
-
-                    }
-
-
                     image.setAttribute(
                         "loading",
                         "lazy"
                     );
-
 
                     image.setAttribute(
                         "decoding",
                         "async"
                     );
 
+                    image.setAttribute(
+                        "referrerpolicy",
+                        "no-referrer"
+                    );
+
                 }
             );
 
-
-        return documentFragment
+        return parsed
             .body
             .innerHTML;
+
+    }
+
+
+    function isSafeHref(
+        value
+    ) {
+
+        if (
+            !value
+        ) {
+            return false;
+        }
+
+        if (
+            value.startsWith(
+                "#"
+            )
+        ) {
+            return true;
+        }
+
+        try {
+
+            const parsed =
+                new URL(
+                    value,
+                    window.location.href
+                );
+
+            return (
+                parsed.protocol ===
+                    "https:" ||
+                parsed.protocol ===
+                    "http:"
+            );
+
+        } catch {
+
+            return false;
+
+        }
 
     }
 
@@ -3524,11 +4207,9 @@
                 "[PRASUN SHOP] Product modal is missing from index.html."
             );
 
-
             return;
 
         }
-
 
         const product =
             state.products.find(
@@ -3541,7 +4222,6 @@
                     )
             );
 
-
         if (
             !product
         ) {
@@ -3550,18 +4230,15 @@
 
         }
 
-
         const images =
             getGalleryImages(
                 product
             );
 
-
         const primaryImage =
             product.image ||
             images[0] ||
             PLACEHOLDER_IMAGE;
-
 
         const title =
             escapeHTML(
@@ -3569,19 +4246,16 @@
                 "CJ Product"
             );
 
-
         const category =
             escapeHTML(
                 product.category ||
                 CONFIG.DEFAULT_CATEGORY
             );
 
-
         const quantity =
             Number(
                 product.quantity
             ) || 0;
-
 
         const description =
             sanitizeDescription(
@@ -3593,6 +4267,12 @@
                 </p>
             `;
 
+        const variants =
+            Array.isArray(
+                product.variants
+            )
+                ? product.variants
+                : [];
 
         const galleryHtml =
             images.length > 1
@@ -3607,11 +4287,11 @@
                                     image,
                                     index
                                 ) => `
+
                                     <button
                                         type="button"
                                         class="modal-gallery-thumb ${
-                                            index ===
-                                            0
+                                            index === 0
                                                 ? "is-active"
                                                 : ""
                                         }"
@@ -3619,8 +4299,7 @@
                                             image
                                         )}"
                                         aria-label="View product image ${
-                                            index +
-                                            1
+                                            index + 1
                                         }"
                                     >
 
@@ -3631,9 +4310,11 @@
                                             alt=""
                                             loading="lazy"
                                             decoding="async"
+                                            referrerpolicy="no-referrer"
                                         >
 
                                     </button>
+
                                 `
                             )
                             .join("")}
@@ -3642,6 +4323,25 @@
                 `
                 : "";
 
+        const variantsHtml =
+            variants.length > 1
+                ? `
+                    <div
+                        class="product-variants-info"
+                    >
+
+                        <strong>
+                            Variants:
+                        </strong>
+
+                        <span>
+                            ${variants.length}
+                            available
+                        </span>
+
+                    </div>
+                `
+                : "";
 
         elements.modalBody.innerHTML =
             `
@@ -3712,6 +4412,9 @@
                     </div>
 
 
+                    ${variantsHtml}
+
+
                     <div
                         class="modal-description-box"
                     >
@@ -3764,12 +4467,10 @@
 
             `;
 
-
         const mainImage =
             document.getElementById(
                 "main-modal-img"
             );
-
 
         if (
             mainImage
@@ -3779,18 +4480,22 @@
                 "error",
                 () => {
 
-                    mainImage.src =
-                        PLACEHOLDER_IMAGE;
+                    if (
+                        !mainImage.dataset.placeholderUsed
+                    ) {
 
-                },
-                {
-                    once:
-                        true
+                        mainImage.dataset.placeholderUsed =
+                            "true";
+
+                        mainImage.src =
+                            PLACEHOLDER_IMAGE;
+
+                    }
+
                 }
             );
 
         }
-
 
         elements.modalBody
             .querySelectorAll(
@@ -3806,7 +4511,6 @@
                             const image =
                                 button.dataset.galleryImage;
 
-
                             if (
                                 mainImage &&
                                 image
@@ -3815,8 +4519,10 @@
                                 mainImage.src =
                                     image;
 
-                            }
+                                mainImage.dataset.placeholderUsed =
+                                    "";
 
+                            }
 
                             elements.modalBody
                                 .querySelectorAll(
@@ -3829,7 +4535,6 @@
                                         )
                                 );
 
-
                             button.classList.add(
                                 "is-active"
                             );
@@ -3840,12 +4545,10 @@
                 }
             );
 
-
         const modalCartButton =
             document.getElementById(
                 "modal-add-cart-btn"
             );
-
 
         if (
             modalCartButton &&
@@ -3856,53 +4559,10 @@
                 "click",
                 () => {
 
-                    let added =
-                        false;
-
-
-                    if (
-                        typeof window.addToCart ===
-                        "function"
-                    ) {
-
-                        added =
-                            Boolean(
-                                window.addToCart(
-                                    product
-                                )
-                            );
-
-                    } else {
-
-                        try {
-
-                            document.dispatchEvent(
-                                new CustomEvent(
-                                    "cart:add",
-                                    {
-                                        detail:
-                                            product
-                                    }
-                                )
-                            );
-
-
-                            added =
-                                true;
-
-                        } catch (
-                            error
-                        ) {
-
-                            console.error(
-                                "[PRASUN SHOP] Modal cart error:",
-                                error
-                            );
-
-                        }
-
-                    }
-
+                    const added =
+                        invokeAddToCart(
+                            product
+                        );
 
                     if (
                         !added
@@ -3912,15 +4572,12 @@
 
                     }
 
-
                     modalCartButton.disabled =
                         true;
-
 
                     modalCartButton.classList.add(
                         "added"
                     );
-
 
                     modalCartButton.innerHTML =
                         `
@@ -3934,7 +4591,6 @@
                             </span>
                         `;
 
-
                     announce(
                         `${product.name} added to cart.`
                     );
@@ -3944,26 +4600,39 @@
 
         }
 
-
         elements.productModal.classList.add(
             "is-open"
         );
-
 
         elements.productModal.setAttribute(
             "aria-hidden",
             "false"
         );
 
+        /*
+         * Accessibility:
+         * indicate dialog role if the HTML doesn't already define it.
+         */
+        elements.productModal.setAttribute(
+            "role",
+            "dialog"
+        );
+
+        elements.productModal.setAttribute(
+            "aria-modal",
+            "true"
+        );
 
         document.body.classList.add(
             "modal-open"
         );
 
-
         window.setTimeout(
-            () =>
-                elements.modalClose?.focus(),
+            () => {
+
+                elements.modalClose?.focus();
+
+            },
             50
         );
 
@@ -3980,22 +4649,18 @@
 
         }
 
-
         elements.productModal.classList.remove(
             "is-open"
         );
-
 
         elements.productModal.setAttribute(
             "aria-hidden",
             "true"
         );
 
-
         document.body.classList.remove(
             "modal-open"
         );
-
 
         if (
             elements.modalBody
@@ -4023,7 +4688,6 @@
 
         }
 
-
         elements.productList.innerHTML =
             `
                 <div
@@ -4041,13 +4705,21 @@
                         Loading Products
                     </h3>
 
-                    <p>
+                    <p
+                        id="catalog-loading-message"
+                    >
                         Loading the latest catalog...
                     </p>
 
                 </div>
             `;
 
+        updateResultsCountLoading();
+
+    }
+
+
+    function updateResultsCountLoading() {
 
         if (
             elements.resultsCount
@@ -4057,6 +4729,29 @@
                 "Loading...";
 
         }
+
+    }
+
+
+    function updateCatalogLoadingProgress(
+        page
+    ) {
+
+        const loadingMessage =
+            document.getElementById(
+                "catalog-loading-message"
+            );
+
+        if (
+            !loadingMessage
+        ) {
+
+            return;
+
+        }
+
+        loadingMessage.textContent =
+            `Loading catalog page ${page}...`;
 
     }
 
@@ -4072,7 +4767,6 @@
             return;
 
         }
-
 
         elements.productList.innerHTML =
             `
@@ -4099,7 +4793,6 @@
                 </div>
             `;
 
-
         if (
             elements.resultsCount
         ) {
@@ -4108,7 +4801,6 @@
                 "0 products found";
 
         }
-
 
         setLoadingState(
             false
@@ -4128,7 +4820,6 @@
             return;
 
         }
-
 
         elements.productList.innerHTML =
             `
@@ -4172,20 +4863,20 @@
                 </div>
             `;
 
-
         elements.productList
             .querySelector(
                 '[data-action="retry"]'
             )
             ?.addEventListener(
                 "click",
-                loadCatalog,
+                () => {
+                    loadCatalog();
+                },
                 {
                     once:
                         true
                 }
             );
-
 
         if (
             elements.resultsCount
@@ -4195,7 +4886,6 @@
                 "Unable to load products";
 
         }
-
 
         setLoadingState(
             false
@@ -4214,15 +4904,21 @@
 
         }
 
-
         const count =
             state.filteredProducts.length;
 
+        /*
+         * If the client has hit MAX_VISIBLE_PRODUCTS, make that clear.
+         */
+        const suffix =
+            state.filteredProducts.length >=
+                CONFIG.MAX_VISIBLE_PRODUCTS
+                ? "+"
+                : "";
 
         elements.resultsCount.textContent =
-            `${count} ${
-                count ===
-                1
+            `${count}${suffix} ${
+                count === 1
                     ? "product"
                     : "products"
             } available`;
@@ -4240,7 +4936,6 @@
 
         }
 
-
         if (
             state.activeCategory
         ) {
@@ -4248,11 +4943,9 @@
             elements.pageHeading.textContent =
                 getActiveCategory().label;
 
-
             return;
 
         }
-
 
         if (
             state.searchQuery
@@ -4261,11 +4954,9 @@
             elements.pageHeading.textContent =
                 `Search: ${state.searchQuery}`;
 
-
             return;
 
         }
-
 
         elements.pageHeading.textContent =
             "All Products";
@@ -4303,18 +4994,15 @@
 
         }
 
-
         const div =
             document.createElement(
                 "div"
             );
 
-
         div.innerHTML =
             String(
                 value
             );
-
 
         return (
             div.textContent ||
@@ -4339,7 +5027,6 @@
                 value
             );
 
-
         if (
             !Number.isFinite(
                 number
@@ -4350,26 +5037,33 @@
 
         }
 
+        try {
 
-        return new Intl.NumberFormat(
-            "en-US",
-            {
-                style:
-                    "currency",
+            return new Intl.NumberFormat(
+                "en-US",
+                {
+                    style:
+                        "currency",
 
-                currency:
-                    "USD",
+                    currency:
+                        "USD",
 
-                minimumFractionDigits:
-                    2,
+                    minimumFractionDigits:
+                        2,
 
-                maximumFractionDigits:
-                    2
-            }
-        )
-            .format(
-                number
-            );
+                    maximumFractionDigits:
+                        2
+                }
+            )
+                .format(
+                    number
+                );
+
+        } catch {
+
+            return `$${number.toFixed(2)}`;
+
+        }
 
     }
 
@@ -4406,6 +5100,35 @@
     }
 
 
+    function firstDefined(
+        ...values
+    ) {
+
+        for (
+            const value
+            of values
+        ) {
+
+            if (
+                value !==
+                    undefined &&
+                value !==
+                    null &&
+                value !==
+                    ""
+            ) {
+
+                return value;
+
+            }
+
+        }
+
+        return undefined;
+
+    }
+
+
     function announce(
         message
     ) {
@@ -4418,10 +5141,8 @@
 
         }
 
-
         elements.liveRegion.textContent =
             "";
-
 
         window.setTimeout(
             () => {
@@ -4453,13 +5174,9 @@
             query => {
 
                 state.searchQuery =
-                    String(
-                        query ||
-                        ""
-                    )
-                        .trim()
-                        .toLowerCase();
-
+                    normalizeSearchQuery(
+                        query
+                    );
 
                 if (
                     elements.searchInput
@@ -4469,7 +5186,6 @@
                         state.searchQuery;
 
                 }
-
 
                 updateClearSearchButton();
 
@@ -4486,7 +5202,6 @@
                         ""
                     );
 
-
                 highlightCategory();
 
                 applyFiltersAndRender();
@@ -4498,8 +5213,7 @@
 
                 state.sortBy =
                     value ||
-                    "featured";
-
+                    CONFIG.DEFAULT_SORT;
 
                 if (
                     elements.sortSelect
@@ -4509,7 +5223,6 @@
                         state.sortBy;
 
                 }
-
 
                 applyFiltersAndRender();
 
@@ -4548,8 +5261,39 @@
                             id
                         )
                 ) ||
-                null
+                null,
+
+        getState:
+            () => ({
+                loading:
+                    state.loading,
+
+                productCount:
+                    state.products.length,
+
+                filteredCount:
+                    state.filteredProducts.length,
+
+                totalServerProducts:
+                    state.totalServerProducts,
+
+                loadedPages:
+                    state.loadedPages,
+
+                hasMoreServerProducts:
+                    state.hasMoreServerProducts,
+
+                activeCategory:
+                    state.activeCategory,
+
+                searchQuery:
+                    state.searchQuery,
+
+                sortBy:
+                    state.sortBy
+            })
 
     };
+
 
 })();
