@@ -5,37 +5,34 @@
  *
  * js/products.js
  *
+ * BROAD CJ CATALOG MODE
+ *
  * IMPORTANT
  * ============================================================================
  *
- * This file MUST contain JavaScript only.
+ * This file contains JavaScript only.
  *
- * Do NOT put:
- * <!DOCTYPE html>
- * <html>
- * <head>
- * <body>
- * <pre>
- * <code>
+ * The Worker is the source of the complete synchronized CJ catalog.
  *
- * inside this file.
- *
- * ARCHITECTURE
- * ============================================================================
- *
- * Cloudflare Worker
- *        ↓
  * /api/products
- *        ↓
- * products.js
- *        ↓
+ *      ↓
+ * ALL returned product records
+ *      ↓
  * local catalog
- *        ↓
- * category/search/sort
+ *      ↓
+ * local search
+ *      ↓
+ * local category filtering
+ *      ↓
+ * local sorting
  *
- * The Worker supplies the synchronized CJ catalog.
- *
- * Categories are filtered locally.
+ * IMPORTANT:
+ * - No hard 5,000-product truncation.
+ * - No server-side category request for storefront buttons.
+ * - Search is local.
+ * - Category filtering is local.
+ * - All CJ products remain available under "All Products".
+ * - Products are progressively rendered to keep the page responsive.
  *
  * Categories:
  *
@@ -80,13 +77,23 @@
             "/product.html",
 
         REQUEST_TIMEOUT:
-            20000,
+            30000,
 
+        /*
+         * IMPORTANT:
+         * Do not limit the catalog at 5,000.
+         *
+         * The Worker is authoritative.
+         */
         MAX_PRODUCTS:
-            5000,
+            Number.POSITIVE_INFINITY,
 
-        MAX_VISIBLE_PRODUCTS:
-            5000,
+        /*
+         * Render products in batches so thousands of products
+         * do not freeze the browser.
+         */
+        RENDER_BATCH_SIZE:
+            80,
 
         DEFAULT_CATEGORY:
             "General"
@@ -95,7 +102,7 @@
 
 
     /* =========================================================================
-       2. PLACEHOLDER IMAGE
+       2. PLACEHOLDER
        ========================================================================= */
 
     const PLACEHOLDER_IMAGE =
@@ -183,14 +190,19 @@
 
             terms:
                 [
+                    "solar",
                     "solar light",
+                    "solar lights",
                     "solar lamp",
+                    "solar lighting",
                     "solar spotlight",
                     "solar floodlight",
                     "solar street light",
                     "solar wall light",
                     "solar garden light",
-                    "solar outdoor light"
+                    "solar outdoor light",
+                    "solar pathway light",
+                    "solar motion light"
                 ]
         },
 
@@ -204,12 +216,18 @@
             terms:
                 [
                     "battery",
+                    "batteries",
                     "rechargeable battery",
                     "lithium battery",
+                    "lithium ion",
+                    "li-ion",
                     "battery pack",
+                    "battery bank",
+                    "power battery",
                     "aa battery",
                     "aaa battery",
-                    "power battery"
+                    "18650",
+                    "21700"
                 ]
         },
 
@@ -223,14 +241,20 @@
             terms:
                 [
                     "charger",
+                    "chargers",
                     "charging",
+                    "charging station",
                     "fast charger",
+                    "fast charging",
                     "wall charger",
                     "usb charger",
+                    "phone charger",
+                    "mobile charger",
                     "wireless charger",
                     "car charger",
-                    "phone charger",
-                    "power adapter"
+                    "travel charger",
+                    "power adapter",
+                    "charging adapter"
                 ]
         },
 
@@ -246,7 +270,11 @@
                     "power bank",
                     "powerbank",
                     "portable power bank",
-                    "portable charger"
+                    "portable charger",
+                    "portable battery",
+                    "mobile power",
+                    "emergency power bank",
+                    "powerbank charger"
                 ]
         },
 
@@ -260,6 +288,7 @@
             terms:
                 [
                     "cable",
+                    "cables",
                     "usb cable",
                     "charging cable",
                     "data cable",
@@ -267,9 +296,13 @@
                     "type-c cable",
                     "usb-c cable",
                     "lightning cable",
+                    "micro usb cable",
                     "hdmi cable",
                     "network cable",
-                    "ethernet cable"
+                    "ethernet cable",
+                    "lan cable",
+                    "audio cable",
+                    "display cable"
                 ]
         },
 
@@ -287,8 +320,12 @@
                     "earbud",
                     "earbuds",
                     "tws",
+                    "true wireless",
                     "wireless earbud",
-                    "bluetooth earphone"
+                    "bluetooth earphone",
+                    "in-ear",
+                    "in ear",
+                    "in-ear headphones"
                 ]
         },
 
@@ -303,10 +340,14 @@
                 [
                     "headphone",
                     "headphones",
+                    "headset",
                     "gaming headset",
+                    "gaming headphones",
                     "bluetooth headset",
                     "wireless headset",
-                    "headset"
+                    "wireless headphones",
+                    "over-ear",
+                    "on-ear"
                 ]
         },
 
@@ -323,7 +364,10 @@
                     "4g modem",
                     "5g modem",
                     "lte modem",
-                    "usb modem"
+                    "usb modem",
+                    "mobile modem",
+                    "wireless modem",
+                    "cellular modem"
                 ]
         },
 
@@ -337,12 +381,17 @@
             terms:
                 [
                     "router",
+                    "routers",
                     "wifi router",
                     "wi-fi router",
                     "wireless router",
                     "4g router",
                     "5g router",
-                    "network router"
+                    "lte router",
+                    "network router",
+                    "mesh router",
+                    "wifi mesh",
+                    "wi-fi mesh"
                 ]
         },
 
@@ -356,9 +405,14 @@
             terms:
                 [
                     "laptop",
+                    "laptops",
                     "notebook",
+                    "notebooks",
                     "ultrabook",
-                    "computer notebook"
+                    "chromebook",
+                    "gaming laptop",
+                    "computer notebook",
+                    "portable computer"
                 ]
         },
 
@@ -374,13 +428,22 @@
                     "power tool",
                     "power tools",
                     "drill",
+                    "cordless drill",
                     "impact driver",
+                    "impact wrench",
                     "grinder",
+                    "angle grinder",
+                    "screwdriver",
                     "electric screwdriver",
                     "saw",
+                    "circular saw",
+                    "jigsaw",
                     "sander",
                     "rotary tool",
-                    "heat gun"
+                    "heat gun",
+                    "polisher",
+                    "cutting tool",
+                    "hammer drill"
                 ]
         },
 
@@ -394,13 +457,21 @@
             terms:
                 [
                     "camera",
+                    "cameras",
                     "security camera",
                     "cctv",
                     "ip camera",
+                    "wireless camera",
+                    "wifi camera",
+                    "wi-fi camera",
                     "action camera",
                     "digital camera",
                     "webcam",
-                    "dash camera"
+                    "dash camera",
+                    "dash cam",
+                    "surveillance camera",
+                    "outdoor camera",
+                    "indoor camera"
                 ]
         },
 
@@ -415,14 +486,21 @@
                 [
                     "smart home",
                     "smart device",
+                    "smart devices",
                     "smart switch",
                     "smart plug",
+                    "smart socket",
                     "smart sensor",
                     "smart lock",
                     "smart bulb",
+                    "smart light",
+                    "smart lighting",
+                    "smart thermostat",
+                    "smart security",
+                    "smart doorbell",
                     "wifi smart",
                     "wi-fi smart",
-                    "smart socket"
+                    "home automation"
                 ]
         }
 
@@ -454,13 +532,16 @@
             false,
 
         initialized:
-            false
+            false,
+
+        renderToken:
+            0
 
     };
 
 
     /* =========================================================================
-       5. DOM REFERENCES
+       5. DOM
        ========================================================================= */
 
     const elements = {
@@ -543,35 +624,24 @@
 
         cacheDOM();
 
-
         loadInitialSort();
 
-
         /*
-         * IMPORTANT:
-         * Render categories BEFORE catalog request.
+         * Render categories immediately.
          */
-
         renderCategoryPills();
-
 
         bindEvents();
 
-
         updateClearSearchButton();
-
 
         updatePageHeading();
 
-
         renderLoadingState();
 
-
         /*
-         * Start catalog loading after the initial
-         * page paint so the categories appear immediately.
+         * Delay catalog fetch until initial paint.
          */
-
         window.setTimeout(
             loadCatalog,
             0
@@ -581,7 +651,7 @@
 
 
     /* =========================================================================
-       7. DOM CACHE
+       7. CACHE DOM
        ========================================================================= */
 
     function cacheDOM() {
@@ -591,60 +661,50 @@
                 "product-list"
             );
 
-
         elements.resultsCount =
             document.getElementById(
                 "results-count"
             );
-
 
         elements.searchInput =
             document.getElementById(
                 "product-search"
             );
 
-
         elements.clearSearchButton =
             document.getElementById(
                 "clear-search"
             );
-
 
         elements.sortSelect =
             document.getElementById(
                 "product-sort"
             );
 
-
         elements.categoriesNav =
             document.getElementById(
                 "products-categories"
             );
-
 
         elements.pageHeading =
             document.getElementById(
                 "page-heading"
             );
 
-
         elements.liveRegion =
             document.getElementById(
                 "aria-live-region"
             );
-
 
         elements.productModal =
             document.getElementById(
                 "product-modal"
             );
 
-
         elements.modalBody =
             document.getElementById(
                 "modal-body"
             );
-
 
         elements.modalClose =
             document.getElementById(
@@ -797,7 +857,7 @@
                 >
                     <path d="M4 15v-3a8 8 0 0 1 16 0v3"></path>
                     <path d="M4 15h3v5H5a1 1 0 0 1-1-1z"></path>
-                    <path d="M20 15h-3v5h2a1 1 0 0 0 1-1z"></path>
+                    <path d="M20 15h-3v5h2a1 1 0 0 1 1-1z"></path>
                 </svg>
                 `,
 
@@ -1008,109 +1068,57 @@
 
         if (
             text.includes("solar")
-        ) {
-
-            return "solar";
-
-        }
+        ) return "solar";
 
         if (
             text.includes("battery")
-        ) {
-
-            return "battery";
-
-        }
+        ) return "battery";
 
         if (
             text.includes("charger")
-        ) {
-
-            return "charger";
-
-        }
+        ) return "charger";
 
         if (
             text.includes("power bank")
-        ) {
-
-            return "powerbank";
-
-        }
+        ) return "powerbank";
 
         if (
             text.includes("cable")
-        ) {
-
-            return "cable";
-
-        }
+        ) return "cable";
 
         if (
             text.includes("earphone")
-        ) {
-
-            return "earphone";
-
-        }
+        ) return "earphone";
 
         if (
             text.includes("headphone")
-        ) {
-
-            return "headphone";
-
-        }
+        ) return "headphone";
 
         if (
             text.includes("modem")
-        ) {
-
-            return "modem";
-
-        }
+        ) return "modem";
 
         if (
             text.includes("router")
-        ) {
-
-            return "router";
-
-        }
+        ) return "router";
 
         if (
             text.includes("laptop")
-        ) {
-
-            return "laptop";
-
-        }
+        ) return "laptop";
 
         if (
             text.includes("power tool")
-        ) {
-
-            return "tool";
-
-        }
+        ) return "tool";
 
         if (
             text.includes("camera")
-        ) {
-
-            return "camera";
-
-        }
+        ) return "camera";
 
         if (
             text.includes("smart")
-        ) {
+        ) return "home";
 
-            return "home";
-
-        }
-
-        return "category";
+        return "apps";
 
     }
 
@@ -1137,15 +1145,6 @@
                 ) {
 
                     clearSearch();
-
-                }
-
-                if (
-                    event.key ===
-                    "Enter"
-                ) {
-
-                    event.preventDefault();
 
                 }
 
@@ -1231,7 +1230,7 @@
 
 
     /* =========================================================================
-       10. CATEGORY UI
+       10. CATEGORIES
        ========================================================================= */
 
     function renderCategoryPills() {
@@ -1260,6 +1259,7 @@
 
 
                         return `
+
                             <button
                                 type="button"
                                 class="category-pill${
@@ -1291,6 +1291,7 @@
                                 </span>
 
                             </button>
+
                         `;
 
                     }
@@ -1323,11 +1324,30 @@
             String(
                 button.dataset.query ||
                 ""
-            );
+            )
+                .trim();
 
+
+        /*
+         * Category selection clears search.
+         */
+        state.searchQuery =
+            "";
+
+
+        if (
+            elements.searchInput
+        ) {
+
+            elements.searchInput.value =
+                "";
+
+        }
+
+
+        updateClearSearchButton();
 
         highlightCategory();
-
 
         applyFiltersAndRender();
 
@@ -1385,7 +1405,7 @@
 
 
     /* =========================================================================
-       11. CATALOG LOAD
+       11. CATALOG LOADING
        ========================================================================= */
 
     async function loadCatalog() {
@@ -1417,15 +1437,21 @@
                     controller.abort();
 
                 },
+
                 CONFIG.REQUEST_TIMEOUT
+
             );
 
 
         try {
 
+            const endpoint =
+                `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`;
+
+
             const response =
                 await fetch(
-                    `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`,
+                    endpoint,
                     {
 
                         method:
@@ -1438,13 +1464,11 @@
                             },
 
                         /*
-                         * Allow normal browser/CDN caching.
-                         * The catalog does not need to be force-fetched
-                         * every single page load.
+                         * no-store is safer because the catalog may
+                         * change after CJ synchronization.
                          */
-
                         cache:
-                            "default",
+                            "no-store",
 
                         signal:
                             controller.signal
@@ -1487,12 +1511,21 @@
                 );
 
 
+            console.info(
+                "[PRASUN SHOP] Worker returned:",
+                rawProducts.length,
+                "products"
+            );
+
+
+            /*
+             * IMPORTANT:
+             * No 5,000 product limit.
+             */
             state.products =
-                rawProducts
-                    .slice(
-                        0,
-                        CONFIG.MAX_PRODUCTS
-                    )
+                deduplicateProducts(
+                    rawProducts
+                )
                     .map(
                         normalizeProduct
                     )
@@ -1502,7 +1535,9 @@
 
 
             console.info(
-                `[PRASUN SHOP] Loaded ${state.products.length} products.`
+                "[PRASUN SHOP] Normalized catalog:",
+                state.products.length,
+                "products"
             );
 
 
@@ -1611,7 +1646,90 @@
         }
 
 
+        /*
+         * Some API wrappers may use `items`.
+         */
+        if (
+            Array.isArray(
+                data?.items
+            )
+        ) {
+
+            return data.items;
+
+        }
+
+
         return [];
+
+    }
+
+
+    function deduplicateProducts(
+        products
+    ) {
+
+        const map =
+            new Map();
+
+
+        for (
+            const product
+            of products
+        ) {
+
+            if (
+                !product ||
+                typeof product !==
+                    "object"
+            ) {
+
+                continue;
+
+            }
+
+
+            const key =
+                String(
+
+                    product.pid ||
+
+                    product.id ||
+
+                    product.productId ||
+
+                    product.sku ||
+
+                    ""
+
+                )
+                    .trim()
+                    .toLowerCase();
+
+
+            if (
+                !key
+            ) {
+
+                continue;
+
+            }
+
+
+            /*
+             * Latest occurrence wins.
+             */
+            map.set(
+                key,
+                product
+            );
+
+        }
+
+
+        return [
+            ...map.values()
+        ];
 
     }
 
@@ -1633,8 +1751,23 @@
                 .toLowerCase();
 
 
-        updateClearSearchButton();
+        /*
+         * Searching from All Products should actually search
+         * the full catalog.
+         */
+        if (
+            state.searchQuery
+        ) {
 
+            state.activeCategory =
+                "";
+
+            highlightCategory();
+
+        }
+
+
+        updateClearSearchButton();
 
         applyFiltersAndRender();
 
@@ -1659,9 +1792,7 @@
 
         updateClearSearchButton();
 
-
         applyFiltersAndRender();
-
 
         elements.searchInput?.focus();
 
@@ -1687,7 +1818,7 @@
 
 
     /* =========================================================================
-       13. LOCAL FILTERING
+       13. FILTERING
        ========================================================================= */
 
     function applyFiltersAndRender() {
@@ -1698,9 +1829,9 @@
             ];
 
 
-        /*
-         * SEARCH
-         */
+        /* ---------------------------------------------------------------------
+           SEARCH
+           --------------------------------------------------------------------- */
 
         if (
             state.searchQuery
@@ -1739,9 +1870,9 @@
         }
 
 
-        /*
-         * CATEGORY
-         */
+        /* ---------------------------------------------------------------------
+           CATEGORY
+           --------------------------------------------------------------------- */
 
         if (
             state.activeCategory
@@ -1763,9 +1894,9 @@
         }
 
 
-        /*
-         * SORT
-         */
+        /* ---------------------------------------------------------------------
+           SORT
+           --------------------------------------------------------------------- */
 
         products.sort(
             compareProducts
@@ -1773,21 +1904,16 @@
 
 
         state.filteredProducts =
-            products.slice(
-                0,
-                CONFIG.MAX_VISIBLE_PRODUCTS
-            );
+            products;
 
 
         updatePageHeading();
-
 
         updateResultsCount();
 
 
         if (
-            state.filteredProducts.length ===
-            0
+            !products.length
         ) {
 
             let message =
@@ -1844,15 +1970,22 @@
 
             product?.threeCategoryName,
 
+            product?.categoryPath,
+
             product?.sku,
 
             product?.pid,
+
+            product?.cj?.productType,
+
+            product?.cj?.supplierName,
 
             stripHtml(
                 product?.description
             )
 
         ]
+
             .map(
                 value =>
                     String(
@@ -1861,9 +1994,36 @@
                     )
                         .toLowerCase()
             )
+
             .join(
                 " "
             );
+
+    }
+
+
+    function normalizeSearchText(
+        value
+    ) {
+
+        return String(
+            value ||
+            ""
+        )
+            .toLowerCase()
+            .replace(
+                /&/g,
+                " and "
+            )
+            .replace(
+                /[_\-\/]+/g,
+                " "
+            )
+            .replace(
+                /\s+/g,
+                " "
+            )
+            .trim();
 
     }
 
@@ -1875,7 +2035,9 @@
 
         if (
             !category ||
-            !category.terms ||
+            !Array.isArray(
+                category.terms
+            ) ||
             !category.terms.length
         ) {
 
@@ -1885,26 +2047,40 @@
 
 
         const searchable =
-            buildSearchText(
-                product
+            normalizeSearchText(
+                buildSearchText(
+                    product
+                )
             );
 
 
+        /*
+         * Match both phrases and individual useful keywords.
+         */
         return category.terms.some(
-            term =>
-                searchable.includes(
-                    String(
+            term => {
+
+                const normalizedTerm =
+                    normalizeSearchText(
                         term
+                    );
+
+
+                return (
+                    normalizedTerm &&
+                    searchable.includes(
+                        normalizedTerm
                     )
-                        .toLowerCase()
-                )
+                );
+
+            }
         );
 
     }
 
 
     /* =========================================================================
-       14. SORT
+       14. SORTING
        ========================================================================= */
 
     function compareProducts(
@@ -1959,8 +2135,10 @@
             )
         ) {
 
-            return priceA -
-                priceB;
+            return (
+                priceA -
+                priceB
+            );
 
         }
 
@@ -1974,8 +2152,10 @@
             )
         ) {
 
-            return priceB -
-                priceA;
+            return (
+                priceB -
+                priceA
+            );
 
         }
 
@@ -2050,6 +2230,38 @@
         ) {
 
             return 1;
+
+        }
+
+
+        /*
+         * CJ listed count can help prioritize products.
+         */
+        const listedA =
+            Number(
+                a.listedNum ||
+                a.cj?.listedNum ||
+                0
+            );
+
+
+        const listedB =
+            Number(
+                b.listedNum ||
+                b.cj?.listedNum ||
+                0
+            );
+
+
+        if (
+            listedA !==
+            listedB
+        ) {
+
+            return (
+                listedB -
+                listedA
+            );
 
         }
 
@@ -2165,21 +2377,31 @@
             Number.isFinite(
                 parsedPrice
             )
+
                 ? Number(
                     parsedPrice.toFixed(
                         2
                     )
                 )
+
                 : 0;
 
 
         const quantity =
             normalizeInventory(
+
                 raw.quantity ??
+
                 raw.inventory ??
+
                 raw.totalInventory ??
+
                 raw.warehouseInventoryNum ??
-                raw.totalVerifiedInventory
+
+                raw.totalVerifiedInventory ??
+
+                raw.totalUnVerifiedInventory
+
             );
 
 
@@ -2267,6 +2489,13 @@
                 )
                     .trim(),
 
+            categoryPath:
+                String(
+                    raw.categoryPath ||
+                    ""
+                )
+                    .trim(),
+
             price,
 
             quantity,
@@ -2289,6 +2518,7 @@
                 Array.isArray(
                     raw.originalImages
                 )
+
                     ? raw.originalImages
                         .map(
                             normalizeImageUrl
@@ -2296,11 +2526,19 @@
                         .filter(
                             Boolean
                         )
+
                     : [],
 
             variants:
                 normalizeVariants(
                     raw.variants
+                ),
+
+            listedNum:
+                Number(
+                    raw.listedNum ||
+                    raw.cj?.listedNum ||
+                    0
                 ),
 
             source:
@@ -2352,6 +2590,7 @@
                         String(
                             variant?.name ||
                             variant?.variantNameEn ||
+                            variant?.variantKey ||
                             "Default"
                         )
                             .trim(),
@@ -2368,7 +2607,8 @@
 
                     inventory:
                         normalizeInventory(
-                            variant?.inventory
+                            variant?.inventory ??
+                            variant?.totalInventory
                         )
 
                 };
@@ -2553,13 +2793,13 @@
 
 
     function isProxyUrl(
-        url
+        value
     ) {
 
         return (
-            typeof url ===
+            typeof value ===
                 "string" &&
-            url.includes(
+            value.includes(
                 CONFIG.IMAGE_PROXY_ENDPOINT
             )
         );
@@ -2694,7 +2934,7 @@
 
         if (
             typeof product?.productImageSet ===
-                "string"
+            "string"
         ) {
 
             candidates.push(
@@ -2708,9 +2948,11 @@
         return [
             ...new Set(
                 candidates
+
                     .map(
                         normalizeImageUrl
                     )
+
                     .filter(
                         Boolean
                     )
@@ -2726,15 +2968,19 @@
 
         return [
             ...new Set(
+
                 collectProductImageUrls(
                     product
                 )
+
                     .map(
                         buildProxyUrl
                     )
+
                     .filter(
                         Boolean
                     )
+
             )
         ];
 
@@ -2742,7 +2988,7 @@
 
 
     /* =========================================================================
-       17. PRODUCT GRID
+       17. GRID RENDERING
        ========================================================================= */
 
     function renderProductGrid() {
@@ -2756,20 +3002,120 @@
         }
 
 
+        const token =
+            ++state.renderToken;
+
+
         elements.productList.innerHTML =
-            state.filteredProducts
-                .map(
-                    renderProductCard
-                )
-                .join("");
+            "";
 
 
         setLoadingState(
-            false
+            true
         );
 
 
-        attachProductImageFallbacks();
+        const products =
+            state.filteredProducts;
+
+
+        let index =
+            0;
+
+
+        const renderBatch =
+            () => {
+
+                if (
+                    token !==
+                    state.renderToken
+                ) {
+
+                    return;
+
+                }
+
+
+                const fragment =
+                    document.createDocumentFragment();
+
+
+                const end =
+                    Math.min(
+                        index +
+                        CONFIG.RENDER_BATCH_SIZE,
+
+                        products.length
+                    );
+
+
+                for (
+                    ;
+                    index < end;
+                    index++
+                ) {
+
+                    const html =
+                        renderProductCard(
+                            products[index]
+                        );
+
+
+                    const wrapper =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    wrapper.innerHTML =
+                        html;
+
+
+                    const card =
+                        wrapper.firstElementChild;
+
+
+                    if (
+                        card
+                    ) {
+
+                        fragment.appendChild(
+                            card
+                        );
+
+                    }
+
+                }
+
+
+                elements.productList.appendChild(
+                    fragment
+                );
+
+
+                if (
+                    index <
+                    products.length
+                ) {
+
+                    window.requestAnimationFrame(
+                        renderBatch
+                    );
+
+                } else {
+
+                    setLoadingState(
+                        false
+                    );
+
+                    attachProductImageFallbacks();
+
+                }
+
+            };
+
+
+        renderBatch();
 
     }
 
@@ -2831,6 +3177,7 @@
         const shortDescription =
             description.length >
                 105
+
                 ? (
                     description.slice(
                         0,
@@ -2838,6 +3185,7 @@
                     ) +
                     "..."
                 )
+
                 : (
                     description ||
                     "Product information available."
@@ -2923,6 +3271,7 @@
                     ${
                         product.rating > 0
                             ? `
+
                                 <div
                                     class="product-rating"
                                     aria-label="Rating ${product.rating.toFixed(
@@ -2942,6 +3291,7 @@
                                     </span>
 
                                 </div>
+
                             `
                             : ""
                     }
@@ -3104,7 +3454,8 @@
         if (
             Number(
                 product.quantity
-            ) <= 0
+            ) <=
+            0
         ) {
 
             announce(
@@ -3185,6 +3536,7 @@
 
         cartButton.innerHTML =
             `
+
                 ${svgIcon(
                     "check",
                     "ui-icon ui-icon-sm"
@@ -3193,6 +3545,7 @@
                 <span>
                     Added
                 </span>
+
             `;
 
 
@@ -3215,6 +3568,7 @@
 
                 cartButton.innerHTML =
                     `
+
                         ${svgIcon(
                             "cart",
                             "ui-icon ui-icon-sm"
@@ -3223,10 +3577,13 @@
                         <span>
                             Add to Cart
                         </span>
+
                     `;
 
             },
+
             1200
+
         );
 
     }
@@ -3238,8 +3595,8 @@
 
     function attachProductImageFallbacks() {
 
-        document
-            .querySelectorAll(
+        elements.productList
+            ?.querySelectorAll(
                 ".product-image"
             )
             .forEach(
@@ -3247,7 +3604,11 @@
 
                     image.addEventListener(
                         "error",
-                        handleImageError
+                        handleImageError,
+                        {
+                            once:
+                                false
+                        }
                     );
 
                 }
@@ -3346,7 +3707,7 @@
             new DOMParser();
 
 
-        const documentFragment =
+        const doc =
             parser.parseFromString(
                 String(
                     html
@@ -3356,6 +3717,7 @@
 
 
         [
+
             "script",
             "style",
             "iframe",
@@ -3370,11 +3732,12 @@
             "video",
             "audio",
             "source"
+
         ]
             .forEach(
                 tag => {
 
-                    documentFragment
+                    doc
                         .querySelectorAll(
                             tag
                         )
@@ -3387,7 +3750,7 @@
             );
 
 
-        documentFragment
+        doc
             .querySelectorAll(
                 "*"
             )
@@ -3428,9 +3791,9 @@
                                 if (
                                     (
                                         name ===
-                                        "src" ||
+                                        "href" ||
                                         name ===
-                                        "href"
+                                        "src"
                                     ) &&
                                     /^javascript:/i.test(
                                         value
@@ -3450,7 +3813,7 @@
             );
 
 
-        documentFragment
+        doc
             .querySelectorAll(
                 "img"
             )
@@ -3504,9 +3867,9 @@
             );
 
 
-        return documentFragment
-            .body
-            .innerHTML;
+        return (
+            doc.body.innerHTML
+        );
 
     }
 
@@ -3607,6 +3970,7 @@
                                     image,
                                     index
                                 ) => `
+
                                     <button
                                         type="button"
                                         class="modal-gallery-thumb ${
@@ -3634,9 +3998,12 @@
                                         >
 
                                     </button>
+
                                 `
                             )
-                            .join("")}
+                            .join(
+                                ""
+                            )}
 
                     </div>
                 `
@@ -3702,11 +4069,16 @@
                         <span
                             class="modal-product-stock"
                         >
+
                             ${
                                 quantity > 0
+
                                     ? `In Stock: ${quantity}`
+
                                     : "Out of Stock"
+
                             }
+
                         </span>
 
                     </div>
@@ -3726,7 +4098,9 @@
                         <div
                             class="cj-description-container"
                         >
+
                             ${description}
+
                         </div>
 
                     </div>
@@ -3751,11 +4125,13 @@
                         )}
 
                         <span>
+
                             ${
                                 quantity > 0
                                     ? "Add to Cart"
                                     : "Out of Stock"
                             }
+
                         </span>
 
                     </button>
@@ -3823,8 +4199,8 @@
                                     ".modal-gallery-thumb"
                                 )
                                 .forEach(
-                                    thumb =>
-                                        thumb.classList.remove(
+                                    thumbnail =>
+                                        thumbnail.classList.remove(
                                             "is-active"
                                         )
                                 );
@@ -3924,6 +4300,7 @@
 
                     modalCartButton.innerHTML =
                         `
+
                             ${svgIcon(
                                 "check",
                                 "ui-icon ui-icon-sm"
@@ -3932,6 +4309,7 @@
                             <span>
                                 Added to Cart
                             </span>
+
                         `;
 
 
@@ -4026,6 +4404,7 @@
 
         elements.productList.innerHTML =
             `
+
                 <div
                     class="product-status-card"
                     role="status"
@@ -4042,10 +4421,11 @@
                     </h3>
 
                     <p>
-                        Loading the latest catalog...
+                        Loading the latest CJ catalog...
                     </p>
 
                 </div>
+
             `;
 
 
@@ -4076,6 +4456,7 @@
 
         elements.productList.innerHTML =
             `
+
                 <div
                     class="product-status-card"
                     role="status"
@@ -4097,6 +4478,7 @@
                     </p>
 
                 </div>
+
             `;
 
 
@@ -4132,6 +4514,7 @@
 
         elements.productList.innerHTML =
             `
+
                 <div
                     class="product-status-card"
                     role="alert"
@@ -4170,6 +4553,7 @@
                     </button>
 
                 </div>
+
             `;
 
 
@@ -4317,14 +4701,18 @@
 
 
         return (
+
             div.textContent ||
             div.innerText ||
             ""
+
         )
+
             .replace(
                 /\s+/g,
                 " "
             )
+
             .trim();
 
     }
@@ -4354,6 +4742,7 @@
         return new Intl.NumberFormat(
             "en-US",
             {
+
                 style:
                     "currency",
 
@@ -4365,6 +4754,7 @@
 
                 maximumFractionDigits:
                     2
+
             }
         )
             .format(
@@ -4382,22 +4772,27 @@
             value ??
             ""
         )
+
             .replace(
                 /&/g,
                 "&amp;"
             )
+
             .replace(
                 /</g,
                 "&lt;"
             )
+
             .replace(
                 />/g,
                 "&gt;"
             )
+
             .replace(
                 /"/g,
                 "&quot;"
             )
+
             .replace(
                 /'/g,
                 "&#039;"
@@ -4433,7 +4828,9 @@
                     );
 
             },
+
             20
+
         );
 
     }
@@ -4449,6 +4846,7 @@
             () =>
                 loadCatalog(),
 
+
         search:
             query => {
 
@@ -4459,6 +4857,10 @@
                     )
                         .trim()
                         .toLowerCase();
+
+
+                state.activeCategory =
+                    "";
 
 
                 if (
@@ -4473,9 +4875,12 @@
 
                 updateClearSearchButton();
 
+                highlightCategory();
+
                 applyFiltersAndRender();
 
             },
+
 
         filterCategory:
             query => {
@@ -4484,14 +4889,32 @@
                     String(
                         query ||
                         ""
-                    );
+                    )
+                        .trim();
 
+
+                state.searchQuery =
+                    "";
+
+
+                if (
+                    elements.searchInput
+                ) {
+
+                    elements.searchInput.value =
+                        "";
+
+                }
+
+
+                updateClearSearchButton();
 
                 highlightCategory();
 
                 applyFiltersAndRender();
 
             },
+
 
         sort:
             value => {
@@ -4515,15 +4938,18 @@
 
             },
 
+
         openDetails:
             id =>
                 openProductModal(
                     id
                 ),
 
+
         closeDetails:
             () =>
                 closeProductModal(),
+
 
         getProducts:
             () =>
@@ -4531,11 +4957,13 @@
                     ...state.products
                 ],
 
+
         getFilteredProducts:
             () =>
                 [
                     ...state.filteredProducts
                 ],
+
 
         getProductById:
             id =>
