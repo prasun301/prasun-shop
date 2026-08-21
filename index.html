@@ -37,10 +37,16 @@
         href="https://shop.prasunbarua.com/"
     >
 
+    <!-- FAVICON -->
     <link
         rel="icon"
         href="/favicon.ico"
         sizes="any"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        href="/favicon.ico"
     >
 
 
@@ -65,7 +71,7 @@
 
     <link
         rel="stylesheet"
-        href="/css/style.css?v=20260821-08"
+        href="/css/style.css?v=20260821-09"
     >
 
 
@@ -114,121 +120,6 @@
 
         <div class="container">
 
-          <!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>PRASUN SHOP — Home Improvement &amp; Solar</title>
-
-    <meta
-        name="description"
-        content="Shop Home Improvement, Solar, lighting, smart home and practical products at PRASUN SHOP."
-    >
-
-    <meta
-        name="robots"
-        content="index, follow"
-    >
-
-    <meta
-        name="theme-color"
-        content="#ffffff"
-    >
-
-    <meta
-        name="color-scheme"
-        content="light"
-    >
-
-    <link
-        rel="canonical"
-        href="https://shop.prasunbarua.com/"
-    >
-
-    <link
-        rel="icon"
-        href="/favicon.ico"
-        sizes="any"
-    >
-
-
-    <!-- ================================================================
-         PERFORMANCE HINTS
-         ================================================================ -->
-
-    <link
-        rel="preconnect"
-        href="https://www.googletagmanager.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://pagead2.googlesyndication.com"
-    >
-
-
-    <!-- ================================================================
-         MAIN STYLESHEET
-         ================================================================ -->
-
-    <link
-        rel="stylesheet"
-        href="/css/style.css?v=20260821-08"
-    >
-
-
-    <!-- ================================================================
-         GOOGLE ANALYTICS
-         ================================================================ -->
-
-    <script
-        async
-        src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"
-    ></script>
-
-    <script>
-        window.dataLayer = window.dataLayer || [];
-
-        function gtag() {
-            dataLayer.push(arguments);
-        }
-
-        gtag("js", new Date());
-        gtag("config", "G-D9F2VQ4247");
-    </script>
-
-
-    <!-- ================================================================
-         GOOGLE ADSENSE
-         ================================================================ -->
-
-    <script
-        async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168"
-        crossorigin="anonymous"
-    ></script>
-
-</head>
-
-
-<body>
-
-
-    <!-- ================================================================
-         HEADER
-         ================================================================ -->
-
-    <header class="site-header">
-
-        <div class="container">
 
             <!-- BRAND -->
 
@@ -238,13 +129,14 @@
                 aria-label="PRASUN SHOP home"
             >
 
-            <img
-        src="/favicon.ico"
-        width="22"
-        height="22"
-        alt=""
-        aria-hidden="true"
-    >
+                <img
+                    src="/favicon.ico"
+                    width="22"
+                    height="22"
+                    alt=""
+                    aria-hidden="true"
+                    decoding="async"
+                >
 
                 <span>PRASUN SHOP</span>
 
@@ -395,7 +287,7 @@
                     </label>
 
 
-                    <!-- Search icon intentionally inside the field -->
+                    <!-- Search icon -->
 
                     <svg
                         class="ui-icon ui-icon-sm"
@@ -513,498 +405,23 @@
                  ======================================================== -->
 
             <nav
-    id="products-categories"
-    class="products-categories"
-    aria-label="Product categories"
->
-    <button
-        type="button"
-        class="category-pill active"
-        data-category-id="all"
-        data-query=""
-        aria-pressed="true"
-    >
-        All Products
-    </button>
-</nav>
-
-
-            <!-- ========================================================
-                 RESULTS
-                 ======================================================== -->
-
-            <div
-                class="products-result-bar"
-                aria-live="polite"
+                id="products-categories"
+                class="products-categories"
+                aria-label="Product categories"
             >
 
-                <span id="page-heading">
-                    Featured Products
-                </span>
-
-
-                <span
-                    id="results-count"
-                    class="results-count"
+                <button
+                    type="button"
+                    class="category-pill active"
+                    data-category-id="all"
+                    data-query=""
+                    aria-pressed="true"
                 >
-                    Loading products...
-                </span>
-
-            </div>
-
-
-            <!-- ========================================================
-                 PRODUCT GRID
-                 ======================================================== -->
-
-            <section
-                id="product-list"
-                class="product-list product-grid"
-                aria-live="polite"
-                aria-busy="true"
-                aria-label="Available products"
-            >
-
-                <div
-                    class="product-status-card"
-                    role="status"
-                >
-
-                    <div
-                        class="spinner"
-                        aria-hidden="true"
-                    ></div>
-
-                    <h3>
-                        Loading Products
-                    </h3>
-
-                    <p>
-                        Fetching the latest catalog.
-                    </p>
-
-                </div>
-
-            </section>
-
-        </div>
-
-    </main>
-
-
-    <!-- ================================================================
-         PRODUCT DETAILS MODAL
-
-         products.js populates this dynamically.
-         ================================================================ -->
-
-    <div
-        id="product-modal"
-        class="product-modal"
-        aria-hidden="true"
-    >
-
-        <div
-            class="modal-content-card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
-        >
-
-            <button
-                id="modal-close"
-                class="modal-close-btn"
-                type="button"
-                aria-label="Close product details"
-                title="Close"
-            >
-
-                <svg
-                    class="ui-icon ui-icon-md"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.8"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                    focusable="false"
-                >
-
-                    <path d="M6 6l12 12"></path>
-                    <path d="M18 6L6 18"></path>
-
-                </svg>
-
-            </button>
-
-
-            <div
-                id="modal-body"
-                class="modal-grid"
-            ></div>
-
-        </div>
-
-    </div>
-
-
-    <!-- ================================================================
-         ACCESSIBILITY
-         ================================================================ -->
-
-    <div
-        id="aria-live-region"
-        class="visually-hidden"
-        aria-live="polite"
-        aria-atomic="true"
-    ></div>
-
-
-    <!-- ================================================================
-         FOOTER
-         ================================================================ -->
-
-    <footer class="footer">
-
-        <div class="container">
-
-            <div class="footer-links">
-
-                <a href="/privacy.html">
-                    Privacy Policy
-                </a>
-
-                <a href="/terms.html">
-                    Terms of Service
-                </a>
-
-                <a href="/refund.html">
-                    Refund Policy
-                </a>
-
-                <a href="/contact.html">
-                    Contact
-                </a>
-
-            </div>
-
-
-            <p>
-                &copy; 2026 PRASUN SHOP by
-
-                <a
-                    href="https://prasunbarua.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    Prasun Barua
-                </a>.
-
-                All rights reserved.
-            </p>
-
-        </div>
-
-    </footer>
-
-
-    <!-- ================================================================
-         APPLICATION JAVASCRIPT
-         defer prevents blocking HTML parsing.
-         ================================================================ -->
-
-    <script
-        src="/js/cart.js?v=20260821-07"
-        defer
-    ></script>
-
-    <script
-        src="/js/products.js?v=20260821-08"
-        defer
-    ></script>
-
-</body>
-
-</html>
-
-            <!-- NAVIGATION -->
-
-            <nav
-                class="nav-links"
-                aria-label="Main navigation"
-            >
-
-                <a
-                    href="/"
-                    class="nav-link active"
-                    aria-current="page"
-                >
-                    Shop
-                </a>
-
-
-                <a
-                    href="/cart.html"
-                    class="cart-link"
-                    aria-label="Shopping cart"
-                >
-
-                    <svg
-                        class="ui-icon ui-icon-sm"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                        focusable="false"
-                    >
-
-                        <circle
-                            cx="9"
-                            cy="20"
-                            r="1.25"
-                        ></circle>
-
-                        <circle
-                            cx="18"
-                            cy="20"
-                            r="1.25"
-                        ></circle>
-
-                        <path
-                            d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.5a2 2 0 0 0 1.9-1.5L21 8H6"
-                        ></path>
-
-                    </svg>
-
-                    <span class="cart-link-label">
-                        Cart
-                    </span>
-
-                    <span
-                        id="cart-count"
-                        class="cart-count"
-                        hidden
-                        aria-label="0 items in cart"
-                    >
-                        0
-                    </span>
-
-                </a>
-
-
-                <a
-                    href="/about.html"
-                    class="nav-link"
-                >
-                    About
-                </a>
-
-
-                <a
-                    href="/contact.html"
-                    class="nav-link"
-                >
-                    Contact
-                </a>
+                    All Products
+                </button>
 
             </nav>
 
-        </div>
-
-    </header>
-
-
-    <!-- ================================================================
-         MAIN SHOP
-         ================================================================ -->
-
-    <main
-        id="main-content"
-        class="products-page"
-    >
-
-        <div class="container">
-
-
-            <!-- ========================================================
-                 PAGE INTRO
-                 ======================================================== -->
-
-            <header class="products-header">
-
-                <h1
-                    id="products-heading"
-                    class="shop-title"
-                >
-                    Home Improvement &amp; Solar
-                </h1>
-
-                <p class="shop-subtitle">
-                    Practical products for home, solar, lighting,
-                    smart home and everyday needs.
-                </p>
-
-            </header>
-
-
-            <!-- ========================================================
-                 SEARCH / SORT
-                 ======================================================== -->
-
-            <section
-                class="search-filter-bar products-toolbar"
-                aria-label="Product search and sorting"
-            >
-
-                <div
-                    class="search-container product-search-container"
-                >
-
-                    <label
-                        for="product-search"
-                        class="visually-hidden"
-                    >
-                        Search products
-                    </label>
-
-
-                    <!-- Search icon intentionally inside the field -->
-
-                    <svg
-                        class="ui-icon ui-icon-sm"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                        focusable="false"
-                    >
-
-                        <circle
-                            cx="11"
-                            cy="11"
-                            r="6.5"
-                        ></circle>
-
-                        <path
-                            d="m16 16 5 5"
-                        ></path>
-
-                    </svg>
-
-
-                    <input
-                        id="product-search"
-                        class="products-search-input"
-                        type="search"
-                        inputmode="search"
-                        placeholder="Search products..."
-                        autocomplete="off"
-                        autocorrect="off"
-                        autocapitalize="none"
-                        spellcheck="false"
-                        enterkeyhint="search"
-                        aria-label="Search products"
-                    >
-
-
-                    <button
-                        id="clear-search"
-                        type="button"
-                        aria-label="Clear search"
-                        title="Clear search"
-                        hidden
-                    >
-
-                        <svg
-                            class="ui-icon ui-icon-sm"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                            focusable="false"
-                        >
-
-                            <path d="M6 6l12 12"></path>
-                            <path d="M18 6L6 18"></path>
-
-                        </svg>
-
-                    </button>
-
-                </div>
-
-
-                <label
-                    for="product-sort"
-                    class="visually-hidden"
-                >
-                    Sort products
-                </label>
-
-
-                <select
-                    id="product-sort"
-                    class="product-sort"
-                    aria-label="Sort products"
-                >
-
-                    <option value="featured">
-                        Featured
-                    </option>
-
-                    <option value="Price: Low to High">
-                        Price: Low to High
-                    </option>
-
-                    <option value="Price: High to Low">
-                        Price: High to Low
-                    </option>
-
-                    <option value="A to Z">
-                        Name: A to Z
-                    </option>
-
-                    <option value="Z to A">
-                        Name: Z to A
-                    </option>
-
-                </select>
-
-            </section>
-
-
-            <!-- ========================================================
-                 CATEGORIES
-
-                 products.js replaces the contents dynamically.
-                 ======================================================== -->
-
-            <nav
-    id="products-categories"
-    class="products-categories"
-    aria-label="Product categories"
->
-    <button
-        type="button"
-        class="category-pill active"
-        data-category-id="all"
-        data-query=""
-        aria-pressed="true"
-    >
-        All Products
-    </button>
-</nav>
-
 
             <!-- ========================================================
                  RESULTS
@@ -1018,7 +435,6 @@
                 <span id="page-heading">
                     Featured Products
                 </span>
-
 
                 <span
                     id="results-count"
@@ -1188,16 +604,17 @@
 
     <!-- ================================================================
          APPLICATION JAVASCRIPT
+
          defer prevents blocking HTML parsing.
          ================================================================ -->
 
     <script
-        src="/js/cart.js?v=20260821-07"
+        src="/js/cart.js?v=20260821-08"
         defer
     ></script>
 
     <script
-        src="/js/products.js?v=20260821-08"
+        src="/js/products.js?v=20260821-09"
         defer
     ></script>
 
