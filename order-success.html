@@ -1,235 +1,1461 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Order Confirmed — PRASUN SHOP</title>
-  <meta name="description" content="Thank you for your order at PRASUN SHOP." />
-  <style>
-    :root {
-      --apple-bg: #f5f5f7;
-      --apple-card-bg: #ffffff;
-      --apple-text: #1d1d1f;
-      --apple-gray: #86868b;
-      --apple-border: #d2d2d7;
-      --apple-dark: #1d1d1f;
-      --apple-dark-hover: #333336;
-    }
 
-    * {
-      box-sizing: border-box;
-    }
+    <!-- ================================================================
+         CORE META
+         ================================================================ -->
 
-    body {
-      background-color: var(--apple-card-bg);
-      color: var(--apple-text);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
-      margin: 0;
-      -webkit-font-smoothing: antialiased;
-    }
+    <meta charset="UTF-8">
 
-    .header {
-      border-bottom: 1px solid var(--apple-border);
-      position: sticky;
-      top: 0;
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      z-index: 100;
-    }
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    .header-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-    }
+    <title>
+        Order Confirmed — PRASUN SHOP
+    </title>
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-      color: var(--apple-text);
-      font-weight: 600;
-    }
+    <meta
+        name="description"
+        content="Your PRASUN SHOP order has been received successfully."
+    >
 
-    .nav-links {
-      display: flex;
-      gap: 2rem;
-    }
+    <meta
+        name="robots"
+        content="noindex, follow"
+    >
 
-    .nav-links a {
-      text-decoration: none;
-      color: var(--apple-gray);
-      font-size: 0.9rem;
-      transition: color 0.2s;
-    }
+    <meta
+        name="theme-color"
+        content="#ffffff"
+    >
 
-    .nav-links a:hover {
-      color: var(--apple-text);
-    }
+    <meta
+        name="color-scheme"
+        content="light"
+    >
 
-    .success-container {
-      max-width: 700px;
-      margin: 4rem auto;
-      padding: 0 2rem;
-      text-align: center;
-    }
+    <link
+        rel="canonical"
+        href="https://shop.prasunbarua.com/order-success.html"
+    >
 
-    .success-card {
-      background-color: var(--apple-bg);
-      border: 1px solid var(--apple-border);
-      border-radius: 20px;
-      padding: 3rem 2rem;
-    }
+    <link
+        rel="icon"
+        href="/favicon.ico"
+        sizes="any"
+    >
 
-    .success-icon {
-      width: 64px;
-      height: 64px;
-      background-color: var(--apple-dark);
-      color: #ffffff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1.5rem auto;
-    }
 
-    .success-card h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      margin: 0 0 0.5rem 0;
-      letter-spacing: -0.015em;
-    }
+    <!-- ================================================================
+         MATERIAL SYMBOLS
+         ================================================================ -->
 
-    .success-card p {
-      color: var(--apple-gray);
-      font-size: 1rem;
-      margin: 0 0 2rem 0;
-    }
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
 
-    .order-details-box {
-      background: #ffffff;
-      border: 1px solid var(--apple-border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      text-align: left;
-      margin-bottom: 2rem;
-    }
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
 
-    .order-details-box h3 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin: 0 0 1rem 0;
-      border-bottom: 1px solid var(--apple-border);
-      padding-bottom: 0.5rem;
-    }
+    <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL,GRAD,opsz,wght,ROND@0..1,-25..200,20..48,300..700,0..100&icon_names=arrow_back,check_circle,home,inventory_2,mail,receipt_long,shopping_cart,storefront,verified_user&display=block"
+    >
 
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.9rem;
-      margin-bottom: 0.6rem;
-      color: var(--apple-gray);
-    }
 
-    .detail-row span:last-child {
-      color: var(--apple-text);
-      font-weight: 500;
-    }
+    <!-- ================================================================
+         MAIN STYLESHEET
+         ================================================================ -->
 
-    .btn-home {
-      display: inline-block;
-      background-color: var(--apple-dark);
-      color: #ffffff;
-      text-decoration: none;
-      padding: 0.85rem 2.5rem;
-      border-radius: 980px;
-      font-size: 0.95rem;
-      font-weight: 500;
-      transition: background-color 0.2s;
-    }
+    <link
+        rel="stylesheet"
+        href="/css/style.css?v=20260821-05"
+    >
 
-    .btn-home:hover {
-      background-color: var(--apple-dark-hover);
-    }
 
-    .footer {
-      border-top: 1px solid var(--apple-border);
-      background-color: var(--apple-bg);
-      padding: 2rem;
-      text-align: center;
-      color: var(--apple-gray);
-      font-size: 0.85rem;
-      margin-top: 6rem;
-    }
-  </style>
+    <!-- ================================================================
+         PAGE-SPECIFIC STYLES
+         ================================================================ -->
+
+    <style>
+
+        /* ============================================================
+           PAGE
+           ============================================================ */
+
+        .order-success-page {
+
+            width:
+                min(
+                    900px,
+                    calc(100% - 32px)
+                );
+
+            margin:
+                0 auto;
+
+            padding:
+                58px 0 80px;
+
+        }
+
+
+        /* ============================================================
+           SUCCESS CARD
+           ============================================================ */
+
+        .order-success-card {
+
+            overflow:
+                hidden;
+
+            background:
+                #ffffff;
+
+            border:
+                1px solid
+                #e5e7eb;
+
+            border-radius:
+                24px;
+
+            box-shadow:
+                0 12px 34px
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.07
+                );
+
+        }
+
+
+        /* ============================================================
+           SUCCESS HERO
+           ============================================================ */
+
+        .success-hero {
+
+            padding:
+                48px 28px 36px;
+
+            text-align:
+                center;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #f8fbff 0%,
+                    #ffffff 100%
+                );
+
+            border-bottom:
+                1px solid
+                #f1f5f9;
+
+        }
+
+
+        .success-icon {
+
+            width:
+                72px;
+
+            height:
+                72px;
+
+            margin:
+                0 auto 20px;
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            border-radius:
+                50%;
+
+            background:
+                #dcfce7;
+
+            color:
+                #15803d;
+
+            box-shadow:
+                0 0 0 8px
+                rgba(
+                    34,
+                    197,
+                    94,
+                    0.08
+                );
+
+        }
+
+
+        .success-title {
+
+            margin:
+                0 0 10px;
+
+            color:
+                #0f172a;
+
+            font-size:
+                clamp(
+                    1.9rem,
+                    4vw,
+                    2.55rem
+                );
+
+            font-weight:
+                800;
+
+            line-height:
+                1.15;
+
+            letter-spacing:
+                -0.035em;
+
+        }
+
+
+        .success-subtitle {
+
+            max-width:
+                650px;
+
+            margin:
+                0 auto;
+
+            color:
+                #64748b;
+
+            font-size:
+                0.96rem;
+
+            line-height:
+                1.7;
+
+        }
+
+
+        /* ============================================================
+           ORDER INFORMATION
+           ============================================================ */
+
+        .success-body {
+
+            padding:
+                28px;
+
+        }
+
+
+        .order-details-box {
+
+            padding:
+                20px;
+
+            background:
+                #f8fafc;
+
+            border:
+                1px solid
+                #e2e8f0;
+
+            border-radius:
+                18px;
+
+        }
+
+
+        .order-details-header {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                11px;
+
+            margin-bottom:
+                18px;
+
+        }
+
+
+        .order-details-icon {
+
+            width:
+                40px;
+
+            height:
+                40px;
+
+            flex:
+                0 0 40px;
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            border-radius:
+                50%;
+
+            background:
+                #eff6ff;
+
+            color:
+                #2563eb;
+
+        }
+
+
+        .order-details-title {
+
+            margin:
+                0;
+
+            color:
+                #0f172a;
+
+            font-size:
+                1rem;
+
+            font-weight:
+                800;
+
+        }
+
+
+        .order-details-subtitle {
+
+            margin:
+                2px 0 0;
+
+            color:
+                #64748b;
+
+            font-size:
+                0.76rem;
+
+        }
+
+
+        /* ============================================================
+           DETAIL GRID
+           ============================================================ */
+
+        .order-detail-list {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+
+            gap:
+                1px;
+
+            overflow:
+                hidden;
+
+            border:
+                1px solid
+                #e5e7eb;
+
+            border-radius:
+                14px;
+
+            background:
+                #e5e7eb;
+
+        }
+
+
+        .order-detail {
+
+            display:
+                flex;
+
+            flex-direction:
+                column;
+
+            gap:
+                5px;
+
+            min-width:
+                0;
+
+            padding:
+                15px;
+
+            background:
+                #ffffff;
+
+        }
+
+
+        .order-detail-label {
+
+            color:
+                #64748b;
+
+            font-size:
+                0.72rem;
+
+            font-weight:
+                650;
+
+        }
+
+
+        .order-detail-value {
+
+            min-width:
+                0;
+
+            color:
+                #0f172a;
+
+            font-size:
+                0.88rem;
+
+            font-weight:
+                750;
+
+            overflow-wrap:
+                anywhere;
+
+        }
+
+
+        .order-status {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            gap:
+                6px;
+
+            width:
+                fit-content;
+
+            padding:
+                5px 9px;
+
+            border-radius:
+                999px;
+
+            background:
+                #f0fdf4;
+
+            color:
+                #15803d;
+
+            font-size:
+                0.72rem;
+
+            font-weight:
+                750;
+
+        }
+
+
+        /* ============================================================
+           INFO NOTICE
+           ============================================================ */
+
+        .success-notice {
+
+            display:
+                flex;
+
+            align-items:
+                flex-start;
+
+            gap:
+                10px;
+
+            margin-top:
+                18px;
+
+            padding:
+                14px;
+
+            border:
+                1px solid
+                #dbeafe;
+
+            border-radius:
+                14px;
+
+            background:
+                #eff6ff;
+
+            color:
+                #1e40af;
+
+            font-size:
+                0.78rem;
+
+            line-height:
+                1.55;
+
+        }
+
+
+        .success-notice .material-symbols-rounded {
+
+            flex:
+                0 0 auto;
+
+            margin-top:
+                1px;
+
+        }
+
+
+        /* ============================================================
+           ACTIONS
+           ============================================================ */
+
+        .success-actions {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+
+            gap:
+                10px;
+
+            margin-top:
+                24px;
+
+        }
+
+
+        .success-action {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            gap:
+                8px;
+
+            min-height:
+                48px;
+
+            padding:
+                0 18px;
+
+            border:
+                1px solid
+                #e2e8f0;
+
+            border-radius:
+                13px;
+
+            background:
+                #ffffff;
+
+            color:
+                #334155;
+
+            font-size:
+                0.85rem;
+
+            font-weight:
+                750;
+
+            text-decoration:
+                none;
+
+            transition:
+                background 160ms ease,
+                border-color 160ms ease,
+                color 160ms ease,
+                transform 160ms ease;
+
+        }
+
+
+        .success-action:hover {
+
+            background:
+                #f8fafc;
+
+            border-color:
+                #cbd5e1;
+
+            color:
+                #0f172a;
+
+            transform:
+                translateY(-1px);
+
+        }
+
+
+        .success-action.primary {
+
+            border-color:
+                #2563eb;
+
+            background:
+                #2563eb;
+
+            color:
+                #ffffff;
+
+        }
+
+
+        .success-action.primary:hover {
+
+            border-color:
+                #1d4ed8;
+
+            background:
+                #1d4ed8;
+
+            color:
+                #ffffff;
+
+        }
+
+
+        /* ============================================================
+           FOOTER
+           ============================================================ */
+
+        .order-success-footer {
+
+            margin-top:
+                30px;
+
+            text-align:
+                center;
+
+            color:
+                #94a3b8;
+
+            font-size:
+                0.75rem;
+
+            line-height:
+                1.6;
+
+        }
+
+
+        .order-success-footer a {
+
+            color:
+                #64748b;
+
+            font-weight:
+                650;
+
+        }
+
+
+        .order-success-footer a:hover {
+
+            color:
+                #2563eb;
+
+        }
+
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+
+        @media (max-width: 640px) {
+
+            .order-success-page {
+
+                width:
+                    calc(100% - 24px);
+
+                padding:
+                    30px 0 50px;
+
+            }
+
+
+            .success-hero {
+
+                padding:
+                    38px 18px 30px;
+
+            }
+
+
+            .success-body {
+
+                padding:
+                    18px;
+
+            }
+
+
+            .success-title {
+
+                font-size:
+                    1.8rem;
+
+            }
+
+
+            .order-detail-list {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            .success-actions {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+        }
+
+
+        @media (max-width: 380px) {
+
+            .order-success-page {
+
+                width:
+                    calc(100% - 18px);
+
+            }
+
+
+            .success-hero {
+
+                padding:
+                    32px 15px 26px;
+
+            }
+
+
+            .success-body {
+
+                padding:
+                    14px;
+
+            }
+
+        }
+
+
+        /* ============================================================
+           REDUCED MOTION
+           ============================================================ */
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+
+                animation:
+                    none !important;
+
+                transition:
+                    none !important;
+
+            }
+
+        }
+
+    </style>
+
 </head>
+
+
 <body>
 
-  <!-- Header -->
-  <header class="header">
-    <div class="header-container">
-      <a href="index.html" class="logo">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <path d="M16 10a4 4 0 0 1-8 0"></path>
-        </svg>
-        <span>PRASUN SHOP</span>
-      </a>
-      <nav class="nav-links">
-        <a href="index.html">Shop</a>
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
-      </nav>
-    </div>
-  </header>
 
-  <!-- Success Message Content -->
-  <main class="success-container">
-    <div class="success-card">
-      <div class="success-icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-      </div>
-      <h1>Thank you for your order!</h1>
-      <p>Your order has been successfully placed. We'll begin processing it right away.</p>
+    <!-- ================================================================
+         HEADER
+         ================================================================ -->
 
-      <div class="order-details-box">
-        <h3>Order Overview</h3>
-        <div class="detail-row">
-          <span>Order Number:</span>
-          <span id="order-id">#PS-84920</span>
+    <header class="site-header">
+
+        <div class="container">
+
+
+            <a
+                href="/"
+                class="site-logo logo"
+                aria-label="PRASUN SHOP Home"
+            >
+
+                <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+
+                    <path
+                        d="M3 9l9-6 9 6"
+                    ></path>
+
+                    <path
+                        d="M5 10v10h14V10"
+                    ></path>
+
+                    <path
+                        d="M9 20v-6h6v6"
+                    ></path>
+
+                </svg>
+
+                <span>
+                    PRASUN SHOP
+                </span>
+
+            </a>
+
+
+            <nav
+                class="nav-links"
+                aria-label="Main navigation"
+            >
+
+                <a
+                    href="/"
+                    class="nav-link"
+                >
+                    Shop
+                </a>
+
+
+                <a
+                    href="/cart.html"
+                    class="cart-link"
+                    aria-label="View shopping cart"
+                >
+
+                    <span
+                        class="material-symbols-rounded icon-sm"
+                        aria-hidden="true"
+                    >
+                        shopping_cart
+                    </span>
+
+                    <span>
+                        Cart
+                    </span>
+
+                </a>
+
+
+                <a
+                    href="/about.html"
+                    class="nav-link"
+                >
+                    About
+                </a>
+
+
+                <a
+                    href="/contact.html"
+                    class="nav-link"
+                >
+                    Contact
+                </a>
+
+            </nav>
+
         </div>
-        <div class="detail-row">
-          <span>Date:</span>
-          <span id="order-date"></span>
+
+    </header>
+
+
+    <!-- ================================================================
+         MAIN
+         ================================================================ -->
+
+    <main
+        class="order-success-page"
+        id="main-content"
+    >
+
+        <section
+            class="order-success-card"
+            aria-labelledby="success-title"
+        >
+
+
+            <!-- ========================================================
+                 HERO
+                 ======================================================== -->
+
+            <div
+                class="success-hero"
+            >
+
+                <div
+                    class="success-icon"
+                    aria-hidden="true"
+                >
+
+                    <span
+                        class="material-symbols-rounded icon-xl"
+                    >
+                        check_circle
+                    </span>
+
+                </div>
+
+
+                <h1
+                    id="success-title"
+                    class="success-title"
+                >
+                    Thank you for your order
+                </h1>
+
+
+                <p
+                    class="success-subtitle"
+                >
+                    Your order has been received successfully.
+                    We will process the order information and continue
+                    with fulfillment.
+                </p>
+
+            </div>
+
+
+            <!-- ========================================================
+                 BODY
+                 ======================================================== -->
+
+            <div
+                class="success-body"
+            >
+
+
+                <!-- ====================================================
+                     ORDER DETAILS
+                     ==================================================== -->
+
+                <section
+                    class="order-details-box"
+                    aria-labelledby="order-details-heading"
+                >
+
+                    <div
+                        class="order-details-header"
+                    >
+
+                        <span
+                            class="order-details-icon"
+                            aria-hidden="true"
+                        >
+
+                            <span
+                                class="material-symbols-rounded icon-md"
+                            >
+                                receipt_long
+                            </span>
+
+                        </span>
+
+
+                        <div>
+
+                            <h2
+                                id="order-details-heading"
+                                class="order-details-title"
+                            >
+                                Order Details
+                            </h2>
+
+
+                            <p
+                                class="order-details-subtitle"
+                            >
+                                Confirmation information
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="order-detail-list"
+                    >
+
+
+                        <!-- ORDER NUMBER -->
+
+                        <div
+                            class="order-detail"
+                        >
+
+                            <span
+                                class="order-detail-label"
+                            >
+                                Order Number
+                            </span>
+
+
+                            <strong
+                                id="order-id"
+                                class="order-detail-value"
+                            >
+                                Loading...
+                            </strong>
+
+                        </div>
+
+
+                        <!-- DATE -->
+
+                        <div
+                            class="order-detail"
+                        >
+
+                            <span
+                                class="order-detail-label"
+                            >
+                                Order Date
+                            </span>
+
+
+                            <strong
+                                id="order-date"
+                                class="order-detail-value"
+                            >
+                                Loading...
+                            </strong>
+
+                        </div>
+
+
+                        <!-- STATUS -->
+
+                        <div
+                            class="order-detail"
+                        >
+
+                            <span
+                                class="order-detail-label"
+                            >
+                                Order Status
+                            </span>
+
+
+                            <span
+                                id="order-status"
+                                class="order-status"
+                            >
+
+                                <span
+                                    class="material-symbols-rounded icon-xs"
+                                    aria-hidden="true"
+                                >
+                                    check_circle
+                                </span>
+
+                                <span>
+                                    Received
+                                </span>
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- SUPPLIER -->
+
+                        <div
+                            class="order-detail"
+                        >
+
+                            <span
+                                class="order-detail-label"
+                            >
+                                Fulfillment
+                            </span>
+
+
+                            <strong
+                                id="order-fulfillment"
+                                class="order-detail-value"
+                            >
+                                PRASUN SHOP
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ====================================================
+                     NOTICE
+                     ==================================================== -->
+
+                <div
+                    class="success-notice"
+                    role="status"
+                >
+
+                    <span
+                        class="material-symbols-rounded icon-sm"
+                        aria-hidden="true"
+                    >
+                        verified_user
+                    </span>
+
+
+                    <span>
+                        Your confirmation information is stored locally
+                        in this browser. For supplier processing,
+                        the Cloudflare Worker remains the authoritative
+                        order service.
+                    </span>
+
+                </div>
+
+
+                <!-- ====================================================
+                     ACTIONS
+                     ==================================================== -->
+
+                <div
+                    class="success-actions"
+                >
+
+                    <a
+                        href="/"
+                        class="success-action primary"
+                    >
+
+                        <span
+                            class="material-symbols-rounded icon-sm"
+                            aria-hidden="true"
+                        >
+                            storefront
+                        </span>
+
+                        <span>
+                            Continue Shopping
+                        </span>
+
+                    </a>
+
+
+                    <a
+                        href="/cart.html"
+                        class="success-action"
+                    >
+
+                        <span
+                            class="material-symbols-rounded icon-sm"
+                            aria-hidden="true"
+                        >
+                            shopping_cart
+                        </span>
+
+                        <span>
+                            View Cart
+                        </span>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ============================================================
+             PAGE FOOTER NOTE
+             ============================================================ -->
+
+        <div
+            class="order-success-footer"
+        >
+
+            <p>
+                Need assistance?
+                <a
+                    href="/contact.html"
+                >
+                    Contact PRASUN SHOP
+                </a>
+            </p>
+
+
+            <p>
+                &copy; 2026 PRASUN SHOP by
+                <a
+                    href="https://prasunbarua.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Prasun Barua
+                </a>.
+                All rights reserved.
+            </p>
+
         </div>
-        <div class="detail-row">
-          <span>Payment Status:</span>
-          <span>Confirmed (Simulated)</span>
-        </div>
-      </div>
 
-      <a href="index.html" class="btn-home">Continue Shopping</a>
-    </div>
-  </main>
+    </main>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <p>&copy; 2026 PRASUN SHOP. All rights reserved.</p>
-  </footer>
 
-  <script>
-    document.getElementById('order-date').textContent = new Date().toLocaleDateString('en-US', {
-      year: 'numeric', month: 'long', day: 'numeric'
-    });
-    document.getElementById('order-id').textContent = '#PS-' + Math.floor(10000 + Math.random() * 90000);
-  </script>
+    <!-- ================================================================
+         SUCCESS PAGE LOGIC
+         ================================================================ -->
+
+    <script>
+
+        "use strict";
+
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            () => {
+
+                const orderId =
+                    document.getElementById(
+                        "order-id"
+                    );
+
+
+                const orderDate =
+                    document.getElementById(
+                        "order-date"
+                    );
+
+
+                const orderStatus =
+                    document.getElementById(
+                        "order-status"
+                    );
+
+
+                const fulfillment =
+                    document.getElementById(
+                        "order-fulfillment"
+                    );
+
+
+                /*
+                 * Checkout.js stores:
+                 *
+                 * sessionStorage:
+                 *     prasun_order_confirmation
+                 */
+
+                let confirmation =
+                    null;
+
+
+                try {
+
+                    const raw =
+                        sessionStorage.getItem(
+                            "prasun_order_confirmation"
+                        );
+
+
+                    if (
+                        raw
+                    ) {
+
+                        confirmation =
+                            JSON.parse(
+                                raw
+                            );
+
+                    }
+
+                } catch (
+                    error
+                ) {
+
+                    console.warn(
+                        "[PRASUN SHOP] Unable to read order confirmation:",
+                        error
+                    );
+
+                }
+
+
+                /*
+                 * Use the real Worker order number.
+                 *
+                 * Never generate a fake random order number.
+                 */
+
+                const realOrderNumber =
+                    confirmation?.orderNumber ||
+                    confirmation?.cjOrderNumber ||
+                    "";
+
+
+                if (
+                    orderId
+                ) {
+
+                    orderId.textContent =
+                        realOrderNumber
+                            ? `#${realOrderNumber}`
+                            : "Confirmation unavailable";
+
+                }
+
+
+                /*
+                 * Date from the successful checkout.
+                 */
+
+                const createdAt =
+                    confirmation?.createdAt;
+
+
+                const dateValue =
+                    createdAt
+                        ? new Date(
+                            createdAt
+                        )
+                        : new Date();
+
+
+                if (
+                    orderDate
+                ) {
+
+                    orderDate.textContent =
+                        Number.isNaN(
+                            dateValue.getTime()
+                        )
+
+                            ? "Unavailable"
+
+                            : dateValue.toLocaleDateString(
+                                "en-US",
+                                {
+                                    year:
+                                        "numeric",
+
+                                    month:
+                                        "long",
+
+                                    day:
+                                        "numeric"
+                                }
+                            );
+
+                }
+
+
+                /*
+                 * Status.
+                 */
+
+                if (
+                    orderStatus
+                ) {
+
+                    orderStatus.innerHTML = `
+
+                        <span
+                            class="material-symbols-rounded icon-xs"
+                            aria-hidden="true"
+                        >
+                            check_circle
+                        </span>
+
+                        <span>
+                            Received
+                        </span>
+
+                    `;
+
+                }
+
+
+                if (
+                    fulfillment
+                ) {
+
+                    fulfillment.textContent =
+                        "PRASUN SHOP";
+
+                }
+
+            }
+        );
+
+    </script>
+
 </body>
+
 </html>
