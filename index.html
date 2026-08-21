@@ -185,9 +185,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const WORKER_BASE = "https://prasun-shop-api.prasun301.workers.dev";
   const API_ENDPOINT = `${WORKER_BASE}/api/products`;
   const PROXY_ENDPOINT = `${WORKER_BASE}/api/image-proxy`;
-  const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=600&q=80";
+  const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=500&auto=format&fit=crop";
 
-  // Fallback product list including CJJZHWTY00095-100 Lamp
+  // Fallback seed catalog
   const SEED_PRODUCTS = [
     {
       id: "CJJZHWTY00095-100",
@@ -197,8 +197,8 @@ document.addEventListener("DOMContentLoaded", () => {
       price: "28.99",
       quantity: 100,
       description: "High-efficiency outdoor solar lamp featuring IP65 weatherproofing, automatic dusk-to-dawn sensors, and long-lasting energy-saving LED illumination. Ideal for pathways, gardens, patios, and outdoor walls.",
-      image: "https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=600&q=80",
-      images: ["https://images.unsplash.com/photo-1508873696983-2df515122519?auto=format&fit=crop&w=600&q=80"]
+      image: FALLBACK_IMAGE,
+      images: [FALLBACK_IMAGE]
     }
   ];
 
@@ -217,14 +217,17 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchTimeout = null;
 
   function getProxiedImageUrl(rawUrl) {
-  if (!rawUrl) return FALLBACK_IMAGE;
-  let target = rawUrl;
-  // If the URL is already routed through worker proxy, return as is
-  if (target.includes("/image-proxy")) return target;
-  if (target.startsWith("//")) target = `https:${target}`;
-  if (target.startsWith("http://")) target = target.replace("http://", "https://");
-  return `${PROXY_ENDPOINT}?url=${encodeURIComponent(target)}`;
-}
+    if (!rawUrl || typeof rawUrl !== "string" || !rawUrl.trim()) {
+      return FALLBACK_IMAGE;
+    }
+    
+    let target = rawUrl.trim();
+    if (target.startsWith("//")) target = `https:${target}`;
+    if (target.startsWith("http://")) target = target.replace("http://", "https://");
+    if (target.includes("/image-proxy")) return target;
+    
+    return `${PROXY_ENDPOINT}?url=${encodeURIComponent(target)}`;
+  }
 
   function getSortedProducts(products, sortBy) {
     const list = [...products];
@@ -258,13 +261,21 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (data.success && Array.isArray(data.products) && data.products.length > 0) {
-        currentProducts = data.products.map(p => ({
-          ...p,
-          image: getProxiedImageUrl(p.image),
-          images: Array.isArray(p.images) ? p.images.map(getProxiedImageUrl) : [getProxiedImageUrl(p.image)]
-        }));
+        currentProducts = data.products.map(p => {
+          // Extract image supporting standard & CJ API keys
+          const rawImg = p.image || p.productImage || p.productImg || p.bigImage;
+          const mainImgUrl = getProxiedImageUrl(rawImg);
+          
+          let rawImagesArray = Array.isArray(p.images) && p.images.length > 0 ? p.images : [rawImg];
+          const imagesArray = rawImagesArray.map(getProxiedImageUrl);
+
+          return {
+            ...p,
+            image: mainImgUrl,
+            images: imagesArray
+          };
+        });
       } else {
-        // Fallback to seed data if KV returns no items
         const rawQuery = query.trim().toLowerCase();
         currentProducts = SEED_PRODUCTS.filter(p => 
           !rawQuery || p.title.toLowerCase().includes(rawQuery) || p.id.toLowerCase().includes(rawQuery)
