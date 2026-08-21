@@ -2,11 +2,6 @@
 <html lang="en">
 
 <head>
-
-    <!-- ================================================================
-         CORE META
-         ================================================================ -->
-
     <meta charset="UTF-8">
 
     <meta
@@ -14,13 +9,11 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>
-        PRASUN SHOP — Home Improvement & Solar
-    </title>
+    <title>PRASUN SHOP — Home Improvement & Solar</title>
 
     <meta
         name="description"
-        content="Explore Home Improvement, Solar, smart home, lighting and practical products at PRASUN SHOP."
+        content="Shop Home Improvement, Solar, lighting and smart home products at PRASUN SHOP."
     >
 
     <meta
@@ -49,82 +42,30 @@
         sizes="any"
     >
 
-
-    <!-- ================================================================
-         RESOURCE HINTS
-         ================================================================ -->
-
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin
-    >
-
-
-    <!-- ================================================================
-         GOOGLE MATERIAL SYMBOLS
-         ================================================================ -->
-
+    <!-- Main stylesheet -->
     <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL,GRAD,opsz,wght,ROND@0..1,-25..200,20..48,300..700,0..100&display=block"
+        href="/css/style.css?v=20260821-06"
     >
 
-
-    <!-- ================================================================
-         MAIN STYLESHEET
-         ================================================================ -->
-
-    <link
-        rel="stylesheet"
-        href="/css/style.css?v=20260821-05"
-    >
-
-
-    <!-- ================================================================
-         GOOGLE ANALYTICS
-         ================================================================ -->
-
+    <!-- Google Analytics -->
     <script
         async
         src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"
     ></script>
 
     <script>
-
-        window.dataLayer =
-            window.dataLayer || [];
+        window.dataLayer = window.dataLayer || [];
 
         function gtag() {
-
-            dataLayer.push(
-                arguments
-            );
-
+            dataLayer.push(arguments);
         }
 
-        gtag(
-            "js",
-            new Date()
-        );
-
-        gtag(
-            "config",
-            "G-D9F2VQ4247"
-        );
-
+        gtag("js", new Date());
+        gtag("config", "G-D9F2VQ4247");
     </script>
 
-
-    <!-- ================================================================
-         GOOGLE ADSENSE
-         ================================================================ -->
-
+    <!-- Google AdSense -->
     <script
         async
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168"
@@ -136,7 +77,6 @@
 
 <body>
 
-
     <!-- ================================================================
          HEADER
          ================================================================ -->
@@ -144,11 +84,6 @@
     <header class="site-header">
 
         <div class="container">
-
-
-            <!-- ========================================================
-                 BRAND
-                 ======================================================== -->
 
             <a
                 href="/"
@@ -167,31 +102,15 @@
                     stroke-linejoin="round"
                     aria-hidden="true"
                 >
-
-                    <path
-                        d="M3 9l9-6 9 6"
-                    ></path>
-
-                    <path
-                        d="M5 10v10h14V10"
-                    ></path>
-
-                    <path
-                        d="M9 20v-6h6v6"
-                    ></path>
-
+                    <path d="M3 9l9-6 9 6"></path>
+                    <path d="M5 10v10h14V10"></path>
+                    <path d="M9 20v-6h6v6"></path>
                 </svg>
 
-                <span>
-                    PRASUN SHOP
-                </span>
+                <span>PRASUN SHOP</span>
 
             </a>
 
-
-            <!-- ========================================================
-                 NAVIGATION
-                 ======================================================== -->
 
             <nav
                 class="nav-links"
@@ -206,23 +125,23 @@
                     Shop
                 </a>
 
-
                 <a
                     href="/cart.html"
                     class="cart-link"
                     aria-label="View shopping cart"
                 >
 
-                    <span
-                        class="material-symbols-rounded icon-sm"
+                    <svg
+                        class="ui-icon ui-icon-sm"
+                        viewBox="0 0 24 24"
                         aria-hidden="true"
                     >
-                        shopping_cart
-                    </span>
+                        <circle cx="9" cy="20" r="1.5"></circle>
+                        <circle cx="18" cy="20" r="1.5"></circle>
+                        <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.5a2 2 0 0 0 1.9-1.5L21 8H6"></path>
+                    </svg>
 
-                    <span>
-                        Cart
-                    </span>
+                    <span>Cart</span>
 
                     <span
                         id="cart-count"
@@ -235,14 +154,12 @@
 
                 </a>
 
-
                 <a
                     href="/about.html"
                     class="nav-link"
                 >
                     About
                 </a>
-
 
                 <a
                     href="/contact.html"
@@ -259,12 +176,12 @@
 
 
     <!-- ================================================================
-         MAIN SHOP
+         MAIN
          ================================================================ -->
 
     <main
         id="main-content"
-        class="products-page shop-container"
+        class="products-page"
     >
 
         <div class="container">
@@ -274,45 +191,18 @@
                  PAGE HEADER
                  ======================================================== -->
 
-            <header
-                class="products-header shop-header"
-            >
+            <header class="products-header">
 
-                <div class="shop-hero">
+                <h1
+                    id="products-heading"
+                    class="shop-title"
+                >
+                    Home Improvement & Solar
+                </h1>
 
-                    <div
-                        class="shop-hero-icon"
-                        aria-hidden="true"
-                    >
-
-                        <span
-                            class="material-symbols-rounded icon-lg"
-                        >
-                            home_iot_device
-                        </span>
-
-                    </div>
-
-
-                    <div class="shop-hero-content">
-
-                        <h1
-                            id="products-heading"
-                            class="shop-title"
-                        >
-                            Home Improvement & Solar
-                        </h1>
-
-
-                        <p class="shop-subtitle">
-                            Explore practical home improvement,
-                            solar, lighting, smart home and everyday
-                            products from our live CJ-powered catalog.
-                        </p>
-
-                    </div>
-
-                </div>
+                <p class="shop-subtitle">
+                    Practical products for your home, solar and everyday needs.
+                </p>
 
             </header>
 
@@ -337,15 +227,6 @@
                         Search products
                     </label>
 
-
-                    <span
-                        class="material-symbols-rounded icon-sm"
-                        aria-hidden="true"
-                    >
-                        search
-                    </span>
-
-
                     <input
                         id="product-search"
                         class="products-search-input"
@@ -357,7 +238,6 @@
                         aria-label="Search products"
                     >
 
-
                     <button
                         id="clear-search"
                         type="button"
@@ -366,12 +246,14 @@
                         hidden
                     >
 
-                        <span
-                            class="material-symbols-rounded icon-sm"
+                        <svg
+                            class="ui-icon ui-icon-sm"
+                            viewBox="0 0 24 24"
                             aria-hidden="true"
                         >
-                            close
-                        </span>
+                            <path d="M6 6l12 12"></path>
+                            <path d="M18 6L6 18"></path>
+                        </svg>
 
                     </button>
 
@@ -385,13 +267,11 @@
                     Sort products
                 </label>
 
-
                 <select
                     id="product-sort"
                     class="product-sort"
                     aria-label="Sort products"
                 >
-
                     <option value="featured">
                         Featured
                     </option>
@@ -411,7 +291,6 @@
                     <option value="Z to A">
                         Name: Z to A
                     </option>
-
                 </select>
 
             </section>
@@ -433,18 +312,43 @@
                     data-query=""
                     aria-pressed="true"
                 >
+                    All Items
+                </button>
 
-                    <span
-                        class="material-symbols-rounded icon-sm"
-                        aria-hidden="true"
-                    >
-                        apps
-                    </span>
+                <button
+                    type="button"
+                    class="category-pill"
+                    data-query="solar light"
+                    aria-pressed="false"
+                >
+                    Solar Lights
+                </button>
 
-                    <span>
-                        All Items
-                    </span>
+                <button
+                    type="button"
+                    class="category-pill"
+                    data-query="consumer electronics"
+                    aria-pressed="false"
+                >
+                    Consumer Electronics
+                </button>
 
+                <button
+                    type="button"
+                    class="category-pill"
+                    data-query="wireless charger"
+                    aria-pressed="false"
+                >
+                    Wireless Chargers
+                </button>
+
+                <button
+                    type="button"
+                    class="category-pill"
+                    data-query="smart home"
+                    aria-pressed="false"
+                >
+                    Smart Home
                 </button>
 
             </nav>
@@ -459,16 +363,13 @@
                 aria-live="polite"
             >
 
-                <span
-                    id="page-heading"
-                >
+                <span id="page-heading">
                     Featured Products
                 </span>
 
-
                 <span
                     id="results-count"
-                    class="results-count products-result-count"
+                    class="results-count"
                 >
                     Loading products...
                 </span>
@@ -489,7 +390,7 @@
             >
 
                 <div
-                    class="product-status-card products-empty"
+                    class="product-status-card"
                     role="status"
                 >
 
@@ -498,62 +399,13 @@
                         aria-hidden="true"
                     ></div>
 
-
                     <h3>
                         Loading Products
                     </h3>
 
-
                     <p>
-                        Connecting to the PRASUN SHOP catalog.
+                        Loading the latest products.
                     </p>
-
-                </div>
-
-            </section>
-
-
-            <!-- ========================================================
-                 STORE INFORMATION
-                 ======================================================== -->
-
-            <section
-                class="store-info"
-                aria-labelledby="store-info-title"
-            >
-
-                <div class="store-info-content">
-
-                    <div
-                        class="store-info-icon"
-                        aria-hidden="true"
-                    >
-
-                        <span
-                            class="material-symbols-rounded icon-md"
-                        >
-                            verified_user
-                        </span>
-
-                    </div>
-
-
-                    <div class="store-info-copy">
-
-                        <h2
-                            id="store-info-title"
-                        >
-                            PRASUN SHOP
-                        </h2>
-
-
-                        <p>
-                            Shop practical Home Improvement,
-                            Solar, lighting and smart-home products
-                            through our live catalog.
-                        </p>
-
-                    </div>
 
                 </div>
 
@@ -590,16 +442,13 @@
                     Privacy Policy
                 </a>
 
-
                 <a href="/terms.html">
                     Terms of Service
                 </a>
 
-
                 <a href="/refund.html">
                     Refund Policy
                 </a>
-
 
                 <a href="/contact.html">
                     Contact
@@ -607,11 +456,8 @@
 
             </div>
 
-
             <p>
-
                 &copy; 2026 PRASUN SHOP by
-
                 <a
                     href="https://prasunbarua.com"
                     target="_blank"
@@ -619,9 +465,7 @@
                 >
                     Prasun Barua
                 </a>.
-
                 All rights reserved.
-
             </p>
 
         </div>
@@ -634,7 +478,7 @@
          ================================================================ -->
 
     <script
-        src="/js/cart.js?v=20260821-04"
+        src="/js/cart.js?v=20260821-05"
         defer
     ></script>
 
@@ -644,7 +488,7 @@
          ================================================================ -->
 
     <script
-        src="/js/products.js?v=20260821-05"
+        src="/js/products.js?v=20260821-06"
         defer
     ></script>
 
