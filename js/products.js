@@ -7,37 +7,38 @@
  *
  * CJ Dropshipping + Cloudflare Worker storefront manager.
  *
- * APPROVED STORE CATEGORIES
- * - All Products
- * - Solar Lights
- * - Battery
- * - Chargers
- * - Power Bank
- * - Cables
- * - Earphones
- * - Headphones
- * - Modem
- * - Routers
- * - Laptops
- * - Power Tools
- * - Smart Home
- * - Camera
- *
  * FEATURES
+ * ----------------------------------------------------------------------------
  * - Loads products from Cloudflare Worker
- * - Uses CJ images through Worker proxy
- * - Displays full CJ descriptions
+ * - Uses CJ product images through Worker image proxy
+ * - Displays CJ descriptions
  * - Product details modal
- * - CJ image gallery
+ * - CJ image galleries
  * - CJ PID / SKU / VID / variants preserved
  * - Search
  * - Category filtering
  * - Sorting
  * - Cart integration
  * - Inline SVG icons only
- * - No Material Symbols
+ * - No Material Symbols dependency
  * - No emoji
- * - No stock-image services
+ * - No external stock images
+ *
+ * STORE CATEGORIES
+ * ----------------------------------------------------------------------------
+ * 1. All Products
+ * 2. Solar Lights
+ * 3. Battery
+ * 4. Chargers
+ * 5. Power Bank
+ * 6. Cables
+ * 7. Earphones
+ * 8. Headphones
+ * 9. Modem
+ * 10. Routers
+ * 11. Laptops
+ * 12. Power Tools
+ *
  * ============================================================================
  */
 
@@ -67,10 +68,13 @@
             15000,
 
         DEBOUNCE_DELAY:
-            300,
+            280,
 
         MAX_PRODUCTS:
             1000,
+
+        MAX_DESCRIPTION_LENGTH:
+            120,
 
         DEFAULT_CATEGORY:
             "Home Improvement / Solar"
@@ -79,12 +83,13 @@
 
 
     /* =========================================================================
-       2. PLACEHOLDER IMAGE
+       2. LOCAL IMAGE PLACEHOLDER
        ========================================================================= */
 
     const PLACEHOLDER_IMAGE =
         "data:image/svg+xml;charset=UTF-8," +
         encodeURIComponent(`
+
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="600"
@@ -138,83 +143,1125 @@
                 </text>
 
             </svg>
+
         `);
 
 
     /* =========================================================================
-       3. APPROVED CATEGORIES
+       3. STORE CATEGORY MAP
        ========================================================================= */
+
+    /*
+     * query:
+     * -------
+     * Initial search sent to the Worker.
+     *
+     * keywords:
+     * ---------
+     * Broader local matching used after the Worker returns products.
+     *
+     * This lets us support different CJ naming conventions.
+     */
 
     const CATEGORY_MAP = [
 
-        {
-            label: "All Products",
-            query: ""
-        },
+        /* ---------------------------------------------------------------------
+           ALL PRODUCTS
+           --------------------------------------------------------------------- */
 
         {
-            label: "Solar Lights",
-            query: "solar light"
+            id:
+                "all",
+
+            label:
+                "All Products",
+
+            query:
+                "",
+
+            keywords:
+                []
         },
 
-        {
-            label: "Battery",
-            query: "battery"
-        },
+
+        /* ---------------------------------------------------------------------
+           SOLAR LIGHTS
+           --------------------------------------------------------------------- */
 
         {
-            label: "Chargers",
-            query: "charger"
+            id:
+                "solar",
+
+            label:
+                "Solar Lights",
+
+            query:
+                "solar",
+
+            keywords: [
+
+                "solar",
+
+                "solar light",
+
+                "solar lights",
+
+                "solar lamp",
+
+                "solar lamps",
+
+                "solar lighting",
+
+                "solar powered",
+
+                "solar power",
+
+                "solar led",
+
+                "solar outdoor",
+
+                "solar garden",
+
+                "solar garden light",
+
+                "solar wall light",
+
+                "solar street light",
+
+                "solar flood light",
+
+                "solar security light",
+
+                "solar motion light",
+
+                "solar sensor light",
+
+                "solar pathway light",
+
+                "solar path light",
+
+                "solar spotlight",
+
+                "solar lantern",
+
+                "solar torch",
+
+                "solar yard light",
+
+                "solar patio light",
+
+                "solar porch light",
+
+                "solar fence light",
+
+                "solar gate light",
+
+                "solar camping light",
+
+                "solar decorative light",
+
+                "solar string light",
+
+                "solar string lights",
+
+                "solar fairy light",
+
+                "solar night light",
+
+                "solar rechargeable light"
+
+            ]
+
         },
 
-        {
-            label: "Power Bank",
-            query: "power bank"
-        },
+
+        /* ---------------------------------------------------------------------
+           BATTERY
+           --------------------------------------------------------------------- */
 
         {
-            label: "Cables",
-            query: "cable"
+            id:
+                "battery",
+
+            label:
+                "Battery",
+
+            query:
+                "battery",
+
+            keywords: [
+
+                "battery",
+
+                "batteries",
+
+                "rechargeable battery",
+
+                "rechargeable batteries",
+
+                "lithium battery",
+
+                "lithium batteries",
+
+                "lithium ion",
+
+                "li-ion",
+
+                "li ion",
+
+                "18650",
+
+                "21700",
+
+                "26650",
+
+                "aa battery",
+
+                "aaa battery",
+
+                "aa batteries",
+
+                "aaa batteries",
+
+                "button battery",
+
+                "button cell",
+
+                "coin battery",
+
+                "coin cell",
+
+                "battery pack",
+
+                "battery packs",
+
+                "battery holder",
+
+                "battery case",
+
+                "battery box",
+
+                "backup battery",
+
+                "portable battery",
+
+                "rechargeable cell",
+
+                "power cell"
+
+            ]
+
         },
 
-        {
-            label: "Earphones",
-            query: "earphone"
-        },
+
+        /* ---------------------------------------------------------------------
+           CHARGERS
+           --------------------------------------------------------------------- */
 
         {
-            label: "Headphones",
-            query: "headphone"
+            id:
+                "charger",
+
+            label:
+                "Chargers",
+
+            query:
+                "charger",
+
+            keywords: [
+
+                "charger",
+
+                "chargers",
+
+                "charging",
+
+                "charging station",
+
+                "charging stations",
+
+                "charging dock",
+
+                "charging docks",
+
+                "charging stand",
+
+                "charging stands",
+
+                "charging pad",
+
+                "charging pads",
+
+                "fast charger",
+
+                "fast charging",
+
+                "quick charger",
+
+                "quick charging",
+
+                "super fast charger",
+
+                "wall charger",
+
+                "usb charger",
+
+                "usb charging",
+
+                "usb-c charger",
+
+                "usb c charger",
+
+                "type-c charger",
+
+                "type c charger",
+
+                "phone charger",
+
+                "mobile charger",
+
+                "smartphone charger",
+
+                "tablet charger",
+
+                "laptop charger",
+
+                "travel charger",
+
+                "car charger",
+
+                "car charging",
+
+                "wireless charger",
+
+                "wireless charging",
+
+                "wireless charging pad",
+
+                "wireless charging stand",
+
+                "magnetic charger",
+
+                "magnetic charging",
+
+                "magsafe",
+
+                "magsafe charger",
+
+                "magnetic wireless charger",
+
+                "multi device charger",
+
+                "multi-device charger",
+
+                "multi port charger",
+
+                "multi-port charger",
+
+                "gan charger",
+
+                "gan charging",
+
+                "desktop charger",
+
+                "charging hub",
+
+                "airpods charger",
+
+                "watch charger",
+
+                "3 in 1 charger",
+
+                "3-in-1 charger",
+
+                "4 in 1 charger",
+
+                "4-in-1 charger",
+
+                "5 in 1 charger",
+
+                "5-in-1 charger"
+
+            ]
+
         },
 
-        {
-            label: "Modem",
-            query: "modem"
-        },
+
+        /* ---------------------------------------------------------------------
+           POWER BANK
+           --------------------------------------------------------------------- */
 
         {
-            label: "Routers",
-            query: "router"
+            id:
+                "power-bank",
+
+            label:
+                "Power Bank",
+
+            query:
+                "power bank",
+
+            keywords: [
+
+                "power bank",
+
+                "powerbank",
+
+                "power banks",
+
+                "portable charger",
+
+                "portable power bank",
+
+                "portable powerbank",
+
+                "portable battery charger",
+
+                "battery bank",
+
+                "backup power bank",
+
+                "backup battery",
+
+                "usb power bank",
+
+                "usb-c power bank",
+
+                "type-c power bank",
+
+                "fast charging power bank",
+
+                "fast charge power bank",
+
+                "wireless power bank",
+
+                "magnetic power bank",
+
+                "magsafe power bank",
+
+                "solar power bank",
+
+                "solar powerbank",
+
+                "phone power bank",
+
+                "smartphone power bank",
+
+                "travel power bank",
+
+                "mini power bank",
+
+                "slim power bank",
+
+                "high capacity power bank",
+
+                "10000mah",
+
+                "20000mah",
+
+                "30000mah",
+
+                "50000mah",
+
+                "portable power station",
+
+                "portable power supply",
+
+                "mobile power"
+
+            ]
+
         },
 
-        {
-            label: "Laptops",
-            query: "laptop"
-        },
+
+        /* ---------------------------------------------------------------------
+           CABLES
+           --------------------------------------------------------------------- */
 
         {
-            label: "Power Tools",
-            query: "power tool"
+            id:
+                "cables",
+
+            label:
+                "Cables",
+
+            query:
+                "cable",
+
+            keywords: [
+
+                "cable",
+
+                "cables",
+
+                "charging cable",
+
+                "charging cables",
+
+                "usb cable",
+
+                "usb cables",
+
+                "usb-c cable",
+
+                "usb c cable",
+
+                "type-c cable",
+
+                "type c cable",
+
+                "type-c charging cable",
+
+                "lightning cable",
+
+                "phone cable",
+
+                "mobile cable",
+
+                "data cable",
+
+                "data cables",
+
+                "sync cable",
+
+                "fast charging cable",
+
+                "fast charge cable",
+
+                "quick charge cable",
+
+                "wireless cable",
+
+                "braided cable",
+
+                "nylon cable",
+
+                "magnetic cable",
+
+                "magnetic charging cable",
+
+                "magsafe cable",
+
+                "hdmi cable",
+
+                "displayport cable",
+
+                "dp cable",
+
+                "ethernet cable",
+
+                "lan cable",
+
+                "network cable",
+
+                "cat5 cable",
+
+                "cat5e cable",
+
+                "cat6 cable",
+
+                "cat6a cable",
+
+                "rj45 cable",
+
+                "audio cable",
+
+                "aux cable",
+
+                "3.5mm cable",
+
+                "optical cable",
+
+                "usb extension cable",
+
+                "usb hub cable",
+
+                "power cable",
+
+                "power cord",
+
+                "extension cord",
+
+                "adapter cable",
+
+                "otg cable",
+
+                "usb otg"
+
+            ]
+
         },
 
-        {
-            label: "Smart Home",
-            query: "smart home"
-        },
+
+        /* ---------------------------------------------------------------------
+           EARPHONES
+           --------------------------------------------------------------------- */
 
         {
-            label: "Camera",
-            query: "camera"
+            id:
+                "earphones",
+
+            label:
+                "Earphones",
+
+            query:
+                "earphone",
+
+            keywords: [
+
+                "earphone",
+
+                "earphones",
+
+                "earbud",
+
+                "earbuds",
+
+                "ear buds",
+
+                "tws",
+
+                "tws earbuds",
+
+                "tws earphones",
+
+                "true wireless",
+
+                "true wireless earbuds",
+
+                "wireless earbuds",
+
+                "wireless earphones",
+
+                "bluetooth earbuds",
+
+                "bluetooth earphones",
+
+                "bluetooth earphone",
+
+                "in-ear",
+
+                "in ear",
+
+                "in-ear earphones",
+
+                "sports earbuds",
+
+                "sport earbuds",
+
+                "gaming earbuds",
+
+                "gaming earphones",
+
+                "noise cancelling earbuds",
+
+                "noise canceling earbuds",
+
+                "anc earbuds",
+
+                "anc earphones",
+
+                "touch control earbuds",
+
+                "stereo earbuds",
+
+                "stereo earphones",
+
+                "mini earbuds",
+
+                "portable earbuds",
+
+                "charging case earbuds",
+
+                "wireless in-ear",
+
+                "handsfree earbuds",
+
+                "hands-free earbuds"
+
+            ]
+
+        },
+
+
+        /* ---------------------------------------------------------------------
+           HEADPHONES
+           --------------------------------------------------------------------- */
+
+        {
+            id:
+                "headphones",
+
+            label:
+                "Headphones",
+
+            query:
+                "headphone",
+
+            keywords: [
+
+                "headphone",
+
+                "headphones",
+
+                "headset",
+
+                "headsets",
+
+                "bluetooth headphone",
+
+                "bluetooth headphones",
+
+                "wireless headphone",
+
+                "wireless headphones",
+
+                "wireless headset",
+
+                "bluetooth headset",
+
+                "over-ear",
+
+                "over ear",
+
+                "over-ear headphones",
+
+                "on-ear",
+
+                "on ear",
+
+                "on-ear headphones",
+
+                "anc headphone",
+
+                "anc headphones",
+
+                "noise cancelling headphones",
+
+                "noise canceling headphones",
+
+                "noise cancellation",
+
+                "active noise cancellation",
+
+                "gaming headphone",
+
+                "gaming headphones",
+
+                "gaming headset",
+
+                "pc headset",
+
+                "computer headset",
+
+                "stereo headphones",
+
+                "portable headphones",
+
+                "foldable headphones",
+
+                "travel headphones",
+
+                "music headphones",
+
+                "wireless audio",
+
+                "audio headset",
+
+                "call headset",
+
+                "office headset",
+
+                "conference headset",
+
+                "kids headphones",
+
+                "kids headset"
+
+            ]
+
+        },
+
+
+        /* ---------------------------------------------------------------------
+           MODEM
+           --------------------------------------------------------------------- */
+
+        {
+            id:
+                "modem",
+
+            label:
+                "Modem",
+
+            query:
+                "modem",
+
+            keywords: [
+
+                "modem",
+
+                "modems",
+
+                "4g modem",
+
+                "5g modem",
+
+                "4g lte modem",
+
+                "5g lte modem",
+
+                "lte modem",
+
+                "wifi modem",
+
+                "wi-fi modem",
+
+                "usb modem",
+
+                "usb lte modem",
+
+                "wireless modem",
+
+                "mobile modem",
+
+                "cellular modem",
+
+                "portable modem",
+
+                "portable wifi modem",
+
+                "portable wi-fi modem",
+
+                "sim modem",
+
+                "sim card modem",
+
+                "sim router",
+
+                "lte router modem",
+
+                "5g cpe",
+
+                "4g cpe",
+
+                "5g home internet",
+
+                "4g home internet",
+
+                "mobile broadband",
+
+                "wireless broadband"
+
+            ]
+
+        },
+
+
+        /* ---------------------------------------------------------------------
+           ROUTERS
+           --------------------------------------------------------------------- */
+
+        {
+            id:
+                "routers",
+
+            label:
+                "Routers",
+
+            query:
+                "router",
+
+            keywords: [
+
+                "router",
+
+                "routers",
+
+                "wifi router",
+
+                "wi-fi router",
+
+                "wireless router",
+
+                "4g router",
+
+                "5g router",
+
+                "lte router",
+
+                "wifi 4 router",
+
+                "wifi 5 router",
+
+                "wifi 6 router",
+
+                "wifi 6e router",
+
+                "wifi 7 router",
+
+                "wi-fi 6",
+
+                "wi-fi 7",
+
+                "dual band router",
+
+                "dual-band router",
+
+                "tri band router",
+
+                "tri-band router",
+
+                "mesh router",
+
+                "mesh wifi",
+
+                "mesh wi-fi",
+
+                "wifi mesh",
+
+                "home router",
+
+                "smart router",
+
+                "travel router",
+
+                "portable router",
+
+                "mini router",
+
+                "gaming router",
+
+                "vpn router",
+
+                "openwrt router",
+
+                "network router",
+
+                "wireless access point",
+
+                "access point",
+
+                "wifi extender",
+
+                "wi-fi extender",
+
+                "wifi repeater",
+
+                "wireless repeater",
+
+                "range extender",
+
+                "network extender"
+
+            ]
+
+        },
+
+
+        /* ---------------------------------------------------------------------
+           LAPTOPS
+           --------------------------------------------------------------------- */
+
+        {
+            id:
+                "laptops",
+
+            label:
+                "Laptops",
+
+            query:
+                "laptop",
+
+            keywords: [
+
+                "laptop",
+
+                "laptops",
+
+                "notebook",
+
+                "notebook computer",
+
+                "notebook laptop",
+
+                "ultrabook",
+
+                "ultra book",
+
+                "gaming laptop",
+
+                "business laptop",
+
+                "work laptop",
+
+                "student laptop",
+
+                "office laptop",
+
+                "portable computer",
+
+                "windows laptop",
+
+                "windows notebook",
+
+                "chromebook",
+
+                "2 in 1 laptop",
+
+                "2-in-1 laptop",
+
+                "convertible laptop",
+
+                "touchscreen laptop",
+
+                "touch screen laptop",
+
+                "mini laptop",
+
+                "small laptop",
+
+                "thin laptop",
+
+                "lightweight laptop",
+
+                "portable notebook",
+
+                "computer notebook"
+
+            ]
+
+        },
+
+
+        /* ---------------------------------------------------------------------
+           POWER TOOLS
+           --------------------------------------------------------------------- */
+
+        {
+            id:
+                "power-tools",
+
+            label:
+                "Power Tools",
+
+            query:
+                "power tool",
+
+            keywords: [
+
+                "power tool",
+
+                "power tools",
+
+                "cordless tool",
+
+                "cordless tools",
+
+                "electric tool",
+
+                "electric tools",
+
+                "drill",
+
+                "drills",
+
+                "cordless drill",
+
+                "electric drill",
+
+                "impact drill",
+
+                "impact driver",
+
+                "cordless impact driver",
+
+                "hammer drill",
+
+                "rotary hammer",
+
+                "screwdriver",
+
+                "electric screwdriver",
+
+                "cordless screwdriver",
+
+                "power screwdriver",
+
+                "saw",
+
+                "electric saw",
+
+                "circular saw",
+
+                "reciprocating saw",
+
+                "jigsaw",
+
+                "mini saw",
+
+                "chainsaw",
+
+                "cordless chainsaw",
+
+                "angle grinder",
+
+                "grinder",
+
+                "polisher",
+
+                "electric polisher",
+
+                "sander",
+
+                "orbital sander",
+
+                "heat gun",
+
+                "electric heat gun",
+
+                "glue gun",
+
+                "hot glue gun",
+
+                "nail gun",
+
+                "staple gun",
+
+                "electric planer",
+
+                "planer",
+
+                "router tool",
+
+                "wood router",
+
+                "cutting tool",
+
+                "multi tool",
+
+                "oscillating tool",
+
+                "rotary tool",
+
+                "engraving tool",
+
+                "electric engraving",
+
+                "air compressor",
+
+                "electric pump",
+
+                "pressure washer",
+
+                "welding machine",
+
+                "soldering iron",
+
+                "soldering station"
+
+            ]
+
         }
 
     ];
@@ -226,19 +1273,29 @@
 
     const state = {
 
-        products: [],
+        products:
+            [],
 
-        filteredProducts: [],
+        filteredProducts:
+            [],
 
-        activeCategoryQuery: "",
+        activeCategoryId:
+            "all",
 
-        searchQuery: "",
+        activeCategoryQuery:
+            "",
 
-        sortBy: "featured",
+        searchQuery:
+            "",
 
-        loading: false,
+        sortBy:
+            "featured",
 
-        requestSequence: 0
+        loading:
+            false,
+
+        requestSequence:
+            0
 
     };
 
@@ -256,27 +1313,38 @@
 
     const elements = {
 
-        productList: null,
+        productList:
+            null,
 
-        resultsCount: null,
+        resultsCount:
+            null,
 
-        searchInput: null,
+        searchInput:
+            null,
 
-        clearSearchButton: null,
+        clearSearchButton:
+            null,
 
-        sortSelect: null,
+        sortSelect:
+            null,
 
-        categoriesNav: null,
+        categoriesNav:
+            null,
 
-        pageHeading: null,
+        pageHeading:
+            null,
 
-        liveRegion: null,
+        liveRegion:
+            null,
 
-        productModal: null,
+        productModal:
+            null,
 
-        modalBody: null,
+        modalBody:
+            null,
 
-        modalClose: null
+        modalClose:
+            null
 
     };
 
@@ -294,7 +1362,8 @@
             "DOMContentLoaded",
             initialize,
             {
-                once: true
+                once:
+                    true
             }
         );
 
@@ -319,7 +1388,7 @@
 
         updatePageHeading("");
 
-        loadProducts();
+        loadProducts("");
 
     }
 
@@ -431,13 +1500,15 @@
 
     function svgIcon(
         name,
-        className = "ui-icon"
+        className =
+            "ui-icon"
     ) {
 
         const safeClass =
             escapeHTML(
                 className
             );
+
 
         const icons = {
 
@@ -469,7 +1540,7 @@
                 </svg>
             `,
 
-            solar: `
+            light_mode: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
@@ -481,10 +1552,10 @@
                     <path d="M12 20v2"></path>
                     <path d="M2 12h2"></path>
                     <path d="M20 12h2"></path>
-                    <path d="m4.9 4.9 1.4 1.4"></path>
-                    <path d="m17.7 17.7 1.4 1.4"></path>
-                    <path d="m19.1 4.9-1.4 1.4"></path>
-                    <path d="m6.3 17.7-1.4 1.4"></path>
+                    <path d="m4.93 4.93 1.41 1.41"></path>
+                    <path d="m17.66 17.66 1.41 1.41"></path>
+                    <path d="m17.66 6.34-1.41-1.41"></path>
+                    <path d="m6.34 17.66-1.41 1.41"></path>
                 </svg>
             `,
 
@@ -501,33 +1572,28 @@
                 </svg>
             `,
 
-            charger: `
+            charging: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                     focusable="false"
                 >
-                    <path d="M8 3v6"></path>
-                    <path d="M16 3v6"></path>
-                    <path d="M5 9h14"></path>
-                    <path d="M12 9v5"></path>
-                    <path d="M9 14h6"></path>
-                    <path d="M12 14v7"></path>
+                    <path d="M13 2L6 13h5l-1 9 8-12h-5z"></path>
                 </svg>
             `,
 
-            power: `
+            power_bank: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                     focusable="false"
                 >
-                    <rect x="4" y="6" width="16" height="12" rx="2"></rect>
-                    <path d="M9 9h6"></path>
-                    <path d="M9 12h6"></path>
-                    <path d="M9 15h3"></path>
+                    <rect x="4" y="7" width="15" height="10" rx="2"></rect>
+                    <path d="M19 10h2v4h-2"></path>
+                    <path d="M11 9v6"></path>
+                    <path d="M8 12h6"></path>
                 </svg>
             `,
 
@@ -538,35 +1604,53 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-                    <path d="M6 8v4a6 6 0 0 0 6 6h6"></path>
-                    <path d="M4 6h4v4H4z"></path>
-                    <path d="M18 16h2v4h-4v-4"></path>
+                    <path d="M7 5v7a5 5 0 0 0 5 5h3"></path>
+                    <path d="M7 5H5v-2h4v2"></path>
+                    <path d="M15 17h4v2h-4z"></path>
+                    <path d="M12 17v4"></path>
                 </svg>
             `,
 
-            earphone: `
+            earphones: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                     focusable="false"
                 >
-                    <path d="M5 14V9a7 7 0 0 1 14 0v5"></path>
-                    <path d="M5 14H3v5h4v-4"></path>
-                    <path d="M19 14h2v5h-4v-4"></path>
+                    <path d="M8 4a4 4 0 0 0-4 4v5"></path>
+                    <path d="M4 13v4a2 2 0 0 0 2 2h2v-6H6a2 2 0 0 0-2 2"></path>
+                    <path d="M16 4a4 4 0 0 1 4 4v5"></path>
+                    <path d="M20 13v4a2 2 0 0 1-2 2h-2v-6h2a2 2 0 0 1 2 2"></path>
                 </svg>
             `,
 
-            headphone: `
+            headphones: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                     focusable="false"
                 >
-                    <path d="M4 14V11a8 8 0 0 1 16 0v3"></path>
-                    <path d="M4 14h3v6H4z"></path>
-                    <path d="M17 14h3v6h-3z"></path>
+                    <path d="M4 13a8 8 0 0 1 16 0"></path>
+                    <path d="M4 13v6a2 2 0 0 0 2 2h2v-8H6a2 2 0 0 0-2 2"></path>
+                    <path d="M20 13v6a2 2 0 0 1-2 2h-2v-8h2a2 2 0 0 1 2 2"></path>
+                </svg>
+            `,
+
+            modem: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <rect x="3" y="7" width="18" height="10" rx="2"></rect>
+                    <path d="M7 17v3"></path>
+                    <path d="M17 17v3"></path>
+                    <path d="M8 11h.01"></path>
+                    <path d="M12 11h.01"></path>
+                    <path d="M16 11h.01"></path>
                 </svg>
             `,
 
@@ -578,10 +1662,12 @@
                     focusable="false"
                 >
                     <rect x="3" y="9" width="18" height="8" rx="2"></rect>
+                    <path d="M7 9V6"></path>
+                    <path d="M17 9V6"></path>
                     <path d="M7 13h.01"></path>
                     <path d="M11 13h.01"></path>
                     <path d="M15 13h.01"></path>
-                    <path d="M8 7a6 6 0 0 1 8 0"></path>
+                    <path d="M19 13h.01"></path>
                 </svg>
             `,
 
@@ -592,48 +1678,24 @@
                     aria-hidden="true"
                     focusable="false"
                 >
-                    <rect x="5" y="4" width="14" height="10" rx="1.5"></rect>
+                    <rect x="5" y="4" width="14" height="11" rx="1.5"></rect>
                     <path d="M3 18h18"></path>
                     <path d="M8 18l1-2h6l1 2"></path>
                 </svg>
             `,
 
-            tool: `
+            power_tools: `
                 <svg
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
                     focusable="false"
                 >
-                    <path d="m14 6 4 4"></path>
-                    <path d="M8 18 18 8"></path>
-                    <path d="m5 21 3-3"></path>
-                    <path d="m4 16 4 4"></path>
-                </svg>
-            `,
-
-            smart: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
-                    <path d="M3 11 12 4l9 7"></path>
-                    <path d="M5 10v10h14V10"></path>
-                    <path d="M9 20v-5h6v5"></path>
-                </svg>
-            `,
-
-            camera: `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
-                    <path d="M5 7h3l1.5-2h5L16 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"></path>
-                    <circle cx="12" cy="13" r="3.5"></circle>
+                    <path d="M5 7h9a3 3 0 0 1 3 3v2H9a4 4 0 0 1-4-4V7z"></path>
+                    <path d="M17 9h3a2 2 0 0 1 2 2v1"></path>
+                    <path d="M9 12v7"></path>
+                    <path d="M7 19h4"></path>
+                    <path d="M14 12l-2 3"></path>
                 </svg>
             `,
 
@@ -748,92 +1810,53 @@
 
 
     function getCategoryIcon(
-        query
+        categoryId
     ) {
 
-        const value =
+        switch (
             String(
-                query || ""
-            )
-                .toLowerCase();
-
-        if (
-            value.includes(
-                "solar"
+                categoryId ||
+                ""
             )
         ) {
-            return "solar";
-        }
 
-        if (
-            value === "battery" ||
-            value.includes("battery")
-        ) {
-            return "battery";
-        }
+            case "solar":
+                return "light_mode";
 
-        if (
-            value.includes("charger")
-        ) {
-            return "charger";
-        }
+            case "battery":
+                return "battery";
 
-        if (
-            value.includes("power bank")
-        ) {
-            return "power";
-        }
+            case "charger":
+                return "charging";
 
-        if (
-            value.includes("cable")
-        ) {
-            return "cable";
-        }
+            case "power-bank":
+                return "power_bank";
 
-        if (
-            value.includes("earphone")
-        ) {
-            return "earphone";
-        }
+            case "cables":
+                return "cable";
 
-        if (
-            value.includes("headphone")
-        ) {
-            return "headphone";
-        }
+            case "earphones":
+                return "earphones";
 
-        if (
-            value.includes("router") ||
-            value.includes("modem")
-        ) {
-            return "router";
-        }
+            case "headphones":
+                return "headphones";
 
-        if (
-            value.includes("laptop")
-        ) {
-            return "laptop";
-        }
+            case "modem":
+                return "modem";
 
-        if (
-            value.includes("power tool")
-        ) {
-            return "tool";
-        }
+            case "routers":
+                return "router";
 
-        if (
-            value.includes("smart home")
-        ) {
-            return "smart";
-        }
+            case "laptops":
+                return "laptop";
 
-        if (
-            value.includes("camera")
-        ) {
-            return "camera";
-        }
+            case "power-tools":
+                return "power_tools";
 
-        return "category";
+            default:
+                return "category";
+
+        }
 
     }
 
@@ -950,8 +1973,10 @@
 
                 if (
                     event.key ===
-                    "Escape" &&
+                        "Escape" &&
+
                     elements.productModal &&
+
                     elements.productModal.classList.contains(
                         "is-open"
                     )
@@ -981,22 +2006,35 @@
                 ""
             ).trim();
 
+
         updateClearSearchButton();
+
 
         window.clearTimeout(
             searchDebounceTimer
         );
 
+
         searchDebounceTimer =
             window.setTimeout(
                 () => {
 
+                    state.activeCategoryId =
+                        "all";
+
                     state.activeCategoryQuery =
                         "";
 
+
                     highlightActiveCategoryPill(
-                        ""
+                        "all"
                     );
+
+
+                    updatePageHeading(
+                        state.searchQuery
+                    );
+
 
                     loadProducts(
                         state.searchQuery
@@ -1022,18 +2060,31 @@
 
         }
 
+
         event.preventDefault();
+
 
         window.clearTimeout(
             searchDebounceTimer
         );
 
+
+        state.activeCategoryId =
+            "all";
+
         state.activeCategoryQuery =
             "";
 
+
         highlightActiveCategoryPill(
-            ""
+            "all"
         );
+
+
+        updatePageHeading(
+            state.searchQuery
+        );
+
 
         loadProducts(
             state.searchQuery
@@ -1048,6 +2099,7 @@
             searchDebounceTimer
         );
 
+
         if (
             elements.searchInput
         ) {
@@ -1059,13 +2111,32 @@
 
         }
 
+
         state.searchQuery =
             "";
 
+
+        state.activeCategoryId =
+            "all";
+
+        state.activeCategoryQuery =
+            "";
+
+
         updateClearSearchButton();
 
+
+        highlightActiveCategoryPill(
+            "all"
+        );
+
+
+        updatePageHeading(
+            ""
+        );
+
+
         loadProducts(
-            state.activeCategoryQuery ||
             ""
         );
 
@@ -1074,14 +2145,16 @@
 
     function updateClearSearchButton() {
 
-        const button =
-            elements.clearSearchButton;
+        if (
+            !elements.clearSearchButton
+        ) {
 
-        if (!button) {
             return;
+
         }
 
-        button.hidden =
+
+        elements.clearSearchButton.hidden =
             state.searchQuery.length ===
             0;
 
@@ -1095,6 +2168,7 @@
         state.sortBy =
             event.target?.value ||
             "featured";
+
 
         applyFiltersAndRender();
 
@@ -1110,9 +2184,15 @@
         const nav =
             elements.categoriesNav;
 
-        if (!nav) {
+
+        if (
+            !nav
+        ) {
+
             return;
+
         }
+
 
         nav.innerHTML =
             CATEGORY_MAP
@@ -1120,15 +2200,20 @@
                     category => {
 
                         const active =
-                            category.query ===
-                            state.activeCategoryQuery;
+                            category.id ===
+                            state.activeCategoryId;
+
 
                         const icon =
-                            category.query
-                                ? getCategoryIcon(
-                                    category.query
-                                )
-                                : "apps";
+                            category.id ===
+                            "all"
+
+                                ? "apps"
+
+                                : getCategoryIcon(
+                                    category.id
+                                );
+
 
                         return `
 
@@ -1139,6 +2224,9 @@
                                         ? " active"
                                         : ""
                                 }"
+                                data-category-id="${escapeHTML(
+                                    category.id
+                                )}"
                                 data-query="${escapeHTML(
                                     category.query
                                 )}"
@@ -1180,21 +2268,51 @@
                 ".category-pill"
             );
 
-        if (!button) {
+
+        if (
+            !button
+        ) {
+
             return;
+
         }
 
-        const query =
+
+        const categoryId =
             String(
-                button.dataset.query ||
-                ""
+                button.dataset.categoryId ||
+                "all"
             ).trim();
 
+
+        const category =
+            CATEGORY_MAP.find(
+                item =>
+                    item.id ===
+                    categoryId
+            );
+
+
+        if (
+            !category
+        ) {
+
+            return;
+
+        }
+
+
+        state.activeCategoryId =
+            category.id;
+
+
         state.activeCategoryQuery =
-            query;
+            category.query;
+
 
         state.searchQuery =
             "";
+
 
         if (
             elements.searchInput
@@ -1205,28 +2323,39 @@
 
         }
 
+
         updateClearSearchButton();
 
+
         highlightActiveCategoryPill(
-            query
+            category.id
         );
 
+
+        updatePageHeading(
+            category.query
+        );
+
+
         loadProducts(
-            query
+            category.query
         );
 
     }
 
 
     function highlightActiveCategoryPill(
-        query
+        categoryId
     ) {
 
         if (
             !elements.categoriesNav
         ) {
+
             return;
+
         }
+
 
         elements.categoriesNav
             .querySelectorAll(
@@ -1237,18 +2366,20 @@
 
                     const active =
                         String(
-                            button.dataset.query ||
-                            ""
+                            button.dataset.categoryId ||
+                            "all"
                         ) ===
                         String(
-                            query ||
-                            ""
+                            categoryId ||
+                            "all"
                         );
+
 
                     button.classList.toggle(
                         "active",
                         active
                     );
+
 
                     button.setAttribute(
                         "aria-pressed",
@@ -1274,6 +2405,7 @@
         const requestId =
             ++state.requestSequence;
 
+
         if (
             activeAbortController
         ) {
@@ -1282,20 +2414,26 @@
 
         }
 
+
         activeAbortController =
             new AbortController();
+
 
         const controller =
             activeAbortController;
 
+
         state.loading =
             true;
+
 
         setLoadingState(
             true
         );
 
+
         renderLoadingState();
+
 
         const cleanQuery =
             String(
@@ -1303,8 +2441,10 @@
                 ""
             ).trim();
 
+
         let apiUrl =
             `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`;
+
 
         if (
             cleanQuery
@@ -1317,6 +2457,7 @@
 
         }
 
+
         const timer =
             window.setTimeout(
                 () => {
@@ -1327,27 +2468,32 @@
                 CONFIG.REQUEST_TIMEOUT
             );
 
+
         try {
 
             const response =
                 await fetch(
                     apiUrl,
                     {
+
                         method:
                             "GET",
 
-                        headers: {
-                            Accept:
-                                "application/json"
-                        },
+                        headers:
+                            {
+                                Accept:
+                                    "application/json"
+                            },
 
                         cache:
                             "no-store",
 
                         signal:
                             controller.signal
+
                     }
                 );
+
 
             if (
                 !response.ok
@@ -1359,8 +2505,10 @@
 
             }
 
+
             const data =
                 await response.json();
+
 
             if (
                 data?.success ===
@@ -1374,21 +2522,29 @@
 
             }
 
+
             const rawProducts =
                 extractProducts(
                     data
                 );
 
+
             const normalizedProducts =
                 rawProducts
+
                     .slice(
                         0,
                         CONFIG.MAX_PRODUCTS
                     )
+
                     .map(
                         normalizeProduct
                     )
-                    .filter(Boolean);
+
+                    .filter(
+                        Boolean
+                    );
+
 
             if (
                 requestId !==
@@ -1399,14 +2555,23 @@
 
             }
 
+
             state.products =
                 normalizedProducts;
 
-            updatePageHeading(
-                cleanQuery
-            );
+
+            /*
+             * Important:
+             * For category pages the category is represented by
+             * state.activeCategoryId, so the heading is updated from
+             * the category rather than only from the worker query.
+             */
+
+            updatePageHeadingForCurrentState();
+
 
             applyFiltersAndRender();
+
 
         } catch (
             error
@@ -1421,10 +2586,12 @@
 
             }
 
+
             console.error(
                 "[PRASUN SHOP] Product API error:",
                 error
             );
+
 
             if (
                 requestId ===
@@ -1432,8 +2599,11 @@
             ) {
 
                 renderErrorState(
+
                     error?.message ||
+
                     "Unable to load products."
+
                 );
 
             }
@@ -1444,6 +2614,7 @@
                 timer
             );
 
+
             if (
                 requestId ===
                 state.requestSequence
@@ -1452,9 +2623,11 @@
                 state.loading =
                     false;
 
+
                 setLoadingState(
                     false
                 );
+
 
                 if (
                     activeAbortController ===
@@ -1487,6 +2660,7 @@
 
         }
 
+
         if (
             Array.isArray(
                 data?.products
@@ -1496,6 +2670,7 @@
             return data.products;
 
         }
+
 
         if (
             Array.isArray(
@@ -1507,6 +2682,7 @@
 
         }
 
+
         if (
             Array.isArray(
                 data?.data?.list
@@ -1516,6 +2692,7 @@
             return data.data.list;
 
         }
+
 
         if (
             Array.isArray(
@@ -1527,13 +2704,14 @@
 
         }
 
+
         return [];
 
     }
 
 
     /* =========================================================================
-       13. IMAGE HANDLING
+       13. IMAGE NORMALIZATION
        ========================================================================= */
 
     function normalizeImageUrl(
@@ -1543,19 +2721,26 @@
         if (
             !value ||
             typeof value !==
-            "string"
+                "string"
         ) {
 
             return "";
 
         }
 
+
         let url =
             value.trim();
 
-        if (!url) {
+
+        if (
+            !url
+        ) {
+
             return "";
+
         }
+
 
         if (
             url.startsWith(
@@ -1567,6 +2752,7 @@
 
         }
 
+
         if (
             url.startsWith(
                 "//"
@@ -1577,6 +2763,7 @@
                 `https:${url}`;
 
         }
+
 
         if (
             /^http:\/\//i.test(
@@ -1592,6 +2779,7 @@
 
         }
 
+
         return url;
 
     }
@@ -1602,11 +2790,14 @@
     ) {
 
         return (
+
             typeof url ===
-            "string" &&
+                "string" &&
+
             url.includes(
                 CONFIG.IMAGE_PROXY_ENDPOINT
             )
+
         );
 
     }
@@ -1621,9 +2812,15 @@
                 originalUrl
             );
 
-        if (!normalized) {
+
+        if (
+            !normalized
+        ) {
+
             return "";
+
         }
+
 
         if (
             normalized.startsWith(
@@ -1635,6 +2832,7 @@
 
         }
 
+
         if (
             isProxyUrl(
                 normalized
@@ -1645,11 +2843,15 @@
 
         }
 
+
         return (
+
             `${CONFIG.API_BASE}${CONFIG.IMAGE_PROXY_ENDPOINT}` +
+
             `?url=${encodeURIComponent(
                 normalized
             )}`
+
         );
 
     }
@@ -1662,6 +2864,7 @@
         const candidates =
             [];
 
+
         if (
             product?.image
         ) {
@@ -1671,6 +2874,7 @@
             );
 
         }
+
 
         if (
             Array.isArray(
@@ -1684,6 +2888,7 @@
 
         }
 
+
         if (
             product?.originalImage
         ) {
@@ -1693,6 +2898,7 @@
             );
 
         }
+
 
         if (
             Array.isArray(
@@ -1706,6 +2912,7 @@
 
         }
 
+
         if (
             product?.bigImage
         ) {
@@ -1715,6 +2922,7 @@
             );
 
         }
+
 
         if (
             product?.productImage
@@ -1726,6 +2934,7 @@
 
         }
 
+
         if (
             product?.productImg
         ) {
@@ -1735,6 +2944,7 @@
             );
 
         }
+
 
         if (
             Array.isArray(
@@ -1748,30 +2958,44 @@
 
         }
 
+
         if (
             typeof product?.productImageSet ===
-            "string"
+                "string"
         ) {
 
             candidates.push(
-                ...product.productImageSet
+
+                ...product
+                    .productImageSet
                     .split(",")
+
                     .map(
                         value =>
                             value.trim()
                     )
+
             );
 
         }
 
+
         return [
+
             ...new Set(
+
                 candidates
+
                     .map(
                         normalizeImageUrl
                     )
-                    .filter(Boolean)
+
+                    .filter(
+                        Boolean
+                    )
+
             )
+
         ];
 
     }
@@ -1786,10 +3010,12 @@
                 product
             );
 
+
         const existingProxy =
             images.find(
                 isProxyUrl
             );
+
 
         if (
             existingProxy
@@ -1798,6 +3024,7 @@
             return existingProxy;
 
         }
+
 
         if (
             images.length
@@ -1809,6 +3036,7 @@
 
         }
 
+
         return PLACEHOLDER_IMAGE;
 
     }
@@ -1819,15 +3047,23 @@
     ) {
 
         return [
+
             ...new Set(
+
                 collectProductImageUrls(
                     product
                 )
+
                     .map(
                         buildProxyUrl
                     )
-                    .filter(Boolean)
+
+                    .filter(
+                        Boolean
+                    )
+
             )
+
         ];
 
     }
@@ -1844,38 +3080,59 @@
         if (
             !raw ||
             typeof raw !==
-            "object"
+                "object"
         ) {
 
             return null;
 
         }
 
+
         const id =
             String(
+
                 raw.id ??
+
                 raw.pid ??
+
                 raw.productId ??
+
                 raw.sku ??
+
                 ""
+
             ).trim();
+
 
         const pid =
             String(
+
                 raw.pid ??
+
                 raw.id ??
+
                 raw.productId ??
+
                 ""
+
             ).trim();
+
 
         const name =
             String(
+
                 raw.title ??
+
                 raw.name ??
+
                 raw.productNameEn ??
+
                 raw.productName ??
+
                 "CJ Product"
+
             ).trim();
+
 
         if (
             !id ||
@@ -1892,44 +3149,61 @@
            --------------------------------------------------------------------- */
 
         let rawPrice =
+
             raw.price ??
+
             raw.sellPrice ??
+
             raw.unitPrice ??
+
             0;
+
 
         if (
             rawPrice &&
             typeof rawPrice ===
-            "object"
+                "object"
         ) {
 
             rawPrice =
+
                 rawPrice.amount ??
+
                 rawPrice.value ??
+
                 rawPrice.raw ??
+
                 0;
 
         }
 
+
         const parsedPrice =
             parseFloat(
+
                 String(
                     rawPrice
-                ).replace(
-                    /[^0-9.]/g,
-                    ""
                 )
+
+                    .replace(
+                        /[^0-9.]/g,
+                        ""
+                    )
+
             );
+
 
         const price =
             Number.isFinite(
                 parsedPrice
             )
+
                 ? Number(
                     parsedPrice.toFixed(
                         2
                     )
                 )
+
                 : 0;
 
 
@@ -1939,24 +3213,37 @@
 
         const parsedQuantity =
             Number(
+
                 raw.quantity ??
+
                 raw.inventory ??
+
                 raw.totalInventory ??
+
                 raw.warehouseInventoryNum ??
+
                 raw.totalVerifiedInventory ??
+
                 0
+
             );
+
 
         const quantity =
             Number.isFinite(
                 parsedQuantity
             )
+
                 ? Math.max(
+
                     0,
+
                     Math.floor(
                         parsedQuantity
                     )
+
                 )
+
                 : 0;
 
 
@@ -1969,21 +3256,29 @@
                 raw.rating
             );
 
+
         const rating =
             Number.isFinite(
                 parsedRating
             )
+
                 ? Number(
+
                     Math.max(
+
                         0,
+
                         Math.min(
                             5,
                             parsedRating
                         )
+
                     ).toFixed(
                         1
                     )
+
                 )
+
                 : 0;
 
 
@@ -1995,6 +3290,7 @@
             getPrimaryImage(
                 raw
             );
+
 
         const images =
             getGalleryImages(
@@ -2010,30 +3306,45 @@
             Array.isArray(
                 raw.variants
             )
-                ? raw.variants
+
+                ?
+
+                raw.variants
+
                     .map(
                         variant => ({
 
                             vid:
                                 String(
+
                                     variant?.vid ||
+
                                     variant?.variantId ||
+
                                     ""
+
                                 ),
 
                             sku:
                                 String(
+
                                     variant?.sku ||
+
                                     variant?.variantSku ||
+
                                     ""
+
                                 ),
 
                             name:
                                 String(
+
                                     variant?.name ||
+
                                     variant?.variantNameEn ||
-                                    variant?.variantKey ||
+
                                     "Default"
+
                                 ),
 
                             price:
@@ -2048,13 +3359,12 @@
 
                             inventory:
                                 normalizeInventory(
-                                    variant?.inventory ??
-                                    variant?.quantity ??
-                                    0
+                                    variant?.inventory
                                 )
 
                         })
                     )
+
                 : [];
 
 
@@ -2066,69 +3376,112 @@
 
             pid,
 
+
             cj_id:
                 String(
+
                     raw.cj_id ||
+
                     raw.cjId ||
+
                     pid
+
                 ),
+
 
             sku:
                 String(
+
                     raw.sku ||
+
                     raw.productSku ||
+
+                    raw.spu ||
+
                     ""
+
                 ),
+
 
             title:
                 name,
 
             name,
 
+
             description:
                 String(
+
                     raw.description ||
+
                     ""
+
                 ),
+
 
             category:
                 String(
+
                     raw.category ||
+
                     raw.categoryName ||
+
                     raw.threeCategoryName ||
+
                     CONFIG.DEFAULT_CATEGORY
+
                 ),
+
 
             price,
 
             quantity,
 
+
             image,
 
             images,
 
+
             originalImage:
                 normalizeImageUrl(
+
                     raw.originalImage ||
+
                     raw.bigImage ||
+
                     raw.productImage ||
+
                     ""
+
                 ),
 
+
             originalImages:
+
                 Array.isArray(
                     raw.originalImages
                 )
-                    ? raw.originalImages
+
+                    ?
+
+                    raw.originalImages
+
                         .map(
                             normalizeImageUrl
                         )
-                        .filter(Boolean)
+
+                        .filter(
+                            Boolean
+                        )
+
                     : [],
+
 
             variants,
 
             rating,
+
 
             source:
                 "CJ Dropshipping"
@@ -2147,6 +3500,7 @@
                 value
             );
 
+
         if (
             !Number.isFinite(
                 number
@@ -2157,10 +3511,13 @@
 
         }
 
+
         return Number(
+
             number.toFixed(
                 2
             )
+
         );
 
     }
@@ -2175,6 +3532,7 @@
                 value
             );
 
+
         if (
             !Number.isFinite(
                 number
@@ -2185,19 +3543,167 @@
 
         }
 
+
         return Math.max(
+
             0,
+
             Math.floor(
                 number
             )
+
         );
 
     }
 
 
     /* =========================================================================
-       15. PAGE HEADING
+       15. SEARCH TEXT
        ========================================================================= */
+
+    function buildSearchText(
+        product
+    ) {
+
+        return [
+
+            product?.name,
+
+            product?.title,
+
+            product?.category,
+
+            product?.sku,
+
+            product?.pid,
+
+            product?.description
+
+        ]
+
+            .map(
+
+                value =>
+
+                    stripHtml(
+
+                        String(
+                            value ||
+                            ""
+                        )
+
+                    )
+
+            )
+
+            .join(" ")
+
+            .toLowerCase();
+
+    }
+
+
+    /* =========================================================================
+       16. CATEGORY MATCH
+       ========================================================================= */
+
+    function productMatchesCategory(
+        product,
+        category
+    ) {
+
+        if (
+            !category ||
+            category.id ===
+                "all"
+        ) {
+
+            return true;
+
+        }
+
+
+        const searchable =
+            buildSearchText(
+                product
+            );
+
+
+        return category.keywords.some(
+
+            keyword =>
+
+                searchable.includes(
+
+                    String(
+                        keyword
+                    ).toLowerCase()
+
+                )
+
+        );
+
+    }
+
+
+    /* =========================================================================
+       17. PAGE HEADING
+       ========================================================================= */
+
+    function updatePageHeadingForCurrentState() {
+
+        if (
+            !elements.pageHeading
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            state.searchQuery
+        ) {
+
+            elements.pageHeading.textContent =
+
+                `Search Results for "${state.searchQuery}"`;
+
+            return;
+
+        }
+
+
+        const category =
+            CATEGORY_MAP.find(
+
+                item =>
+
+                    item.id ===
+                    state.activeCategoryId
+
+            );
+
+
+        if (
+            category &&
+            category.id !==
+            "all"
+        ) {
+
+            elements.pageHeading.textContent =
+                category.label;
+
+            return;
+
+        }
+
+
+        elements.pageHeading.textContent =
+            "Featured Products";
+
+    }
+
 
     function updatePageHeading(
         query
@@ -2211,41 +3717,58 @@
 
         }
 
-        if (!query) {
 
-            elements.pageHeading.textContent =
-                "Featured Products";
+        const cleanQuery =
+            String(
+                query ||
+                ""
+            ).trim();
 
-            return;
-
-        }
-
-        const category =
-            CATEGORY_MAP.find(
-                item =>
-                    item.query ===
-                    query
-            );
 
         if (
-            category
+            cleanQuery
         ) {
 
+            const category =
+                CATEGORY_MAP.find(
+
+                    item =>
+
+                        item.query ===
+                        cleanQuery
+
+                );
+
+
+            if (
+                category
+            ) {
+
+                elements.pageHeading.textContent =
+                    category.label;
+
+                return;
+
+            }
+
+
             elements.pageHeading.textContent =
-                category.label;
+
+                `Search Results for "${cleanQuery}"`;
 
             return;
 
         }
 
+
         elements.pageHeading.textContent =
-            `Search Results for "${query}"`;
+            "Featured Products";
 
     }
 
 
     /* =========================================================================
-       16. FILTER / SORT
+       18. FILTER / SORT
        ========================================================================= */
 
     function applyFiltersAndRender() {
@@ -2256,12 +3779,21 @@
             ];
 
 
+        /* ---------------------------------------------------------------------
+           SEARCH
+           --------------------------------------------------------------------- */
+
         const localQuery =
             String(
+
                 state.searchQuery ||
+
                 ""
+
             )
+
                 .trim()
+
                 .toLowerCase();
 
 
@@ -2271,99 +3803,70 @@
 
             products =
                 products.filter(
-                    product => {
 
-                        const searchable =
-                            [
+                    product =>
 
-                                product.name,
+                        buildSearchText(
+                            product
+                        )
 
-                                product.title,
+                            .includes(
+                                localQuery
+                            )
 
-                                product.category,
-
-                                product.sku,
-
-                                product.pid,
-
-                                stripHtml(
-                                    product.description
-                                )
-
-                            ]
-                                .map(
-                                    value =>
-                                        String(
-                                            value ||
-                                            ""
-                                        ).toLowerCase()
-                                )
-                                .join(" ");
-
-                        return searchable.includes(
-                            localQuery
-                        );
-
-                    }
                 );
 
         }
 
 
+        /* ---------------------------------------------------------------------
+           CATEGORY
+           --------------------------------------------------------------------- */
+
         if (
-            state.activeCategoryQuery &&
+
+            state.activeCategoryId !==
+                "all" &&
+
             !state.searchQuery
+
         ) {
 
-            const categoryQuery =
-                state.activeCategoryQuery
-                    .toLowerCase()
-                    .trim();
+            const category =
+                CATEGORY_MAP.find(
+
+                    item =>
+
+                        item.id ===
+                        state.activeCategoryId
+
+                );
+
 
             if (
-                categoryQuery
+                category
             ) {
 
                 products =
                     products.filter(
-                        product => {
 
-                            const searchable =
-                                [
+                        product =>
 
-                                    product.name,
+                            productMatchesCategory(
+                                product,
+                                category
+                            )
 
-                                    product.title,
-
-                                    product.category,
-
-                                    product.sku,
-
-                                    stripHtml(
-                                        product.description
-                                    )
-
-                                ]
-                                    .map(
-                                        value =>
-                                            String(
-                                                value ||
-                                                ""
-                                            ).toLowerCase()
-                                    )
-                                    .join(" ");
-
-                            return searchable.includes(
-                                categoryQuery
-                            );
-
-                        }
                     );
 
             }
 
         }
 
+
+        /* ---------------------------------------------------------------------
+           SORT
+           --------------------------------------------------------------------- */
 
         products.sort(
             compareProducts
@@ -2375,19 +3878,54 @@
 
 
         if (
-            !products.length
+            products.length ===
+            0
         ) {
 
-            const query =
-                state.searchQuery ||
-                state.activeCategoryQuery ||
-                "";
+            const category =
+                CATEGORY_MAP.find(
+
+                    item =>
+
+                        item.id ===
+                        state.activeCategoryId
+
+                );
+
+
+            let message;
+
+
+            if (
+                state.searchQuery
+            ) {
+
+                message =
+
+                    `No available products found for "${state.searchQuery}".`;
+
+            } else if (
+                category &&
+                category.id !==
+                "all"
+            ) {
+
+                message =
+
+                    `No available products found in ${category.label}.`;
+
+            } else {
+
+                message =
+                    "No active CJ products are available.";
+
+            }
+
 
             renderEmptyState(
-                query
-                    ? `No approved products found for "${query}".`
-                    : "No approved PRASUN SHOP products are currently available."
+                message
             );
+
 
             return;
 
@@ -2408,10 +3946,15 @@
 
         const sort =
             String(
+
                 state.sortBy ||
+
                 "featured"
+
             )
+
                 .toLowerCase()
+
                 .replace(
                     /[^a-z0-9]/g,
                     ""
@@ -2423,10 +3966,12 @@
                 a.price
             ) || 0;
 
+
         const priceB =
             Number(
                 b.price
             ) || 0;
+
 
         const nameA =
             String(
@@ -2434,16 +3979,19 @@
                 ""
             );
 
+
         const nameB =
             String(
                 b.name ||
                 ""
             );
 
+
         const ratingA =
             Number(
                 a.rating
             ) || 0;
+
 
         const ratingB =
             Number(
@@ -2452,15 +4000,19 @@
 
 
         if (
+
             sort.includes(
                 "lowtohigh"
             ) ||
+
             sort.includes(
                 "lowhigh"
             ) ||
+
             sort.includes(
                 "priceasc"
             )
+
         ) {
 
             return (
@@ -2472,15 +4024,19 @@
 
 
         if (
+
             sort.includes(
                 "hightolow"
             ) ||
+
             sort.includes(
                 "highlow"
             ) ||
+
             sort.includes(
                 "pricedesc"
             )
+
         ) {
 
             return (
@@ -2492,58 +4048,77 @@
 
 
         if (
+
             sort.includes(
                 "atoz"
             ) ||
+
             sort.includes(
                 "nameaz"
             ) ||
+
             sort ===
-            "nameasc"
+                "nameasc"
+
         ) {
 
             return nameA.localeCompare(
+
                 nameB,
+
                 undefined,
+
                 {
                     sensitivity:
                         "base"
                 }
+
             );
 
         }
 
 
         if (
+
             sort.includes(
                 "ztoa"
             ) ||
+
             sort.includes(
                 "nameza"
             ) ||
+
             sort ===
-            "namedesc"
+                "namedesc"
+
         ) {
 
             return nameB.localeCompare(
+
                 nameA,
+
                 undefined,
+
                 {
                     sensitivity:
                         "base"
                 }
+
             );
 
         }
 
 
         if (
+
             sort.includes(
                 "rating"
             ) ||
+
             sort.includes(
                 "toprated"
             )
+
         ) {
 
             return (
@@ -2554,64 +4129,13 @@
         }
 
 
-        /*
-         * Featured:
-         * Put in-stock products first, then products with
-         * ratings, then stable name order.
-         */
-
-        const stockA =
-            Number(
-                a.quantity
-            ) > 0
-                ? 1
-                : 0;
-
-        const stockB =
-            Number(
-                b.quantity
-            ) > 0
-                ? 1
-                : 0;
-
-        if (
-            stockA !==
-            stockB
-        ) {
-
-            return (
-                stockB -
-                stockA
-            );
-
-        }
-
-        if (
-            ratingA !==
-            ratingB
-        ) {
-
-            return (
-                ratingB -
-                ratingA
-            );
-
-        }
-
-        return nameA.localeCompare(
-            nameB,
-            undefined,
-            {
-                sensitivity:
-                    "base"
-            }
-        );
+        return 0;
 
     }
 
 
     /* =========================================================================
-       17. PRODUCT GRID
+       19. PRODUCT GRID
        ========================================================================= */
 
     function renderProductGrid() {
@@ -2624,16 +4148,22 @@
 
         }
 
+
         elements.productList.innerHTML =
+
             state.filteredProducts
+
                 .map(
                     renderProductCard
                 )
+
                 .join("");
+
 
         setLoadingState(
             false
         );
+
 
         attachProductImageFallbacks();
 
@@ -2641,7 +4171,7 @@
 
 
     /* =========================================================================
-       18. PRODUCT CARD
+       20. PRODUCT CARD
        ========================================================================= */
 
     function renderProductCard(
@@ -2653,70 +4183,103 @@
                 product.id
             );
 
+
         const title =
             escapeHTML(
+
                 product.name ||
+
                 "CJ Product"
+
             );
+
 
         const category =
             escapeHTML(
+
                 product.category ||
+
                 CONFIG.DEFAULT_CATEGORY
+
             );
+
 
         const image =
             escapeHTML(
+
                 product.image ||
+
                 PLACEHOLDER_IMAGE
+
             );
+
 
         const price =
             formatPrice(
                 product.price
             );
 
+
         const quantity =
             Number(
                 product.quantity
             );
 
+
         const available =
             Number.isFinite(
                 quantity
             ) &&
-            quantity > 0;
 
-        const productUrl =
-            `${CONFIG.PRODUCT_PAGE}?id=${encodeURIComponent(
-                String(
-                    product.id
-                )
-            )}`;
+            quantity >
+                0;
+
 
         const rating =
             Number(
                 product.rating
             ) || 0;
 
+
         const descriptionText =
             stripHtml(
                 product.description
             );
 
-        const shortDescription =
-            descriptionText.length >
-            120
 
-                ? `${descriptionText.slice(
+        const shortDescription =
+
+            descriptionText.length >
+
+                CONFIG.MAX_DESCRIPTION_LENGTH
+
+                ?
+
+                `${descriptionText.slice(
                     0,
-                    120
+                    CONFIG.MAX_DESCRIPTION_LENGTH
                 )}...`
 
-                : (
+                :
+
+                (
+
                     descriptionText ||
+
                     "Product information available."
+
                 );
+
+
+        const productUrl =
+
+            `${CONFIG.PRODUCT_PAGE}?id=${encodeURIComponent(
+
+                String(
+                    product.id
+                )
+
+            )}`;
 
 
         return `
@@ -2739,10 +4302,11 @@
                     >
 
                         ${svgIcon(
-                            getCategoryIcon(
-                                category
-                            ),
+
+                            "category",
+
                             "ui-icon ui-icon-sm"
+
                         )}
 
                         <span>
@@ -2760,8 +4324,11 @@
                         decoding="async"
                         referrerpolicy="no-referrer"
                         data-original-image="${escapeHTML(
+
                             product.originalImage ||
+
                             ""
+
                         )}"
                     >
 
@@ -2797,9 +4364,12 @@
 
 
                     ${
+
                         rating > 0
 
-                            ? `
+                            ?
+
+                            `
 
                                 <div
                                     class="product-rating"
@@ -2809,8 +4379,11 @@
                                 >
 
                                     ${svgIcon(
+
                                         "star",
+
                                         "ui-icon ui-icon-sm"
+
                                     )}
 
                                     <span>
@@ -2823,7 +4396,10 @@
 
                             `
 
-                            : ""
+                            :
+
+                            ""
+
                     }
 
 
@@ -2858,8 +4434,11 @@
                             >
 
                                 ${svgIcon(
+
                                     "eye",
+
                                     "ui-icon ui-icon-sm"
+
                                 )}
 
                                 <span>
@@ -2873,31 +4452,48 @@
                                 type="button"
                                 class="btn-card btn-primary btn-add-to-cart add-to-cart-btn"
                                 data-product-id="${productId}"
+
                                 ${
                                     available
                                         ? ""
                                         : "disabled"
                                 }
+
                                 aria-label="${
+
                                     available
+
                                         ? `Add ${title} to cart`
+
                                         : `${title} is out of stock`
+
                                 }"
                             >
 
                                 ${svgIcon(
+
                                     available
+
                                         ? "add_cart"
+
                                         : "inventory",
+
                                     "ui-icon ui-icon-sm"
+
                                 )}
 
                                 <span>
+
                                     ${
+
                                         available
+
                                             ? "Add to Cart"
+
                                             : "Out of Stock"
+
                                     }
+
                                 </span>
 
                             </button>
@@ -2916,24 +4512,40 @@
 
 
     /* =========================================================================
-       19. IMAGE FALLBACK
+       21. IMAGE FALLBACK
        ========================================================================= */
 
     function attachProductImageFallbacks() {
 
-        document
+        if (
+            !elements.productList
+        ) {
+
+            return;
+
+        }
+
+
+        elements.productList
+
             .querySelectorAll(
                 ".product-image"
             )
+
             .forEach(
+
                 image => {
 
                     image.addEventListener(
+
                         "error",
+
                         handleProductImageError
+
                     );
 
                 }
+
             );
 
     }
@@ -2946,30 +4558,45 @@
         const image =
             event.currentTarget;
 
-        if (!image) {
+
+        if (
+            !image
+        ) {
+
             return;
+
         }
+
 
         const original =
             image.dataset.originalImage;
 
+
         if (
+
             original &&
+
             !image.dataset.originalAttempted
+
         ) {
 
             image.dataset.originalAttempted =
                 "true";
+
 
             const proxiedOriginal =
                 buildProxyUrl(
                     original
                 );
 
+
             if (
+
                 proxiedOriginal &&
+
                 proxiedOriginal !==
-                image.src
+                    image.src
+
             ) {
 
                 image.src =
@@ -2981,12 +4608,14 @@
 
         }
 
+
         if (
             !image.dataset.placeholderUsed
         ) {
 
             image.dataset.placeholderUsed =
                 "true";
+
 
             image.src =
                 PLACEHOLDER_IMAGE;
@@ -2997,7 +4626,7 @@
 
 
     /* =========================================================================
-       20. GRID CLICK HANDLER
+       22. PRODUCT GRID CLICK HANDLER
        ========================================================================= */
 
     function handleProductGridClick(
@@ -3009,6 +4638,7 @@
                 ".view-details-btn"
             );
 
+
         if (
             detailsButton
         ) {
@@ -3017,9 +4647,13 @@
 
             event.stopPropagation();
 
+
             openProductModal(
+
                 detailsButton.dataset.productId
+
             );
+
 
             return;
 
@@ -3031,6 +4665,7 @@
                 ".add-to-cart-btn"
             );
 
+
         if (
             !cartButton
         ) {
@@ -3039,15 +4674,21 @@
 
         }
 
+
         event.preventDefault();
 
         event.stopPropagation();
 
+
         const productId =
             String(
+
                 cartButton.dataset.productId ||
+
                 ""
+
             );
+
 
         if (
             !productId
@@ -3057,14 +4698,20 @@
 
         }
 
+
         const product =
             state.products.find(
+
                 current =>
+
                     String(
                         current.id
                     ) ===
+
                     productId
+
             );
+
 
         if (
             !product
@@ -3074,6 +4721,7 @@
 
         }
 
+
         if (
             Number(
                 product.quantity
@@ -3082,15 +4730,20 @@
         ) {
 
             announceToScreenReader(
+
                 `${product.name} is currently out of stock.`
+
             );
+
 
             return;
 
         }
 
+
         let added =
             false;
+
 
         if (
             typeof window.addToCart ===
@@ -3099,9 +4752,11 @@
 
             added =
                 Boolean(
+
                     window.addToCart(
                         product
                     )
+
                 );
 
         } else {
@@ -3109,6 +4764,7 @@
             try {
 
                 document.dispatchEvent(
+
                     new CustomEvent(
                         "cart:add",
                         {
@@ -3116,7 +4772,9 @@
                                 product
                         }
                     )
+
                 );
+
 
                 added =
                     true;
@@ -3126,13 +4784,21 @@
             ) {
 
                 console.error(
+
                     "[PRASUN SHOP] Cart event error:",
+
                     error
+
                 );
+
+
+                added =
+                    false;
 
             }
 
         }
+
 
         if (
             !added
@@ -3142,18 +4808,24 @@
 
         }
 
+
         cartButton.disabled =
             true;
+
 
         cartButton.classList.add(
             "added"
         );
 
+
         cartButton.innerHTML = `
 
             ${svgIcon(
+
                 "check",
+
                 "ui-icon ui-icon-sm"
+
             )}
 
             <span>
@@ -3162,25 +4834,44 @@
 
         `;
 
+
         announceToScreenReader(
+
             `${product.name} added to cart.`
+
         );
 
+
         window.setTimeout(
+
             () => {
+
+                if (
+                    !cartButton.isConnected
+                ) {
+
+                    return;
+
+                }
+
 
                 cartButton.disabled =
                     false;
+
 
                 cartButton.classList.remove(
                     "added"
                 );
 
+
                 cartButton.innerHTML = `
 
                     ${svgIcon(
+
                         "add_cart",
+
                         "ui-icon ui-icon-sm"
+
                     )}
 
                     <span>
@@ -3190,31 +4881,44 @@
                 `;
 
             },
+
             1200
+
         );
 
     }
 
 
     /* =========================================================================
-       21. DESCRIPTION SANITIZATION
+       23. PRODUCT DETAILS MODAL
        ========================================================================= */
 
     function sanitizeDescription(
         html
     ) {
 
-        if (!html) {
+        if (
+            !html
+        ) {
+
             return "";
+
         }
+
 
         const parser =
             new DOMParser();
 
+
         const doc =
             parser.parseFromString(
-                String(html),
+
+                String(
+                    html
+                ),
+
                 "text/html"
+
             );
 
 
@@ -3233,34 +4937,51 @@
             "option",
             "video",
             "audio",
-            "source"
+            "source",
+            "canvas"
 
         ];
 
 
         dangerousTags.forEach(
+
             tag => {
 
                 doc
-                    .querySelectorAll(tag)
+
+                    .querySelectorAll(
+                        tag
+                    )
+
                     .forEach(
+
                         element =>
+
                             element.remove()
+
                     );
 
             }
+
         );
 
 
         doc
-            .querySelectorAll("*")
+
+            .querySelectorAll(
+                "*"
+            )
+
             .forEach(
+
                 element => {
 
                     [
                         ...element.attributes
                     ]
+
                         .forEach(
+
                             attribute => {
 
                                 const name =
@@ -3288,15 +5009,40 @@
 
 
                                 if (
+
                                     (
+
                                         name ===
-                                        "src" ||
+                                            "src" ||
+
                                         name ===
-                                        "href"
+                                            "href"
+
                                     ) &&
+
                                     /^javascript:/i.test(
                                         value
                                     )
+
+                                ) {
+
+                                    element.removeAttribute(
+                                        attribute.name
+                                    );
+
+                                    return;
+
+                                }
+
+
+                                /*
+                                 * Prevent CJ inline CSS from breaking
+                                 * the storefront layout.
+                                 */
+
+                                if (
+                                    name ===
+                                    "style"
                                 ) {
 
                                     element.removeAttribute(
@@ -3306,17 +5052,51 @@
                                 }
 
                             }
+
                         );
 
                 }
+
             );
 
 
         doc
+
+            .querySelectorAll(
+                "a"
+            )
+
+            .forEach(
+
+                link => {
+
+                    link.setAttribute(
+                        "target",
+                        "_blank"
+                    );
+
+                    link.setAttribute(
+                        "rel",
+                        "noopener noreferrer nofollow"
+                    );
+
+                }
+
+            );
+
+
+        /*
+         * Proxy CJ description images through Cloudflare.
+         */
+
+        doc
+
             .querySelectorAll(
                 "img"
             )
+
             .forEach(
+
                 image => {
 
                     const source =
@@ -3324,42 +5104,61 @@
                             "src"
                         );
 
-                    if (!source) {
-                        return;
-                    }
-
-                    const normalized =
-                        normalizeImageUrl(
-                            source
-                        );
 
                     if (
-                        normalized &&
-                        /^https:\/\//i.test(
-                            normalized
-                        )
+                        source
                     ) {
 
-                        image.setAttribute(
-                            "src",
-                            buildProxyUrl(
+                        const normalized =
+                            normalizeImageUrl(
+                                source
+                            );
+
+
+                        if (
+
+                            normalized &&
+
+                            /^https:\/\//i.test(
                                 normalized
                             )
-                        );
+
+                        ) {
+
+                            image.setAttribute(
+
+                                "src",
+
+                                buildProxyUrl(
+                                    normalized
+                                )
+
+                            );
+
+                        }
 
                     }
+
 
                     image.setAttribute(
                         "loading",
                         "lazy"
                     );
 
+
                     image.setAttribute(
                         "decoding",
                         "async"
                     );
 
+
+                    image.setAttribute(
+                        "referrerpolicy",
+                        "no-referrer"
+                    );
+
                 }
+
             );
 
 
@@ -3368,22 +5167,24 @@
     }
 
 
-    /* =========================================================================
-       22. PRODUCT DETAILS MODAL
-       ========================================================================= */
-
     function openProductModal(
         productId
     ) {
 
         if (
+
             !elements.productModal ||
+
             !elements.modalBody
+
         ) {
 
             console.error(
-                "[PRASUN SHOP] Product modal elements are missing."
+
+                "[PRASUN SHOP] Product modal elements are missing from index.html."
+
             );
+
 
             return;
 
@@ -3392,14 +5193,19 @@
 
         const product =
             state.products.find(
+
                 item =>
+
                     String(
                         item.id
                     ) ===
+
                     String(
                         productId
                     )
+
             );
+
 
         if (
             !product
@@ -3418,22 +5224,31 @@
 
         const primaryImage =
             product.image ||
+
             images[0] ||
+
             PLACEHOLDER_IMAGE;
 
 
         const title =
             escapeHTML(
+
                 product.name ||
+
                 product.title ||
+
                 "CJ Product"
+
             );
 
 
         const category =
             escapeHTML(
+
                 product.category ||
+
                 CONFIG.DEFAULT_CATEGORY
+
             );
 
 
@@ -3456,23 +5271,39 @@
             "";
 
 
-        const descriptionHtml =
+        const sanitizedDescription =
             sanitizeDescription(
                 rawDescription
-            ) ||
-            `
-                <p>
-                    No detailed description is currently available
-                    for this product.
-                </p>
-            `;
+            );
+
+
+        const descriptionHtml =
+
+            sanitizedDescription
+
+                ?
+
+                sanitizedDescription
+
+                :
+
+                `
+
+                    <p>
+                        No detailed description is currently available
+                        for this product.
+                    </p>
+
+                `;
 
 
         const galleryHtml =
-            images.length >
-            1
 
-                ? `
+            images.length > 1
+
+                ?
+
+                `
 
                     <div
                         class="modal-gallery"
@@ -3480,8 +5311,11 @@
                     >
 
                         ${
+
                             images
+
                                 .map(
+
                                     (
                                         image,
                                         index
@@ -3490,8 +5324,7 @@
                                         <button
                                             type="button"
                                             class="modal-gallery-thumb ${
-                                                index ===
-                                                0
+                                                index === 0
                                                     ? "is-active"
                                                     : ""
                                             }"
@@ -3510,20 +5343,26 @@
                                                 alt=""
                                                 loading="lazy"
                                                 decoding="async"
+                                                referrerpolicy="no-referrer"
                                             >
 
                                         </button>
 
                                     `
+
                                 )
+
                                 .join("")
+
                         }
 
                     </div>
 
                 `
 
-                : "";
+                :
+
+                "";
 
 
         elements.modalBody.innerHTML = `
@@ -3586,11 +5425,18 @@
                     >
 
                         ${
-                            quantity > 0
 
-                                ? `In Stock: ${quantity}`
+                            quantity >
+                            0
 
-                                : "Currently unavailable"
+                                ?
+
+                                `In Stock: ${quantity}`
+
+                                :
+
+                                "Out of Stock"
+
                         }
 
                     </span>
@@ -3622,29 +5468,39 @@
                     type="button"
                     id="modal-add-cart-btn"
                     class="btn-primary modal-add-cart-button"
+
                     ${
                         quantity <=
                         0
                             ? "disabled"
                             : ""
                     }
+
                 >
 
                     ${svgIcon(
+
                         quantity > 0
                             ? "add_cart"
                             : "inventory",
+
                         "ui-icon ui-icon-sm"
+
                     )}
 
+
                     <span>
+
                         ${
+
                             quantity > 0
 
                                 ? "Add to Cart"
 
                                 : "Out of Stock"
+
                         }
+
                     </span>
 
                 </button>
@@ -3665,12 +5521,17 @@
         ) {
 
             mainImage.addEventListener(
+
                 "error",
+
                 () => {
 
                     if (
+
                         mainImage.src !==
+
                         PLACEHOLDER_IMAGE
+
                     ) {
 
                         mainImage.src =
@@ -3679,31 +5540,43 @@
                     }
 
                 },
+
                 {
-                    once: true
+                    once:
+                        true
                 }
+
             );
 
         }
 
 
         elements.modalBody
+
             .querySelectorAll(
                 ".modal-gallery-thumb"
             )
+
             .forEach(
+
                 button => {
 
                     button.addEventListener(
+
                         "click",
+
                         () => {
 
                             const image =
                                 button.dataset.galleryImage;
 
+
                             if (
+
                                 mainImage &&
+
                                 image
+
                             ) {
 
                                 mainImage.src =
@@ -3713,14 +5586,19 @@
 
 
                             elements.modalBody
+
                                 .querySelectorAll(
                                     ".modal-gallery-thumb"
                                 )
+
                                 .forEach(
+
                                     item =>
+
                                         item.classList.remove(
                                             "is-active"
                                         )
+
                                 );
 
 
@@ -3729,9 +5607,11 @@
                             );
 
                         }
+
                     );
 
                 }
+
             );
 
 
@@ -3742,12 +5622,17 @@
 
 
         if (
+
             modalCartButton &&
+
             quantity > 0
+
         ) {
 
             modalCartButton.addEventListener(
+
                 "click",
+
                 () => {
 
                     let added =
@@ -3755,15 +5640,19 @@
 
 
                     if (
+
                         typeof window.addToCart ===
                         "function"
+
                     ) {
 
                         added =
                             Boolean(
+
                                 window.addToCart(
                                     product
                                 )
+
                             );
 
                     } else {
@@ -3771,6 +5660,7 @@
                         try {
 
                             document.dispatchEvent(
+
                                 new CustomEvent(
                                     "cart:add",
                                     {
@@ -3778,7 +5668,9 @@
                                             product
                                     }
                                 )
+
                             );
+
 
                             added =
                                 true;
@@ -3788,8 +5680,11 @@
                         ) {
 
                             console.error(
+
                                 "[PRASUN SHOP] Modal cart error:",
+
                                 error
+
                             );
 
                         }
@@ -3809,15 +5704,20 @@
                     modalCartButton.disabled =
                         true;
 
+
                     modalCartButton.classList.add(
                         "added"
                     );
 
+
                     modalCartButton.innerHTML = `
 
                         ${svgIcon(
+
                             "check",
+
                             "ui-icon ui-icon-sm"
+
                         )}
 
                         <span>
@@ -3826,11 +5726,15 @@
 
                     `;
 
+
                     announceToScreenReader(
+
                         `${product.name} added to cart.`
+
                     );
 
                 }
+
             );
 
         }
@@ -3840,10 +5744,12 @@
             "is-open"
         );
 
+
         elements.productModal.setAttribute(
             "aria-hidden",
             "false"
         );
+
 
         document.body.classList.add(
             "modal-open"
@@ -3851,12 +5757,15 @@
 
 
         window.setTimeout(
+
             () => {
 
                 elements.modalClose?.focus();
 
             },
+
             50
+
         );
 
     }
@@ -3872,18 +5781,22 @@
 
         }
 
+
         elements.productModal.classList.remove(
             "is-open"
         );
+
 
         elements.productModal.setAttribute(
             "aria-hidden",
             "true"
         );
 
+
         document.body.classList.remove(
             "modal-open"
         );
+
 
         if (
             elements.modalBody
@@ -3898,7 +5811,7 @@
 
 
     /* =========================================================================
-       23. UI STATES
+       24. UI STATES
        ========================================================================= */
 
     function renderLoadingState() {
@@ -3910,6 +5823,7 @@
             return;
 
         }
+
 
         elements.productList.innerHTML = `
 
@@ -3924,12 +5838,14 @@
                     aria-hidden="true"
                 ></div>
 
+
                 <h3>
                     Loading Products
                 </h3>
 
+
                 <p>
-                    Fetching the latest approved products.
+                    Fetching the latest available products.
                 </p>
 
             </div>
@@ -3961,6 +5877,7 @@
 
         }
 
+
         elements.productList.innerHTML = `
 
             <div
@@ -3969,13 +5886,18 @@
             >
 
                 ${svgIcon(
+
                     "inventory",
+
                     "ui-icon ui-icon-xl"
+
                 )}
+
 
                 <h3>
                     No Products Found
                 </h3>
+
 
                 <p>
                     ${escapeHTML(
@@ -3997,6 +5919,7 @@
 
         }
 
+
         setLoadingState(
             false
         );
@@ -4016,6 +5939,7 @@
 
         }
 
+
         elements.productList.innerHTML = `
 
             <div
@@ -4024,19 +5948,25 @@
             >
 
                 ${svgIcon(
+
                     "error",
+
                     "ui-icon ui-icon-xl"
+
                 )}
+
 
                 <h3>
                     Unable to Load Products
                 </h3>
+
 
                 <p>
                     ${escapeHTML(
                         message
                     )}
                 </p>
+
 
                 <button
                     type="button"
@@ -4045,9 +5975,13 @@
                 >
 
                     ${svgIcon(
+
                         "refresh",
+
                         "ui-icon ui-icon-sm"
+
                     )}
+
 
                     <span>
                         Try Again
@@ -4069,6 +6003,7 @@
 
         }
 
+
         setLoadingState(
             false
         );
@@ -4076,7 +6011,9 @@
 
         const retry =
             elements.productList.querySelector(
+
                 '[data-action="retry-products"]'
+
             );
 
 
@@ -4085,18 +6022,26 @@
         ) {
 
             retry.addEventListener(
+
                 "click",
+
                 () => {
 
                     loadProducts(
+
                         state.searchQuery ||
+
                         state.activeCategoryQuery
+
                     );
 
                 },
+
                 {
-                    once: true
+                    once:
+                        true
                 }
+
             );
 
         }
@@ -4114,12 +6059,16 @@
 
         }
 
+
         const count =
             state.filteredProducts.length;
 
+
         elements.resultsCount.textContent =
+
             `${count} ${
-                count === 1
+                count ===
+                1
                     ? "product"
                     : "products"
             } available`;
@@ -4139,47 +6088,64 @@
 
         }
 
+
         elements.productList.setAttribute(
+
             "aria-busy",
+
             loading
                 ? "true"
                 : "false"
+
         );
 
     }
 
 
     /* =========================================================================
-       24. TEXT HELPERS
+       25. TEXT HELPERS
        ========================================================================= */
 
     function stripHtml(
         value
     ) {
 
-        if (!value) {
+        if (
+            !value
+        ) {
+
             return "";
+
         }
+
 
         const container =
             document.createElement(
                 "div"
             );
 
+
         container.innerHTML =
             String(
                 value
             );
 
+
         return (
+
             container.textContent ||
+
             container.innerText ||
+
             ""
+
         )
+
             .replace(
                 /\s+/g,
                 " "
             )
+
             .trim();
 
     }
@@ -4194,6 +6160,7 @@
                 amount
             );
 
+
         if (
             !Number.isFinite(
                 value
@@ -4204,9 +6171,13 @@
 
         }
 
+
         return new Intl.NumberFormat(
+
             "en-US",
+
             {
+
                 style:
                     "currency",
 
@@ -4218,7 +6189,9 @@
 
                 maximumFractionDigits:
                     2
+
             }
+
         ).format(
             value
         );
@@ -4231,25 +6204,33 @@
     ) {
 
         return String(
+
             value ??
+
             ""
+
         )
+
             .replace(
                 /&/g,
                 "&amp;"
             )
+
             .replace(
                 /</g,
                 "&lt;"
             )
+
             .replace(
                 />/g,
                 "&gt;"
             )
+
             .replace(
                 /"/g,
                 "&quot;"
             )
+
             .replace(
                 /'/g,
                 "&#039;"
@@ -4265,6 +6246,7 @@
         const liveRegion =
             elements.liveRegion;
 
+
         if (
             !liveRegion
         ) {
@@ -4273,37 +6255,51 @@
 
         }
 
+
         liveRegion.textContent =
             "";
 
+
         window.setTimeout(
+
             () => {
 
                 liveRegion.textContent =
+
                     String(
+
                         message ||
+
                         ""
+
                     );
 
             },
+
             20
+
         );
 
     }
 
 
     /* =========================================================================
-       25. PUBLIC API
+       26. PUBLIC API
        ========================================================================= */
 
     window.PrasunProducts = {
 
         reload:
             () =>
+
                 loadProducts(
+
                     state.searchQuery ||
+
                     state.activeCategoryQuery
+
                 ),
+
 
         search:
             query => {
@@ -4314,8 +6310,14 @@
                         ""
                     ).trim();
 
+
+                state.activeCategoryId =
+                    "all";
+
+
                 state.activeCategoryQuery =
                     "";
+
 
                 if (
                     elements.searchInput
@@ -4326,17 +6328,26 @@
 
                 }
 
+
                 updateClearSearchButton();
 
+
                 highlightActiveCategoryPill(
-                    ""
+                    "all"
                 );
 
+
+                updatePageHeadingForCurrentState();
+
+
                 return loadProducts(
+
                     state.searchQuery
+
                 );
 
             },
+
 
         sort:
             value => {
@@ -4344,6 +6355,7 @@
                 state.sortBy =
                     value ||
                     "featured";
+
 
                 if (
                     elements.sortSelect
@@ -4354,43 +6366,59 @@
 
                 }
 
+
                 applyFiltersAndRender();
 
             },
 
+
         openDetails:
             productId =>
+
                 openProductModal(
                     productId
                 ),
 
+
         closeDetails:
             () =>
+
                 closeProductModal(),
+
 
         getProducts:
             () =>
+
                 [
                     ...state.products
                 ],
 
+
         getFilteredProducts:
             () =>
+
                 [
                     ...state.filteredProducts
                 ],
 
+
         getProductById:
             id =>
+
                 state.products.find(
+
                     product =>
+
                         String(
                             product.id
                         ) ===
+
                         String(
                             id
                         )
+
                 ) ||
+
                 null
 
     };
