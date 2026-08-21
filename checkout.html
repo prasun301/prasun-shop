@@ -31,171 +31,568 @@
         content="#ffffff"
     >
 
+    <meta
+        name="color-scheme"
+        content="light"
+    >
+
     <link
         rel="canonical"
         href="https://shop.prasunbarua.com/checkout.html"
     >
 
-
-    <!-- ================================================================
-         STYLESHEET
-         ================================================================ -->
-
     <link
-        rel="stylesheet"
-        href="/css/style.css?v=20260820-01"
+        rel="icon"
+        href="/favicon.ico"
+        sizes="any"
     >
 
 
     <!-- ================================================================
-         CHECKOUT PAGE STYLES
+         GOOGLE MATERIAL SYMBOLS
+         ================================================================ -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL,GRAD,opsz,wght,ROND@0..1,-25..200,20..48,300..700,0..100&icon_names=arrow_back,check_circle,check_circle_outline,delete,edit,error,expand_more,info,inventory_2,location_on,mail,person,phone,public,receipt_long,refresh,security,shopping_bag,shopping_cart_checkout,sync,verified_user&display=block"
+    >
+
+
+    <!-- ================================================================
+         MAIN STYLESHEET
+         ================================================================ -->
+
+    <link
+        rel="stylesheet"
+        href="/css/style.css?v=20260821-03"
+    >
+
+
+    <!-- ================================================================
+         CHECKOUT STYLES
          ================================================================ -->
 
     <style>
 
-        /* ==============================================================
+        /* ============================================================
+           DESIGN TOKENS
+           ============================================================ */
+
+        :root {
+
+            --checkout-primary: #2563eb;
+            --checkout-primary-hover: #1d4ed8;
+            --checkout-primary-soft: #eff6ff;
+
+            --checkout-text: #0f172a;
+            --checkout-text-secondary: #475569;
+            --checkout-text-muted: #64748b;
+
+            --checkout-border: #e2e8f0;
+            --checkout-border-strong: #cbd5e1;
+
+            --checkout-surface: #ffffff;
+            --checkout-surface-soft: #f8fafc;
+
+            --checkout-success: #15803d;
+            --checkout-success-soft: #f0fdf4;
+            --checkout-success-border: #bbf7d0;
+
+            --checkout-danger: #dc2626;
+            --checkout-danger-dark: #b91c1c;
+            --checkout-danger-soft: #fef2f2;
+            --checkout-danger-border: #fecaca;
+
+            --checkout-warning: #a16207;
+            --checkout-warning-soft: #fefce8;
+            --checkout-warning-border: #fde68a;
+
+            --checkout-radius-xl: 24px;
+            --checkout-radius-lg: 18px;
+            --checkout-radius-md: 14px;
+            --checkout-radius-sm: 10px;
+
+            --checkout-shadow:
+                0 1px 2px rgba(15, 23, 42, 0.04),
+                0 12px 34px rgba(15, 23, 42, 0.05);
+
+        }
+
+
+        /* ============================================================
+           MATERIAL SYMBOLS
+           ============================================================ */
+
+        .material-symbols-rounded {
+
+            font-family:
+                "Material Symbols Rounded";
+
+            font-style: normal;
+            font-weight: 400;
+
+            font-size: 24px;
+
+            line-height: 1;
+
+            letter-spacing: normal;
+            text-transform: none;
+
+            display: inline-block;
+
+            white-space: nowrap;
+            word-wrap: normal;
+
+            direction: ltr;
+
+            -webkit-font-feature-settings: "liga";
+
+            -webkit-font-smoothing: antialiased;
+
+            font-feature-settings: "liga";
+
+            font-variation-settings:
+                "FILL" 0,
+                "GRAD" 0,
+                "opsz" 24,
+                "wght" 500,
+                "ROND" 100;
+
+        }
+
+        .icon-xs {
+            font-size: 18px;
+        }
+
+        .icon-sm {
+            font-size: 20px;
+        }
+
+        .icon-md {
+            font-size: 24px;
+        }
+
+        .icon-lg {
+            font-size: 30px;
+        }
+
+        .icon-xl {
+            font-size: 40px;
+        }
+
+
+        /* ============================================================
            ACCESSIBILITY
-           ============================================================== */
+           ============================================================ */
 
         .visually-hidden {
+
             position: absolute !important;
+
             width: 1px !important;
             height: 1px !important;
+
             padding: 0 !important;
             margin: -1px !important;
+
             overflow: hidden !important;
+
             clip: rect(0, 0, 0, 0) !important;
             clip-path: inset(50%) !important;
+
             white-space: nowrap !important;
+
             border: 0 !important;
+
         }
 
 
-        /* ==============================================================
+        /* ============================================================
            PAGE
-           ============================================================== */
+           ============================================================ */
 
         .checkout-page {
-            width: min(
-                1200px,
-                calc(100% - 32px)
-            );
 
-            margin: 0 auto;
+            width:
+                min(
+                    1240px,
+                    calc(100% - 32px)
+                );
 
-            padding: 42px 0 72px;
+            margin:
+                0 auto;
+
+            padding:
+                40px 0 72px;
+
         }
+
 
         .checkout-header {
-            margin-bottom: 30px;
+
+            margin-bottom:
+                28px;
+
         }
 
-        .checkout-title {
-            margin: 0 0 8px;
 
-            color: #0f172a;
+        .checkout-title {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                12px;
+
+            margin:
+                0 0 8px;
+
+            color:
+                var(--checkout-text);
 
             font-size:
                 clamp(
-                    1.75rem,
-                    3vw,
-                    2.35rem
+                    2rem,
+                    4vw,
+                    2.75rem
                 );
 
-            font-weight: 800;
+            font-weight:
+                800;
 
-            line-height: 1.15;
+            line-height:
+                1.15;
 
-            letter-spacing: -0.03em;
+            letter-spacing:
+                -0.025em;
+
         }
+
+
+        .checkout-title-icon {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            width:
+                46px;
+
+            height:
+                46px;
+
+            flex:
+                0 0 46px;
+
+            border-radius:
+                50%;
+
+            background:
+                var(--checkout-primary-soft);
+
+            color:
+                var(--checkout-primary);
+
+        }
+
 
         .checkout-subtitle {
-            margin: 0;
 
-            color: #64748b;
+            max-width:
+                760px;
 
-            font-size: 0.96rem;
+            margin:
+                0;
 
-            line-height: 1.6;
+            color:
+                var(--checkout-text-muted);
+
+            font-size:
+                0.98rem;
+
+            line-height:
+                1.65;
+
         }
 
 
-        /* ==============================================================
+        /* ============================================================
            LAYOUT
-           ============================================================== */
+           ============================================================ */
 
         .checkout-layout {
-            display: grid;
+
+            display:
+                grid;
 
             grid-template-columns:
                 minmax(0, 1fr)
                 380px;
 
-            align-items: start;
+            align-items:
+                start;
 
-            gap: 24px;
+            gap:
+                24px;
+
         }
 
 
-        /* ==============================================================
+        /* ============================================================
            CARDS
-           ============================================================== */
+           ============================================================ */
 
         .checkout-card {
-            background: #ffffff;
+
+            background:
+                var(--checkout-surface);
 
             border:
-                1px solid #e2e8f0;
+                1px solid
+                var(--checkout-border);
 
-            border-radius: 16px;
+            border-radius:
+                var(--checkout-radius-xl);
 
             box-shadow:
-                0 8px 30px
-                rgba(
-                    15,
-                    23,
-                    42,
-                    0.05
-                );
+                var(--checkout-shadow);
 
-            padding: 24px;
-        }
-
-        .checkout-card h2 {
-            margin: 0 0 22px;
-
-            color: #0f172a;
-
-            font-size: 1.15rem;
-
-            font-weight: 800;
         }
 
 
-        /* ==============================================================
+        .checkout-form-card {
+
+            min-width:
+                0;
+
+            padding:
+                26px;
+
+        }
+
+
+        .checkout-summary-card {
+
+            position:
+                sticky;
+
+            top:
+                88px;
+
+            min-width:
+                0;
+
+            padding:
+                24px;
+
+        }
+
+
+        /* ============================================================
+           CARD HEADERS
+           ============================================================ */
+
+        .checkout-card-header {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                12px;
+
+            margin-bottom:
+                24px;
+
+        }
+
+
+        .checkout-card-header-icon {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            width:
+                42px;
+
+            height:
+                42px;
+
+            flex:
+                0 0 42px;
+
+            border-radius:
+                50%;
+
+            background:
+                var(--checkout-primary-soft);
+
+            color:
+                var(--checkout-primary);
+
+        }
+
+
+        .checkout-card-title {
+
+            margin:
+                0;
+
+            color:
+                var(--checkout-text);
+
+            font-size:
+                1.15rem;
+
+            font-weight:
+                800;
+
+            line-height:
+                1.3;
+
+        }
+
+
+        .checkout-card-description {
+
+            margin:
+                -13px 0 24px;
+
+            color:
+                var(--checkout-text-muted);
+
+            font-size:
+                0.82rem;
+
+            line-height:
+                1.5;
+
+        }
+
+
+        /* ============================================================
            FORM SECTIONS
-           ============================================================== */
+           ============================================================ */
 
         .checkout-section {
-            margin-bottom: 28px;
+
+            margin-bottom:
+                30px;
+
         }
+
 
         .checkout-section:last-child {
-            margin-bottom: 0;
+
+            margin-bottom:
+                0;
+
         }
+
+
+        .checkout-section-header {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                8px;
+
+            margin:
+                0 0 14px;
+
+        }
+
+
+        .checkout-section-number {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            width:
+                28px;
+
+            height:
+                28px;
+
+            flex:
+                0 0 28px;
+
+            border-radius:
+                50%;
+
+            background:
+                var(--checkout-primary-soft);
+
+            color:
+                var(--checkout-primary);
+
+            font-size:
+                0.78rem;
+
+            font-weight:
+                800;
+
+        }
+
 
         .checkout-section-title {
-            margin: 0 0 14px;
 
-            color: #334155;
+            margin:
+                0;
 
-            font-size: 0.95rem;
+            color:
+                var(--checkout-text);
 
-            font-weight: 800;
+            font-size:
+                0.96rem;
+
+            font-weight:
+                800;
+
         }
 
+
         .form-grid {
-            display: grid;
+
+            display:
+                grid;
 
             grid-template-columns:
                 repeat(
@@ -203,81 +600,193 @@
                     minmax(0, 1fr)
                 );
 
-            gap: 15px;
+            gap:
+                16px;
+
         }
+
 
         .form-field {
-            display: flex;
 
-            flex-direction: column;
+            display:
+                flex;
 
-            gap: 7px;
+            flex-direction:
+                column;
+
+            gap:
+                7px;
+
+            min-width:
+                0;
+
         }
+
 
         .form-field.full {
-            grid-column: 1 / -1;
+
+            grid-column:
+                1 / -1;
+
         }
+
 
         .form-field label {
-            color: #334155;
 
-            font-size: 0.82rem;
+            display:
+                flex;
 
-            font-weight: 700;
+            align-items:
+                baseline;
+
+            gap:
+                4px;
+
+            color:
+                var(--checkout-text-secondary);
+
+            font-size:
+                0.80rem;
+
+            font-weight:
+                750;
+
         }
+
 
         .required {
-            color: #dc2626;
+
+            color:
+                var(--checkout-danger);
+
         }
 
 
-        /* ==============================================================
+        .field-hint {
+
+            margin:
+                -2px 0 0;
+
+            color:
+                var(--checkout-text-muted);
+
+            font-size:
+                0.72rem;
+
+            line-height:
+                1.4;
+
+        }
+
+
+        /* ============================================================
            FORM CONTROLS
-           ============================================================== */
+           ============================================================ */
 
         .form-field input,
         .form-field select,
         .form-field textarea {
-            width: 100%;
 
-            min-height: 46px;
+            width:
+                100%;
+
+            min-height:
+                48px;
 
             padding:
                 11px 13px;
 
             border:
-                1px solid #cbd5e1;
+                1px solid
+                var(--checkout-border-strong);
 
-            border-radius: 10px;
+            border-radius:
+                12px;
 
-            background: #ffffff;
+            background:
+                var(--checkout-surface);
 
-            color: #0f172a;
+            color:
+                var(--checkout-text);
 
-            font-family: inherit;
+            font-family:
+                inherit;
 
-            font-size: 0.9rem;
+            font-size:
+                0.90rem;
 
-            outline: none;
+            outline:
+                none;
 
             transition:
-                border-color
-                0.15s ease,
+                border-color 0.15s ease,
+                box-shadow 0.15s ease,
+                background-color 0.15s ease;
 
-                box-shadow
-                0.15s ease;
         }
+
 
         .form-field textarea {
-            min-height: 92px;
 
-            resize: vertical;
+            min-height:
+                100px;
+
+            resize:
+                vertical;
+
         }
+
+
+        .form-field select {
+
+            appearance:
+                none;
+
+            background-image:
+                linear-gradient(
+                    45deg,
+                    transparent 50%,
+                    #64748b 50%
+                ),
+                linear-gradient(
+                    135deg,
+                    #64748b 50%,
+                    transparent 50%
+                );
+
+            background-position:
+                calc(100% - 18px) 20px,
+                calc(100% - 13px) 20px;
+
+            background-size:
+                5px 5px,
+                5px 5px;
+
+            background-repeat:
+                no-repeat;
+
+            padding-right:
+                38px;
+
+        }
+
+
+        .form-field input:hover,
+        .form-field select:hover,
+        .form-field textarea:hover {
+
+            border-color:
+                #94a3b8;
+
+        }
+
 
         .form-field input:focus,
         .form-field select:focus,
         .form-field textarea:focus {
-            border-color: #2563eb;
+
+            border-color:
+                var(--checkout-primary);
 
             box-shadow:
                 0 0 0 3px
@@ -287,12 +796,16 @@
                     235,
                     0.12
                 );
+
         }
+
 
         .form-field input.invalid,
         .form-field select.invalid,
         .form-field textarea.invalid {
-            border-color: #dc2626;
+
+            border-color:
+                var(--checkout-danger);
 
             box-shadow:
                 0 0 0 3px
@@ -302,263 +815,767 @@
                     38,
                     0.08
                 );
+
         }
 
 
-        /* ==============================================================
-           ERROR / SUCCESS
-           ============================================================== */
+        /* ============================================================
+           INPUT WITH ICON
+           ============================================================ */
+
+        .input-with-icon {
+
+            position:
+                relative;
+
+        }
+
+
+        .input-with-icon >
+        .material-symbols-rounded {
+
+            position:
+                absolute;
+
+            top:
+                50%;
+
+            left:
+                13px;
+
+            transform:
+                translateY(-50%);
+
+            color:
+                var(--checkout-text-muted);
+
+            pointer-events:
+                none;
+
+        }
+
+
+        .input-with-icon input {
+
+            padding-left:
+                44px;
+
+        }
+
+
+        /* ============================================================
+           GLOBAL ERROR
+           ============================================================ */
 
         .checkout-error {
-            display: none;
 
-            margin-bottom: 20px;
+            display:
+                none;
+
+            align-items:
+                flex-start;
+
+            gap:
+                10px;
+
+            margin-bottom:
+                20px;
 
             padding:
-                13px 15px;
+                14px 15px;
 
             border:
-                1px solid #fecaca;
+                1px solid
+                var(--checkout-danger-border);
 
-            border-radius: 10px;
+            border-radius:
+                14px;
 
-            background: #fef2f2;
+            background:
+                var(--checkout-danger-soft);
 
-            color: #b91c1c;
+            color:
+                var(--checkout-danger-dark);
 
-            font-size: 0.85rem;
+            font-size:
+                0.84rem;
 
-            line-height: 1.5;
+            line-height:
+                1.5;
+
         }
+
 
         .checkout-error.visible {
-            display: block;
+
+            display:
+                flex;
+
         }
+
+
+        .checkout-error-icon {
+
+            flex:
+                0 0 auto;
+
+            margin-top:
+                1px;
+
+        }
+
+
+        /* ============================================================
+           GLOBAL SUCCESS
+           ============================================================ */
 
         .checkout-success {
-            display: none;
 
-            margin-bottom: 20px;
+            display:
+                none;
+
+            align-items:
+                flex-start;
+
+            gap:
+                10px;
+
+            margin-bottom:
+                20px;
 
             padding:
-                15px;
+                14px 15px;
 
             border:
-                1px solid #bbf7d0;
+                1px solid
+                var(--checkout-success-border);
 
-            border-radius: 10px;
+            border-radius:
+                14px;
 
-            background: #f0fdf4;
+            background:
+                var(--checkout-success-soft);
 
-            color: #166534;
+            color:
+                #166534;
 
-            font-size: 0.85rem;
+            font-size:
+                0.84rem;
 
-            line-height: 1.5;
+            line-height:
+                1.5;
+
         }
+
 
         .checkout-success.visible {
-            display: block;
+
+            display:
+                flex;
+
         }
 
 
-        /* ==============================================================
-           CHECKOUT STATUS
-           ============================================================== */
+        .checkout-success-icon {
+
+            flex:
+                0 0 auto;
+
+            margin-top:
+                1px;
+
+        }
+
+
+        /* ============================================================
+           SECURITY / TRUST NOTICE
+           ============================================================ */
+
+        .checkout-security-notice {
+
+            display:
+                flex;
+
+            align-items:
+                flex-start;
+
+            gap:
+                10px;
+
+            margin-top:
+                18px;
+
+            padding:
+                13px;
+
+            border-radius:
+                13px;
+
+            background:
+                var(--checkout-surface-soft);
+
+            color:
+                var(--checkout-text-muted);
+
+            font-size:
+                0.76rem;
+
+            line-height:
+                1.5;
+
+        }
+
+
+        .checkout-security-notice
+        .material-symbols-rounded {
+
+            flex:
+                0 0 auto;
+
+            color:
+                var(--checkout-primary);
+
+        }
+
+
+        /* ============================================================
+           STATUS
+           ============================================================ */
 
         .checkout-status {
-            margin-top: 14px;
 
-            color: #64748b;
+            display:
+                flex;
 
-            font-size: 0.78rem;
+            align-items:
+                center;
 
-            line-height: 1.5;
+            justify-content:
+                center;
 
-            text-align: center;
+            gap:
+                8px;
+
+            min-height:
+                24px;
+
+            margin-top:
+                12px;
+
+            color:
+                var(--checkout-text-muted);
+
+            font-size:
+                0.78rem;
+
+            line-height:
+                1.5;
+
+            text-align:
+                center;
+
         }
 
 
-        /* ==============================================================
-           ORDER SUMMARY
-           ============================================================== */
+        /* ============================================================
+           SUMMARY
+           ============================================================ */
 
-        .order-summary {
-            position: sticky;
+        .summary-items {
 
-            top: 96px;
+            display:
+                flex;
+
+            flex-direction:
+                column;
+
         }
+
 
         .summary-item {
-            display: flex;
 
-            align-items: flex-start;
+            display:
+                grid;
 
-            gap: 12px;
+            grid-template-columns:
+                58px
+                minmax(0, 1fr)
+                auto;
+
+            align-items:
+                start;
+
+            gap:
+                11px;
 
             padding:
                 13px 0;
 
             border-bottom:
-                1px solid #f1f5f9;
+                1px solid
+                #f1f5f9;
+
         }
+
 
         .summary-item:last-child {
-            border-bottom: 0;
+
+            border-bottom:
+                0;
+
         }
+
+
+        .summary-item-image-wrap {
+
+            position:
+                relative;
+
+            width:
+                58px;
+
+            height:
+                58px;
+
+        }
+
 
         .summary-item-image {
-            width: 58px;
 
-            height: 58px;
+            width:
+                58px;
 
-            flex:
-                0 0 58px;
+            height:
+                58px;
 
-            object-fit: contain;
+            display:
+                block;
+
+            object-fit:
+                contain;
 
             border:
-                1px solid #e2e8f0;
+                1px solid
+                var(--checkout-border);
 
-            border-radius: 10px;
+            border-radius:
+                11px;
 
-            background: #f8fafc;
+            background:
+                var(--checkout-surface-soft);
+
         }
+
+
+        .summary-item-quantity {
+
+            position:
+                absolute;
+
+            top:
+                -6px;
+
+            right:
+                -6px;
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            min-width:
+                22px;
+
+            height:
+                22px;
+
+            padding:
+                0 5px;
+
+            border:
+                2px solid
+                #ffffff;
+
+            border-radius:
+                999px;
+
+            background:
+                var(--checkout-primary);
+
+            color:
+                #ffffff;
+
+            font-size:
+                0.68rem;
+
+            font-weight:
+                800;
+
+        }
+
 
         .summary-item-info {
-            min-width: 0;
 
-            flex: 1;
+            min-width:
+                0;
+
         }
+
 
         .summary-item-name {
-            margin: 0 0 4px;
 
-            color: #0f172a;
+            margin:
+                0 0 4px;
 
-            font-size: 0.84rem;
+            color:
+                var(--checkout-text);
 
-            font-weight: 700;
+            font-size:
+                0.82rem;
 
-            line-height: 1.35;
+            font-weight:
+                750;
 
-            overflow-wrap: anywhere;
+            line-height:
+                1.38;
+
+            overflow-wrap:
+                anywhere;
+
         }
+
 
         .summary-item-meta {
-            color: #64748b;
 
-            font-size: 0.74rem;
+            display:
+                flex;
 
-            line-height: 1.4;
+            flex-wrap:
+                wrap;
+
+            gap:
+                5px;
+
+            color:
+                var(--checkout-text-muted);
+
+            font-size:
+                0.71rem;
+
+            line-height:
+                1.4;
+
         }
+
+
+        .summary-item-meta span {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            gap:
+                3px;
+
+        }
+
 
         .summary-item-price {
-            flex:
-                0 0 auto;
 
-            color: #0f172a;
+            align-self:
+                start;
 
-            font-size: 0.84rem;
+            color:
+                var(--checkout-text);
 
-            font-weight: 800;
+            font-size:
+                0.82rem;
 
-            white-space: nowrap;
+            font-weight:
+                800;
+
+            white-space:
+                nowrap;
+
         }
+
+
+        .summary-empty {
+
+            display:
+                flex;
+
+            flex-direction:
+                column;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            min-height:
+                210px;
+
+            padding:
+                30px 15px;
+
+            text-align:
+                center;
+
+            color:
+                var(--checkout-text-muted);
+
+        }
+
+
+        .summary-empty-icon {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            width:
+                56px;
+
+            height:
+                56px;
+
+            margin-bottom:
+                12px;
+
+            border-radius:
+                50%;
+
+            background:
+                var(--checkout-primary-soft);
+
+            color:
+                var(--checkout-primary);
+
+        }
+
+
+        /* ============================================================
+           SUMMARY TOTALS
+           ============================================================ */
 
         .summary-row {
-            display: flex;
 
-            align-items: center;
+            display:
+                flex;
 
-            justify-content: space-between;
+            align-items:
+                center;
 
-            gap: 20px;
+            justify-content:
+                space-between;
 
-            margin-top: 8px;
+            gap:
+                20px;
 
-            color: #64748b;
+            margin-top:
+                10px;
 
-            font-size: 0.82rem;
+            color:
+                var(--checkout-text-muted);
+
+            font-size:
+                0.84rem;
+
         }
+
 
         .summary-row strong {
-            color: #0f172a;
+
+            color:
+                var(--checkout-text);
+
+            font-weight:
+                750;
+
         }
+
+
+        .summary-divider {
+
+            height:
+                1px;
+
+            margin:
+                18px 0;
+
+            background:
+                var(--checkout-border);
+
+        }
+
 
         .summary-total {
-            display: flex;
 
-            align-items: center;
+            display:
+                flex;
 
-            justify-content: space-between;
+            align-items:
+                center;
 
-            gap: 20px;
+            justify-content:
+                space-between;
 
-            margin-top: 18px;
+            gap:
+                20px;
 
-            padding-top: 18px;
+            margin-top:
+                0;
 
-            border-top:
-                1px solid #e2e8f0;
+            color:
+                var(--checkout-text);
 
-            color: #0f172a;
+            font-size:
+                1rem;
 
-            font-size: 1.05rem;
+            font-weight:
+                800;
 
-            font-weight: 800;
         }
 
 
-        /* ==============================================================
+        #order-total {
+
+            color:
+                var(--checkout-primary);
+
+            font-size:
+                1.4rem;
+
+            font-weight:
+                850;
+
+        }
+
+
+        /* ============================================================
            PLACE ORDER
-           ============================================================== */
+           ============================================================ */
 
         #place-order-button {
-            width: 100%;
 
-            min-height: 48px;
+            display:
+                inline-flex;
 
-            margin-top: 22px;
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            gap:
+                9px;
+
+            width:
+                100%;
+
+            min-height:
+                52px;
+
+            margin-top:
+                22px;
 
             padding:
                 0 18px;
 
-            border: 0;
+            border:
+                0;
 
-            border-radius: 10px;
+            border-radius:
+                14px;
 
-            background: #2563eb;
+            background:
+                var(--checkout-primary);
 
-            color: #ffffff;
+            color:
+                #ffffff;
 
-            font-size: 0.92rem;
+            font-family:
+                inherit;
 
-            font-weight: 800;
+            font-size:
+                0.93rem;
 
-            cursor: pointer;
+            font-weight:
+                800;
+
+            cursor:
+                pointer;
+
+            box-shadow:
+                0 5px 15px rgba(
+                    37,
+                    99,
+                    235,
+                    0.18
+                );
 
             transition:
-                background
-                0.15s ease,
+                background-color 0.18s ease,
+                transform 0.18s ease,
+                box-shadow 0.18s ease;
 
-                opacity
-                0.15s ease;
         }
+
 
         #place-order-button:hover:not(:disabled) {
-            background: #1d4ed8;
+
+            background:
+                var(--checkout-primary-hover);
+
+            transform:
+                translateY(-1px);
+
+            box-shadow:
+                0 8px 20px rgba(
+                    37,
+                    99,
+                    235,
+                    0.22
+                );
+
         }
+
 
         #place-order-button:disabled {
-            background: #cbd5e1;
 
-            color: #64748b;
+            background:
+                #e2e8f0;
 
-            cursor: not-allowed;
+            color:
+                #94a3b8;
+
+            cursor:
+                not-allowed;
+
+            box-shadow:
+                none;
+
+            transform:
+                none;
+
         }
 
+
         #place-order-button:focus-visible {
+
             outline:
                 3px solid
                 rgba(
@@ -568,216 +1585,396 @@
                     0.25
                 );
 
-            outline-offset: 2px;
+            outline-offset:
+                3px;
+
         }
 
 
-        /* ==============================================================
+        /* ============================================================
            BACK TO CART
-           ============================================================== */
+           ============================================================ */
 
         .back-to-cart {
-            display: inline-flex;
 
-            margin-top: 14px;
+            display:
+                inline-flex;
 
-            color: #2563eb;
+            align-items:
+                center;
 
-            font-size: 0.82rem;
+            gap:
+                7px;
 
-            font-weight: 700;
+            margin-top:
+                14px;
 
-            text-decoration: none;
+            color:
+                var(--checkout-primary);
+
+            font-size:
+                0.82rem;
+
+            font-weight:
+                700;
+
+            text-decoration:
+                none;
+
         }
+
 
         .back-to-cart:hover {
-            text-decoration: underline;
+
+            text-decoration:
+                underline;
+
+            text-underline-offset:
+                3px;
+
         }
 
 
-        /* ==============================================================
+        /* ============================================================
            EMPTY CHECKOUT
-           ============================================================== */
+           ============================================================ */
 
         .empty-checkout {
-            padding:
-                55px 20px;
 
-            text-align: center;
+            display:
+                flex;
+
+            flex-direction:
+                column;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            min-height:
+                360px;
+
+            padding:
+                50px 24px;
+
+            text-align:
+                center;
+
         }
+
+
+        .empty-checkout-icon {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            width:
+                72px;
+
+            height:
+                72px;
+
+            margin-bottom:
+                18px;
+
+            border-radius:
+                50%;
+
+            background:
+                var(--checkout-primary-soft);
+
+            color:
+                var(--checkout-primary);
+
+        }
+
 
         .empty-checkout h2 {
-            margin: 0 0 8px;
 
-            color: #0f172a;
-
-            font-size: 1.25rem;
-
-            font-weight: 800;
-        }
-
-        .empty-checkout p {
-            margin:
-                0 0 20px;
-
-            color: #64748b;
-
-            line-height: 1.6;
-        }
-
-        .empty-checkout a {
-            display: inline-flex;
-
-            min-height: 44px;
-
-            align-items: center;
-
-            justify-content: center;
-
-            padding:
-                0 18px;
-
-            border-radius: 10px;
-
-            background: #2563eb;
-
-            color: #ffffff;
-
-            font-weight: 700;
-
-            text-decoration: none;
-        }
-
-        .empty-checkout a:hover {
-            background: #1d4ed8;
-        }
-
-
-        /* ==============================================================
-           ORDER CONFIRMATION
-           ============================================================== */
-
-        .order-confirmation {
-            display: none;
-
-            padding:
-                36px 24px;
-
-            text-align: center;
-        }
-
-        .order-confirmation.visible {
-            display: block;
-        }
-
-        .confirmation-icon {
-            width: 58px;
-
-            height: 58px;
-
-            margin:
-                0 auto 16px;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            border-radius: 50%;
-
-            background: #dcfce7;
-
-            color: #15803d;
-
-            font-size: 1.6rem;
-
-            font-weight: 800;
-        }
-
-        .order-confirmation h2 {
             margin:
                 0 0 8px;
 
-            color: #0f172a;
+            color:
+                var(--checkout-text);
 
-            font-size: 1.3rem;
+            font-size:
+                1.3rem;
 
-            font-weight: 800;
+            font-weight:
+                800;
+
         }
 
+
+        .empty-checkout p {
+
+            max-width:
+                500px;
+
+            margin:
+                0 0 22px;
+
+            color:
+                var(--checkout-text-muted);
+
+            line-height:
+                1.65;
+
+        }
+
+
+        .empty-checkout a {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            gap:
+                8px;
+
+            min-height:
+                48px;
+
+            padding:
+                0 20px;
+
+            border-radius:
+                14px;
+
+            background:
+                var(--checkout-primary);
+
+            color:
+                #ffffff;
+
+            font-size:
+                0.90rem;
+
+            font-weight:
+                750;
+
+            text-decoration:
+                none;
+
+        }
+
+
+        .empty-checkout a:hover {
+
+            background:
+                var(--checkout-primary-hover);
+
+        }
+
+
+        /* ============================================================
+           ORDER CONFIRMATION
+           ============================================================ */
+
+        .order-confirmation {
+
+            display:
+                none;
+
+            padding:
+                42px 24px;
+
+            text-align:
+                center;
+
+        }
+
+
+        .order-confirmation.visible {
+
+            display:
+                block;
+
+        }
+
+
+        .confirmation-icon {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            width:
+                64px;
+
+            height:
+                64px;
+
+            margin:
+                0 auto 17px;
+
+            border-radius:
+                50%;
+
+            background:
+                #dcfce7;
+
+            color:
+                var(--checkout-success);
+
+        }
+
+
+        .order-confirmation h2 {
+
+            margin:
+                0 0 8px;
+
+            color:
+                var(--checkout-text);
+
+            font-size:
+                1.35rem;
+
+            font-weight:
+                800;
+
+        }
+
+
         .order-confirmation p {
-            max-width: 520px;
+
+            max-width:
+                560px;
 
             margin:
                 0 auto 20px;
 
-            color: #64748b;
+            color:
+                var(--checkout-text-muted);
 
-            line-height: 1.6;
+            line-height:
+                1.65;
+
         }
 
-        .order-number {
-            display: inline-block;
 
-            margin-bottom: 20px;
+        .order-number {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            gap:
+                7px;
+
+            margin-bottom:
+                20px;
 
             padding:
                 9px 13px;
 
-            border-radius: 8px;
+            border-radius:
+                10px;
 
-            background: #f8fafc;
+            background:
+                var(--checkout-surface-soft);
 
-            color: #0f172a;
+            color:
+                var(--checkout-text);
 
-            font-size: 0.85rem;
+            font-size:
+                0.84rem;
 
-            font-weight: 800;
+            font-weight:
+                800;
+
         }
+
 
         .continue-shopping {
-            display: inline-flex;
 
-            min-height: 44px;
+            display:
+                inline-flex;
 
-            align-items: center;
+            align-items:
+                center;
 
-            justify-content: center;
+            justify-content:
+                center;
+
+            gap:
+                8px;
+
+            min-height:
+                48px;
 
             padding:
-                0 18px;
+                0 20px;
 
-            border-radius: 10px;
+            border-radius:
+                14px;
 
-            background: #2563eb;
+            background:
+                var(--checkout-primary);
 
-            color: #ffffff;
+            color:
+                #ffffff;
 
-            font-size: 0.85rem;
+            font-size:
+                0.90rem;
 
-            font-weight: 700;
+            font-weight:
+                750;
 
-            text-decoration: none;
+            text-decoration:
+                none;
+
         }
+
 
         .continue-shopping:hover {
-            background: #1d4ed8;
+
+            background:
+                var(--checkout-primary-hover);
+
         }
 
 
-        /* ==============================================================
+        /* ============================================================
            RESPONSIVE
-           ============================================================== */
+           ============================================================ */
 
-        @media (max-width: 900px) {
+        @media (max-width: 960px) {
 
             .checkout-layout {
-                grid-template-columns: 1fr;
+
+                grid-template-columns:
+                    1fr;
+
             }
 
-            .order-summary {
-                position: static;
+
+            .checkout-summary-card {
+
+                position:
+                    static;
+
             }
 
         }
@@ -786,59 +1983,201 @@
         @media (max-width: 640px) {
 
             .checkout-page {
+
                 width:
                     calc(100% - 24px);
 
                 padding:
-                    28px 0 50px;
+                    28px 0 52px;
+
             }
 
-            .checkout-card {
-                padding: 17px;
 
-                border-radius: 14px;
+            .checkout-form-card,
+            .checkout-summary-card {
+
+                padding:
+                    18px;
+
+                border-radius:
+                    18px;
+
             }
+
+
+            .checkout-title {
+
+                font-size:
+                    1.85rem;
+
+            }
+
+
+            .checkout-title-icon {
+
+                width:
+                    42px;
+
+                height:
+                    42px;
+
+                flex-basis:
+                    42px;
+
+            }
+
 
             .form-grid {
-                grid-template-columns: 1fr;
+
+                grid-template-columns:
+                    1fr;
+
             }
+
 
             .form-field.full {
-                grid-column: auto;
+
+                grid-column:
+                    auto;
+
             }
+
 
             .summary-item {
-                gap: 10px;
+
+                grid-template-columns:
+                    52px
+                    minmax(0, 1fr)
+                    auto;
+
+                gap:
+                    9px;
+
             }
 
-            .summary-item-image {
-                width: 52px;
 
-                height: 52px;
+            .summary-item-image,
+            .summary-item-image-wrap {
 
-                flex-basis: 52px;
+                width:
+                    52px;
+
+                height:
+                    52px;
+
+            }
+
+
+            .summary-total {
+
+                align-items:
+                    flex-end;
+
             }
 
         }
 
 
-        /* ==============================================================
+        @media (max-width: 430px) {
+
+            .checkout-page {
+
+                width:
+                    calc(100% - 20px);
+
+            }
+
+
+            .checkout-form-card,
+            .checkout-summary-card {
+
+                padding:
+                    16px;
+
+            }
+
+
+            .checkout-title {
+
+                gap:
+                    9px;
+
+                font-size:
+                    1.65rem;
+
+            }
+
+
+            .checkout-title-icon {
+
+                width:
+                    38px;
+
+                height:
+                    38px;
+
+                flex-basis:
+                    38px;
+
+            }
+
+
+            .summary-item {
+
+                grid-template-columns:
+                    48px
+                    minmax(0, 1fr);
+
+            }
+
+
+            .summary-item-image,
+            .summary-item-image-wrap {
+
+                width:
+                    48px;
+
+                height:
+                    48px;
+
+            }
+
+
+            .summary-item-price {
+
+                grid-column:
+                    2;
+
+                justify-self:
+                    start;
+
+                margin-top:
+                    -2px;
+
+            }
+
+        }
+
+
+        /* ============================================================
            REDUCED MOTION
-           ============================================================== */
+           ============================================================ */
 
         @media (prefers-reduced-motion: reduce) {
 
             *,
             *::before,
             *::after {
+
                 scroll-behavior:
                     auto !important;
+
+                animation:
+                    none !important;
 
                 transition:
                     none !important;
 
-                animation:
-                    none !important;
             }
 
         }
@@ -904,12 +2243,16 @@
                     Shop
                 </a>
 
+
                 <a
                     href="/cart.html"
                     class="cart-link"
                     aria-label="View Shopping Cart"
                 >
-                    Cart
+
+                    <span>
+                        Cart
+                    </span>
 
                     <span
                         id="cart-count"
@@ -919,7 +2262,9 @@
                     >
                         0
                     </span>
+
                 </a>
+
 
                 <a
                     href="/about.html"
@@ -927,6 +2272,7 @@
                 >
                     About
                 </a>
+
 
                 <a
                     href="/contact.html"
@@ -954,18 +2300,37 @@
         <header class="checkout-header">
 
             <h1 class="checkout-title">
-                Checkout
+
+                <span
+                    class="checkout-title-icon"
+                    aria-hidden="true"
+                >
+
+                    <span
+                        class="material-symbols-rounded icon-lg"
+                    >
+                        shopping_cart_checkout
+                    </span>
+
+                </span>
+
+                <span>
+                    Checkout
+                </span>
+
             </h1>
+
 
             <p class="checkout-subtitle">
                 Enter your delivery information to submit your order.
+                Product availability and pricing are verified before order submission.
             </p>
 
         </header>
 
 
         <!-- ============================================================
-             GLOBAL ERROR
+             ERROR
              ============================================================ -->
 
         <div
@@ -973,11 +2338,30 @@
             class="checkout-error"
             role="alert"
             aria-live="assertive"
-        ></div>
+        >
+
+            <span
+                class="checkout-error-icon"
+                aria-hidden="true"
+            >
+
+                <span
+                    class="material-symbols-rounded icon-sm"
+                >
+                    error
+                </span>
+
+            </span>
+
+            <span
+                id="checkout-error-message"
+            ></span>
+
+        </div>
 
 
         <!-- ============================================================
-             GLOBAL SUCCESS
+             SUCCESS
              ============================================================ -->
 
         <div
@@ -985,7 +2369,26 @@
             class="checkout-success"
             role="status"
             aria-live="polite"
-        ></div>
+        >
+
+            <span
+                class="checkout-success-icon"
+                aria-hidden="true"
+            >
+
+                <span
+                    class="material-symbols-rounded icon-sm"
+                >
+                    check_circle
+                </span>
+
+            </span>
+
+            <span
+                id="checkout-success-message"
+            ></span>
+
+        </div>
 
 
         <div
@@ -999,13 +2402,46 @@
                  ======================================================== -->
 
             <section
-                class="checkout-card"
+                class="checkout-card checkout-form-card"
                 aria-labelledby="shipping-information-heading"
             >
 
-                <h2 id="shipping-information-heading">
-                    Shipping Information
-                </h2>
+                <div
+                    class="checkout-card-header"
+                >
+
+                    <span
+                        class="checkout-card-header-icon"
+                        aria-hidden="true"
+                    >
+
+                        <span
+                            class="material-symbols-rounded icon-md"
+                        >
+                            local_shipping
+                        </span>
+
+                    </span>
+
+
+                    <div>
+
+                        <h2
+                            id="shipping-information-heading"
+                            class="checkout-card-title"
+                        >
+                            Shipping Information
+                        </h2>
+
+                    </div>
+
+                </div>
+
+
+                <p class="checkout-card-description">
+                    Please provide accurate contact and delivery information
+                    so your order can be processed correctly.
+                </p>
 
 
                 <form
@@ -1018,18 +2454,42 @@
                          CONTACT
                          ================================================== -->
 
-                    <div class="checkout-section">
+                    <div
+                        class="checkout-section"
+                    >
 
-                        <h3 class="checkout-section-title">
-                            Contact Information
-                        </h3>
+                        <div
+                            class="checkout-section-header"
+                        >
+
+                            <span
+                                class="checkout-section-number"
+                                aria-hidden="true"
+                            >
+                                1
+                            </span>
+
+                            <h3
+                                class="checkout-section-title"
+                            >
+                                Contact Information
+                            </h3>
+
+                        </div>
+
 
                         <div class="form-grid">
 
 
-                            <div class="form-field full">
+                            <!-- FULL NAME -->
 
-                                <label for="customer-name">
+                            <div
+                                class="form-field full"
+                            >
+
+                                <label
+                                    for="customer-name"
+                                >
                                     Full Name
                                     <span
                                         class="required"
@@ -1037,21 +2497,42 @@
                                     >*</span>
                                 </label>
 
-                                <input
-                                    id="customer-name"
-                                    name="name"
-                                    type="text"
-                                    autocomplete="name"
-                                    maxlength="100"
-                                    required
+
+                                <div
+                                    class="input-with-icon"
                                 >
+
+                                    <span
+                                        class="material-symbols-rounded icon-sm"
+                                        aria-hidden="true"
+                                    >
+                                        person
+                                    </span>
+
+                                    <input
+                                        id="customer-name"
+                                        name="name"
+                                        type="text"
+                                        autocomplete="name"
+                                        maxlength="100"
+                                        required
+                                        placeholder="Enter your full name"
+                                    >
+
+                                </div>
 
                             </div>
 
 
-                            <div class="form-field">
+                            <!-- EMAIL -->
 
-                                <label for="customer-email">
+                            <div
+                                class="form-field"
+                            >
+
+                                <label
+                                    for="customer-email"
+                                >
                                     Email
                                     <span
                                         class="required"
@@ -1059,21 +2540,42 @@
                                     >*</span>
                                 </label>
 
-                                <input
-                                    id="customer-email"
-                                    name="email"
-                                    type="email"
-                                    autocomplete="email"
-                                    maxlength="120"
-                                    required
+
+                                <div
+                                    class="input-with-icon"
                                 >
+
+                                    <span
+                                        class="material-symbols-rounded icon-sm"
+                                        aria-hidden="true"
+                                    >
+                                        mail
+                                    </span>
+
+                                    <input
+                                        id="customer-email"
+                                        name="email"
+                                        type="email"
+                                        autocomplete="email"
+                                        maxlength="120"
+                                        required
+                                        placeholder="you@example.com"
+                                    >
+
+                                </div>
 
                             </div>
 
 
-                            <div class="form-field">
+                            <!-- PHONE -->
 
-                                <label for="customer-phone">
+                            <div
+                                class="form-field"
+                            >
+
+                                <label
+                                    for="customer-phone"
+                                >
                                     Phone
                                     <span
                                         class="required"
@@ -1081,14 +2583,29 @@
                                     >*</span>
                                 </label>
 
-                                <input
-                                    id="customer-phone"
-                                    name="phone"
-                                    type="tel"
-                                    autocomplete="tel"
-                                    maxlength="30"
-                                    required
+
+                                <div
+                                    class="input-with-icon"
                                 >
+
+                                    <span
+                                        class="material-symbols-rounded icon-sm"
+                                        aria-hidden="true"
+                                    >
+                                        phone
+                                    </span>
+
+                                    <input
+                                        id="customer-phone"
+                                        name="phone"
+                                        type="tel"
+                                        autocomplete="tel"
+                                        maxlength="30"
+                                        required
+                                        placeholder="Enter phone number"
+                                    >
+
+                                </div>
 
                             </div>
 
@@ -1101,18 +2618,42 @@
                          SHIPPING ADDRESS
                          ================================================== -->
 
-                    <div class="checkout-section">
+                    <div
+                        class="checkout-section"
+                    >
 
-                        <h3 class="checkout-section-title">
-                            Delivery Address
-                        </h3>
+                        <div
+                            class="checkout-section-header"
+                        >
+
+                            <span
+                                class="checkout-section-number"
+                                aria-hidden="true"
+                            >
+                                2
+                            </span>
+
+                            <h3
+                                class="checkout-section-title"
+                            >
+                                Delivery Address
+                            </h3>
+
+                        </div>
+
 
                         <div class="form-grid">
 
 
-                            <div class="form-field">
+                            <!-- COUNTRY -->
 
-                                <label for="shipping-country">
+                            <div
+                                class="form-field"
+                            >
+
+                                <label
+                                    for="shipping-country"
+                                >
                                     Country
                                     <span
                                         class="required"
@@ -1120,22 +2661,42 @@
                                     >*</span>
                                 </label>
 
-                                <input
-                                    id="shipping-country"
-                                    name="country"
-                                    type="text"
-                                    maxlength="80"
-                                    autocomplete="country-name"
-                                    placeholder="United States"
-                                    required
+
+                                <div
+                                    class="input-with-icon"
                                 >
+
+                                    <span
+                                        class="material-symbols-rounded icon-sm"
+                                        aria-hidden="true"
+                                    >
+                                        public
+                                    </span>
+
+                                    <input
+                                        id="shipping-country"
+                                        name="country"
+                                        type="text"
+                                        maxlength="80"
+                                        autocomplete="country-name"
+                                        required
+                                        placeholder="United States"
+                                    >
+
+                                </div>
 
                             </div>
 
 
-                            <div class="form-field">
+                            <!-- COUNTRY CODE -->
 
-                                <label for="shipping-country-code">
+                            <div
+                                class="form-field"
+                            >
+
+                                <label
+                                    for="shipping-country-code"
+                                >
                                     Country Code
                                     <span
                                         class="required"
@@ -1150,16 +2711,30 @@
                                     maxlength="2"
                                     minlength="2"
                                     autocomplete="country"
-                                    placeholder="US"
                                     required
+                                    placeholder="US"
+                                    pattern="[A-Za-z]{2}"
+                                    style="text-transform: uppercase;"
                                 >
+
+                                <p
+                                    class="field-hint"
+                                >
+                                    Two-letter ISO country code.
+                                </p>
 
                             </div>
 
 
-                            <div class="form-field">
+                            <!-- STATE / PROVINCE -->
 
-                                <label for="shipping-province">
+                            <div
+                                class="form-field"
+                            >
+
+                                <label
+                                    for="shipping-province"
+                                >
                                     State / Province
                                     <span
                                         class="required"
@@ -1174,14 +2749,21 @@
                                     maxlength="100"
                                     autocomplete="address-level1"
                                     required
+                                    placeholder="State or province"
                                 >
 
                             </div>
 
 
-                            <div class="form-field">
+                            <!-- CITY -->
 
-                                <label for="shipping-city">
+                            <div
+                                class="form-field"
+                            >
+
+                                <label
+                                    for="shipping-city"
+                                >
                                     City
                                     <span
                                         class="required"
@@ -1196,14 +2778,21 @@
                                     maxlength="100"
                                     autocomplete="address-level2"
                                     required
+                                    placeholder="City"
                                 >
 
                             </div>
 
 
-                            <div class="form-field">
+                            <!-- ZIP -->
 
-                                <label for="shipping-zip">
+                            <div
+                                class="form-field"
+                            >
+
+                                <label
+                                    for="shipping-zip"
+                                >
                                     ZIP / Postal Code
                                 </label>
 
@@ -1213,14 +2802,21 @@
                                     type="text"
                                     maxlength="30"
                                     autocomplete="postal-code"
+                                    placeholder="Postal code"
                                 >
 
                             </div>
 
 
-                            <div class="form-field">
+                            <!-- COUNTY -->
 
-                                <label for="shipping-county">
+                            <div
+                                class="form-field"
+                            >
+
+                                <label
+                                    for="shipping-county"
+                                >
                                     County
                                 </label>
 
@@ -1229,35 +2825,63 @@
                                     name="county"
                                     type="text"
                                     maxlength="100"
+                                    placeholder="County"
                                 >
 
                             </div>
 
 
-                            <div class="form-field full">
+                            <!-- ADDRESS -->
 
-                                <label for="shipping-address">
-                                    Address
+                            <div
+                                class="form-field full"
+                            >
+
+                                <label
+                                    for="shipping-address"
+                                >
+                                    Street Address
                                     <span
                                         class="required"
                                         aria-hidden="true"
                                     >*</span>
                                 </label>
 
-                                <textarea
-                                    id="shipping-address"
-                                    name="address"
-                                    maxlength="500"
-                                    autocomplete="street-address"
-                                    required
-                                ></textarea>
+
+                                <div
+                                    class="input-with-icon"
+                                >
+
+                                    <span
+                                        class="material-symbols-rounded icon-sm"
+                                        aria-hidden="true"
+                                    >
+                                        location_on
+                                    </span>
+
+                                    <textarea
+                                        id="shipping-address"
+                                        name="address"
+                                        maxlength="500"
+                                        autocomplete="street-address"
+                                        required
+                                        placeholder="Street, building, house number, etc."
+                                    ></textarea>
+
+                                </div>
 
                             </div>
 
 
-                            <div class="form-field full">
+                            <!-- ADDRESS 2 -->
 
-                                <label for="shipping-address2">
+                            <div
+                                class="form-field full"
+                            >
+
+                                <label
+                                    for="shipping-address2"
+                                >
                                     Apartment / Unit / Additional Address
                                 </label>
 
@@ -1267,6 +2891,7 @@
                                     type="text"
                                     maxlength="300"
                                     autocomplete="address-line2"
+                                    placeholder="Apartment, unit, floor, etc."
                                 >
 
                             </div>
@@ -1280,16 +2905,38 @@
                          ORDER NOTE
                          ================================================== -->
 
-                    <div class="checkout-section">
+                    <div
+                        class="checkout-section"
+                    >
 
-                        <h3 class="checkout-section-title">
-                            Order Note
-                        </h3>
+                        <div
+                            class="checkout-section-header"
+                        >
 
-                        <div class="form-field">
+                            <span
+                                class="checkout-section-number"
+                                aria-hidden="true"
+                            >
+                                3
+                            </span>
 
-                            <label for="order-note">
-                                Optional note
+                            <h3
+                                class="checkout-section-title"
+                            >
+                                Order Note
+                            </h3>
+
+                        </div>
+
+
+                        <div
+                            class="form-field"
+                        >
+
+                            <label
+                                for="order-note"
+                            >
+                                Optional Note
                             </label>
 
                             <textarea
@@ -1312,7 +2959,18 @@
                         type="submit"
                         id="place-order-button"
                     >
-                        Place Order
+
+                        <span
+                            class="material-symbols-rounded icon-md"
+                            aria-hidden="true"
+                        >
+                            shopping_cart_checkout
+                        </span>
+
+                        <span>
+                            Place Order
+                        </span>
+
                     </button>
 
 
@@ -1323,11 +2981,42 @@
                     ></div>
 
 
+                    <div
+                        class="checkout-security-notice"
+                    >
+
+                        <span
+                            class="material-symbols-rounded icon-sm"
+                            aria-hidden="true"
+                        >
+                            verified_user
+                        </span>
+
+                        <span>
+                            Your information is transmitted to the
+                            PRASUN SHOP checkout service for order processing.
+                            Supplier credentials are never exposed in your browser.
+                        </span>
+
+                    </div>
+
+
                     <a
                         href="/cart.html"
                         class="back-to-cart"
                     >
-                        ← Back to Cart
+
+                        <span
+                            class="material-symbols-rounded icon-sm"
+                            aria-hidden="true"
+                        >
+                            arrow_back
+                        </span>
+
+                        <span>
+                            Back to Cart
+                        </span>
+
                     </a>
 
                 </form>
@@ -1344,31 +3033,67 @@
                     aria-live="polite"
                 >
 
-                    <div class="confirmation-icon">
-                        ✓
+                    <div
+                        class="confirmation-icon"
+                        aria-hidden="true"
+                    >
+
+                        <span
+                            class="material-symbols-rounded icon-lg"
+                        >
+                            check_circle
+                        </span>
+
                     </div>
+
 
                     <h2>
                         Order Received
                     </h2>
 
+
                     <p>
-                        Thank you for your order. We have received your
-                        order information and will process it for delivery.
+                        Thank you for your order.
+                        Your order information has been received
+                        and is being processed.
                     </p>
+
 
                     <div
                         id="confirmation-order-number"
                         class="order-number"
-                    ></div>
+                    >
 
-                    <br>
+                        <span
+                            class="material-symbols-rounded icon-sm"
+                            aria-hidden="true"
+                        >
+                            receipt_long
+                        </span>
+
+                        <span>
+                            Order
+                        </span>
+
+                    </div>
+
 
                     <a
                         href="/"
                         class="continue-shopping"
                     >
-                        Continue Shopping
+
+                        <span
+                            class="material-symbols-rounded icon-sm"
+                            aria-hidden="true"
+                        >
+                            storefront
+                        </span>
+
+                        <span>
+                            Continue Shopping
+                        </span>
+
                     </a>
 
                 </div>
@@ -1381,22 +3106,164 @@
                  ======================================================== -->
 
             <aside
-                class="checkout-card order-summary"
+                class="checkout-card checkout-summary-card"
                 aria-labelledby="order-summary-heading"
             >
 
-                <h2 id="order-summary-heading">
-                    Your Order
-                </h2>
+                <div
+                    class="checkout-card-header"
+                >
+
+                    <span
+                        class="checkout-card-header-icon"
+                        aria-hidden="true"
+                    >
+
+                        <span
+                            class="material-symbols-rounded icon-md"
+                        >
+                            receipt_long
+                        </span>
+
+                    </span>
+
+
+                    <div>
+
+                        <h2
+                            id="order-summary-heading"
+                            class="checkout-card-title"
+                        >
+                            Your Order
+                        </h2>
+
+                    </div>
+
+                </div>
+
 
                 <div
                     id="order-summary"
+                    class="summary-items"
                     aria-live="polite"
                     aria-busy="true"
                 >
 
-                    <div class="checkout-status">
-                        Loading order...
+                    <div
+                        class="summary-empty"
+                    >
+
+                        <span
+                            class="material-symbols-rounded icon-xl"
+                            aria-hidden="true"
+                        >
+                            sync
+                        </span>
+
+                        <p>
+                            Loading order details...
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="summary-totals"
+                    hidden
+                >
+
+                    <div
+                        class="summary-divider"
+                        aria-hidden="true"
+                    ></div>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Items
+                        </span>
+
+                        <strong
+                            id="summary-item-count"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Subtotal
+                        </span>
+
+                        <strong
+                            id="summary-subtotal"
+                        >
+                            $0.00
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Shipping
+                        </span>
+
+                        <strong
+                            id="summary-shipping"
+                        >
+                            Calculated at checkout
+                        </strong>
+
+                    </div>
+
+
+                    <div
+                        class="summary-divider"
+                        aria-hidden="true"
+                    ></div>
+
+
+                    <div
+                        class="summary-total"
+                    >
+
+                        <span>
+                            Total
+                        </span>
+
+                        <strong
+                            id="order-total"
+                        >
+                            $0.00
+                        </strong>
+
+                    </div>
+
+
+                    <div
+                        class="checkout-security-notice"
+                    >
+
+                        <span
+                            class="material-symbols-rounded icon-sm"
+                            aria-hidden="true"
+                        >
+                            security
+                        </span>
+
+                        <span>
+                            Final order amount is confirmed by the
+                            checkout service before submission.
+                        </span>
+
                     </div>
 
                 </div>
@@ -1414,41 +3281,46 @@
 
     <footer class="footer">
 
-        <div class="footer-links">
+        <div class="container">
 
-            <a href="/privacy.html">
-                Privacy Policy
-            </a>
+            <div class="footer-links">
 
-            <a href="/terms.html">
-                Terms of Service
-            </a>
+                <a href="/privacy.html">
+                    Privacy Policy
+                </a>
 
-            <a href="/refund.html">
-                Refund Policy
-            </a>
+                <a href="/terms.html">
+                    Terms of Service
+                </a>
 
-            <a href="/contact.html">
-                Contact
-            </a>
+                <a href="/refund.html">
+                    Refund Policy
+                </a>
+
+                <a href="/contact.html">
+                    Contact
+                </a>
+
+            </div>
+
+
+            <p>
+
+                &copy; 2026 PRASUN SHOP by
+
+                <a
+                    href="https://prasunbarua.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Prasun Barua
+                </a>.
+
+                All rights reserved.
+
+            </p>
 
         </div>
-
-        <p>
-
-            &copy; 2026 PRASUN SHOP by
-
-            <a
-                href="https://prasunbarua.com"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                Prasun Barua
-            </a>.
-
-            All rights reserved.
-
-        </p>
 
     </footer>
 
@@ -1458,10 +3330,11 @@
          ================================================================ -->
 
     <script
-        src="/js/checkout.js?v=20260820-01"
+        src="/js/checkout.js?v=20260821-03"
         defer
     ></script>
 
 </body>
 
 </html>
+
