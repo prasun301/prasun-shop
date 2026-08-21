@@ -5,36 +5,46 @@
  *
  * js/products.js
  *
- * BROAD CJ CATALOG MODE
+ * BROAD CJ CATALOG STOREFRONT
+ *
+ * ARCHITECTURE
+ * ============================================================================
+ *
+ * Cloudflare Worker
+ *        ↓
+ * /api/products
+ *        ↓
+ * BROAD KV CATALOG
+ *        ↓
+ * products.js
+ *        ↓
+ * local search
+ *        ↓
+ * local categories
+ *        ↓
+ * local sorting
+ *
  *
  * IMPORTANT
  * ============================================================================
  *
- * This file contains JavaScript only.
+ * This file NEVER requests CJ categories for storefront filtering.
  *
- * The Worker is the source of the complete synchronized CJ catalog.
- *
- * /api/products
- *      ↓
- * ALL returned product records
- *      ↓
- * local catalog
- *      ↓
- * local search
- *      ↓
- * local category filtering
- *      ↓
- * local sorting
- *
- * IMPORTANT:
- * - No hard 5,000-product truncation.
- * - No server-side category request for storefront buttons.
- * - Search is local.
- * - Category filtering is local.
- * - All CJ products remain available under "All Products".
- * - Products are progressively rendered to keep the page responsive.
+ * All Products:
+ *     Shows every product returned by /api/products.
  *
  * Categories:
+ *     Filter the already-loaded catalog locally.
+ *
+ * Search:
+ *     Searches the already-loaded catalog locally.
+ *
+ * No hard 5,000-product limit is applied here.
+ *
+ * ============================================================================
+ *
+ * STORE CATEGORIES
+ * ============================================================================
  *
  * All Products
  * Solar Lights
@@ -77,11 +87,10 @@
             "/product.html",
 
         REQUEST_TIMEOUT:
-            30000,
+            45000,
 
         /*
-         * IMPORTANT:
-         * Do not limit the catalog at 5,000.
+         * Do NOT use a fixed catalog ceiling.
          *
          * The Worker is authoritative.
          */
@@ -89,20 +98,26 @@
             Number.POSITIVE_INFINITY,
 
         /*
-         * Render products in batches so thousands of products
-         * do not freeze the browser.
+         * Render gradually.
          */
         RENDER_BATCH_SIZE:
-            80,
+            60,
 
         DEFAULT_CATEGORY:
-            "General"
+            "General",
+
+        /*
+         * Maximum number of search terms.
+         * Prevents pathological search strings.
+         */
+        MAX_SEARCH_TERMS:
+            12
 
     };
 
 
     /* =========================================================================
-       2. PLACEHOLDER
+       2. PLACEHOLDER IMAGE
        ========================================================================= */
 
     const PLACEHOLDER_IMAGE =
@@ -165,8 +180,26 @@
 
 
     /* =========================================================================
-       3. CATEGORY DEFINITIONS
+       3. STORE CATEGORY DEFINITIONS
        ========================================================================= */
+
+    /*
+     * These are intentionally BROAD.
+     *
+     * We search across:
+     *
+     * - title
+     * - name
+     * - description
+     * - category
+     * - category levels
+     * - category path
+     * - product type
+     * - SKU
+     *
+     * Therefore a product does not need an exact CJ category name
+     * to appear in the corresponding storefront category.
+     */
 
     const CATEGORY_MAP = [
 
@@ -177,9 +210,13 @@
             query:
                 "",
 
+            icon:
+                "apps",
+
             terms:
                 []
         },
+
 
         {
             label:
@@ -188,6 +225,9 @@
             query:
                 "solar-lights",
 
+            icon:
+                "solar",
+
             terms:
                 [
                     "solar",
@@ -195,22 +235,34 @@
                     "solar lights",
                     "solar lamp",
                     "solar lighting",
-                    "solar spotlight",
+                    "solar led",
+                    "solar led light",
+                    "solar outdoor",
+                    "solar garden",
+                    "solar street",
+                    "solar wall",
+                    "solar flood",
                     "solar floodlight",
-                    "solar street light",
-                    "solar wall light",
-                    "solar garden light",
-                    "solar outdoor light",
-                    "solar pathway light",
-                    "solar motion light"
+                    "solar spotlight",
+                    "solar pathway",
+                    "solar lawn",
+                    "solar motion",
+                    "solar powered light",
+                    "solar powered lamp",
+                    "solar garden lamp",
+                    "solar outdoor lamp"
                 ]
         },
+
 
         {
             label:
                 "Battery",
 
             query:
+                "battery",
+
+            icon:
                 "battery",
 
             terms:
@@ -221,15 +273,21 @@
                     "lithium battery",
                     "lithium ion",
                     "li-ion",
+                    "li ion",
                     "battery pack",
                     "battery bank",
                     "power battery",
                     "aa battery",
                     "aaa battery",
                     "18650",
-                    "21700"
+                    "21700",
+                    "lifepo4",
+                    "li-ion battery",
+                    "rechargeable cell",
+                    "battery charger"
                 ]
         },
+
 
         {
             label:
@@ -237,6 +295,9 @@
 
             query:
                 "chargers",
+
+            icon:
+                "charger",
 
             terms:
                 [
@@ -246,17 +307,24 @@
                     "charging station",
                     "fast charger",
                     "fast charging",
+                    "quick charger",
+                    "quick charge",
                     "wall charger",
                     "usb charger",
+                    "type c charger",
+                    "type-c charger",
                     "phone charger",
                     "mobile charger",
                     "wireless charger",
                     "car charger",
                     "travel charger",
+                    "charging adapter",
                     "power adapter",
-                    "charging adapter"
+                    "usb power adapter",
+                    "ac adapter"
                 ]
         },
+
 
         {
             label:
@@ -264,6 +332,9 @@
 
             query:
                 "power-bank",
+
+            icon:
+                "powerbank",
 
             terms:
                 [
@@ -274,9 +345,12 @@
                     "portable battery",
                     "mobile power",
                     "emergency power bank",
-                    "powerbank charger"
+                    "power bank charger",
+                    "power station",
+                    "portable power station"
                 ]
         },
+
 
         {
             label:
@@ -284,6 +358,9 @@
 
             query:
                 "cables",
+
+            icon:
+                "cable",
 
             terms:
                 [
@@ -295,16 +372,23 @@
                     "type c cable",
                     "type-c cable",
                     "usb-c cable",
+                    "usbc cable",
                     "lightning cable",
                     "micro usb cable",
+                    "micro-usb cable",
                     "hdmi cable",
                     "network cable",
                     "ethernet cable",
                     "lan cable",
                     "audio cable",
-                    "display cable"
+                    "aux cable",
+                    "display cable",
+                    "dp cable",
+                    "displayport cable",
+                    "power cable"
                 ]
         },
+
 
         {
             label:
@@ -312,6 +396,9 @@
 
             query:
                 "earphones",
+
+            icon:
+                "earphone",
 
             terms:
                 [
@@ -322,12 +409,17 @@
                     "tws",
                     "true wireless",
                     "wireless earbud",
+                    "wireless earbuds",
                     "bluetooth earphone",
+                    "bluetooth earbuds",
                     "in-ear",
                     "in ear",
-                    "in-ear headphones"
+                    "in-ear headphones",
+                    "sports earphones",
+                    "headset earbuds"
                 ]
         },
+
 
         {
             label:
@@ -335,6 +427,9 @@
 
             query:
                 "headphones",
+
+            icon:
+                "headphone",
 
             terms:
                 [
@@ -347,15 +442,25 @@
                     "wireless headset",
                     "wireless headphones",
                     "over-ear",
-                    "on-ear"
+                    "over ear",
+                    "on-ear",
+                    "on ear",
+                    "stereo headset",
+                    "pc headset",
+                    "computer headset",
+                    "gaming headphone"
                 ]
         },
+
 
         {
             label:
                 "Modem",
 
             query:
+                "modem",
+
+            icon:
                 "modem",
 
             terms:
@@ -367,9 +472,13 @@
                     "usb modem",
                     "mobile modem",
                     "wireless modem",
-                    "cellular modem"
+                    "cellular modem",
+                    "4g usb modem",
+                    "5g usb modem",
+                    "mobile broadband"
                 ]
         },
+
 
         {
             label:
@@ -377,6 +486,9 @@
 
             query:
                 "routers",
+
+            icon:
+                "router",
 
             terms:
                 [
@@ -391,9 +503,12 @@
                     "network router",
                     "mesh router",
                     "wifi mesh",
-                    "wi-fi mesh"
+                    "wi-fi mesh",
+                    "network gateway",
+                    "wireless network"
                 ]
         },
+
 
         {
             label:
@@ -401,6 +516,9 @@
 
             query:
                 "laptops",
+
+            icon:
+                "laptop",
 
             terms:
                 [
@@ -411,10 +529,15 @@
                     "ultrabook",
                     "chromebook",
                     "gaming laptop",
+                    "gaming notebook",
                     "computer notebook",
-                    "portable computer"
+                    "portable computer",
+                    "netbook",
+                    "windows laptop",
+                    "macbook"
                 ]
         },
+
 
         {
             label:
@@ -423,29 +546,38 @@
             query:
                 "power-tools",
 
+            icon:
+                "tool",
+
             terms:
                 [
                     "power tool",
                     "power tools",
                     "drill",
                     "cordless drill",
+                    "electric drill",
                     "impact driver",
                     "impact wrench",
                     "grinder",
                     "angle grinder",
                     "screwdriver",
                     "electric screwdriver",
+                    "cordless screwdriver",
                     "saw",
                     "circular saw",
                     "jigsaw",
+                    "reciprocating saw",
                     "sander",
                     "rotary tool",
                     "heat gun",
                     "polisher",
                     "cutting tool",
-                    "hammer drill"
+                    "hammer drill",
+                    "power cutter",
+                    "electric tool"
                 ]
         },
+
 
         {
             label:
@@ -454,10 +586,14 @@
             query:
                 "camera",
 
+            icon:
+                "camera",
+
             terms:
                 [
                     "camera",
                     "cameras",
+                    "digital camera",
                     "security camera",
                     "cctv",
                     "ip camera",
@@ -465,15 +601,21 @@
                     "wifi camera",
                     "wi-fi camera",
                     "action camera",
-                    "digital camera",
                     "webcam",
+                    "web camera",
                     "dash camera",
                     "dash cam",
                     "surveillance camera",
                     "outdoor camera",
-                    "indoor camera"
+                    "indoor camera",
+                    "home camera",
+                    "baby camera",
+                    "doorbell camera",
+                    "camera lens",
+                    "camcorder"
                 ]
         },
+
 
         {
             label:
@@ -481,6 +623,9 @@
 
             query:
                 "smart-home",
+
+            icon:
+                "home",
 
             terms:
                 [
@@ -498,9 +643,14 @@
                     "smart thermostat",
                     "smart security",
                     "smart doorbell",
+                    "smart camera",
                     "wifi smart",
                     "wi-fi smart",
-                    "home automation"
+                    "home automation",
+                    "smart automation",
+                    "smart relay",
+                    "smart remote",
+                    "smart controller"
                 ]
         }
 
@@ -626,9 +776,6 @@
 
         loadInitialSort();
 
-        /*
-         * Render categories immediately.
-         */
         renderCategoryPills();
 
         bindEvents();
@@ -639,9 +786,12 @@
 
         renderLoadingState();
 
+
         /*
-         * Delay catalog fetch until initial paint.
+         * Let the browser paint categories before
+         * starting the API request.
          */
+
         window.setTimeout(
             loadCatalog,
             0
@@ -651,7 +801,7 @@
 
 
     /* =========================================================================
-       7. CACHE DOM
+       7. DOM CACHE
        ========================================================================= */
 
     function cacheDOM() {
@@ -661,50 +811,60 @@
                 "product-list"
             );
 
+
         elements.resultsCount =
             document.getElementById(
                 "results-count"
             );
+
 
         elements.searchInput =
             document.getElementById(
                 "product-search"
             );
 
+
         elements.clearSearchButton =
             document.getElementById(
                 "clear-search"
             );
+
 
         elements.sortSelect =
             document.getElementById(
                 "product-sort"
             );
 
+
         elements.categoriesNav =
             document.getElementById(
                 "products-categories"
             );
+
 
         elements.pageHeading =
             document.getElementById(
                 "page-heading"
             );
 
+
         elements.liveRegion =
             document.getElementById(
                 "aria-live-region"
             );
+
 
         elements.productModal =
             document.getElementById(
                 "product-modal"
             );
 
+
         elements.modalBody =
             document.getElementById(
                 "modal-body"
             );
+
 
         elements.modalClose =
             document.getElementById(
@@ -767,7 +927,6 @@
                     class="${safeClass}"
                     viewBox="0 0 24 24"
                     aria-hidden="true"
-                    focusable="false"
                 >
                     <circle cx="12" cy="12" r="4"></circle>
                     <path d="M12 2v2"></path>
@@ -857,7 +1016,7 @@
                 >
                     <path d="M4 15v-3a8 8 0 0 1 16 0v3"></path>
                     <path d="M4 15h3v5H5a1 1 0 0 1-1-1z"></path>
-                    <path d="M20 15h-3v5h2a1 1 0 0 1 1-1z"></path>
+                    <path d="M20 15h-3v5h2a1 1 0 0 1-1-1z"></path>
                 </svg>
                 `,
 
@@ -1054,75 +1213,6 @@
     }
 
 
-    function categoryIcon(
-        category
-    ) {
-
-        const text =
-            String(
-                category?.label ||
-                ""
-            )
-                .toLowerCase();
-
-
-        if (
-            text.includes("solar")
-        ) return "solar";
-
-        if (
-            text.includes("battery")
-        ) return "battery";
-
-        if (
-            text.includes("charger")
-        ) return "charger";
-
-        if (
-            text.includes("power bank")
-        ) return "powerbank";
-
-        if (
-            text.includes("cable")
-        ) return "cable";
-
-        if (
-            text.includes("earphone")
-        ) return "earphone";
-
-        if (
-            text.includes("headphone")
-        ) return "headphone";
-
-        if (
-            text.includes("modem")
-        ) return "modem";
-
-        if (
-            text.includes("router")
-        ) return "router";
-
-        if (
-            text.includes("laptop")
-        ) return "laptop";
-
-        if (
-            text.includes("power tool")
-        ) return "tool";
-
-        if (
-            text.includes("camera")
-        ) return "camera";
-
-        if (
-            text.includes("smart")
-        ) return "home";
-
-        return "apps";
-
-    }
-
-
     /* =========================================================================
        9. EVENTS
        ========================================================================= */
@@ -1165,6 +1255,7 @@
                 state.sortBy =
                     event.target?.value ||
                     "featured";
+
 
                 applyFiltersAndRender();
 
@@ -1230,7 +1321,7 @@
 
 
     /* =========================================================================
-       10. CATEGORIES
+       10. CATEGORY UI
        ========================================================================= */
 
     function renderCategoryPills() {
@@ -1259,7 +1350,6 @@
 
 
                         return `
-
                             <button
                                 type="button"
                                 class="category-pill${
@@ -1278,9 +1368,7 @@
                             >
 
                                 ${svgIcon(
-                                    categoryIcon(
-                                        category
-                                    ),
+                                    category.icon,
                                     "ui-icon ui-icon-sm"
                                 )}
 
@@ -1291,7 +1379,6 @@
                                 </span>
 
                             </button>
-
                         `;
 
                     }
@@ -1331,6 +1418,7 @@
         /*
          * Category selection clears search.
          */
+
         state.searchQuery =
             "";
 
@@ -1394,8 +1482,8 @@
 
         return (
             CATEGORY_MAP.find(
-                item =>
-                    item.query ===
+                category =>
+                    category.query ===
                     state.activeCategory
             ) ||
             CATEGORY_MAP[0]
@@ -1413,6 +1501,19 @@
         if (
             state.loading
         ) {
+
+            return;
+
+        }
+
+
+        if (
+            !elements.productList
+        ) {
+
+            console.error(
+                "[PRASUN SHOP] #product-list not found."
+            );
 
             return;
 
@@ -1437,9 +1538,7 @@
                     controller.abort();
 
                 },
-
                 CONFIG.REQUEST_TIMEOUT
-
             );
 
 
@@ -1447,6 +1546,12 @@
 
             const endpoint =
                 `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`;
+
+
+            console.info(
+                "[PRASUN SHOP] Loading catalog:",
+                endpoint
+            );
 
 
             const response =
@@ -1463,10 +1568,6 @@
                                     "application/json"
                             },
 
-                        /*
-                         * no-store is safer because the catalog may
-                         * change after CJ synchronization.
-                         */
                         cache:
                             "no-store",
 
@@ -1519,9 +1620,12 @@
 
 
             /*
+             * Normalize and deduplicate.
+             *
              * IMPORTANT:
-             * No 5,000 product limit.
+             * Nothing here removes products because of category.
              */
+
             state.products =
                 deduplicateProducts(
                     rawProducts
@@ -1535,10 +1639,40 @@
 
 
             console.info(
-                "[PRASUN SHOP] Normalized catalog:",
+                "[PRASUN SHOP] Final catalog:",
                 state.products.length,
                 "products"
             );
+
+
+            if (
+                !state.products.length
+            ) {
+
+                const serverCount =
+                    Number(
+                        data?.count ||
+                        data?.catalogProductCount ||
+                        0
+                    );
+
+
+                if (
+                    serverCount > 0
+                ) {
+
+                    throw new Error(
+                        `The Worker reports ${serverCount} products, but no usable product records were returned.`
+                    );
+
+                }
+
+
+                throw new Error(
+                    "The Worker returned an empty catalog. Complete the broad CJ synchronization first."
+                );
+
+            }
 
 
             applyFiltersAndRender();
@@ -1560,7 +1694,7 @@
             ) {
 
                 renderErrorState(
-                    "The catalog request timed out."
+                    "The catalog request timed out. Please try again."
                 );
 
             } else {
@@ -1646,9 +1780,6 @@
         }
 
 
-        /*
-         * Some API wrappers may use `items`.
-         */
         if (
             Array.isArray(
                 data?.items
@@ -1656,6 +1787,17 @@
         ) {
 
             return data.items;
+
+        }
+
+
+        if (
+            Array.isArray(
+                data?.results
+            )
+        ) {
+
+            return data.results;
 
         }
 
@@ -1691,17 +1833,12 @@
 
             const key =
                 String(
-
                     product.pid ||
-
                     product.id ||
-
                     product.productId ||
-
+                    product.cj_id ||
                     product.sku ||
-
                     ""
-
                 )
                     .trim()
                     .toLowerCase();
@@ -1717,12 +1854,40 @@
 
 
             /*
-             * Latest occurrence wins.
+             * Keep the newest/best record.
+             *
+             * If an existing record contains useful information
+             * and the new record does not, preserve the richer object.
              */
-            map.set(
-                key,
-                product
-            );
+
+            if (
+                !map.has(
+                    key
+                )
+            ) {
+
+                map.set(
+                    key,
+                    product
+                );
+
+            } else {
+
+                const existing =
+                    map.get(
+                        key
+                    );
+
+
+                map.set(
+                    key,
+                    mergeProductRecords(
+                        existing,
+                        product
+                    )
+                );
+
+            }
 
         }
 
@@ -1730,6 +1895,104 @@
         return [
             ...map.values()
         ];
+
+    }
+
+
+    function mergeProductRecords(
+        a,
+        b
+    ) {
+
+        const result =
+            {
+                ...(a || {}),
+                ...(b || {})
+            };
+
+
+        const fields =
+            [
+                "description",
+                "category",
+                "oneCategoryName",
+                "twoCategoryName",
+                "threeCategoryName",
+                "categoryPath",
+                "image",
+                "originalImage",
+                "sku"
+            ];
+
+
+        for (
+            const field
+            of fields
+        ) {
+
+            if (
+                !String(
+                    result[field] ||
+                    ""
+                ).trim()
+            ) {
+
+                result[field] =
+                    a?.[field] ||
+                    b?.[field] ||
+                    "";
+
+            }
+
+        }
+
+
+        if (
+            !Array.isArray(
+                result.images
+            ) &&
+            Array.isArray(
+                a?.images
+            )
+        ) {
+
+            result.images =
+                a.images;
+
+        }
+
+
+        if (
+            !Array.isArray(
+                result.originalImages
+            ) &&
+            Array.isArray(
+                a?.originalImages
+            )
+        ) {
+
+            result.originalImages =
+                a.originalImages;
+
+        }
+
+
+        if (
+            !Array.isArray(
+                result.variants
+            ) &&
+            Array.isArray(
+                a?.variants
+            )
+        ) {
+
+            result.variants =
+                a.variants;
+
+        }
+
+
+        return result;
 
     }
 
@@ -1743,18 +2006,16 @@
     ) {
 
         state.searchQuery =
-            String(
+            normalizeSearchText(
                 event.target?.value ||
                 ""
-            )
-                .trim()
-                .toLowerCase();
+            );
 
 
         /*
-         * Searching from All Products should actually search
-         * the full catalog.
+         * Search from the full catalog.
          */
+
         if (
             state.searchQuery
         ) {
@@ -1794,6 +2055,7 @@
 
         applyFiltersAndRender();
 
+
         elements.searchInput?.focus();
 
     }
@@ -1811,8 +2073,7 @@
 
 
         elements.clearSearchButton.hidden =
-            state.searchQuery.length ===
-            0;
+            !state.searchQuery;
 
     }
 
@@ -1829,50 +2090,62 @@
             ];
 
 
-        /* ---------------------------------------------------------------------
-           SEARCH
-           --------------------------------------------------------------------- */
+        /*
+         * SEARCH
+         */
 
         if (
             state.searchQuery
         ) {
 
             const terms =
-                state.searchQuery
+                normalizeSearchText(
+                    state.searchQuery
+                )
                     .split(
                         /\s+/
                     )
                     .filter(
                         Boolean
+                    )
+                    .slice(
+                        0,
+                        CONFIG.MAX_SEARCH_TERMS
                     );
 
 
-            products =
-                products.filter(
-                    product => {
+            if (
+                terms.length
+            ) {
 
-                        const text =
-                            buildSearchText(
-                                product
+                products =
+                    products.filter(
+                        product => {
+
+                            const searchable =
+                                buildSearchText(
+                                    product
+                                );
+
+
+                            return terms.every(
+                                term =>
+                                    searchable.includes(
+                                        term
+                                    )
                             );
 
+                        }
+                    );
 
-                        return terms.every(
-                            term =>
-                                text.includes(
-                                    term
-                                )
-                        );
-
-                    }
-                );
+            }
 
         }
 
 
-        /* ---------------------------------------------------------------------
-           CATEGORY
-           --------------------------------------------------------------------- */
+        /*
+         * CATEGORY
+         */
 
         if (
             state.activeCategory
@@ -1894,9 +2167,9 @@
         }
 
 
-        /* ---------------------------------------------------------------------
-           SORT
-           --------------------------------------------------------------------- */
+        /*
+         * SORT
+         */
 
         products.sort(
             compareProducts
@@ -1956,11 +2229,13 @@
         product
     ) {
 
-        return [
+        const values = [
 
             product?.title,
 
             product?.name,
+
+            product?.description,
 
             product?.category,
 
@@ -1972,58 +2247,73 @@
 
             product?.categoryPath,
 
+            product?.categoryName,
+
+            product?.categoryFirstName,
+
+            product?.categorySecondName,
+
+            product?.categoryThirdName,
+
             product?.sku,
 
             product?.pid,
+
+            product?.id,
+
+            product?.productId,
+
+            product?.productType,
 
             product?.cj?.productType,
 
             product?.cj?.supplierName,
 
-            stripHtml(
-                product?.description
+            product?.cj?.sku,
+
+            product?.cj?.categoryId
+
+        ];
+
+
+        if (
+            Array.isArray(
+                product?.categories
             )
+        ) {
 
-        ]
-
-            .map(
-                value =>
-                    String(
-                        value ||
-                        ""
-                    )
-                        .toLowerCase()
-            )
-
-            .join(
-                " "
+            values.push(
+                ...product.categories
             );
 
-    }
+        }
 
 
-    function normalizeSearchText(
-        value
-    ) {
+        if (
+            Array.isArray(
+                product?.tags
+            )
+        ) {
 
-        return String(
-            value ||
-            ""
-        )
-            .toLowerCase()
-            .replace(
-                /&/g,
-                " and "
-            )
-            .replace(
-                /[_\-\/]+/g,
-                " "
-            )
-            .replace(
-                /\s+/g,
-                " "
-            )
-            .trim();
+            values.push(
+                ...product.tags
+            );
+
+        }
+
+
+        return normalizeSearchText(
+            values
+                .map(
+                    value =>
+                        stripHtml(
+                            value
+                        )
+                )
+                .join(
+                    " "
+                )
+        );
 
     }
 
@@ -2047,34 +2337,164 @@
 
 
         const searchable =
-            normalizeSearchText(
-                buildSearchText(
-                    product
-                )
+            buildSearchText(
+                product
             );
 
 
         /*
-         * Match both phrases and individual useful keywords.
+         * Exact phrase matching first.
          */
-        return category.terms.some(
-            term => {
 
-                const normalizedTerm =
-                    normalizeSearchText(
-                        term
-                    );
+        for (
+            const term
+            of category.terms
+        ) {
 
-
-                return (
-                    normalizedTerm &&
-                    searchable.includes(
-                        normalizedTerm
-                    )
+            const normalizedTerm =
+                normalizeSearchText(
+                    term
                 );
 
+
+            if (
+                normalizedTerm &&
+                searchable.includes(
+                    normalizedTerm
+                )
+            ) {
+
+                return true;
+
             }
-        );
+
+        }
+
+
+        /*
+         * Special category fallbacks.
+         *
+         * These help products where CJ's category metadata
+         * is incomplete.
+         */
+
+        const title =
+            normalizeSearchText(
+                [
+                    product?.title,
+                    product?.name
+                ]
+                    .join(
+                        " "
+                    )
+            );
+
+
+        const categoryText =
+            normalizeSearchText(
+                [
+                    product?.category,
+                    product?.oneCategoryName,
+                    product?.twoCategoryName,
+                    product?.threeCategoryName,
+                    product?.categoryPath
+                ]
+                    .join(
+                        " "
+                    )
+            );
+
+
+        if (
+            category.query ===
+            "solar-lights"
+        ) {
+
+            return (
+                /\bsolar\b/.test(
+                    title
+                ) ||
+                /\bsolar\b/.test(
+                    categoryText
+                )
+            );
+
+        }
+
+
+        if (
+            category.query ===
+            "battery"
+        ) {
+
+            return (
+                /\bbattery\b/.test(
+                    title
+                ) ||
+                /\bbatteries\b/.test(
+                    title
+                ) ||
+                /\b18650\b/.test(
+                    title
+                ) ||
+                /\b21700\b/.test(
+                    title
+                )
+
+            );
+
+        }
+
+
+        if (
+            category.query ===
+            "camera"
+        ) {
+
+            return (
+                /\bcamera\b/.test(
+                    title
+                ) ||
+                /\bcctv\b/.test(
+                    title
+                ) ||
+                /\bwebcam\b/.test(
+                    title
+                ) ||
+                /\bdash cam\b/.test(
+                    title
+                ) ||
+                /\bsurveillance\b/.test(
+                    title
+                )
+
+            );
+
+        }
+
+
+        if (
+            category.query ===
+            "smart-home"
+        ) {
+
+            return (
+                /\bsmart\b/.test(
+                    title
+                ) ||
+                /\bhome automation\b/.test(
+                    searchable
+                ) ||
+                /\bsmart\b/.test(
+                    categoryText
+                )
+
+            );
+
+        }
+
+
+        return false;
 
     }
 
@@ -2102,26 +2522,28 @@
 
         const priceA =
             Number(
-                a.price
+                a?.price
             ) || 0;
 
 
         const priceB =
             Number(
-                b.price
+                b?.price
             ) || 0;
 
 
         const nameA =
             String(
-                a.name ||
+                a?.name ||
+                a?.title ||
                 ""
             );
 
 
         const nameB =
             String(
-                b.name ||
+                b?.name ||
+                b?.title ||
                 ""
             );
 
@@ -2202,15 +2624,23 @@
         }
 
 
+        /*
+         * Featured:
+         *
+         * 1. In stock
+         * 2. CJ listed count
+         * 3. Name
+         */
+
         const stockA =
             Number(
-                a.quantity
+                a?.quantity
             ) > 0;
 
 
         const stockB =
             Number(
-                b.quantity
+                b?.quantity
             ) > 0;
 
 
@@ -2234,21 +2664,18 @@
         }
 
 
-        /*
-         * CJ listed count can help prioritize products.
-         */
         const listedA =
             Number(
-                a.listedNum ||
-                a.cj?.listedNum ||
+                a?.listedNum ||
+                a?.cj?.listedNum ||
                 0
             );
 
 
         const listedB =
             Number(
-                b.listedNum ||
-                b.cj?.listedNum ||
+                b?.listedNum ||
+                b?.cj?.listedNum ||
                 0
             );
 
@@ -2298,35 +2725,33 @@
 
 
         const id =
-            String(
+            cleanString(
                 raw.id ??
                 raw.pid ??
                 raw.productId ??
-                raw.sku ??
-                ""
-            )
-                .trim();
+                raw.cj_id ??
+                raw.sku
+            );
 
 
         const pid =
-            String(
+            cleanString(
                 raw.pid ??
                 raw.id ??
                 raw.productId ??
-                ""
-            )
-                .trim();
+                raw.cj_id
+            );
 
 
         const name =
-            String(
+            cleanString(
                 raw.title ??
                 raw.name ??
                 raw.productNameEn ??
                 raw.productName ??
+                raw.nameEn ??
                 "CJ Product"
-            )
-                .trim();
+            );
 
 
         if (
@@ -2339,69 +2764,15 @@
         }
 
 
-        let rawPrice =
-            raw.price ??
-            raw.sellPrice ??
-            raw.unitPrice ??
-            0;
-
-
-        if (
-            rawPrice &&
-            typeof rawPrice ===
-                "object"
-        ) {
-
-            rawPrice =
-                rawPrice.amount ??
-                rawPrice.value ??
-                rawPrice.raw ??
-                0;
-
-        }
-
-
-        const parsedPrice =
-            parseFloat(
-                String(
-                    rawPrice
-                )
-                    .replace(
-                        /[^0-9.]/g,
-                        ""
-                    )
+        const price =
+            normalizeProductPrice(
+                raw
             );
 
 
-        const price =
-            Number.isFinite(
-                parsedPrice
-            )
-
-                ? Number(
-                    parsedPrice.toFixed(
-                        2
-                    )
-                )
-
-                : 0;
-
-
         const quantity =
-            normalizeInventory(
-
-                raw.quantity ??
-
-                raw.inventory ??
-
-                raw.totalInventory ??
-
-                raw.warehouseInventoryNum ??
-
-                raw.totalVerifiedInventory ??
-
-                raw.totalUnVerifiedInventory
-
+            normalizeProductQuantity(
+                raw
             );
 
 
@@ -2422,6 +2793,12 @@
             PLACEHOLDER_IMAGE;
 
 
+        const originalImages =
+            collectProductImageUrls(
+                raw
+            );
+
+
         return {
 
             ...raw,
@@ -2431,20 +2808,18 @@
             pid,
 
             cj_id:
-                String(
+                cleanString(
                     raw.cj_id ||
                     raw.cjId ||
                     pid
-                )
-                    .trim(),
+                ),
 
             sku:
-                String(
+                cleanString(
                     raw.sku ||
                     raw.productSku ||
-                    ""
-                )
-                    .trim(),
+                    raw.cj?.sku
+                ),
 
             title:
                 name,
@@ -2458,43 +2833,44 @@
                 ),
 
             category:
-                String(
+                cleanString(
                     raw.category ||
                     raw.categoryName ||
                     raw.threeCategoryName ||
                     raw.twoCategoryName ||
                     raw.oneCategoryName ||
+                    raw.cj?.categoryName ||
                     CONFIG.DEFAULT_CATEGORY
-                )
-                    .trim(),
+                ),
 
             oneCategoryName:
-                String(
+                cleanString(
                     raw.oneCategoryName ||
-                    ""
-                )
-                    .trim(),
+                    raw.cj?.oneCategoryName
+                ),
 
             twoCategoryName:
-                String(
+                cleanString(
                     raw.twoCategoryName ||
-                    ""
-                )
-                    .trim(),
+                    raw.cj?.twoCategoryName
+                ),
 
             threeCategoryName:
-                String(
+                cleanString(
                     raw.threeCategoryName ||
-                    ""
-                )
-                    .trim(),
+                    raw.cj?.threeCategoryName
+                ),
 
             categoryPath:
-                String(
-                    raw.categoryPath ||
-                    ""
-                )
-                    .trim(),
+                cleanString(
+                    raw.categoryPath
+                ),
+
+            categoryId:
+                cleanString(
+                    raw.categoryId ||
+                    raw.cj?.categoryId
+                ),
 
             price,
 
@@ -2507,27 +2883,10 @@
             images,
 
             originalImage:
-                normalizeImageUrl(
-                    raw.originalImage ||
-                    raw.bigImage ||
-                    raw.productImage ||
-                    ""
-                ),
+                originalImages[0] ||
+                "",
 
-            originalImages:
-                Array.isArray(
-                    raw.originalImages
-                )
-
-                    ? raw.originalImages
-                        .map(
-                            normalizeImageUrl
-                        )
-                        .filter(
-                            Boolean
-                        )
-
-                    : [],
+            originalImages,
 
             variants:
                 normalizeVariants(
@@ -2542,9 +2901,183 @@
                 ),
 
             source:
+                raw.source ||
                 "CJ Dropshipping"
 
         };
+
+    }
+
+
+    function normalizeProductPrice(
+        raw
+    ) {
+
+        let value =
+            raw?.price ??
+            raw?.sellPrice ??
+            raw?.unitPrice ??
+            raw?.nowPrice ??
+            raw?.discountPrice ??
+            0;
+
+
+        if (
+            value &&
+            typeof value ===
+                "object"
+        ) {
+
+            value =
+                value.amount ??
+                value.value ??
+                value.price ??
+                value.raw ??
+                0;
+
+        }
+
+
+        const number =
+            parseFloat(
+                String(
+                    value
+                )
+                    .replace(
+                        /[^0-9.]/g,
+                        ""
+                    )
+            );
+
+
+        return Number.isFinite(
+            number
+        )
+            ? Number(
+                number.toFixed(
+                    2
+                )
+            )
+            : 0;
+
+    }
+
+
+    function normalizeProductQuantity(
+        raw
+    ) {
+
+        const candidates = [
+
+            raw?.quantity,
+
+            raw?.inventory,
+
+            raw?.totalInventory,
+
+            raw?.warehouseInventoryNum,
+
+            raw?.totalVerifiedInventory,
+
+            raw?.totalUnVerifiedInventory,
+
+            raw?.availableQuantity,
+
+            raw?.cj?.totalInventory,
+
+            raw?.cj?.warehouseInventoryNum,
+
+            raw?.cj?.totalVerifiedInventory
+
+        ];
+
+
+        /*
+         * Prefer explicit product-level inventory.
+         */
+
+        for (
+            const value
+            of candidates
+        ) {
+
+            const number =
+                Number(
+                    value
+                );
+
+
+            if (
+                Number.isFinite(
+                    number
+                )
+            ) {
+
+                return Math.max(
+                    0,
+                    Math.floor(
+                        number
+                    )
+                );
+
+            }
+
+        }
+
+
+        /*
+         * Fall back to variant inventory.
+         */
+
+        if (
+            Array.isArray(
+                raw?.variants
+            )
+        ) {
+
+            let total =
+                0;
+
+
+            for (
+                const variant
+                of raw.variants
+            ) {
+
+                const inventory =
+                    Number(
+                        variant?.inventory ??
+                        variant?.quantity ??
+                        variant?.totalInventory ??
+                        0
+                    );
+
+
+                if (
+                    Number.isFinite(
+                        inventory
+                    )
+                ) {
+
+                    total +=
+                        Math.max(
+                            0,
+                            Math.floor(
+                                inventory
+                            )
+                        );
+
+                }
+
+            }
+
+
+            return total;
+
+        }
+
+
+        return 0;
 
     }
 
@@ -2564,88 +3097,103 @@
         }
 
 
-        return variants.map(
-            variant => {
+        return variants
+            .map(
+                variant => {
 
-                return {
-
-                    ...variant,
-
-                    vid:
-                        String(
-                            variant?.vid ||
-                            ""
-                        )
-                            .trim(),
-
-                    sku:
-                        String(
-                            variant?.sku ||
-                            variant?.variantSku ||
-                            ""
-                        )
-                            .trim(),
-
-                    name:
-                        String(
-                            variant?.name ||
-                            variant?.variantNameEn ||
-                            variant?.variantKey ||
-                            "Default"
-                        )
-                            .trim(),
-
-                    price:
-                        normalizePrice(
-                            variant?.price
-                        ),
-
-                    costPrice:
-                        normalizePrice(
-                            variant?.costPrice
-                        ),
-
-                    inventory:
-                        normalizeInventory(
+                    const inventory =
+                        Number(
                             variant?.inventory ??
-                            variant?.totalInventory
-                        )
-
-                };
-
-            }
-        );
-
-    }
+                            variant?.quantity ??
+                            variant?.totalInventory ??
+                            0
+                        );
 
 
-    function normalizeInventory(
-        value
-    ) {
+                    const price =
+                        Number(
+                            variant?.price ??
+                            variant?.sellPrice ??
+                            0
+                        );
 
-        const number =
-            Number(
-                value
+
+                    const costPrice =
+                        Number(
+                            variant?.costPrice ??
+                            0
+                        );
+
+
+                    return {
+
+                        ...variant,
+
+                        vid:
+                            cleanString(
+                                variant?.vid ||
+                                variant?.id
+                            ),
+
+                        pid:
+                            cleanString(
+                                variant?.pid ||
+                                variant?.productId
+                            ),
+
+                        sku:
+                            cleanString(
+                                variant?.sku ||
+                                variant?.variantSku
+                            ),
+
+                        name:
+                            cleanString(
+                                variant?.name ||
+                                variant?.variantNameEn ||
+                                variant?.variantName ||
+                                variant?.variantKey ||
+                                "Default"
+                            ),
+
+                        price:
+                            Number.isFinite(
+                                price
+                            )
+                                ? Number(
+                                    price.toFixed(
+                                        2
+                                    )
+                                )
+                                : 0,
+
+                        costPrice:
+                            Number.isFinite(
+                                costPrice
+                            )
+                                ? Number(
+                                    costPrice.toFixed(
+                                        2
+                                    )
+                                )
+                                : 0,
+
+                        inventory:
+                            Number.isFinite(
+                                inventory
+                            )
+                                ? Math.max(
+                                    0,
+                                    Math.floor(
+                                        inventory
+                                    )
+                                )
+                                : 0
+
+                    };
+
+                }
             );
-
-
-        if (
-            !Number.isFinite(
-                number
-            )
-        ) {
-
-            return 0;
-
-        }
-
-
-        return Math.max(
-            0,
-            Math.floor(
-                number
-            )
-        );
 
     }
 
@@ -2682,36 +3230,6 @@
                 .toFixed(
                     1
                 )
-        );
-
-    }
-
-
-    function normalizePrice(
-        value
-    ) {
-
-        const number =
-            Number(
-                value
-            );
-
-
-        if (
-            !Number.isFinite(
-                number
-            )
-        ) {
-
-            return 0;
-
-        }
-
-
-        return Number(
-            number.toFixed(
-                2
-            )
         );
 
     }
@@ -2945,14 +3463,40 @@
         }
 
 
+        /*
+         * Images may also be nested in variants.
+         */
+
+        if (
+            Array.isArray(
+                product?.variants
+            )
+        ) {
+
+            for (
+                const variant
+                of product.variants
+            ) {
+
+                candidates.push(
+                    variant?.image
+                );
+
+                candidates.push(
+                    variant?.variantImage
+                );
+
+            }
+
+        }
+
+
         return [
             ...new Set(
                 candidates
-
                     .map(
                         normalizeImageUrl
                     )
-
                     .filter(
                         Boolean
                     )
@@ -2968,19 +3512,15 @@
 
         return [
             ...new Set(
-
                 collectProductImageUrls(
                     product
                 )
-
                     .map(
                         buildProxyUrl
                     )
-
                     .filter(
                         Boolean
                     )
-
             )
         ];
 
@@ -3044,7 +3584,6 @@
                     Math.min(
                         index +
                         CONFIG.RENDER_BATCH_SIZE,
-
                         products.length
                     );
 
@@ -3055,24 +3594,10 @@
                     index++
                 ) {
 
-                    const html =
-                        renderProductCard(
+                    const card =
+                        createProductCardElement(
                             products[index]
                         );
-
-
-                    const wrapper =
-                        document.createElement(
-                            "div"
-                        );
-
-
-                    wrapper.innerHTML =
-                        html;
-
-
-                    const card =
-                        wrapper.firstElementChild;
 
 
                     if (
@@ -3116,6 +3641,28 @@
 
 
         renderBatch();
+
+    }
+
+
+    function createProductCardElement(
+        product
+    ) {
+
+        const wrapper =
+            document.createElement(
+                "div"
+            );
+
+
+        wrapper.innerHTML =
+            renderProductCard(
+                product
+            );
+
+
+        return wrapper.firstElementChild ||
+            null;
 
     }
 
@@ -3176,7 +3723,7 @@
 
         const shortDescription =
             description.length >
-                105
+            105
 
                 ? (
                     description.slice(
@@ -3193,7 +3740,6 @@
 
 
         return `
-
             <article
                 class="product-card"
                 data-product-id="${productId}"
@@ -3269,12 +3815,16 @@
 
 
                     ${
-                        product.rating > 0
-                            ? `
+                        Number(
+                            product.rating
+                        ) > 0
 
+                            ? `
                                 <div
                                     class="product-rating"
-                                    aria-label="Rating ${product.rating.toFixed(
+                                    aria-label="Rating ${Number(
+                                        product.rating
+                                    ).toFixed(
                                         1
                                     )} out of 5"
                                 >
@@ -3285,14 +3835,16 @@
                                     )}
 
                                     <span>
-                                        ${product.rating.toFixed(
+                                        ${Number(
+                                            product.rating
+                                        ).toFixed(
                                             1
                                         )}
                                     </span>
 
                                 </div>
-
                             `
+
                             : ""
                     }
 
@@ -3325,6 +3877,7 @@
                                 class="btn-card btn-secondary view-details-btn"
                                 data-action="view-details"
                                 data-product-id="${productId}"
+                                aria-label="View details for ${title}"
                             >
 
                                 ${svgIcon(
@@ -3349,6 +3902,11 @@
                                         ? ""
                                         : "disabled"
                                 }
+                                aria-label="${
+                                    available
+                                        ? `Add ${title} to cart`
+                                        : `${title} is out of stock`
+                                }"
                             >
 
                                 ${svgIcon(
@@ -3359,11 +3917,13 @@
                                 )}
 
                                 <span>
+
                                     ${
                                         available
                                             ? "Add to Cart"
                                             : "Out of Stock"
                                     }
+
                                 </span>
 
                             </button>
@@ -3375,7 +3935,6 @@
                 </div>
 
             </article>
-
         `;
 
     }
@@ -3536,7 +4095,6 @@
 
         cartButton.innerHTML =
             `
-
                 ${svgIcon(
                     "check",
                     "ui-icon ui-icon-sm"
@@ -3545,7 +4103,6 @@
                 <span>
                     Added
                 </span>
-
             `;
 
 
@@ -3568,7 +4125,6 @@
 
                 cartButton.innerHTML =
                     `
-
                         ${svgIcon(
                             "cart",
                             "ui-icon ui-icon-sm"
@@ -3577,13 +4133,10 @@
                         <span>
                             Add to Cart
                         </span>
-
                     `;
 
             },
-
             1200
-
         );
 
     }
@@ -3602,13 +4155,23 @@
             .forEach(
                 image => {
 
+                    if (
+                        image.dataset.fallbackBound ===
+                        "true"
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    image.dataset.fallbackBound =
+                        "true";
+
+
                     image.addEventListener(
                         "error",
-                        handleImageError,
-                        {
-                            once:
-                                false
-                        }
+                        handleImageError
                     );
 
                 }
@@ -3687,7 +4250,7 @@
 
 
     /* =========================================================================
-       20. MODAL
+       20. PRODUCT MODAL
        ========================================================================= */
 
     function sanitizeDescription(
@@ -3717,7 +4280,6 @@
 
 
         [
-
             "script",
             "style",
             "iframe",
@@ -3732,7 +4294,6 @@
             "video",
             "audio",
             "source"
-
         ]
             .forEach(
                 tag => {
@@ -3884,7 +4445,7 @@
         ) {
 
             console.error(
-                "[PRASUN SHOP] Product modal is missing from index.html."
+                "[PRASUN SHOP] Product modal is missing from the page."
             );
 
 
@@ -3959,6 +4520,7 @@
 
         const galleryHtml =
             images.length > 1
+
                 ? `
                     <div
                         class="modal-gallery"
@@ -3970,7 +4532,6 @@
                                     image,
                                     index
                                 ) => `
-
                                     <button
                                         type="button"
                                         class="modal-gallery-thumb ${
@@ -3998,7 +4559,6 @@
                                         >
 
                                     </button>
-
                                 `
                             )
                             .join(
@@ -4007,12 +4567,12 @@
 
                     </div>
                 `
+
                 : "";
 
 
         elements.modalBody.innerHTML =
             `
-
                 <div
                     class="modal-image-column"
                 >
@@ -4072,11 +4632,8 @@
 
                             ${
                                 quantity > 0
-
                                     ? `In Stock: ${quantity}`
-
                                     : "Out of Stock"
-
                             }
 
                         </span>
@@ -4137,7 +4694,6 @@
                     </button>
 
                 </div>
-
             `;
 
 
@@ -4300,7 +4856,6 @@
 
                     modalCartButton.innerHTML =
                         `
-
                             ${svgIcon(
                                 "check",
                                 "ui-icon ui-icon-sm"
@@ -4309,7 +4864,6 @@
                             <span>
                                 Added to Cart
                             </span>
-
                         `;
 
 
@@ -4404,7 +4958,6 @@
 
         elements.productList.innerHTML =
             `
-
                 <div
                     class="product-status-card"
                     role="status"
@@ -4421,11 +4974,10 @@
                     </h3>
 
                     <p>
-                        Loading the latest CJ catalog...
+                        Loading the complete CJ catalog...
                     </p>
 
                 </div>
-
             `;
 
 
@@ -4456,7 +5008,6 @@
 
         elements.productList.innerHTML =
             `
-
                 <div
                     class="product-status-card"
                     role="status"
@@ -4478,7 +5029,6 @@
                     </p>
 
                 </div>
-
             `;
 
 
@@ -4514,7 +5064,6 @@
 
         elements.productList.innerHTML =
             `
-
                 <div
                     class="product-status-card"
                     role="alert"
@@ -4553,7 +5102,6 @@
                     </button>
 
                 </div>
-
             `;
 
 
@@ -4563,7 +5111,11 @@
             )
             ?.addEventListener(
                 "click",
-                loadCatalog,
+                () => {
+
+                    loadCatalog();
+
+                },
                 {
                     once:
                         true
@@ -4675,12 +5227,62 @@
        22. HELPERS
        ========================================================================= */
 
+    function cleanString(
+        value
+    ) {
+
+        return String(
+            value ??
+            ""
+        )
+            .replace(
+                /\s+/g,
+                " "
+            )
+            .trim();
+
+    }
+
+
+    function normalizeSearchText(
+        value
+    ) {
+
+        return String(
+            value ||
+            ""
+        )
+            .toLowerCase()
+            .replace(
+                /&/g,
+                " and "
+            )
+            .replace(
+                /[_\-\/]+/g,
+                " "
+            )
+            .replace(
+                /[^a-z0-9\s]+/g,
+                " "
+            )
+            .replace(
+                /\s+/g,
+                " "
+            )
+            .trim();
+
+    }
+
+
     function stripHtml(
         value
     ) {
 
         if (
-            !value
+            value ===
+            null ||
+            value ===
+            undefined
         ) {
 
             return "";
@@ -4701,18 +5303,14 @@
 
 
         return (
-
             div.textContent ||
             div.innerText ||
             ""
-
         )
-
             .replace(
                 /\s+/g,
                 " "
             )
-
             .trim();
 
     }
@@ -4742,7 +5340,6 @@
         return new Intl.NumberFormat(
             "en-US",
             {
-
                 style:
                     "currency",
 
@@ -4754,7 +5351,6 @@
 
                 maximumFractionDigits:
                     2
-
             }
         )
             .format(
@@ -4772,27 +5368,22 @@
             value ??
             ""
         )
-
             .replace(
                 /&/g,
                 "&amp;"
             )
-
             .replace(
                 /</g,
                 "&lt;"
             )
-
             .replace(
                 />/g,
                 "&gt;"
             )
-
             .replace(
                 /"/g,
                 "&quot;"
             )
-
             .replace(
                 /'/g,
                 "&#039;"
@@ -4828,9 +5419,7 @@
                     );
 
             },
-
             20
-
         );
 
     }
@@ -4851,12 +5440,9 @@
             query => {
 
                 state.searchQuery =
-                    String(
-                        query ||
-                        ""
-                    )
-                        .trim()
-                        .toLowerCase();
+                    normalizeSearchText(
+                        query
+                    );
 
 
                 state.activeCategory =
@@ -4868,7 +5454,8 @@
                 ) {
 
                     elements.searchInput.value =
-                        state.searchQuery;
+                        query ||
+                        "";
 
                 }
 
@@ -4886,11 +5473,9 @@
             query => {
 
                 state.activeCategory =
-                    String(
-                        query ||
-                        ""
-                    )
-                        .trim();
+                    cleanString(
+                        query
+                    );
 
 
                 state.searchQuery =
@@ -4976,7 +5561,20 @@
                             id
                         )
                 ) ||
-                null
+                null,
+
+
+        getCategoryMap:
+            () =>
+                CATEGORY_MAP.map(
+                    category => ({
+                        label:
+                            category.label,
+
+                        query:
+                            category.query
+                    })
+                )
 
     };
 
