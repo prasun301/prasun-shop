@@ -1,1651 +1,2390 @@
-/**
- * ============================================================================
- * MULTI-SITE CONTACT BACKEND
- * ============================================================================
- *
- * Cloudflare Worker
- *
- * Supports:
- *
- *   POST /
- *
- * Request formats:
- *
- *   1. multipart/form-data
- *      - Used by PRASUN SHOP contact page
- *      - Supports file attachments
- *
- *   2. application/json
- *      - Supported for other websites / legacy forms
- *
- * Required secret:
- *
- *   RESEND_API_KEY
- *
- * Required variable:
- *
- *   DESTINATION_EMAIL
- *
- * Optional:
- *
- *   MAX_FILE_SIZE_MB
- *
- * ============================================================================
- */
-
-"use strict";
-
-
-/* ============================================================================
-   CONSTANTS
-   ========================================================================== */
-
-const DEFAULT_MAX_FILE_SIZE =
-    10 * 1024 * 1024;
-
-const ALLOWED_EXTENSIONS = new Set([
-    "pdf",
-    "jpg",
-    "jpeg",
-    "png",
-    "webp",
-    "doc",
-    "docx",
-    "xls",
-    "xlsx",
-    "zip"
-]);
-
-const ALLOWED_CONTENT_TYPES = new Set([
-    "application/pdf",
-
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-
-    "application/msword",
-
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-
-    "application/vnd.ms-excel",
-
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-
-    "application/zip",
-    "application/x-zip-compressed",
-
-    "application/octet-stream"
-]);
-
-
-/* ============================================================================
-   WORKER
-   ========================================================================== */
-
-export default {
-
-    async fetch(
-        request,
-        env,
-        ctx
-    ) {
-
-        const corsHeaders =
-            getCorsHeaders(
-                request
-            );
-
-        /*
-         * ------------------------------------------------------------
-         * CORS PREFLIGHT
-         * ------------------------------------------------------------
-         */
-
-        if (
-            request.method ===
-            "OPTIONS"
-        ) {
-
-            return new Response(
-                null,
-                {
-                    status:
-                        204,
-
-                    headers:
-                        corsHeaders
-                }
-            );
-        }
-
-
-        /*
-         * ------------------------------------------------------------
-         * ONLY POST
-         * ------------------------------------------------------------
-         */
-
-        if (
-            request.method !==
-            "POST"
-        ) {
-
-            return jsonResponse(
-                {
-                    success:
-                        false,
-
-                    error:
-                        "Method not allowed."
-                },
-                corsHeaders,
-                405
-            );
-        }
-
-
-        try {
-
-            /*
-             * --------------------------------------------------------
-             * ENVIRONMENT VALIDATION
-             * --------------------------------------------------------
-             */
-
-            if (
-                !env?.RESEND_API_KEY
-            ) {
-
-                console.error(
-                    "[CONTACT] RESEND_API_KEY is missing."
-                );
-
-                return jsonResponse(
-                    {
-                        success:
-                            false,
-
-                        error:
-                            "Email service is not configured."
-                    },
-                    corsHeaders,
-                    500
-                );
-            }
-
-
-            if (
-                !env?.DESTINATION_EMAIL
-            ) {
-
-                console.error(
-                    "[CONTACT] DESTINATION_EMAIL is missing."
-                );
-
-                return jsonResponse(
-                    {
-                        success:
-                            false,
-
-                        error:
-                            "Destination email is not configured."
-                    },
-                    corsHeaders,
-                    500
-                );
-            }
-
-
-            /*
-             * --------------------------------------------------------
-             * READ REQUEST
-             * --------------------------------------------------------
-             */
-
-            const contentType =
-                (
-                    request.headers.get(
-                        "Content-Type"
-                    ) ||
-                    ""
-                )
-                    .toLowerCase();
-
-
-            let contactData;
-
-
-            if (
-                contentType.includes(
-                    "multipart/form-data"
-                )
-            ) {
-
-                contactData =
-                    await parseMultipartRequest(
-                        request,
-                        env
-                    );
-
-            } else if (
-                contentType.includes(
-                    "application/json"
-                )
-            ) {
-
-                contactData =
-                    await parseJsonRequest(
-                        request
-                    );
-
-            } else if (
-                contentType.includes(
-                    "application/x-www-form-urlencoded"
-                )
-            ) {
-
-                contactData =
-                    await parseUrlEncodedRequest(
-                        request
-                    );
-
-            } else {
-
-                return jsonResponse(
-                    {
-                        success:
-                            false,
-
-                        error:
-                            "Unsupported request content type."
-                    },
-                    corsHeaders,
-                    415
-                );
-            }
-
-
-            /*
-             * --------------------------------------------------------
-             * SPAM HONEYPOT
-             * --------------------------------------------------------
-             */
-
-            if (
-                cleanText(
-                    contactData?.honeypot
-                )
-            ) {
-
-                /*
-                 * Deliberately return a generic successful response
-                 * so basic bots do not learn that the honeypot fired.
-                 */
-
-                return jsonResponse(
-                    {
-                        success:
-                            true,
-
-                        message:
-                            "Message received."
-                    },
-                    corsHeaders
-                );
-            }
-
-
-            /*
-             * --------------------------------------------------------
-             * NORMALIZE
-             * --------------------------------------------------------
-             */
-
-            const name =
-                cleanText(
-                    contactData?.name
-                );
-
-            const email =
-                cleanText(
-                    contactData?.email
-                );
-
-            const siteName =
-                cleanText(
-                    contactData?.siteName
-                ) ||
-                "Website";
-
-            const topic =
-                cleanText(
-                    contactData?.topic
-                );
-
-            const orderId =
-                cleanText(
-                    contactData?.orderId
-                );
-
-            const message =
-                cleanText(
-                    contactData?.message
-                );
-
-            const source =
-                cleanText(
-                    contactData?.source
-                );
-
-
-            /*
-             * --------------------------------------------------------
-             * VALIDATION
-             * --------------------------------------------------------
-             */
-
-            if (
-                !email ||
-                !isValidEmail(
-                    email
-                )
-            ) {
-
-                return jsonResponse(
-                    {
-                        success:
-                            false,
-
-                        error:
-                            "Please provide a valid email address."
-                    },
-                    corsHeaders,
-                    400
-                );
-            }
-
-
-            if (
-                !message
-            ) {
-
-                return jsonResponse(
-                    {
-                        success:
-                            false,
-
-                        error:
-                            "Message is required."
-                    },
-                    corsHeaders,
-                    400
-                );
-            }
-
-
-            if (
-                message.length >
-                5000
-            ) {
-
-                return jsonResponse(
-                    {
-                        success:
-                            false,
-
-                        error:
-                            "Message is too long. Maximum length is 5000 characters."
-                    },
-                    corsHeaders,
-                    400
-                );
-            }
-
-
-            if (
-                name.length >
-                120
-            ) {
-
-                return jsonResponse(
-                    {
-                        success:
-                            false,
-
-                        error:
-                            "Name is too long."
-                    },
-                    corsHeaders,
-                    400
-                );
-            }
-
-
-            if (
-                siteName.length >
-                150
-            ) {
-
-                return jsonResponse(
-                    {
-                        success:
-                            false,
-
-                        error:
-                            "Site name is too long."
-                    },
-                    corsHeaders,
-                    400
-                );
-            }
-
-
-            /*
-             * --------------------------------------------------------
-             * EXTRA FIELDS
-             * --------------------------------------------------------
-             *
-             * This keeps the backend compatible with other sites
-             * that may send additional form fields.
-             */
-
-            const extraFields =
-                contactData?.extraFields ||
-                {};
-
-
-            /*
-             * --------------------------------------------------------
-             * BUILD EMAIL TEXT
-             * --------------------------------------------------------
-             */
-
-            const lines = [];
-
-            lines.push(
-                `Name: ${name || "Not provided"}`
-            );
-
-            lines.push(
-                `Email: ${email}`
-            );
-
-            lines.push(
-                `Website: ${siteName}`
-            );
-
-            if (
-                source
-            ) {
-
-                lines.push(
-                    `Source: ${source}`
-                );
-            }
-
-            if (
-                topic
-            ) {
-
-                lines.push(
-                    `Topic: ${topic}`
-                );
-            }
-
-            if (
-                orderId
-            ) {
-
-                lines.push(
-                    `Order ID: ${orderId}`
-                );
-            }
-
-
-            /*
-             * Add additional fields.
-             */
-            for (
-                const [
-                    key,
-                    value
-                ]
-                of Object.entries(
-                    extraFields
-                )
-            ) {
-
-                if (
-                    !cleanText(
-                        value
-                    )
-                ) {
-                    continue;
-                }
-
-                const formattedKey =
-                    formatFieldName(
-                        key
-                    );
-
-                /*
-                 * Prevent duplicate standard fields.
-                 */
-                if (
-                    [
-                        "Name",
-                        "Email",
-                        "Site Name",
-                        "Website",
-                        "Source",
-                        "Topic",
-                        "Order Id",
-                        "Message",
-                        "Attachment"
-                    ].includes(
-                        formattedKey
-                    )
-                ) {
-                    continue;
-                }
-
-                lines.push(
-                    `${formattedKey}: ${cleanText(value)}`
-                );
-            }
-
-
-            lines.push("");
-
-            lines.push(
-                "Message:"
-            );
-
-            lines.push(
-                message
-            );
-
-
-            /*
-             * --------------------------------------------------------
-             * ATTACHMENT
-             * --------------------------------------------------------
-             */
-
-            const attachment =
-                contactData?.attachment ||
-                null;
-
-
-            /*
-             * --------------------------------------------------------
-             * MAX FILE SIZE
-             * --------------------------------------------------------
-             */
-
-            const configuredMaxMB =
-                Number(
-                    env?.MAX_FILE_SIZE_MB
-                );
-
-            const maxFileSize =
-                Number.isFinite(
-                    configuredMaxMB
-                ) &&
-                configuredMaxMB > 0
-
-                    ? (
-                        configuredMaxMB *
-                        1024 *
-                        1024
-                    )
-
-                    : DEFAULT_MAX_FILE_SIZE;
-
-
-            /*
-             * --------------------------------------------------------
-             * RESEND PAYLOAD
-             * --------------------------------------------------------
-             */
-
-            const resendPayload = {
-
-                from:
-                    `${sanitizeSenderName(siteName)} <contact@prasunbarua.com>`,
-
-                to:
-                    [
-                        env.DESTINATION_EMAIL
-                    ],
-
-                subject:
-                    `New Message from [${siteName}]`,
-
-                text:
-                    lines.join(
-                        "\n"
-                    )
-
-            };
-
-
-            /*
-             * --------------------------------------------------------
-             * RESEND ATTACHMENT
-             * --------------------------------------------------------
-             *
-             * Resend accepts attachment data.
-             *
-             * We encode the uploaded file as Base64.
-             */
-
-            if (
-                attachment
-            ) {
-
-                if (
-                    !(attachment instanceof File)
-                ) {
-
-                    return jsonResponse(
-                        {
-                            success:
-                                false,
-
-                            error:
-                                "Invalid attachment."
-                        },
-                        corsHeaders,
-                        400
-                    );
-                }
-
-
-                if (
-                    attachment.size >
-                    maxFileSize
-                ) {
-
-                    return jsonResponse(
-                        {
-                            success:
-                                false,
-
-                            error:
-                                `Attachment is too large. Maximum allowed size is ${Math.round(
-                                    maxFileSize /
-                                    1024 /
-                                    1024
-                                )} MB.`
-                        },
-                        corsHeaders,
-                        400
-                    );
-                }
-
-
-                const fileName =
-                    sanitizeFileName(
-                        attachment.name
-                    );
-
-                const extension =
-                    getFileExtension(
-                        fileName
-                    );
-
-                if (
-                    !ALLOWED_EXTENSIONS.has(
-                        extension
-                    )
-                ) {
-
-                    return jsonResponse(
-                        {
-                            success:
-                                false,
-
-                            error:
-                                "This attachment type is not supported."
-                        },
-                        corsHeaders,
-                        400
-                    );
-                }
-
-
-                const contentType =
-                    cleanText(
-                        attachment.type
-                    )
-                        .toLowerCase();
-
-
-                if (
-                    contentType &&
-                    !ALLOWED_CONTENT_TYPES.has(
-                        contentType
-                    )
-                ) {
-
-                    return jsonResponse(
-                        {
-                            success:
-                                false,
-
-                            error:
-                                "The attachment content type is not supported."
-                        },
-                        corsHeaders,
-                        400
-                    );
-                }
-
-
-                /*
-                 * Convert File to Base64.
-                 */
-                const bytes =
-                    new Uint8Array(
-                        await attachment.arrayBuffer()
-                    );
-
-                const base64 =
-                    uint8ArrayToBase64(
-                        bytes
-                    );
-
-
-                resendPayload.attachments =
-                    [
-                        {
-                            filename:
-                                fileName,
-
-                            content:
-                                base64
-                        }
-                    ];
-
-
-                /*
-                 * Add attachment information to email body.
-                 */
-
-                resendPayload.text +=
-                    `\n\nAttachment: ${fileName}`;
-            }
-
-
-            /*
-             * --------------------------------------------------------
-             * SEND THROUGH RESEND
-             * --------------------------------------------------------
-             */
-
-            const resendResponse =
-                await fetch(
-                    "https://api.resend.com/emails",
-                    {
-                        method:
-                            "POST",
-
-                        headers:
-                            {
-                                "Authorization":
-                                    `Bearer ${env.RESEND_API_KEY}`,
-
-                                "Content-Type":
-                                    "application/json",
-
-                                "Accept":
-                                    "application/json"
-                            },
-
-                        body:
-                            JSON.stringify(
-                                resendPayload
-                            )
-                    }
-                );
-
-
-            const responseText =
-                await resendResponse.text();
-
-
-            let resendResult =
-                null;
-
-
-            if (
-                responseText
-                    .trim()
-                    .length
-            ) {
-
-                try {
-
-                    resendResult =
-                        JSON.parse(
-                            responseText
-                        );
-
-                } catch {
-
-                    resendResult =
-                        {
-                            raw:
-                                responseText
-                        };
-                }
-            }
-
-
-            /*
-             * --------------------------------------------------------
-             * RESEND ERROR
-             * --------------------------------------------------------
-             */
-
-            if (
-                !resendResponse.ok
-            ) {
-
-                console.error(
-                    "[CONTACT] Resend API failed:",
-                    resendResult
-                );
-
-                return jsonResponse(
-                    {
-                        success:
-                            false,
-
-                        error:
-                            resendResult?.message ||
-                            resendResult?.error ||
-                            "Email service failed to send the message."
-                    },
-                    corsHeaders,
-                    502
-                );
-            }
-
-
-            /*
-             * --------------------------------------------------------
-             * SUCCESS
-             * --------------------------------------------------------
-             */
-
-            console.log(
-                "[CONTACT] Message sent successfully.",
-                {
-                    siteName,
-                    email,
-                    hasAttachment:
-                        Boolean(
-                            attachment
-                        ),
-                    resendId:
-                        resendResult?.id ||
-                        null
-                }
-            );
-
-
-            return jsonResponse(
-                {
-                    success:
-                        true,
-
-                    message:
-                        "Email sent successfully.",
-
-                    id:
-                        resendResult?.id ||
-                        null
-                },
-                corsHeaders
-            );
-
-
-        } catch (
-            error
-        ) {
-
-            console.error(
-                "[CONTACT] Unexpected Worker error:",
-                error
-            );
-
-
-            return jsonResponse(
-                {
-                    success:
-                        false,
-
-                    error:
-                        error?.message ||
-                        "Unable to process your message."
-                },
-                corsHeaders,
-                500
-            );
-        }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <!-- ============================================================
+       GOOGLE ANALYTICS
+  ============================================================ -->
+
+  <script
+    async
+    src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"
+  ></script>
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
     }
-};
+
+    gtag("js", new Date());
+    gtag("config", "G-D9F2VQ4247");
+  </script>
 
 
-/* ============================================================================
-   REQUEST PARSERS
-   ========================================================================== */
+  <!-- ============================================================
+       META
+  ============================================================ -->
 
-async function parseMultipartRequest(
-    request,
-    env
-) {
+  <meta charset="UTF-8">
 
-    const formData =
-        await request.formData();
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-    const standardFields = new Set([
-        "name",
-        "email",
-        "siteName",
-        "message",
-        "topic",
-        "order_id",
-        "orderId",
-        "source",
-        "_gotcha",
-        "attachment"
-    ]);
+  <title>Contact & Support — PRASUN SHOP</title>
 
-    const extraFields = {};
+  <meta
+    name="description"
+    content="Contact PRASUN SHOP for product support, order assistance, technical questions, returns, payment issues, or other customer service inquiries."
+  >
 
-    for (
-        const [
-            key,
-            value
-        ]
-        of formData.entries()
-    ) {
+  <meta
+    name="robots"
+    content="index, follow"
+  >
 
-        if (
-            standardFields.has(
-                key
-            )
-        ) {
-            continue;
-        }
+  <meta
+    name="theme-color"
+    content="#f8fafc"
+  >
 
-        /*
-         * Ignore files in generic extra-field collection.
-         */
-        if (
-            value instanceof File
-        ) {
-            continue;
-        }
 
-        extraFields[key] =
-            cleanText(
-                value
-            );
+  <!-- ============================================================
+       FAVICON
+  ============================================================ -->
+
+  <link
+    rel="icon"
+    href="/favicon.ico"
+    sizes="any"
+  >
+
+  <link
+    rel="icon"
+    href="/icon.svg"
+    type="image/svg+xml"
+  >
+
+  <link
+    rel="apple-touch-icon"
+    href="/apple-touch-icon.png"
+  >
+
+
+  <!-- ============================================================
+       GOOGLE ADSENSE
+  ============================================================ -->
+
+  <script
+    async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168"
+    crossorigin="anonymous"
+  ></script>
+
+
+  <style>
+
+    /* ============================================================
+       RESET
+    ============================================================ */
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
 
-    const attachmentValue =
-        formData.get(
-            "attachment"
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+
+    :root {
+
+      --bg: #f8fafc;
+
+      --surface: #ffffff;
+
+      --text: #0f172a;
+
+      --body: #334155;
+
+      --muted: #64748b;
+
+      --border: #e2e8f0;
+
+      --border-strong: #cbd5e1;
+
+      --primary: #2563eb;
+
+      --primary-dark: #1d4ed8;
+
+      --danger: #dc2626;
+
+      --success: #15803d;
+
+      --success-bg: #dcfce7;
+
+      --focus:
+        0 0 0 3px rgba(37, 99, 235, 0.12);
+
+    }
+
+
+    /* ============================================================
+       BASE
+    ============================================================ */
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+
+    body {
+
+      min-height: 100vh;
+
+      background: var(--bg);
+
+      color: var(--body);
+
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+
+      line-height: 1.6;
+
+      -webkit-font-smoothing: antialiased;
+
+      text-rendering: optimizeLegibility;
+
+    }
+
+
+    a {
+
+      color: var(--primary);
+
+      text-decoration: none;
+
+    }
+
+
+    a:hover {
+
+      text-decoration: underline;
+
+    }
+
+
+    button,
+    input,
+    select,
+    textarea {
+
+      font: inherit;
+
+    }
+
+
+    button {
+
+      -webkit-tap-highlight-color: transparent;
+
+    }
+
+
+    /* ============================================================
+       HEADER
+    ============================================================ */
+
+    .header {
+
+      position: sticky;
+
+      top: 0;
+
+      z-index: 100;
+
+      border-bottom:
+        1px solid var(--border);
+
+      background:
+        rgba(255, 255, 255, 0.96);
+
+      backdrop-filter:
+        blur(12px);
+
+      -webkit-backdrop-filter:
+        blur(12px);
+
+    }
+
+
+    .header-container {
+
+      width:
+        min(1080px, calc(100% - 2rem));
+
+      min-height: 68px;
+
+      margin: 0 auto;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 1.5rem;
+
+    }
+
+
+    .site-logo {
+
+      display: inline-flex;
+
+      align-items: center;
+
+      gap: 10px;
+
+      color: var(--text);
+
+      text-decoration: none;
+
+      font-size: 1.08rem;
+
+      font-weight: 700;
+
+      letter-spacing: -0.01em;
+
+      white-space: nowrap;
+
+    }
+
+
+    .site-logo:hover {
+
+      text-decoration: none;
+
+    }
+
+
+    .site-logo-image {
+
+      width: 44px;
+
+      height: 44px;
+
+      object-fit: contain;
+
+      border-radius: 8px;
+
+      display: block;
+
+    }
+
+
+    .nav-links {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 1.75rem;
+
+    }
+
+
+    .nav-links a {
+
+      color: var(--muted);
+
+      font-size: 0.94rem;
+
+      font-weight: 500;
+
+      text-decoration: none;
+
+      transition:
+        color 0.18s ease;
+
+    }
+
+
+    .nav-links a:hover,
+    .nav-links a.active {
+
+      color: var(--text);
+
+      text-decoration: none;
+
+    }
+
+
+    .nav-links a.active {
+
+      font-weight: 600;
+
+    }
+
+
+    /* ============================================================
+       MAIN
+    ============================================================ */
+
+    .page {
+
+      width:
+        min(800px, calc(100% - 2rem));
+
+      margin:
+        40px auto 0;
+
+    }
+
+
+    .content-card {
+
+      background: var(--surface);
+
+      border:
+        1px solid var(--border);
+
+      border-radius: 12px;
+
+      padding: 2.5rem;
+
+      box-shadow:
+        0 4px 6px -1px rgba(15, 23, 42, 0.04),
+        0 2px 4px -2px rgba(15, 23, 42, 0.04);
+
+    }
+
+
+    h1 {
+
+      color: var(--text);
+
+      font-size:
+        clamp(1.9rem, 4vw, 2.25rem);
+
+      line-height: 1.2;
+
+      letter-spacing: -0.025em;
+
+      margin-bottom: 0.6rem;
+
+    }
+
+
+    .subtitle {
+
+      color: var(--muted);
+
+      font-size: 1rem;
+
+      line-height: 1.65;
+
+      margin-bottom: 2rem;
+
+      padding-bottom: 1.25rem;
+
+      border-bottom:
+        1px solid var(--border);
+
+    }
+
+
+    /* ============================================================
+       SUPPORT META
+    ============================================================ */
+
+    .support-meta {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+      gap: 1rem;
+
+      margin-bottom: 2rem;
+
+    }
+
+
+    .meta-item {
+
+      background: var(--bg);
+
+      border:
+        1px solid var(--border);
+
+      border-radius: 9px;
+
+      padding: 1rem;
+
+    }
+
+
+    .meta-item h3 {
+
+      color: var(--muted);
+
+      font-size: 0.72rem;
+
+      font-weight: 700;
+
+      letter-spacing: 0.07em;
+
+      margin-bottom: 0.3rem;
+
+      text-transform: uppercase;
+
+    }
+
+
+    .meta-item p {
+
+      color: var(--text);
+
+      font-size: 0.92rem;
+
+      font-weight: 600;
+
+      margin: 0;
+
+    }
+
+
+    /* ============================================================
+       FORM
+    ============================================================ */
+
+    .form-grid {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+      gap: 1.15rem;
+
+    }
+
+
+    .form-group {
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 0.38rem;
+
+    }
+
+
+    .form-group.full-width {
+
+      grid-column: 1 / -1;
+
+    }
+
+
+    label {
+
+      color: var(--text);
+
+      font-size: 0.86rem;
+
+      font-weight: 600;
+
+    }
+
+
+    .required {
+
+      color: var(--danger);
+
+    }
+
+
+    .optional {
+
+      color: #94a3b8;
+
+      font-weight: 400;
+
+      font-size: 0.8rem;
+
+    }
+
+
+    input,
+    select,
+    textarea {
+
+      width: 100%;
+
+      border:
+        1px solid var(--border-strong);
+
+      border-radius: 8px;
+
+      padding:
+        0.75rem 0.85rem;
+
+      background: #ffffff;
+
+      color: var(--text);
+
+      font-size: 0.94rem;
+
+      transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background-color 0.15s ease;
+
+    }
+
+
+    input::placeholder,
+    textarea::placeholder {
+
+      color: #94a3b8;
+
+    }
+
+
+    input:hover,
+    select:hover,
+    textarea:hover {
+
+      border-color: #94a3b8;
+
+    }
+
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+
+      outline: none;
+
+      border-color: var(--primary);
+
+      box-shadow: var(--focus);
+
+    }
+
+
+    input[aria-invalid="true"],
+    select[aria-invalid="true"],
+    textarea[aria-invalid="true"] {
+
+      border-color: var(--danger);
+
+    }
+
+
+    textarea {
+
+      min-height: 145px;
+
+      resize: vertical;
+
+    }
+
+
+    /* ============================================================
+       FILE INPUT
+    ============================================================ */
+
+    .file-upload {
+
+      border:
+        1px dashed var(--border-strong);
+
+      border-radius: 9px;
+
+      padding: 1rem;
+
+      background: #fafcff;
+
+      transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
+
+    }
+
+
+    .file-upload:hover {
+
+      border-color: #94a3b8;
+
+      background: #f8fafc;
+
+    }
+
+
+    .file-input {
+
+      padding: 0.4rem;
+
+      border: 0;
+
+      box-shadow: none;
+
+      background: transparent;
+
+      cursor: pointer;
+
+    }
+
+
+    .file-input:hover {
+
+      border: 0;
+
+    }
+
+
+    .file-input:focus {
+
+      box-shadow: none;
+
+    }
+
+
+    .file-help {
+
+      margin-top: 0.45rem;
+
+      color: var(--muted);
+
+      font-size: 0.78rem;
+
+      line-height: 1.5;
+
+    }
+
+
+    .file-name {
+
+      display: none;
+
+      margin-top: 0.55rem;
+
+      color: var(--text);
+
+      font-size: 0.8rem;
+
+      font-weight: 600;
+
+      word-break: break-word;
+
+    }
+
+
+    .file-name.error {
+
+      color: var(--danger);
+
+    }
+
+
+    /* ============================================================
+       SUBMIT
+    ============================================================ */
+
+    .submit-area {
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: flex-start;
+
+      gap: 0.55rem;
+
+      margin-top: 0.2rem;
+
+    }
+
+
+    .btn-submit {
+
+      display: inline-flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      gap: 0.55rem;
+
+      min-height: 44px;
+
+      padding:
+        0.78rem 1.35rem;
+
+      border: 0;
+
+      border-radius: 8px;
+
+      background: var(--text);
+
+      color: #ffffff;
+
+      cursor: pointer;
+
+      font-size: 0.94rem;
+
+      font-weight: 600;
+
+      transition:
+        background-color 0.15s ease,
+        transform 0.08s ease,
+        opacity 0.15s ease;
+
+    }
+
+
+    .btn-submit:hover:not(:disabled) {
+
+      background: #1e293b;
+
+    }
+
+
+    .btn-submit:active:not(:disabled) {
+
+      transform: scale(0.98);
+
+    }
+
+
+    .btn-submit:disabled {
+
+      cursor: not-allowed;
+
+      opacity: 0.7;
+
+    }
+
+
+    .btn-spinner {
+
+      width: 16px;
+
+      height: 16px;
+
+      display: none;
+
+      border:
+        2px solid rgba(255, 255, 255, 0.35);
+
+      border-top-color: #ffffff;
+
+      border-radius: 50%;
+
+      animation:
+        f-spin 0.8s linear infinite;
+
+    }
+
+
+    @keyframes f-spin {
+
+      to {
+        transform: rotate(360deg);
+      }
+
+    }
+
+
+    .error-msg {
+
+      display: none;
+
+      width: 100%;
+
+      color: var(--danger);
+
+      font-size: 0.84rem;
+
+      line-height: 1.5;
+
+    }
+
+
+    .error-msg.is-visible {
+
+      display: block;
+
+    }
+
+
+    /* ============================================================
+       SUCCESS
+    ============================================================ */
+
+    .success-state {
+
+      display: none;
+
+      padding:
+        1.5rem 0 0.5rem;
+
+      text-align: center;
+
+    }
+
+
+    .success-icon {
+
+      width: 46px;
+
+      height: 46px;
+
+      margin:
+        0 auto 0.9rem;
+
+      display: grid;
+
+      place-items: center;
+
+      border-radius: 50%;
+
+      background: var(--success-bg);
+
+      color: var(--success);
+
+    }
+
+
+    .success-icon svg {
+
+      width: 22px;
+
+      height: 22px;
+
+    }
+
+
+    .success-state h3 {
+
+      color: var(--text);
+
+      font-size: 1.4rem;
+
+      margin-bottom: 0.4rem;
+
+    }
+
+
+    .success-state p {
+
+      color: var(--muted);
+
+      font-size: 0.92rem;
+
+    }
+
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+
+    .footer {
+
+      margin-top: 4rem;
+
+      padding:
+        2.5rem 1rem;
+
+      border-top:
+        1px solid var(--border);
+
+      background: #ffffff;
+
+      color: var(--muted);
+
+      font-size: 0.84rem;
+
+      text-align: center;
+
+    }
+
+
+    .footer-container {
+
+      width:
+        min(1080px, calc(100% - 2rem));
+
+      margin: 0 auto;
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+
+      gap: 1.15rem;
+
+    }
+
+
+    .footer-links {
+
+      display: flex;
+
+      flex-wrap: wrap;
+
+      align-items: center;
+
+      justify-content: center;
+
+      gap: 1.35rem;
+
+    }
+
+
+    .footer-links a {
+
+      color: var(--muted);
+
+      font-weight: 500;
+
+      text-decoration: none;
+
+    }
+
+
+    .footer-links a:hover {
+
+      color: var(--text);
+
+      text-decoration: underline;
+
+    }
+
+
+    .footer p {
+
+      margin: 0;
+
+    }
+
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+
+    @media (max-width: 700px) {
+
+      .header-container {
+
+        min-height: auto;
+
+        padding: 0.9rem 0;
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 0.7rem;
+
+      }
+
+
+      .nav-links {
+
+        width: 100%;
+
+        justify-content: space-between;
+
+        gap: 1rem;
+
+      }
+
+
+      .support-meta {
+
+        grid-template-columns: 1fr;
+
+      }
+
+
+      .content-card {
+
+        padding: 1.5rem;
+
+      }
+
+    }
+
+
+    @media (max-width: 560px) {
+
+      .page {
+
+        width:
+          min(100% - 1rem, 800px);
+
+        margin-top: 20px;
+
+      }
+
+
+      .form-grid {
+
+        grid-template-columns: 1fr;
+
+      }
+
+
+      .form-group.full-width {
+
+        grid-column: auto;
+
+      }
+
+
+      .btn-submit {
+
+        width: 100%;
+
+      }
+
+
+      .nav-links {
+
+        overflow-x: auto;
+
+        justify-content: flex-start;
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <!-- ============================================================
+       HEADER
+  ============================================================ -->
+
+  <header class="header">
+
+    <div class="header-container">
+
+      <a
+        href="/"
+        class="site-logo"
+        aria-label="PRASUN SHOP home"
+      >
+
+        <img
+          class="site-logo-image"
+          src="/logo.jpg"
+          width="44"
+          height="44"
+          alt="PRASUN SHOP"
+          decoding="async"
+        >
+
+        <span>
+          PRASUN SHOP
+        </span>
+
+      </a>
+
+
+      <nav
+        class="nav-links"
+        aria-label="Primary navigation"
+      >
+
+        <a href="/">
+          Shop
+        </a>
+
+        <a href="/about.html">
+          About
+        </a>
+
+        <a
+          href="/contact.html"
+          class="active"
+          aria-current="page"
+        >
+          Contact
+        </a>
+
+      </nav>
+
+    </div>
+
+  </header>
+
+
+  <!-- ============================================================
+       MAIN
+  ============================================================ -->
+
+  <main class="page">
+
+    <section
+      class="content-card"
+      aria-labelledby="pageTitle"
+    >
+
+      <h1 id="pageTitle">
+        Contact & Support
+      </h1>
+
+
+      <p class="subtitle">
+        Have a question about a product, order, payment, delivery,
+        return, or anything else related to PRASUN SHOP?
+        Send us a message and our support team will review your request.
+      </p>
+
+
+      <!-- ========================================================
+           SUPPORT INFORMATION
+      ======================================================== -->
+
+      <div class="support-meta">
+
+        <div class="meta-item">
+
+          <h3>
+            Customer Support
+          </h3>
+
+          <p>
+            We aim to respond promptly
+          </p>
+
+        </div>
+
+
+        <div class="meta-item">
+
+          <h3>
+            Order Assistance
+          </h3>
+
+          <p>
+            Products, orders & payments
+          </p>
+
+        </div>
+
+
+        <div class="meta-item">
+
+          <h3>
+            Official Website
+          </h3>
+
+          <p>
+
+            <a
+              href="https://prasunbarua.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              prasunbarua.com
+            </a>
+
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- ========================================================
+           CONTACT FORM
+      ======================================================== -->
+
+      <form
+        id="contactForm"
+        enctype="multipart/form-data"
+        novalidate
+        autocomplete="on"
+      >
+
+        <!-- Honeypot -->
+        <input
+          type="text"
+          name="_gotcha"
+          id="hp_check"
+          tabindex="-1"
+          autocomplete="off"
+          aria-hidden="true"
+          style="
+            position:absolute;
+            left:-9999px;
+            width:1px;
+            height:1px;
+            opacity:0;
+            pointer-events:none;
+          "
+        >
+
+
+        <div class="form-grid">
+
+
+          <!-- ======================================================
+               NAME
+          ====================================================== -->
+
+          <div class="form-group">
+
+            <label for="name">
+
+              Full Name
+
+              <span
+                class="required"
+                aria-hidden="true"
+              >
+                *
+              </span>
+
+            </label>
+
+
+            <input
+              type="text"
+              id="name"
+              name="name"
+              placeholder="Your full name"
+              autocomplete="name"
+              required
+              aria-required="true"
+              maxlength="120"
+            >
+
+          </div>
+
+
+          <!-- ======================================================
+               EMAIL
+          ====================================================== -->
+
+          <div class="form-group">
+
+            <label for="email">
+
+              Email Address
+
+              <span
+                class="required"
+                aria-hidden="true"
+              >
+                *
+              </span>
+
+            </label>
+
+
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+              aria-required="true"
+              maxlength="254"
+            >
+
+          </div>
+
+
+          <!-- ======================================================
+               TOPIC
+          ====================================================== -->
+
+          <div class="form-group">
+
+            <label for="topic">
+
+              Topic
+
+              <span
+                class="required"
+                aria-hidden="true"
+              >
+                *
+              </span>
+
+            </label>
+
+
+            <select
+              id="topic"
+              name="topic"
+              required
+              aria-required="true"
+            >
+
+              <option
+                value=""
+                disabled
+                selected
+              >
+                Select a topic...
+              </option>
+
+              <option value="Product Inquiry">
+                Product Inquiry
+              </option>
+
+              <option value="Order Support">
+                Order Support
+              </option>
+
+              <option value="Payment Issue">
+                Payment Issue
+              </option>
+
+              <option value="Shipping / Delivery">
+                Shipping / Delivery
+              </option>
+
+              <option value="Return / Refund">
+                Return / Refund
+              </option>
+
+              <option value="Technical Issue">
+                Technical Issue
+              </option>
+
+              <option value="General Inquiry">
+                General Inquiry
+              </option>
+
+              <option value="Business Inquiry">
+                Business Inquiry
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <!-- ======================================================
+               ORDER ID
+          ====================================================== -->
+
+          <div class="form-group">
+
+            <label for="order_id">
+
+              Order ID
+
+              <span class="optional">
+                (Optional)
+              </span>
+
+            </label>
+
+
+            <input
+              type="text"
+              id="order_id"
+              name="order_id"
+              placeholder="e.g. PS123456"
+              autocomplete="off"
+              maxlength="100"
+            >
+
+          </div>
+
+
+          <!-- ======================================================
+               MESSAGE
+          ====================================================== -->
+
+          <div class="form-group full-width">
+
+            <label for="message">
+
+              Message
+
+              <span
+                class="required"
+                aria-hidden="true"
+              >
+                *
+              </span>
+
+            </label>
+
+
+            <textarea
+              id="message"
+              name="message"
+              placeholder="Please describe your question or issue..."
+              required
+              aria-required="true"
+              maxlength="5000"
+            ></textarea>
+
+          </div>
+
+
+          <!-- ======================================================
+               ATTACHMENT
+          ====================================================== -->
+
+          <div class="form-group full-width">
+
+            <label for="attachment">
+
+              Attachment
+
+              <span class="optional">
+                (Optional)
+              </span>
+
+            </label>
+
+
+            <div class="file-upload">
+
+              <input
+                type="file"
+                id="attachment"
+                name="attachment"
+                class="file-input"
+                accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.zip"
+              >
+
+
+              <div class="file-help">
+
+                Attach a screenshot, receipt, product photo,
+                document, or other relevant file.
+
+                Maximum size: 10 MB.
+
+                Supported formats:
+                PDF, JPG, PNG, WEBP, DOC, DOCX,
+                XLS, XLSX, ZIP.
+
+              </div>
+
+
+              <div
+                class="file-name"
+                id="fileName"
+                aria-live="polite"
+              ></div>
+
+            </div>
+
+          </div>
+
+
+          <!-- ======================================================
+               SUBMIT
+          ====================================================== -->
+
+          <div class="form-group full-width submit-area">
+
+            <button
+              type="submit"
+              class="btn-submit"
+              id="submitBtn"
+            >
+
+              <span id="btnText">
+                Send Message
+              </span>
+
+
+              <span
+                class="btn-spinner"
+                id="btnSpinner"
+                aria-hidden="true"
+              ></span>
+
+            </button>
+
+
+            <div
+              class="error-msg"
+              id="errorMsg"
+              role="alert"
+              aria-live="assertive"
+            ></div>
+
+          </div>
+
+        </div>
+
+      </form>
+
+
+      <!-- ========================================================
+           SUCCESS MESSAGE
+      ======================================================== -->
+
+      <div
+        class="success-state"
+        id="successMessage"
+        role="status"
+        aria-live="polite"
+        aria-hidden="true"
+      >
+
+        <div class="success-icon">
+
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+
+            <path d="m5 12 4 4L19 6"></path>
+
+          </svg>
+
+        </div>
+
+
+        <h3>
+          Message Sent Successfully
+        </h3>
+
+
+        <p>
+          Thank you for contacting PRASUN SHOP.
+          We have received your message and will review it
+          as soon as possible.
+        </p>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+
+  <footer class="footer">
+
+    <div class="footer-container">
+
+      <div class="footer-links">
+
+        <a href="/about.html">
+          About
+        </a>
+
+        <a href="/contact.html">
+          Contact
+        </a>
+
+        <a href="/privacy.html">
+          Privacy Policy
+        </a>
+
+        <a href="/terms.html">
+          Terms of Service
+        </a>
+
+        <a href="/refund.html">
+          Refund Policy
+        </a>
+
+      </div>
+
+
+      <p>
+
+        &copy; 2026 PRASUN SHOP by
+
+        <a
+          href="https://prasunbarua.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Prasun Barua
+        </a>.
+
+        All rights reserved.
+
+      </p>
+
+    </div>
+
+  </footer>
+
+
+  <!-- ============================================================
+       CONTACT FORM JAVASCRIPT
+  ============================================================ -->
+
+  <script>
+
+    "use strict";
+
+
+    (() => {
+
+      /* ==========================================================
+         CONFIGURATION
+      ========================================================== */
+
+      const CONTACT_WORKER_URL =
+        "https://multi-site-contact-backend.prasun301.workers.dev";
+
+
+      const MAX_FILE_SIZE =
+        10 * 1024 * 1024;
+
+
+      const ALLOWED_EXTENSIONS = new Set([
+        "pdf",
+        "jpg",
+        "jpeg",
+        "png",
+        "webp",
+        "doc",
+        "docx",
+        "xls",
+        "xlsx",
+        "zip"
+      ]);
+
+
+      /* ==========================================================
+         DOM
+      ========================================================== */
+
+      const form =
+        document.getElementById(
+          "contactForm"
         );
 
 
-    return {
-
-        name:
-            cleanText(
-                formData.get(
-                    "name"
-                )
-            ),
-
-        email:
-            cleanText(
-                formData.get(
-                    "email"
-                )
-            ),
-
-        siteName:
-            cleanText(
-                formData.get(
-                    "siteName"
-                )
-            ),
-
-        message:
-            cleanText(
-                formData.get(
-                    "message"
-                )
-            ),
-
-        topic:
-            cleanText(
-                formData.get(
-                    "topic"
-                )
-            ),
-
-        orderId:
-            cleanText(
-                formData.get(
-                    "order_id"
-                ) ||
-                formData.get(
-                    "orderId"
-                )
-            ),
-
-        source:
-            cleanText(
-                formData.get(
-                    "source"
-                )
-            ),
-
-        honeypot:
-            cleanText(
-                formData.get(
-                    "_gotcha"
-                )
-            ),
-
-        attachment:
-            attachmentValue instanceof File
-                ? attachmentValue
-                : null,
-
-        extraFields
-    };
-}
-
-
-async function parseJsonRequest(
-    request
-) {
-
-    let data;
-
-    try {
-
-        data =
-            await request.json();
-
-    } catch {
-
-        throw new Error(
-            "Invalid JSON request."
-        );
-    }
-
-
-    if (
-        !data ||
-        typeof data !==
-            "object"
-    ) {
-
-        throw new Error(
-            "JSON request must contain an object."
-        );
-    }
-
-
-    const standardFields = new Set([
-        "name",
-        "email",
-        "siteName",
-        "message",
-        "topic",
-        "order_id",
-        "orderId",
-        "source",
-        "_gotcha"
-    ]);
-
-    const extraFields = {};
-
-
-    for (
-        const [
-            key,
-            value
-        ]
-        of Object.entries(
-            data
-        )
-    ) {
-
-        if (
-            standardFields.has(
-                key
-            )
-        ) {
-            continue;
-        }
-
-        if (
-            value &&
-            typeof value ===
-                "object"
-        ) {
-            continue;
-        }
-
-        extraFields[key] =
-            cleanText(
-                value
-            );
-    }
-
-
-    return {
-
-        name:
-            cleanText(
-                data.name
-            ),
-
-        email:
-            cleanText(
-                data.email
-            ),
-
-        siteName:
-            cleanText(
-                data.siteName
-            ),
-
-        message:
-            cleanText(
-                data.message
-            ),
-
-        topic:
-            cleanText(
-                data.topic
-            ),
-
-        orderId:
-            cleanText(
-                data.order_id ||
-                data.orderId
-            ),
-
-        source:
-            cleanText(
-                data.source
-            ),
-
-        honeypot:
-            cleanText(
-                data._gotcha
-            ),
-
-        attachment:
-            null,
-
-        extraFields
-    };
-}
-
-
-async function parseUrlEncodedRequest(
-    request
-) {
-
-    const formData =
-        await request.formData();
-
-    const standardFields = new Set([
-        "name",
-        "email",
-        "siteName",
-        "message",
-        "topic",
-        "order_id",
-        "orderId",
-        "source",
-        "_gotcha"
-    ]);
-
-    const extraFields = {};
-
-
-    for (
-        const [
-            key,
-            value
-        ]
-        of formData.entries()
-    ) {
-
-        if (
-            standardFields.has(
-                key
-            )
-        ) {
-            continue;
-        }
-
-        extraFields[key] =
-            cleanText(
-                value
-            );
-    }
-
-
-    return {
-
-        name:
-            cleanText(
-                formData.get(
-                    "name"
-                )
-            ),
-
-        email:
-            cleanText(
-                formData.get(
-                    "email"
-                )
-            ),
-
-        siteName:
-            cleanText(
-                formData.get(
-                    "siteName"
-                )
-            ),
-
-        message:
-            cleanText(
-                formData.get(
-                    "message"
-                )
-            ),
-
-        topic:
-            cleanText(
-                formData.get(
-                    "topic"
-                )
-            ),
-
-        orderId:
-            cleanText(
-                formData.get(
-                    "order_id"
-                ) ||
-                formData.get(
-                    "orderId"
-                )
-            ),
-
-        source:
-            cleanText(
-                formData.get(
-                    "source"
-                )
-            ),
-
-        honeypot:
-            cleanText(
-                formData.get(
-                    "_gotcha"
-                )
-            ),
-
-        attachment:
-            null,
-
-        extraFields
-    };
-}
-
-
-/* ============================================================================
-   VALIDATION
-   ========================================================================== */
-
-function isValidEmail(
-    value
-) {
-
-    const email =
-        cleanText(
-            value
+      const attachmentInput =
+        document.getElementById(
+          "attachment"
         );
 
-    if (
-        !email ||
-        email.length >
-            254
-    ) {
-        return false;
-    }
 
-    /*
-     * Practical email validation.
-     */
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-        email
-    );
-}
+      const fileName =
+        document.getElementById(
+          "fileName"
+        );
 
 
-/* ============================================================================
-   FILE HELPERS
-   ========================================================================== */
+      const submitButton =
+        document.getElementById(
+          "submitBtn"
+        );
 
-function getFileExtension(
-    filename
-) {
 
-    const cleanName =
-        cleanText(
-            filename
-        )
+      const buttonText =
+        document.getElementById(
+          "btnText"
+        );
+
+
+      const buttonSpinner =
+        document.getElementById(
+          "btnSpinner"
+        );
+
+
+      const errorMessage =
+        document.getElementById(
+          "errorMsg"
+        );
+
+
+      const successMessage =
+        document.getElementById(
+          "successMessage"
+        );
+
+
+      const honeypotInput =
+        document.getElementById(
+          "hp_check"
+        );
+
+
+      if (
+        !form ||
+        !attachmentInput ||
+        !fileName ||
+        !submitButton ||
+        !buttonText ||
+        !buttonSpinner ||
+        !errorMessage ||
+        !successMessage ||
+        !honeypotInput
+      ) {
+
+        console.error(
+          "[PRASUN SHOP] Contact form initialization failed."
+        );
+
+        return;
+
+      }
+
+
+      /* ==========================================================
+         FILE HELPERS
+      ========================================================== */
+
+      function getFileExtension(
+        filename
+      ) {
+
+        const name =
+          String(
+            filename || ""
+          )
+            .trim()
             .toLowerCase();
 
-    const index =
-        cleanName.lastIndexOf(
-            "."
-        );
 
-    if (
-        index < 0 ||
-        index ===
-            cleanName.length - 1
-    ) {
-        return "";
-    }
+        const index =
+          name.lastIndexOf(".");
 
-    return cleanName.slice(
-        index + 1
-    );
-}
-
-
-function sanitizeFileName(
-    filename
-) {
-
-    let name =
-        cleanText(
-            filename
-        );
-
-    /*
-     * Remove directory traversal.
-     */
-    name =
-        name.replace(
-            /[\\/]/g,
-            "_"
-        );
-
-    /*
-     * Remove control characters.
-     */
-    name =
-        name.replace(
-            /[\u0000-\u001F\u007F]/g,
-            ""
-        );
-
-    /*
-     * Keep a reasonable filename length.
-     */
-    if (
-        name.length >
-        180
-    ) {
-
-        const extension =
-            getFileExtension(
-                name
-            );
 
         if (
-            extension
+          index < 0 ||
+          index === name.length - 1
         ) {
 
-            name =
-                `${name.slice(
-                    0,
-                    160
-                )}.${extension}`;
+          return "";
 
-        } else {
-
-            name =
-                name.slice(
-                    0,
-                    180
-                );
         }
-    }
-
-    return (
-        name ||
-        "attachment"
-    );
-}
 
 
-/* ============================================================================
-   BASE64
-   ========================================================================== */
-
-function uint8ArrayToBase64(
-    bytes
-) {
-
-    let binary =
-        "";
-
-    const chunkSize =
-        0x8000;
-
-    for (
-        let i = 0;
-        i < bytes.length;
-        i += chunkSize
-    ) {
-
-        const chunk =
-            bytes.subarray(
-                i,
-                Math.min(
-                    i +
-                    chunkSize,
-                    bytes.length
-                )
-            );
-
-        binary +=
-            String.fromCharCode(
-                ...chunk
-            );
-    }
-
-    return btoa(
-        binary
-    );
-}
-
-
-/* ============================================================================
-   TEXT
-   ========================================================================== */
-
-function cleanText(
-    value
-) {
-
-    if (
-        value ===
-            null ||
-        value ===
-            undefined
-    ) {
-        return "";
-    }
-
-    return String(
-        value
-    )
-        .replace(
-            /\s+/g,
-            " "
-        )
-        .trim();
-}
-
-
-function formatFieldName(
-    key
-) {
-
-    return String(
-        key || ""
-    )
-        .replace(
-            /[_-]+/g,
-            " "
-        )
-        .replace(
-            /\b\w/g,
-            letter =>
-                letter.toUpperCase()
-        )
-        .trim();
-}
-
-
-function sanitizeSenderName(
-    value
-) {
-
-    const result =
-        cleanText(
-            value
-        )
-            .replace(
-                /[\r\n<>]/g,
-                ""
-            );
-
-    return (
-        result ||
-        "Website"
-    )
-        .slice(
-            0,
-            100
-        );
-}
-
-
-/* ============================================================================
-   CORS
-   ========================================================================== */
-
-function getCorsHeaders(
-    request
-) {
-
-    const origin =
-        request.headers.get(
-            "Origin"
+        return name.slice(
+          index + 1
         );
 
-    const allowedOrigins = [
-
-        "https://shop.prasunbarua.com",
-
-        "https://prasunbarua.com",
-
-        "https://www.prasunbarua.com"
-
-    ];
+      }
 
 
-    /*
-     * Only reflect known production origins.
-     */
-    const allowOrigin =
-        origin &&
-        allowedOrigins.includes(
-            origin
-        )
-            ? origin
-            : "https://shop.prasunbarua.com";
+      function formatFileSize(
+        bytes
+      ) {
+
+        if (
+          bytes < 1024
+        ) {
+
+          return `${bytes} B`;
+
+        }
 
 
-    return {
+        if (
+          bytes < 1024 * 1024
+        ) {
 
-        "Access-Control-Allow-Origin":
-            allowOrigin,
+          return `${(
+            bytes / 1024
+          ).toFixed(1)} KB`;
 
-        "Access-Control-Allow-Methods":
-            "POST, OPTIONS",
-
-        "Access-Control-Allow-Headers":
-            "Content-Type, Accept",
-
-        "Access-Control-Max-Age":
-            "86400",
-
-        "Vary":
-            "Origin"
-    };
-}
+        }
 
 
-/* ============================================================================
-   JSON RESPONSE
-   ========================================================================== */
+        return `${(
+          bytes / (1024 * 1024)
+        ).toFixed(1)} MB`;
 
-function jsonResponse(
-    data,
-    headers,
-    status = 200
-) {
+      }
 
-    return new Response(
-        JSON.stringify(
-            data
-        ),
-        {
-            status,
 
-            headers:
+      function validateAttachment(
+        file
+      ) {
+
+        if (
+          !file
+        ) {
+
+          return {
+            valid: true,
+            message: ""
+          };
+
+        }
+
+
+        if (
+          file.size >
+          MAX_FILE_SIZE
+        ) {
+
+          return {
+            valid: false,
+            message:
+              "The attachment is too large. Please choose a file up to 10 MB."
+          };
+
+        }
+
+
+        const extension =
+          getFileExtension(
+            file.name
+          );
+
+
+        if (
+          !ALLOWED_EXTENSIONS.has(
+            extension
+          )
+        ) {
+
+          return {
+            valid: false,
+            message:
+              "This file type is not supported. Please choose PDF, JPG, PNG, WEBP, DOC, DOCX, XLS, XLSX, or ZIP."
+          };
+
+        }
+
+
+        return {
+          valid: true,
+          message: ""
+        };
+
+      }
+
+
+      /* ==========================================================
+         UI HELPERS
+      ========================================================== */
+
+      function showError(
+        message
+      ) {
+
+        errorMessage.textContent =
+          message ||
+          "Unable to send your message. Please try again.";
+
+        errorMessage.classList.add(
+          "is-visible"
+        );
+
+      }
+
+
+      function clearError() {
+
+        errorMessage.textContent =
+          "";
+
+        errorMessage.classList.remove(
+          "is-visible"
+        );
+
+      }
+
+
+      function setLoading(
+        loading
+      ) {
+
+        submitButton.disabled =
+          loading;
+
+        buttonText.textContent =
+          loading
+            ? "Sending..."
+            : "Send Message";
+
+        buttonSpinner.style.display =
+          loading
+            ? "inline-block"
+            : "none";
+
+      }
+
+
+      function showSuccess() {
+
+        form.style.display =
+          "none";
+
+        successMessage.style.display =
+          "block";
+
+        successMessage.setAttribute(
+          "aria-hidden",
+          "false"
+        );
+
+        successMessage.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+
+      }
+
+
+      /* ==========================================================
+         FILE CHANGE
+      ========================================================== */
+
+      attachmentInput.addEventListener(
+        "change",
+        () => {
+
+          clearError();
+
+          const file =
+            attachmentInput.files?.[0] ||
+            null;
+
+
+          if (
+            !file
+          ) {
+
+            fileName.textContent =
+              "";
+
+            fileName.style.display =
+              "none";
+
+            fileName.classList.remove(
+              "error"
+            );
+
+            return;
+
+          }
+
+
+          const validation =
+            validateAttachment(
+              file
+            );
+
+
+          if (
+            !validation.valid
+          ) {
+
+            attachmentInput.value =
+              "";
+
+            fileName.textContent =
+              validation.message;
+
+            fileName.style.display =
+              "block";
+
+            fileName.classList.add(
+              "error"
+            );
+
+            showError(
+              validation.message
+            );
+
+            return;
+
+          }
+
+
+          fileName.textContent =
+            `Selected file: ${file.name} (${formatFileSize(file.size)})`;
+
+          fileName.style.display =
+            "block";
+
+          fileName.classList.remove(
+            "error"
+          );
+
+        }
+      );
+
+
+      /* ==========================================================
+         SUBMIT
+      ========================================================== */
+
+      form.addEventListener(
+        "submit",
+        async event => {
+
+          event.preventDefault();
+
+          clearError();
+
+
+          /* ------------------------------------------------------
+             Honeypot
+          ------------------------------------------------------ */
+
+          if (
+            honeypotInput.value.trim() !== ""
+          ) {
+
+            console.warn(
+              "[PRASUN SHOP] Honeypot triggered."
+            );
+
+            return;
+
+          }
+
+
+          /* ------------------------------------------------------
+             Browser validation
+          ------------------------------------------------------ */
+
+          if (
+            !form.checkValidity()
+          ) {
+
+            form.reportValidity();
+
+            return;
+
+          }
+
+
+          /* ------------------------------------------------------
+             Attachment validation
+          ------------------------------------------------------ */
+
+          const file =
+            attachmentInput.files?.[0] ||
+            null;
+
+
+          const validation =
+            validateAttachment(
+              file
+            );
+
+
+          if (
+            !validation.valid
+          ) {
+
+            showError(
+              validation.message
+            );
+
+            return;
+
+          }
+
+
+          /* ------------------------------------------------------
+             Duplicate-submit protection
+          ------------------------------------------------------ */
+
+          if (
+            submitButton.disabled
+          ) {
+
+            return;
+
+          }
+
+
+          setLoading(
+            true
+          );
+
+
+          /*
+           * -------------------------------------------------------
+           * BUILD FORMDATA
+           * -------------------------------------------------------
+           *
+           * IMPORTANT:
+           *
+           * We intentionally DO NOT set Content-Type manually.
+           *
+           * The browser automatically generates:
+           *
+           * multipart/form-data;
+           * boundary=...
+           *
+           * This is required for the Worker to correctly call:
+           *
+           * request.formData()
+           *
+           * -------------------------------------------------------
+           */
+
+          const formData =
+            new FormData(
+              form
+            );
+
+
+          /*
+           * Explicit site identification.
+           */
+          formData.set(
+            "siteName",
+            "PRASUN SHOP"
+          );
+
+
+          /*
+           * Explicit source.
+           */
+          formData.set(
+            "source",
+            "PRASUN SHOP contact page"
+          );
+
+
+          try {
+
+            const response =
+              await fetch(
+                CONTACT_WORKER_URL,
                 {
-                    ...headers,
+                  method:
+                    "POST",
 
-                    "Content-Type":
-                        "application/json; charset=UTF-8",
+                  body:
+                    formData,
 
-                    "Cache-Control":
-                        "no-store"
+                  headers:
+                    {
+                      Accept:
+                        "application/json"
+                    },
+
+                  credentials:
+                    "omit",
+
+                  cache:
+                    "no-store"
                 }
+              );
+
+
+            /*
+             * Read response exactly once.
+             */
+            const responseText =
+              await response.text();
+
+
+            let result =
+              null;
+
+
+            /*
+             * Worker should return JSON.
+             *
+             * We parse it ourselves so an unexpected
+             * Cloudflare/Resend text response does not create
+             * an obscure JSON parsing error.
+             */
+            if (
+              responseText.trim()
+            ) {
+
+              try {
+
+                result =
+                  JSON.parse(
+                    responseText
+                  );
+
+              } catch (
+                parseError
+              ) {
+
+                console.error(
+                  "[PRASUN SHOP] Non-JSON contact Worker response:",
+                  responseText
+                );
+
+                throw new Error(
+                  response.ok
+                    ? "The support server returned an invalid response. Please try again."
+                    : `Support server returned HTTP ${response.status}. Please try again later.`
+                );
+
+              }
+
+            }
+
+
+            /*
+             * SUCCESS
+             */
+            if (
+              response.ok &&
+              result?.success === true
+            ) {
+
+              console.info(
+                "[PRASUN SHOP] Contact message submitted successfully.",
+                result?.id || ""
+              );
+
+              showSuccess();
+
+              return;
+
+            }
+
+
+            /*
+             * BACKEND ERROR
+             */
+            const serverMessage =
+              result?.error ||
+              result?.message ||
+              "";
+
+
+            if (
+              serverMessage
+            ) {
+
+              throw new Error(
+                serverMessage
+              );
+
+            }
+
+
+            throw new Error(
+              `Unable to send your message. Server returned HTTP ${response.status}.`
+            );
+
+
+          } catch (
+            error
+          ) {
+
+            console.error(
+              "[PRASUN SHOP] Contact form submission failed:",
+              error
+            );
+
+
+            let message =
+              "Unable to send your message. Please try again.";
+
+
+            if (
+              error?.message &&
+              String(
+                error.message
+              ).trim()
+            ) {
+
+              message =
+                String(
+                  error.message
+                ).trim();
+
+            }
+
+
+            /*
+             * Make network errors more understandable.
+             */
+            if (
+              error instanceof
+                TypeError &&
+              /fetch/i.test(
+                error.message ||
+                ""
+              )
+            ) {
+
+              message =
+                "Unable to connect to the support server. Please check your internet connection and try again.";
+
+            }
+
+
+            showError(
+              message
+            );
+
+            setLoading(
+              false
+            );
+
+          }
+
         }
-    );
-}
+      );
+
+
+      /* ==========================================================
+         INITIAL STATE
+      ========================================================== */
+
+      clearError();
+
+      setLoading(
+        false
+      );
+
+
+      console.info(
+        "[PRASUN SHOP] Contact form initialized."
+      );
+
+    })();
+
+  </script>
+
+</body>
+</html>
