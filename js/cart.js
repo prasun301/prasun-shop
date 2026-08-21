@@ -8,16 +8,16 @@
  * Storage:
  *     prasun_cart
  *
- * Main supplier:
+ * Supplier:
  *     CJ Dropshipping
  *
  * Architecture:
  *
- *   Product API
+ *   CJ Product
  *       ↓
  *   Product page
  *       ↓
- *   addToCart()
+ *   window.addToCart()
  *       ↓
  *   localStorage
  *       ↓
@@ -25,19 +25,22 @@
  *       ↓
  *   /api/products?pid=...
  *       ↓
- *   price / stock / variant refresh
+ *   Refresh current product data
  *       ↓
  *   checkout.html
  *       ↓
  *   Cloudflare Worker
  *       ↓
- *   CJ createOrderV3
+ *   CJ order API
  *
- * IMPORTANT:
+ * IMPORTANT
  * - No CJ API credentials are stored in the browser.
  * - Browser price is display-only.
- * - Worker must revalidate price/stock before creating CJ order.
+ * - Worker must revalidate price and stock before creating the order.
  * - CJ variant IDs (vid) are preserved.
+ * - No emoji or Unicode icon characters are used.
+ * - Material Symbols are used for dynamic cart controls.
+ *
  * ============================================================================
  */
 
@@ -45,9 +48,9 @@
 
 (() => {
 
-    /* ========================================================================
-       1. CONFIG
-       ======================================================================== */
+    /* =========================================================================
+       1. CONFIGURATION
+       ========================================================================= */
 
     const CART_KEY =
         "prasun_cart";
@@ -82,9 +85,9 @@
         12000;
 
 
-    /* ========================================================================
-       2. DOM
-       ======================================================================== */
+    /* =========================================================================
+       2. DOM CACHE
+       ========================================================================= */
 
     let elements = {};
 
@@ -142,19 +145,22 @@
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        3. STATE
-       ======================================================================== */
+       ========================================================================= */
 
     let cart = [];
 
     let checkoutBusy =
         false;
 
+    let initialized =
+        false;
 
-    /* ========================================================================
-       4. FORMATTERS
-       ======================================================================== */
+
+    /* =========================================================================
+       4. CURRENCY
+       ========================================================================= */
 
     const currencyFormatter =
         new Intl.NumberFormat(
@@ -201,9 +207,9 @@
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        5. GENERAL HELPERS
-       ======================================================================== */
+       ========================================================================= */
 
     function cleanString(
         value
@@ -339,9 +345,27 @@
     }
 
 
-    /* ========================================================================
-       6. CJ FIELD EXTRACTION
-       ======================================================================== */
+    function getAvailableQuantity(
+        item
+    ) {
+
+        const value =
+            Number(
+                item?.availableQuantity
+            );
+
+        return Number.isFinite(
+            value
+        )
+            ? value
+            : 0;
+
+    }
+
+
+    /* =========================================================================
+       6. CJ FIELD EXTRACTORS
+       ========================================================================= */
 
     function getProductId(
         item
@@ -508,9 +532,9 @@
     }
 
 
-    /* ========================================================================
-       7. CART ITEM NORMALIZATION
-       ======================================================================== */
+    /* =========================================================================
+       7. NORMALIZE CART ITEM
+       ========================================================================= */
 
     function normalizeCartItem(
         item
@@ -562,6 +586,53 @@
             )
                 ? item.variants
                 : [];
+
+
+        const normalizedVariants =
+            variants.map(
+                variant => ({
+
+                    vid:
+                        cleanString(
+                            variant?.vid
+                        ),
+
+                    sku:
+                        cleanString(
+                            variant?.sku
+                        ),
+
+                    name:
+                        cleanString(
+                            variant?.name
+                        ),
+
+                    price:
+                        normalizePrice(
+                            variant?.price
+                        ),
+
+                    costPrice:
+                        normalizePrice(
+                            variant?.costPrice
+                        ),
+
+                    inventory:
+                        Number(
+                            variant?.inventory ||
+                            0
+                        )
+
+                })
+            );
+
+
+        const availableQuantity =
+            Number(
+                item?.availableQuantity ??
+                item?.quantity ??
+                0
+            );
 
 
         return {
@@ -662,44 +733,19 @@
                 ),
 
             availableQuantity:
-                Number(
-                    item?.availableQuantity ??
-                    item?.quantity ??
-                    0
-                ),
+                Number.isFinite(
+                    availableQuantity
+                )
+                    ? Math.max(
+                        0,
+                        Math.floor(
+                            availableQuantity
+                        )
+                    )
+                    : 0,
 
             variants:
-
-                variants.map(
-                    variant => ({
-
-                        vid:
-                            cleanString(
-                                variant?.vid
-                            ),
-
-                        sku:
-                            cleanString(
-                                variant?.sku
-                            ),
-
-                        name:
-                            cleanString(
-                                variant?.name
-                            ),
-
-                        price:
-                            normalizePrice(
-                                variant?.price
-                            ),
-
-                        costPrice:
-                            normalizePrice(
-                                variant?.costPrice
-                            )
-
-                    })
-                ),
+                normalizedVariants,
 
             source:
                 "CJ Dropshipping"
@@ -732,9 +778,9 @@
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        8. LOCAL STORAGE
-       ======================================================================== */
+       ========================================================================= */
 
     function readStorage(
         key
@@ -836,11 +882,19 @@
                     raw
                 );
 
+
             return normalizeCartArray(
                 parsed
             );
 
-        } catch {
+        } catch (
+            error
+        ) {
+
+            console.warn(
+                "[PRASUN SHOP] Invalid stored cart:",
+                error
+            );
 
             return [];
 
@@ -865,6 +919,7 @@
                 parseStoredCart(
                     primary
                 );
+
 
             if (
                 parsed.length
@@ -973,16 +1028,17 @@
                 new CustomEvent(
                     "prasunCartUpdated",
                     {
-                        detail:
-                            {
-                                cart:
-                                    cart.map(
-                                        item =>
-                                            ({
-                                                ...item
-                                            })
-                                    )
-                            }
+                        detail: {
+
+                            cart:
+                                cart.map(
+                                    item =>
+                                        ({
+                                            ...item
+                                        })
+                                )
+
+                        }
                     }
                 )
 
@@ -1002,9 +1058,9 @@
     }
 
 
-    /* ========================================================================
-       9. CART ITEM IDENTITY
-       ======================================================================== */
+    /* =========================================================================
+       9. PRODUCT IDENTITY
+       ========================================================================= */
 
     function sameCartProduct(
         a,
@@ -1015,6 +1071,7 @@
             getVariantId(
                 a
             );
+
 
         const bVariant =
             getVariantId(
@@ -1027,19 +1084,16 @@
             bVariant
         ) {
 
-            if (
-                aVariant &&
-                bVariant
-            ) {
-
-                return (
-                    aVariant ===
+            return (
+                Boolean(
+                    aVariant
+                ) &&
+                Boolean(
                     bVariant
-                );
-
-            }
-
-            return false;
+                ) &&
+                aVariant ===
+                    bVariant
+            );
 
         }
 
@@ -1048,6 +1102,7 @@
             getVariantSKU(
                 a
             );
+
 
         const bVariantSku =
             getVariantSKU(
@@ -1061,10 +1116,18 @@
         ) {
 
             return (
-                aVariantSku &&
-                bVariantSku &&
+
+                Boolean(
+                    aVariantSku
+                ) &&
+
+                Boolean(
+                    bVariantSku
+                ) &&
+
                 aVariantSku.toLowerCase() ===
                     bVariantSku.toLowerCase()
+
             );
 
         }
@@ -1074,6 +1137,7 @@
             getCJProductId(
                 a
             );
+
 
         const bPid =
             getCJProductId(
@@ -1094,21 +1158,49 @@
         }
 
 
+        const aSku =
+            getSKU(
+                a
+            );
+
+
+        const bSku =
+            getSKU(
+                b
+            );
+
+
+        if (
+            aSku &&
+            bSku
+        ) {
+
+            return (
+                aSku.toLowerCase() ===
+                bSku.toLowerCase()
+            );
+
+        }
+
+
         return (
+
             cleanString(
                 a.id
             ) ===
+
             cleanString(
                 b.id
             )
+
         );
 
     }
 
 
-    /* ========================================================================
-       10. ADD TO CART
-       ======================================================================== */
+    /* =========================================================================
+       10. ADD PRODUCT
+       ========================================================================= */
 
     function addProduct(
         product,
@@ -1120,7 +1212,8 @@
                 {
                     ...product,
 
-                    quantity
+                    quantity:
+                        quantity
                 }
             );
 
@@ -1130,7 +1223,7 @@
         ) {
 
             console.error(
-                "[PRASUN SHOP] Invalid CJ product:",
+                "[PRASUN SHOP] Product could not be added:",
                 product
             );
 
@@ -1139,11 +1232,46 @@
         }
 
 
+        const available =
+            getAvailableQuantity(
+                normalized
+            );
+
+
+        if (
+            available >
+                0 &&
+            quantity >
+                available
+        ) {
+
+            quantity =
+                available;
+
+        }
+
+
+        if (
+            quantity <=
+                0
+        ) {
+
+            return false;
+
+        }
+
+
+        normalized.quantity =
+            normalizeQuantity(
+                quantity
+            );
+
+
         cart =
             readCartFromStorage();
 
 
-        const index =
+        const existingIndex =
             cart.findIndex(
                 item =>
                     sameCartProduct(
@@ -1154,29 +1282,59 @@
 
 
         if (
-            index >= 0
+            existingIndex >=
+                0
         ) {
 
-            cart[index] =
-                {
+            const existing =
+                cart[
+                    existingIndex
+                ];
 
-                    ...cart[index],
 
-                    ...normalized,
+            let newQuantity =
+                normalizeQuantity(
+                    Number(
+                        existing.quantity
+                    ) +
+                    Number(
+                        normalized.quantity
+                    )
+                );
 
-                    quantity:
-                        normalizeQuantity(
-                            Number(
-                                cart[index]
-                                    .quantity
-                            ) +
-                            Number(
-                                normalized
-                                    .quantity
-                            )
-                        )
 
-                };
+            const existingAvailable =
+                getAvailableQuantity(
+                    normalized
+                );
+
+
+            if (
+                existingAvailable >
+                    0
+            ) {
+
+                newQuantity =
+                    Math.min(
+                        newQuantity,
+                        existingAvailable
+                    );
+
+            }
+
+
+            cart[
+                existingIndex
+            ] = {
+
+                ...existing,
+
+                ...normalized,
+
+                quantity:
+                    newQuantity
+
+            };
 
         } else {
 
@@ -1205,9 +1363,9 @@
     }
 
 
-    /* ========================================================================
+    /* =========================================================================
        11. QUANTITY
-       ======================================================================== */
+       ========================================================================= */
 
     function updateQuantity(
         index,
@@ -1234,17 +1392,16 @@
 
 
         const available =
-            Number(
-                cart[index]
-                    .availableQuantity
+            getAvailableQuantity(
+                cart[
+                    index
+                ]
             );
 
 
         if (
-            Number.isFinite(
-                available
-            ) &&
-            available > 0
+            available >
+                0
         ) {
 
             quantity =
@@ -1256,9 +1413,10 @@
         }
 
 
-        cart[index]
-            .quantity =
-                quantity;
+        cart[
+            index
+        ].quantity =
+            quantity;
 
 
         saveCart(
@@ -1274,9 +1432,9 @@
     }
 
 
-    /* ========================================================================
-       12. REMOVE / CLEAR
-       ======================================================================== */
+    /* =========================================================================
+       12. REMOVE
+       ========================================================================= */
 
     function removeItem(
         index
@@ -1296,7 +1454,9 @@
 
 
         const removed =
-            cart[index];
+            cart[
+                index
+            ];
 
 
         cart.splice(
@@ -1323,14 +1483,22 @@
     }
 
 
+    /* =========================================================================
+       13. CLEAR
+       ========================================================================= */
+
     function clearCart() {
 
-        cart =
-            [];
+        cart = [];
 
 
         removeStorage(
             CART_KEY
+        );
+
+
+        removeStorage(
+            CHECKOUT_SNAPSHOT_KEY
         );
 
 
@@ -1348,7 +1516,9 @@
 
         dispatchCartUpdate();
 
+
         renderCart();
+
 
         announce(
             "Cart cleared."
@@ -1357,9 +1527,9 @@
     }
 
 
-    /* ========================================================================
-       13. TOTALS
-       ======================================================================== */
+    /* =========================================================================
+       14. TOTALS
+       ========================================================================= */
 
     function getTotalQuantity() {
 
@@ -1367,13 +1537,16 @@
             (
                 total,
                 item
-            ) =>
+            ) => {
 
-                total +
-                normalizeQuantity(
-                    item.quantity
-                ),
+                return (
+                    total +
+                    normalizeQuantity(
+                        item.quantity
+                    )
+                );
 
+            },
             0
         );
 
@@ -1390,17 +1563,23 @@
                 ) => {
 
                     return (
+
                         total +
-                        normalizePrice(
-                            item.price
-                        ) *
-                        normalizeQuantity(
-                            item.quantity
+
+                        (
+                            normalizePrice(
+                                item.price
+                            ) *
+
+                            normalizeQuantity(
+                                item.quantity
+                            )
+
                         )
+
                     );
 
                 },
-
                 0
             );
 
@@ -1414,9 +1593,9 @@
     }
 
 
-    /* ========================================================================
-       14. HEADER / SUMMARY
-       ======================================================================== */
+    /* =========================================================================
+       15. HEADER AND SUMMARY
+       ========================================================================= */
 
     function updateHeaderCount() {
 
@@ -1433,13 +1612,17 @@
                     total
                 );
 
+
             elements.cartCount.hidden =
-                total <= 0;
+                total <=
+                0;
+
 
             elements.cartCount.setAttribute(
                 "aria-label",
                 `${total} ${
-                    total === 1
+                    total ===
+                        1
                         ? "item"
                         : "items"
                 } in cart`
@@ -1454,7 +1637,8 @@
 
             elements.cartItemsCount.textContent =
                 `${total} ${
-                    total === 1
+                    total ===
+                        1
                         ? "item"
                         : "items"
                 }`;
@@ -1476,9 +1660,9 @@
     }
 
 
-    /* ========================================================================
-       15. CART RENDERING
-       ======================================================================== */
+    /* =========================================================================
+       16. EMPTY CART
+       ========================================================================= */
 
     function renderEmptyCart() {
 
@@ -1493,29 +1677,52 @@
 
         elements.cartItems.innerHTML = `
 
-            <div class="cart-empty">
+            <div
+                class="cart-empty"
+                role="status"
+            >
 
                 <div
                     class="cart-empty-icon"
                     aria-hidden="true"
                 >
-                    🛒
+
+                    <span
+                        class="material-symbols-rounded icon-xl"
+                    >
+                        shopping_cart
+                    </span>
+
                 </div>
+
 
                 <h2>
                     Your cart is empty
                 </h2>
 
+
                 <p>
-                    Browse our CJ-powered products and add something
-                    to your cart to continue shopping.
+                    Browse our CJ-powered products and add
+                    products to your cart to continue shopping.
                 </p>
+
 
                 <a
                     href="${PRODUCTS_URL}"
                     class="continue-shopping"
                 >
-                    Continue Shopping
+
+                    <span
+                        class="material-symbols-rounded icon-sm"
+                        aria-hidden="true"
+                    >
+                        storefront
+                    </span>
+
+                    <span>
+                        Continue Shopping
+                    </span>
+
                 </a>
 
             </div>
@@ -1524,6 +1731,35 @@
 
     }
 
+
+    /* =========================================================================
+       17. DYNAMIC MATERIAL ICON
+       ========================================================================= */
+
+    function materialIcon(
+        name,
+        className = "icon-md"
+    ) {
+
+        return `
+
+            <span
+                class="material-symbols-rounded ${className}"
+                aria-hidden="true"
+            >
+                ${escapeHTML(
+                    name
+                )}
+            </span>
+
+        `;
+
+    }
+
+
+    /* =========================================================================
+       18. CART RENDER
+       ========================================================================= */
 
     function renderCart() {
 
@@ -1713,6 +1949,12 @@
                     }
 
 
+                    const hasOriginalImage =
+                        Boolean(
+                            item.originalImage
+                        );
+
+
                     return `
 
                         <article
@@ -1739,10 +1981,14 @@
                                                     class="cart-item-image"
                                                     loading="lazy"
                                                     decoding="async"
-                                                    data-original="${escapeHTML(
-                                                        item.originalImage ||
-                                                        ""
-                                                    )}"
+                                                    referrerpolicy="no-referrer"
+                                                    ${
+                                                        hasOriginalImage
+                                                            ? `data-original="${escapeHTML(
+                                                                item.originalImage
+                                                            )}"`
+                                                            : ""
+                                                    }
                                                 >
 
                                             `
@@ -1753,7 +1999,12 @@
                                                     class="cart-item-image cart-item-image-placeholder"
                                                     aria-hidden="true"
                                                 >
-                                                    🛍
+
+                                                    ${materialIcon(
+                                                        "image",
+                                                        "icon-md"
+                                                    )}
+
                                                 </div>
 
                                             `
@@ -1762,7 +2013,9 @@
                                 </a>
 
 
-                                <div class="cart-item-info">
+                                <div
+                                    class="cart-item-info"
+                                >
 
                                     ${
                                         category
@@ -1779,16 +2032,22 @@
                                     }
 
 
-                                    <h3 class="cart-item-title">
+                                    <h3
+                                        class="cart-item-title"
+                                    >
 
-                                        <a href="${PRODUCTS_URL}">
+                                        <a
+                                            href="${PRODUCTS_URL}"
+                                        >
                                             ${name}
                                         </a>
 
                                     </h3>
 
 
-                                    <p class="cart-item-price">
+                                    <p
+                                        class="cart-item-price"
+                                    >
                                         ${formatPrice(
                                             price
                                         )}
@@ -1801,8 +2060,19 @@
 
                                             ? `
 
-                                                <p class="cart-item-variant">
-                                                    ${variantText}
+                                                <p
+                                                    class="cart-item-variant"
+                                                >
+
+                                                    ${materialIcon(
+                                                        "tune",
+                                                        "icon-sm"
+                                                    )}
+
+                                                    <span>
+                                                        ${variantText}
+                                                    </span>
+
                                                 </p>
 
                                             `
@@ -1815,7 +2085,9 @@
                             </div>
 
 
-                            <div class="cart-item-controls">
+                            <div
+                                class="cart-item-controls"
+                            >
 
                                 <div
                                     class="quantity-control"
@@ -1829,12 +2101,17 @@
                                         aria-label="Decrease quantity"
                                         ${
                                             quantity <=
-                                            1
+                                                1
                                                 ? "disabled"
                                                 : ""
                                         }
                                     >
-                                        −
+
+                                        ${materialIcon(
+                                            "remove",
+                                            "icon-sm"
+                                        )}
+
                                     </button>
 
 
@@ -1847,6 +2124,8 @@
                                         data-action="quantity"
                                         data-index="${index}"
                                         aria-label="Quantity"
+                                        inputmode="numeric"
+                                        autocomplete="off"
                                     >
 
 
@@ -1855,14 +2134,27 @@
                                         data-action="increase"
                                         data-index="${index}"
                                         aria-label="Increase quantity"
+                                        ${
+                                            quantity >=
+                                                MAX_QUANTITY
+                                                ? "disabled"
+                                                : ""
+                                        }
                                     >
-                                        +
+
+                                        ${materialIcon(
+                                            "add",
+                                            "icon-sm"
+                                        )}
+
                                     </button>
 
                                 </div>
 
 
-                                <div class="cart-item-subtotal">
+                                <div
+                                    class="cart-item-subtotal"
+                                >
 
                                     <strong>
                                         ${formatPrice(
@@ -1876,8 +2168,18 @@
                                         class="cart-remove-button"
                                         data-action="remove"
                                         data-index="${index}"
+                                        aria-label="Remove ${name} from cart"
                                     >
-                                        Remove
+
+                                        ${materialIcon(
+                                            "delete",
+                                            "icon-sm"
+                                        )}
+
+                                        <span>
+                                            Remove
+                                        </span>
+
                                     </button>
 
                                 </div>
@@ -1892,53 +2194,7 @@
             ).join("");
 
 
-        /* ---------------------------------------------------------------
-           Image fallback
-           --------------------------------------------------------------- */
-
-        elements.cartItems
-            .querySelectorAll(
-                "img.cart-item-image"
-            )
-            .forEach(
-                image => {
-
-                    image.addEventListener(
-                        "error",
-                        () => {
-
-                            const original =
-                                image.dataset.original;
-
-
-                            if (
-                                original &&
-                                !image.dataset.triedOriginal
-                            ) {
-
-                                image.dataset.triedOriginal =
-                                    "true";
-
-                                image.src =
-                                    original;
-
-                                return;
-
-                            }
-
-
-                            image.style.display =
-                                "none";
-
-                        },
-                        {
-                            once:
-                                true
-                        }
-                    );
-
-                }
-            );
+        attachCartImageFallbacks();
 
 
         subtotal =
@@ -2000,9 +2256,113 @@
     }
 
 
-    /* ========================================================================
-       16. WORKER PRODUCT REFRESH
-       ======================================================================== */
+    /* =========================================================================
+       19. IMAGE FALLBACK
+       ========================================================================= */
+
+    function attachCartImageFallbacks() {
+
+        if (
+            !elements.cartItems
+        ) {
+
+            return;
+
+        }
+
+
+        elements.cartItems
+            .querySelectorAll(
+                "img.cart-item-image"
+            )
+            .forEach(
+                image => {
+
+                    image.addEventListener(
+                        "error",
+                        () => {
+
+                            const original =
+                                image.dataset.original;
+
+
+                            if (
+                                original &&
+                                !image.dataset.originalTried
+                            ) {
+
+                                image.dataset.originalTried =
+                                    "true";
+
+
+                                image.src =
+                                    original;
+
+
+                                return;
+
+                            }
+
+
+                            const parent =
+                                image.parentElement;
+
+
+                            if (
+                                !parent
+                            ) {
+
+                                return;
+
+                            }
+
+
+                            const placeholder =
+                                document.createElement(
+                                    "div"
+                                );
+
+
+                            placeholder.className =
+                                "cart-item-image cart-item-image-placeholder";
+
+
+                            placeholder.setAttribute(
+                                "aria-hidden",
+                                "true"
+                            );
+
+
+                            placeholder.innerHTML =
+                                materialIcon(
+                                    "image",
+                                    "icon-md"
+                                );
+
+
+                            image.remove();
+
+
+                            parent.appendChild(
+                                placeholder
+                            );
+
+                        },
+                        {
+                            once:
+                                true
+                        }
+                    );
+
+                }
+            );
+
+    }
+
+
+    /* =========================================================================
+       20. FRESH PRODUCT VALIDATION
+       ========================================================================= */
 
     async function fetchFreshProduct(
         item
@@ -2047,30 +2407,54 @@
 
             const response =
                 await fetch(
+
                     `${PRODUCTS_ENDPOINT}?pid=${encodeURIComponent(
                         pid
                     )}`,
+
                     {
                         method:
                             "GET",
 
-                        headers:
-                            {
-                                "Accept":
-                                    "application/json"
-                            },
+                        headers: {
+
+                            "Accept":
+                                "application/json"
+
+                        },
 
                         cache:
                             "no-store",
 
                         signal:
                             controller.signal
+
                     }
+
                 );
 
 
-            const data =
-                await response.json();
+            const rawText =
+                await response.text();
+
+
+            let data;
+
+
+            try {
+
+                data =
+                    JSON.parse(
+                        rawText
+                    );
+
+            } catch {
+
+                throw new Error(
+                    "The product service returned an invalid response."
+                );
+
+            }
 
 
             if (
@@ -2103,9 +2487,9 @@
     }
 
 
-    /* ========================================================================
-       17. REFRESH CART BEFORE CHECKOUT
-       ======================================================================== */
+    /* =========================================================================
+       21. REFRESH CART FOR CHECKOUT
+       ========================================================================= */
 
     async function refreshCartForCheckout() {
 
@@ -2150,10 +2534,6 @@
             }
 
 
-            /*
-             * Keep the customer's selected variant.
-             */
-
             const selectedVid =
                 getVariantId(
                     item
@@ -2166,33 +2546,32 @@
                 );
 
 
-            let updated =
-                {
-                    ...fresh,
+            let updated = {
 
-                    quantity:
-                        item.quantity,
+                ...fresh,
 
-                    variantId:
-                        selectedVid,
+                quantity:
+                    item.quantity,
 
-                    vid:
-                        selectedVid,
+                variantId:
+                    selectedVid,
 
-                    variantSku:
-                        selectedVariantSku,
+                vid:
+                    selectedVid,
 
-                    variantOptions:
-                        getVariantOptions(
-                            item
-                        )
+                variantSku:
+                    selectedVariantSku,
 
-                };
+                variantOptions:
+                    getVariantOptions(
+                        item
+                    )
+
+            };
 
 
             /*
-             * If a selected variant exists,
-             * use the fresh variant price when available.
+             * Preserve selected variant price when available.
              */
 
             if (
@@ -2229,7 +2608,7 @@
 
 
             /*
-             * Stock validation.
+             * Verify requested quantity against current inventory.
              */
 
             const available =
@@ -2242,14 +2621,26 @@
                 Number.isFinite(
                     available
                 ) &&
-                available > 0 &&
-                item.quantity >
-                    available
+                available > 0
             ) {
 
-                throw new Error(
-                    `${item.name} has only ${available} unit(s) available.`
-                );
+                if (
+                    item.quantity >
+                    available
+                ) {
+
+                    throw new Error(
+                        `${item.name} has only ${available} unit${
+                            available === 1
+                                ? ""
+                                : "s"
+                        } available.`
+                    );
+
+                }
+
+                updated.availableQuantity =
+                    available;
 
             }
 
@@ -2278,9 +2669,101 @@
     }
 
 
-    /* ========================================================================
-       18. PREPARE CHECKOUT
-       ======================================================================== */
+    /* =========================================================================
+       22. CHECKOUT SNAPSHOT
+       ========================================================================= */
+
+    function createCheckoutSnapshot(
+        refreshedCart
+    ) {
+
+        return {
+
+            version:
+                1,
+
+            createdAt:
+                new Date()
+                    .toISOString(),
+
+            currency:
+                "USD",
+
+            items:
+                refreshedCart.map(
+                    (
+                        item,
+                        index
+                    ) => ({
+
+                        lineId:
+                            `${Date.now()}-${index}-${String(
+                                item.pid ||
+                                item.id
+                            )}`,
+
+                        id:
+                            item.id,
+
+                        pid:
+                            item.pid,
+
+                        cj_id:
+                            item.cj_id,
+
+                        sku:
+                            item.sku,
+
+                        variantId:
+                            item.variantId,
+
+                        vid:
+                            item.vid,
+
+                        variantSku:
+                            item.variantSku,
+
+                        variantOptions:
+                            item.variantOptions,
+
+                        name:
+                            item.name,
+
+                        title:
+                            item.title,
+
+                        category:
+                            item.category,
+
+                        image:
+                            item.image,
+
+                        quantity:
+                            normalizeQuantity(
+                                item.quantity
+                            ),
+
+                        /*
+                         * This is only for checkout display.
+                         * Final price must be revalidated by Worker.
+                         */
+
+                        displayPrice:
+                            normalizePrice(
+                                item.price
+                            )
+
+                    })
+                )
+
+        };
+
+    }
+
+
+    /* =========================================================================
+       23. PROCEED TO CHECKOUT
+       ========================================================================= */
 
     async function proceedToCheckout() {
 
@@ -2297,15 +2780,34 @@
             true;
 
 
+        const button =
+            elements.checkoutButton;
+
+
         if (
-            elements.checkoutButton
+            button
         ) {
 
-            elements.checkoutButton.disabled =
+            button.disabled =
                 true;
 
-            elements.checkoutButton.textContent =
-                "Checking CJ availability...";
+            button.setAttribute(
+                "aria-disabled",
+                "true"
+            );
+
+            button.innerHTML = `
+
+                ${materialIcon(
+                    "sync",
+                    "icon-md"
+                )}
+
+                <span>
+                    Checking availability
+                </span>
+
+            `;
 
         }
 
@@ -2316,85 +2818,30 @@
                 await refreshCartForCheckout();
 
 
-            const snapshot = {
+            const snapshot =
+                createCheckoutSnapshot(
+                    refreshedCart
+                );
 
-                version:
-                    1,
 
-                createdAt:
-                    new Date()
-                        .toISOString(),
-
-                currency:
-                    "USD",
-
-                items:
-                    refreshedCart.map(
-                        (
-                            item,
-                            index
-                        ) => ({
-
-                            lineId:
-                                `${Date.now()}-${index}-${String(
-                                    item.pid ||
-                                    item.id
-                                )}`,
-
-                            id:
-                                item.id,
-
-                            pid:
-                                item.pid,
-
-                            cj_id:
-                                item.cj_id,
-
-                            sku:
-                                item.sku,
-
-                            variantId:
-                                item.variantId,
-
-                            vid:
-                                item.vid,
-
-                            variantSku:
-                                item.variantSku,
-
-                            variantOptions:
-                                item.variantOptions,
-
-                            name:
-                                item.name,
-
-                            title:
-                                item.title,
-
-                            category:
-                                item.category,
-
-                            image:
-                                item.image,
-
-                            price:
-                                item.price,
-
-                            quantity:
-                                item.quantity
-
-                        })
+            const saved =
+                writeStorage(
+                    CHECKOUT_SNAPSHOT_KEY,
+                    JSON.stringify(
+                        snapshot
                     )
+                );
 
-            };
 
+            if (
+                !saved
+            ) {
 
-            writeStorage(
-                CHECKOUT_SNAPSHOT_KEY,
-                JSON.stringify(
-                    snapshot
-                )
-            );
+                throw new Error(
+                    "Unable to prepare checkout data."
+                );
+
+            }
 
 
             window.location.href =
@@ -2416,7 +2863,7 @@
             );
 
 
-            alert(
+            showCheckoutError(
                 error?.message ||
                 "Unable to prepare checkout. Please try again."
             );
@@ -2436,8 +2883,27 @@
                     cart.length ===
                     0;
 
-                elements.checkoutButton.textContent =
-                    "Proceed to Checkout";
+                elements.checkoutButton.setAttribute(
+                    "aria-disabled",
+                    cart.length ===
+                        0
+                        ? "true"
+                        : "false"
+                );
+
+
+                elements.checkoutButton.innerHTML = `
+
+                    ${materialIcon(
+                        "shopping_cart_checkout",
+                        "icon-md"
+                    )}
+
+                    <span>
+                        Proceed to Checkout
+                    </span>
+
+                `;
 
             }
 
@@ -2446,11 +2912,151 @@
     }
 
 
-    /* ========================================================================
-       19. EVENT HANDLERS
-       ======================================================================== */
+    /* =========================================================================
+       24. CHECKOUT ERROR
+       ========================================================================= */
+
+    function showCheckoutError(
+        message
+    ) {
+
+        const existing =
+            document.getElementById(
+                "cart-checkout-error"
+            );
+
+
+        if (
+            existing
+        ) {
+
+            existing.remove();
+
+        }
+
+
+        if (
+            !elements.cartItems
+        ) {
+
+            return;
+
+        }
+
+
+        const notice =
+            document.createElement(
+                "div"
+            );
+
+
+        notice.id =
+            "cart-checkout-error";
+
+
+        notice.setAttribute(
+            "role",
+            "alert"
+        );
+
+
+        notice.style.cssText = `
+
+            display:flex;
+            align-items:flex-start;
+            gap:10px;
+            margin:16px 24px;
+            padding:13px 14px;
+            border:1px solid #fecaca;
+            border-radius:12px;
+            background:#fef2f2;
+            color:#991b1b;
+            font-size:0.86rem;
+            line-height:1.5;
+
+        `;
+
+
+        notice.innerHTML = `
+
+            ${materialIcon(
+                "error",
+                "icon-sm"
+            )}
+
+            <span>
+                ${escapeHTML(
+                    message
+                )}
+            </span>
+
+        `;
+
+
+        elements.cartItems.parentElement.insertBefore(
+            notice,
+            elements.cartItems
+        );
+
+
+        window.setTimeout(
+            () => {
+
+                notice.remove();
+
+            },
+            7000
+        );
+
+    }
+
+
+    /* =========================================================================
+       25. ACCESSIBILITY ANNOUNCEMENTS
+       ========================================================================= */
+
+    function announce(
+        message
+    ) {
+
+        if (
+            !elements.liveRegion
+        ) {
+
+            return;
+
+        }
+
+
+        elements.liveRegion.textContent =
+            "";
+
+
+        window.setTimeout(
+            () => {
+
+                elements.liveRegion.textContent =
+                    String(
+                        message ||
+                        ""
+                    );
+
+            },
+            20
+        );
+
+    }
+
+
+    /* =========================================================================
+       26. EVENT LISTENERS
+       ========================================================================= */
 
     function bindEvents() {
+
+        /*
+         * Cart item controls
+         */
 
         if (
             elements.cartItems
@@ -2481,6 +3087,19 @@
                         );
 
 
+                    if (
+                        !Number.isInteger(
+                            index
+                        ) ||
+                        index < 0 ||
+                        index >= cart.length
+                    ) {
+
+                        return;
+
+                    }
+
+
                     const action =
                         button.dataset.action;
 
@@ -2492,9 +3111,10 @@
 
                         updateQuantity(
                             index,
-                            cart[index]
-                                .quantity +
-                            1
+                            cart[
+                                index
+                            ].quantity +
+                                1
                         );
 
                     }
@@ -2507,9 +3127,10 @@
 
                         updateQuantity(
                             index,
-                            cart[index]
-                                .quantity -
-                            1
+                            cart[
+                                index
+                            ].quantity -
+                                1
                         );
 
                     }
@@ -2529,6 +3150,10 @@
                 }
             );
 
+
+            /*
+             * Quantity input
+             */
 
             elements.cartItems.addEventListener(
                 "change",
@@ -2559,8 +3184,50 @@
                 }
             );
 
+
+            /*
+             * Enter key on quantity input
+             */
+
+            elements.cartItems.addEventListener(
+                "keydown",
+                event => {
+
+                    const input =
+                        event.target.closest(
+                            'input[data-action="quantity"]'
+                        );
+
+
+                    if (
+                        !input
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    if (
+                        event.key ===
+                        "Enter"
+                    ) {
+
+                        event.preventDefault();
+
+                        input.blur();
+
+                    }
+
+                }
+            );
+
         }
 
+
+        /*
+         * Checkout
+         */
 
         if (
             elements.checkoutButton
@@ -2573,6 +3240,10 @@
 
         }
 
+
+        /*
+         * Clear cart
+         */
 
         if (
             elements.clearCartButton
@@ -2608,7 +3279,13 @@
 
 
         /*
-         * Product pages use window.addToCart(product).
+         * Products pages can dispatch:
+         *
+         * document.dispatchEvent(
+         *   new CustomEvent("cart:add", {
+         *     detail: product
+         *   })
+         * )
          */
 
         document.addEventListener(
@@ -2631,9 +3308,9 @@
     }
 
 
-    /* ========================================================================
-       20. EVENTS FROM OTHER TABS / WINDOWS
-       ======================================================================== */
+    /* =========================================================================
+       27. CROSS-TAB SYNCHRONIZATION
+       ========================================================================= */
 
     window.addEventListener(
         "storage",
@@ -2692,9 +3369,9 @@
     );
 
 
-    /* ========================================================================
-       21. PUBLIC API
-       ======================================================================== */
+    /* =========================================================================
+       28. PUBLIC API
+       ========================================================================= */
 
     window.addToCart =
         addProduct;
@@ -2753,11 +3430,24 @@
     };
 
 
-    /* ========================================================================
-       22. INITIALIZATION
-       ======================================================================== */
+    /* =========================================================================
+       29. INITIALIZATION
+       ========================================================================= */
 
     function initialize() {
+
+        if (
+            initialized
+        ) {
+
+            return;
+
+        }
+
+
+        initialized =
+            true;
+
 
         cacheDOMElements();
 
