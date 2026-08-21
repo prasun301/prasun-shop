@@ -25,7 +25,7 @@
  *       ↓
  *   /api/products?pid=...
  *       ↓
- *   Refresh current product data
+ *   Fresh CJ product validation
  *       ↓
  *   checkout.html
  *       ↓
@@ -33,13 +33,16 @@
  *       ↓
  *   CJ order API
  *
+ *
  * IMPORTANT
- * - No CJ API credentials are stored in the browser.
+ *
+ * - No CJ credentials are stored in the browser.
  * - Browser price is display-only.
- * - Worker must revalidate price and stock before creating the order.
- * - CJ variant IDs (vid) are preserved.
- * - No emoji or Unicode icon characters are used.
- * - Material Symbols are used for dynamic cart controls.
+ * - Worker remains authoritative for final price, stock and order creation.
+ * - CJ PID / VID / SKU / variant information is preserved.
+ * - No emoji.
+ * - No Material Symbols dependency.
+ * - All dynamic UI icons use inline SVG.
  *
  * ============================================================================
  */
@@ -86,10 +89,64 @@
 
 
     /* =========================================================================
-       2. DOM CACHE
+       2. STATE
        ========================================================================= */
 
+    let cart = [];
+
+    let checkoutBusy = false;
+
+    let initialized = false;
+
     let elements = {};
+
+
+    /* =========================================================================
+       3. CURRENCY
+       ========================================================================= */
+
+    const currencyFormatter =
+        new Intl.NumberFormat(
+            "en-US",
+            {
+                style:
+                    "currency",
+
+                currency:
+                    "USD",
+
+                minimumFractionDigits:
+                    2,
+
+                maximumFractionDigits:
+                    2
+            }
+        );
+
+
+    function formatPrice(value) {
+
+        const number =
+            Number(value);
+
+        if (
+            !Number.isFinite(number)
+        ) {
+
+            return "$0.00";
+
+        }
+
+        return currencyFormatter.format(
+            number
+        );
+
+    }
+
+
+    /* =========================================================================
+       4. DOM
+       ========================================================================= */
 
     function cacheDOMElements() {
 
@@ -146,90 +203,22 @@
 
 
     /* =========================================================================
-       3. STATE
-       ========================================================================= */
-
-    let cart = [];
-
-    let checkoutBusy =
-        false;
-
-    let initialized =
-        false;
-
-
-    /* =========================================================================
-       4. CURRENCY
-       ========================================================================= */
-
-    const currencyFormatter =
-        new Intl.NumberFormat(
-            "en-US",
-            {
-                style:
-                    "currency",
-
-                currency:
-                    "USD",
-
-                minimumFractionDigits:
-                    2,
-
-                maximumFractionDigits:
-                    2
-            }
-        );
-
-
-    function formatPrice(
-        value
-    ) {
-
-        const number =
-            Number(
-                value
-            );
-
-        if (
-            !Number.isFinite(
-                number
-            )
-        ) {
-
-            return "$0.00";
-
-        }
-
-        return currencyFormatter.format(
-            number
-        );
-
-    }
-
-
-    /* =========================================================================
        5. GENERAL HELPERS
        ========================================================================= */
 
-    function cleanString(
-        value
-    ) {
+    function cleanString(value) {
 
         return String(
-            value ??
-            ""
+            value ?? ""
         ).trim();
 
     }
 
 
-    function firstNonEmpty(
-        ...values
-    ) {
+    function firstNonEmpty(...values) {
 
         for (
-            const value
-            of values
+            const value of values
         ) {
 
             const cleaned =
@@ -252,13 +241,10 @@
     }
 
 
-    function escapeHTML(
-        value
-    ) {
+    function escapeHTML(value) {
 
         return String(
-            value ??
-            ""
+            value ?? ""
         )
             .replace(
                 /&/g,
@@ -284,19 +270,13 @@
     }
 
 
-    function normalizePrice(
-        value
-    ) {
+    function normalizePrice(value) {
 
         const number =
-            Number(
-                value
-            );
+            Number(value);
 
         if (
-            !Number.isFinite(
-                number
-            ) ||
+            !Number.isFinite(number) ||
             number < 0
         ) {
 
@@ -305,27 +285,19 @@
         }
 
         return Number(
-            number.toFixed(
-                2
-            )
+            number.toFixed(2)
         );
 
     }
 
 
-    function normalizeQuantity(
-        value
-    ) {
+    function normalizeQuantity(value) {
 
         const number =
-            Number(
-                value
-            );
+            Number(value);
 
         if (
-            !Number.isFinite(
-                number
-            )
+            !Number.isFinite(number)
         ) {
 
             return 1;
@@ -336,40 +308,207 @@
             MAX_QUANTITY,
             Math.max(
                 1,
-                Math.floor(
-                    number
-                )
+                Math.floor(number)
             )
         );
 
     }
 
 
-    function getAvailableQuantity(
-        item
-    ) {
+    function normalizeInventory(value) {
 
-        const value =
-            Number(
-                item?.availableQuantity
-            );
+        const number =
+            Number(value);
 
-        return Number.isFinite(
-            value
-        )
-            ? value
-            : 0;
+        if (
+            !Number.isFinite(number)
+        ) {
+
+            return 0;
+
+        }
+
+        return Math.max(
+            0,
+            Math.floor(number)
+        );
+
+    }
+
+
+    function getAvailableQuantity(item) {
+
+        return normalizeInventory(
+            item?.availableQuantity
+        );
 
     }
 
 
     /* =========================================================================
-       6. CJ FIELD EXTRACTORS
+       6. INLINE SVG ICON SYSTEM
        ========================================================================= */
 
-    function getProductId(
-        item
+    function svgIcon(
+        name,
+        className = "ui-icon"
     ) {
+
+        const safeClass =
+            escapeHTML(
+                className
+            );
+
+
+        const common =
+            `
+                class="${safeClass}"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+            `;
+
+
+        const icons = {
+
+            cart: `
+                <svg ${common}>
+                    <circle cx="9" cy="20" r="1"></circle>
+                    <circle cx="19" cy="20" r="1"></circle>
+                    <path
+                        d="
+                            M3 4h2
+                            l2.4 11.2
+                            a2 2 0 0 0 2 1.6h8.8
+                            a2 2 0 0 0 1.9-1.4L22 8H6
+                        "
+                    ></path>
+                </svg>
+            `,
+
+            cartCheck: `
+                <svg ${common}>
+                    <circle cx="9" cy="20" r="1"></circle>
+                    <circle cx="19" cy="20" r="1"></circle>
+                    <path
+                        d="
+                            M3 4h2
+                            l2.4 11.2
+                            a2 2 0 0 0 2 1.6h8.8
+                            a2 2 0 0 0 1.9-1.4L22 8H6
+                        "
+                    ></path>
+                    <path d="m15 5 2 2 4-4"></path>
+                </svg>
+            `,
+
+            add: `
+                <svg ${common}>
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                </svg>
+            `,
+
+            remove: `
+                <svg ${common}>
+                    <path d="M5 12h14"></path>
+                </svg>
+            `,
+
+            delete: `
+                <svg ${common}>
+                    <path d="M4 7h16"></path>
+                    <path d="M10 11v6"></path>
+                    <path d="M14 11v6"></path>
+                    <path d="M6 7l1 14h10l1-14"></path>
+                    <path d="M9 7V4h6v3"></path>
+                </svg>
+            `,
+
+            image: `
+                <svg ${common}>
+                    <rect
+                        x="3"
+                        y="3"
+                        width="18"
+                        height="18"
+                        rx="2"
+                    ></rect>
+                    <circle
+                        cx="8.5"
+                        cy="8.5"
+                        r="1.5"
+                    ></circle>
+                    <path d="m3 16 5-5 4 4 3-3 6 6"></path>
+                </svg>
+            `,
+
+            tune: `
+                <svg ${common}>
+                    <path d="M4 6h16"></path>
+                    <circle cx="9" cy="6" r="2"></circle>
+                    <path d="M4 12h16"></path>
+                    <circle cx="15" cy="12" r="2"></circle>
+                    <path d="M4 18h16"></path>
+                    <circle cx="11" cy="18" r="2"></circle>
+                </svg>
+            `,
+
+            refresh: `
+                <svg ${common}>
+                    <path d="M20 11a8 8 0 1 0 1 4"></path>
+                    <path d="M20 4v7h-7"></path>
+                </svg>
+            `,
+
+            error: `
+                <svg ${common}>
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 8v5"></path>
+                    <path d="M12 16h.01"></path>
+                </svg>
+            `,
+
+            shield: `
+                <svg ${common}>
+                    <path
+                        d="
+                            M12 3
+                            20 6
+                            v5
+                            c0 5.2-3.4 8.7-8 10
+                            -4.6-1.3-8-4.8-8-10V6z
+                        "
+                    ></path>
+                    <path d="m9 12 2 2 4-4"></path>
+                </svg>
+            `,
+
+            store: `
+                <svg ${common}>
+                    <path d="M4 10v10h16V10"></path>
+                    <path d="M3 10 5 4h14l2 6"></path>
+                    <path d="M8 20v-6h8v6"></path>
+                    <path d="M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"></path>
+                </svg>
+            `
+
+        };
+
+
+        return (
+            icons[name] ||
+            icons.image
+        );
+
+    }
+
+
+    /* =========================================================================
+       7. CJ FIELD EXTRACTORS
+       ========================================================================= */
+
+    function getProductId(item) {
 
         return firstNonEmpty(
 
@@ -386,9 +525,7 @@
     }
 
 
-    function getCJProductId(
-        item
-    ) {
+    function getCJProductId(item) {
 
         return firstNonEmpty(
 
@@ -403,9 +540,7 @@
     }
 
 
-    function getSKU(
-        item
-    ) {
+    function getSKU(item) {
 
         return firstNonEmpty(
 
@@ -420,9 +555,7 @@
     }
 
 
-    function getVariantId(
-        item
-    ) {
+    function getVariantId(item) {
 
         return firstNonEmpty(
 
@@ -439,9 +572,7 @@
     }
 
 
-    function getVariantSKU(
-        item
-    ) {
+    function getVariantSKU(item) {
 
         return firstNonEmpty(
 
@@ -456,9 +587,7 @@
     }
 
 
-    function getVariantOptions(
-        item
-    ) {
+    function getVariantOptions(item) {
 
         return firstNonEmpty(
 
@@ -477,9 +606,7 @@
     }
 
 
-    function getProductName(
-        item
-    ) {
+    function getProductName(item) {
 
         return firstNonEmpty(
 
@@ -496,9 +623,7 @@
     }
 
 
-    function getProductCategory(
-        item
-    ) {
+    function getProductCategory(item) {
 
         return firstNonEmpty(
 
@@ -513,9 +638,7 @@
     }
 
 
-    function getProductImage(
-        item
-    ) {
+    function getProductImage(item) {
 
         return firstNonEmpty(
 
@@ -533,17 +656,14 @@
 
 
     /* =========================================================================
-       7. NORMALIZE CART ITEM
+       8. CART ITEM NORMALIZATION
        ========================================================================= */
 
-    function normalizeCartItem(
-        item
-    ) {
+    function normalizeCartItem(item) {
 
         if (
             !item ||
-            typeof item !==
-                "object"
+            typeof item !== "object"
         ) {
 
             return null;
@@ -552,21 +672,13 @@
 
 
         const id =
-            getProductId(
-                item
-            );
-
+            getProductId(item);
 
         const pid =
-            getCJProductId(
-                item
-            );
-
+            getCJProductId(item);
 
         const name =
-            getProductName(
-                item
-            );
+            getProductName(item);
 
 
         if (
@@ -589,50 +701,68 @@
 
 
         const normalizedVariants =
-            variants.map(
-                variant => ({
+            variants
+                .map(
+                    variant => {
 
-                    vid:
-                        cleanString(
-                            variant?.vid
-                        ),
+                        if (
+                            !variant ||
+                            typeof variant !== "object"
+                        ) {
 
-                    sku:
-                        cleanString(
-                            variant?.sku
-                        ),
+                            return null;
 
-                    name:
-                        cleanString(
-                            variant?.name
-                        ),
-
-                    price:
-                        normalizePrice(
-                            variant?.price
-                        ),
-
-                    costPrice:
-                        normalizePrice(
-                            variant?.costPrice
-                        ),
-
-                    inventory:
-                        Number(
-                            variant?.inventory ||
-                            0
-                        )
-
-                })
-            );
+                        }
 
 
-        const availableQuantity =
-            Number(
-                item?.availableQuantity ??
-                item?.quantity ??
-                0
-            );
+                        return {
+
+                            vid:
+                                cleanString(
+                                    variant?.vid
+                                ),
+
+                            sku:
+                                firstNonEmpty(
+                                    variant?.sku,
+                                    variant?.variantSku
+                                ),
+
+                            name:
+                                firstNonEmpty(
+                                    variant?.name,
+                                    variant?.variantNameEn,
+                                    "Default"
+                                ),
+
+                            price:
+                                normalizePrice(
+                                    variant?.price
+                                ),
+
+                            costPrice:
+                                normalizePrice(
+                                    variant?.costPrice
+                                ),
+
+                            inventory:
+                                normalizeInventory(
+                                    variant?.inventory
+                                )
+
+                        };
+
+                    }
+                )
+                .filter(Boolean);
+
+
+        const rawAvailable =
+            item?.availableQuantity ??
+            item?.inventory ??
+            item?.totalInventory ??
+            item?.quantity ??
+            0;
 
 
         return {
@@ -647,33 +777,27 @@
                 id,
 
             cj_id:
-                pid ||
-                id,
+                firstNonEmpty(
+                    item?.cj_id,
+                    item?.cjId,
+                    pid ||
+                    id
+                ),
 
             sku:
-                getSKU(
-                    item
-                ),
+                getSKU(item),
 
             variantId:
-                getVariantId(
-                    item
-                ),
+                getVariantId(item),
 
             vid:
-                getVariantId(
-                    item
-                ),
+                getVariantId(item),
 
             variantSku:
-                getVariantSKU(
-                    item
-                ),
+                getVariantSKU(item),
 
             variantOptions:
-                getVariantOptions(
-                    item
-                ),
+                getVariantOptions(item),
 
             name:
                 name ||
@@ -684,9 +808,7 @@
                 "CJ Product",
 
             category:
-                getProductCategory(
-                    item
-                ),
+                getProductCategory(item),
 
             description:
                 cleanString(
@@ -700,9 +822,7 @@
                 ),
 
             image:
-                getProductImage(
-                    item
-                ),
+                getProductImage(item),
 
             images:
                 Array.isArray(
@@ -733,16 +853,9 @@
                 ),
 
             availableQuantity:
-                Number.isFinite(
-                    availableQuantity
-                )
-                    ? Math.max(
-                        0,
-                        Math.floor(
-                            availableQuantity
-                        )
-                    )
-                    : 0,
+                normalizeInventory(
+                    rawAvailable
+                ),
 
             variants:
                 normalizedVariants,
@@ -755,14 +868,10 @@
     }
 
 
-    function normalizeCartArray(
-        items
-    ) {
+    function normalizeCartArray(items) {
 
         if (
-            !Array.isArray(
-                items
-            )
+            !Array.isArray(items)
         ) {
 
             return [];
@@ -779,12 +888,10 @@
 
 
     /* =========================================================================
-       8. LOCAL STORAGE
+       9. LOCAL STORAGE
        ========================================================================= */
 
-    function readStorage(
-        key
-    ) {
+    function readStorage(key) {
 
         try {
 
@@ -792,9 +899,7 @@
                 key
             );
 
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             console.error(
                 "[PRASUN SHOP] localStorage read error:",
@@ -822,9 +927,7 @@
 
             return true;
 
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             console.error(
                 "[PRASUN SHOP] localStorage write error:",
@@ -838,9 +941,7 @@
     }
 
 
-    function removeStorage(
-        key
-    ) {
+    function removeStorage(key) {
 
         try {
 
@@ -848,9 +949,7 @@
                 key
             );
 
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             console.error(
                 "[PRASUN SHOP] localStorage remove error:",
@@ -862,9 +961,7 @@
     }
 
 
-    function parseStoredCart(
-        raw
-    ) {
+    function parseStoredCart(raw) {
 
         if (
             !raw
@@ -887,9 +984,7 @@
                 parsed
             );
 
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             console.warn(
                 "[PRASUN SHOP] Invalid stored cart:",
@@ -933,8 +1028,7 @@
 
 
         for (
-            const key
-            of LEGACY_KEYS
+            const key of LEGACY_KEYS
         ) {
 
             const legacy =
@@ -969,6 +1063,7 @@
                     )
                 );
 
+
                 return migrated;
 
             }
@@ -981,9 +1076,7 @@
     }
 
 
-    function saveCart(
-        items
-    ) {
+    function saveCart(items) {
 
         cart =
             normalizeCartArray(
@@ -991,17 +1084,28 @@
             );
 
 
-        writeStorage(
-            CART_KEY,
-            JSON.stringify(
-                cart
-            )
-        );
+        const saved =
+            writeStorage(
+                CART_KEY,
+                JSON.stringify(
+                    cart
+                )
+            );
+
+
+        if (
+            !saved
+        ) {
+
+            console.error(
+                "[PRASUN SHOP] Cart could not be saved."
+            );
+
+        }
 
 
         for (
-            const key
-            of LEGACY_KEYS
+            const key of LEGACY_KEYS
         ) {
 
             removeStorage(
@@ -1024,29 +1128,22 @@
         try {
 
             window.dispatchEvent(
-
                 new CustomEvent(
                     "prasunCartUpdated",
                     {
                         detail: {
-
                             cart:
                                 cart.map(
-                                    item =>
-                                        ({
-                                            ...item
-                                        })
+                                    item => ({
+                                        ...item
+                                    })
                                 )
-
                         }
                     }
                 )
-
             );
 
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             console.error(
                 "[PRASUN SHOP] Cart event error:",
@@ -1059,7 +1156,7 @@
 
 
     /* =========================================================================
-       9. PRODUCT IDENTITY
+       10. PRODUCT IDENTITY
        ========================================================================= */
 
     function sameCartProduct(
@@ -1068,15 +1165,10 @@
     ) {
 
         const aVariant =
-            getVariantId(
-                a
-            );
-
+            getVariantId(a);
 
         const bVariant =
-            getVariantId(
-                b
-            );
+            getVariantId(b);
 
 
         if (
@@ -1085,29 +1177,20 @@
         ) {
 
             return (
-                Boolean(
-                    aVariant
-                ) &&
-                Boolean(
-                    bVariant
-                ) &&
-                aVariant ===
-                    bVariant
+                Boolean(aVariant) &&
+                Boolean(bVariant) &&
+                String(aVariant) ===
+                String(bVariant)
             );
 
         }
 
 
         const aVariantSku =
-            getVariantSKU(
-                a
-            );
-
+            getVariantSKU(a);
 
         const bVariantSku =
-            getVariantSKU(
-                b
-            );
+            getVariantSKU(b);
 
 
         if (
@@ -1116,33 +1199,20 @@
         ) {
 
             return (
-
-                Boolean(
-                    aVariantSku
-                ) &&
-
-                Boolean(
-                    bVariantSku
-                ) &&
-
+                Boolean(aVariantSku) &&
+                Boolean(bVariantSku) &&
                 aVariantSku.toLowerCase() ===
-                    bVariantSku.toLowerCase()
-
+                bVariantSku.toLowerCase()
             );
 
         }
 
 
         const aPid =
-            getCJProductId(
-                a
-            );
-
+            getCJProductId(a);
 
         const bPid =
-            getCJProductId(
-                b
-            );
+            getCJProductId(b);
 
 
         if (
@@ -1151,23 +1221,18 @@
         ) {
 
             return (
-                aPid ===
-                bPid
+                String(aPid) ===
+                String(bPid)
             );
 
         }
 
 
         const aSku =
-            getSKU(
-                a
-            );
-
+            getSKU(a);
 
         const bSku =
-            getSKU(
-                b
-            );
+            getSKU(b);
 
 
         if (
@@ -1184,22 +1249,15 @@
 
 
         return (
-
-            cleanString(
-                a.id
-            ) ===
-
-            cleanString(
-                b.id
-            )
-
+            cleanString(a.id) ===
+            cleanString(b.id)
         );
 
     }
 
 
     /* =========================================================================
-       10. ADD PRODUCT
+       11. ADD PRODUCT
        ========================================================================= */
 
     function addProduct(
@@ -1207,13 +1265,28 @@
         quantity = 1
     ) {
 
+        if (
+            !product ||
+            typeof product !== "object"
+        ) {
+
+            return false;
+
+        }
+
+
+        let requestedQuantity =
+            normalizeQuantity(
+                quantity
+            );
+
+
         const normalized =
             normalizeCartItem(
                 {
                     ...product,
-
                     quantity:
-                        quantity
+                        requestedQuantity
                 }
             );
 
@@ -1239,21 +1312,20 @@
 
 
         if (
-            available >
-                0 &&
-            quantity >
-                available
+            available > 0
         ) {
 
-            quantity =
-                available;
+            requestedQuantity =
+                Math.min(
+                    requestedQuantity,
+                    available
+                );
 
         }
 
 
         if (
-            quantity <=
-                0
+            requestedQuantity <= 0
         ) {
 
             return false;
@@ -1263,7 +1335,7 @@
 
         normalized.quantity =
             normalizeQuantity(
-                quantity
+                requestedQuantity
             );
 
 
@@ -1282,8 +1354,7 @@
 
 
         if (
-            existingIndex >=
-                0
+            existingIndex >= 0
         ) {
 
             const existing =
@@ -1303,21 +1374,20 @@
                 );
 
 
-            const existingAvailable =
+            const freshAvailable =
                 getAvailableQuantity(
                     normalized
                 );
 
 
             if (
-                existingAvailable >
-                    0
+                freshAvailable > 0
             ) {
 
                 newQuantity =
                     Math.min(
                         newQuantity,
-                        existingAvailable
+                        freshAvailable
                     );
 
             }
@@ -1364,7 +1434,7 @@
 
 
     /* =========================================================================
-       11. QUANTITY
+       12. QUANTITY
        ========================================================================= */
 
     function updateQuantity(
@@ -1373,9 +1443,7 @@
     ) {
 
         if (
-            !Number.isInteger(
-                index
-            ) ||
+            !Number.isInteger(index) ||
             index < 0 ||
             index >= cart.length
         ) {
@@ -1393,15 +1461,12 @@
 
         const available =
             getAvailableQuantity(
-                cart[
-                    index
-                ]
+                cart[index]
             );
 
 
         if (
-            available >
-                0
+            available > 0
         ) {
 
             quantity =
@@ -1413,9 +1478,7 @@
         }
 
 
-        cart[
-            index
-        ].quantity =
+        cart[index].quantity =
             quantity;
 
 
@@ -1427,23 +1490,24 @@
         renderCart();
 
 
+        announce(
+            `${cart[index].name} quantity updated to ${quantity}.`
+        );
+
+
         return true;
 
     }
 
 
     /* =========================================================================
-       12. REMOVE
+       13. REMOVE
        ========================================================================= */
 
-    function removeItem(
-        index
-    ) {
+    function removeItem(index) {
 
         if (
-            !Number.isInteger(
-                index
-            ) ||
+            !Number.isInteger(index) ||
             index < 0 ||
             index >= cart.length
         ) {
@@ -1454,9 +1518,7 @@
 
 
         const removed =
-            cart[
-                index
-            ];
+            cart[index];
 
 
         cart.splice(
@@ -1484,7 +1546,7 @@
 
 
     /* =========================================================================
-       13. CLEAR
+       14. CLEAR
        ========================================================================= */
 
     function clearCart() {
@@ -1503,8 +1565,7 @@
 
 
         for (
-            const key
-            of LEGACY_KEYS
+            const key of LEGACY_KEYS
         ) {
 
             removeStorage(
@@ -1528,7 +1589,7 @@
 
 
     /* =========================================================================
-       14. TOTALS
+       15. TOTALS
        ========================================================================= */
 
     function getTotalQuantity() {
@@ -1563,20 +1624,13 @@
                 ) => {
 
                     return (
-
                         total +
-
-                        (
-                            normalizePrice(
-                                item.price
-                            ) *
-
-                            normalizeQuantity(
-                                item.quantity
-                            )
-
+                        normalizePrice(
+                            item.price
+                        ) *
+                        normalizeQuantity(
+                            item.quantity
                         )
-
                     );
 
                 },
@@ -1594,7 +1648,7 @@
 
 
     /* =========================================================================
-       15. HEADER AND SUMMARY
+       16. HEADER / SUMMARY
        ========================================================================= */
 
     function updateHeaderCount() {
@@ -1614,15 +1668,13 @@
 
 
             elements.cartCount.hidden =
-                total <=
-                0;
+                total <= 0;
 
 
             elements.cartCount.setAttribute(
                 "aria-label",
                 `${total} ${
-                    total ===
-                        1
+                    total === 1
                         ? "item"
                         : "items"
                 } in cart`
@@ -1637,8 +1689,7 @@
 
             elements.cartItemsCount.textContent =
                 `${total} ${
-                    total ===
-                        1
+                    total === 1
                         ? "item"
                         : "items"
                 }`;
@@ -1661,7 +1712,7 @@
 
 
     /* =========================================================================
-       16. EMPTY CART
+       17. EMPTY CART
        ========================================================================= */
 
     function renderEmptyCart() {
@@ -1687,11 +1738,10 @@
                     aria-hidden="true"
                 >
 
-                    <span
-                        class="material-symbols-rounded icon-xl"
-                    >
-                        shopping_cart
-                    </span>
+                    ${svgIcon(
+                        "cart",
+                        "ui-icon ui-icon-xl"
+                    )}
 
                 </div>
 
@@ -1702,8 +1752,8 @@
 
 
                 <p>
-                    Browse our CJ-powered products and add
-                    products to your cart to continue shopping.
+                    Browse our CJ-powered products and
+                    add products to your cart to continue shopping.
                 </p>
 
 
@@ -1712,12 +1762,10 @@
                     class="continue-shopping"
                 >
 
-                    <span
-                        class="material-symbols-rounded icon-sm"
-                        aria-hidden="true"
-                    >
-                        storefront
-                    </span>
+                    ${svgIcon(
+                        "store",
+                        "ui-icon ui-icon-sm"
+                    )}
 
                     <span>
                         Continue Shopping
@@ -1726,31 +1774,6 @@
                 </a>
 
             </div>
-
-        `;
-
-    }
-
-
-    /* =========================================================================
-       17. DYNAMIC MATERIAL ICON
-       ========================================================================= */
-
-    function materialIcon(
-        name,
-        className = "icon-md"
-    ) {
-
-        return `
-
-            <span
-                class="material-symbols-rounded ${className}"
-                aria-hidden="true"
-            >
-                ${escapeHTML(
-                    name
-                )}
-            </span>
 
         `;
 
@@ -1843,355 +1866,357 @@
             0;
 
 
-        elements.cartItems.innerHTML =
-            cart.map(
-                (
-                    item,
-                    index
-                ) => {
+        const html =
+            cart
+                .map(
+                    (
+                        item,
+                        index
+                    ) => {
 
-                    const quantity =
-                        normalizeQuantity(
-                            item.quantity
-                        );
+                        const quantity =
+                            normalizeQuantity(
+                                item.quantity
+                            );
 
 
-                    const price =
-                        normalizePrice(
-                            item.price
-                        );
+                        const price =
+                            normalizePrice(
+                                item.price
+                            );
 
 
-                    const lineTotal =
-                        Number(
-                            (
-                                price *
-                                quantity
-                            ).toFixed(
-                                2
-                            )
-                        );
+                        const lineTotal =
+                            Number(
+                                (
+                                    price *
+                                    quantity
+                                ).toFixed(2)
+                            );
 
 
-                    subtotal +=
-                        lineTotal;
+                        subtotal +=
+                            lineTotal;
 
 
-                    const name =
-                        escapeHTML(
-                            item.name
-                        );
+                        const name =
+                            escapeHTML(
+                                item.name
+                            );
 
 
-                    const category =
-                        escapeHTML(
-                            item.category
-                        );
+                        const category =
+                            escapeHTML(
+                                item.category
+                            );
 
 
-                    const image =
-                        escapeHTML(
-                            item.image ||
-                            item.originalImage ||
-                            ""
-                        );
+                        const image =
+                            escapeHTML(
+                                item.image ||
+                                item.originalImage ||
+                                ""
+                            );
 
 
-                    const vid =
-                        escapeHTML(
-                            getVariantId(
-                                item
-                            )
-                        );
+                        const variantId =
+                            escapeHTML(
+                                getVariantId(
+                                    item
+                                )
+                            );
 
 
-                    const variantSku =
-                        escapeHTML(
-                            getVariantSKU(
-                                item
-                            )
-                        );
+                        const variantSku =
+                            escapeHTML(
+                                getVariantSKU(
+                                    item
+                                )
+                            );
 
 
-                    const variantOptions =
-                        escapeHTML(
-                            getVariantOptions(
-                                item
-                            )
-                        );
+                        const variantOptions =
+                            escapeHTML(
+                                getVariantOptions(
+                                    item
+                                )
+                            );
 
 
-                    let variantText =
-                        "";
+                        let variantText =
+                            "";
 
 
-                    if (
-                        variantOptions
-                    ) {
+                        if (
+                            variantOptions
+                        ) {
 
-                        variantText =
-                            variantOptions;
+                            variantText =
+                                variantOptions;
 
-                    } else if (
-                        variantSku
-                    ) {
+                        } else if (
+                            variantSku
+                        ) {
 
-                        variantText =
-                            `SKU: ${variantSku}`;
+                            variantText =
+                                `SKU: ${variantSku}`;
 
-                    } else if (
-                        vid
-                    ) {
+                        } else if (
+                            variantId
+                        ) {
 
-                        variantText =
-                            `Variant: ${vid}`;
+                            variantText =
+                                `Variant: ${variantId}`;
 
-                    }
+                        }
 
 
-                    const hasOriginalImage =
-                        Boolean(
-                            item.originalImage
-                        );
+                        const originalImage =
+                            escapeHTML(
+                                item.originalImage ||
+                                ""
+                            );
 
 
-                    return `
+                        return `
 
-                        <article
-                            class="cart-item"
-                            data-cart-index="${index}"
-                        >
-
-                            <div class="cart-item-product">
-
-                                <a
-                                    href="${PRODUCTS_URL}"
-                                    class="cart-item-image-link"
-                                    aria-label="${name}"
-                                >
-
-                                    ${
-                                        image
-
-                                            ? `
-
-                                                <img
-                                                    src="${image}"
-                                                    alt="${name}"
-                                                    class="cart-item-image"
-                                                    loading="lazy"
-                                                    decoding="async"
-                                                    referrerpolicy="no-referrer"
-                                                    ${
-                                                        hasOriginalImage
-                                                            ? `data-original="${escapeHTML(
-                                                                item.originalImage
-                                                            )}"`
-                                                            : ""
-                                                    }
-                                                >
-
-                                            `
-
-                                            : `
-
-                                                <div
-                                                    class="cart-item-image cart-item-image-placeholder"
-                                                    aria-hidden="true"
-                                                >
-
-                                                    ${materialIcon(
-                                                        "image",
-                                                        "icon-md"
-                                                    )}
-
-                                                </div>
-
-                                            `
-                                    }
-
-                                </a>
-
-
-                                <div
-                                    class="cart-item-info"
-                                >
-
-                                    ${
-                                        category
-
-                                            ? `
-
-                                                <span class="cart-item-category">
-                                                    ${category}
-                                                </span>
-
-                                            `
-
-                                            : ""
-                                    }
-
-
-                                    <h3
-                                        class="cart-item-title"
-                                    >
-
-                                        <a
-                                            href="${PRODUCTS_URL}"
-                                        >
-                                            ${name}
-                                        </a>
-
-                                    </h3>
-
-
-                                    <p
-                                        class="cart-item-price"
-                                    >
-                                        ${formatPrice(
-                                            price
-                                        )}
-                                        each
-                                    </p>
-
-
-                                    ${
-                                        variantText
-
-                                            ? `
-
-                                                <p
-                                                    class="cart-item-variant"
-                                                >
-
-                                                    ${materialIcon(
-                                                        "tune",
-                                                        "icon-sm"
-                                                    )}
-
-                                                    <span>
-                                                        ${variantText}
-                                                    </span>
-
-                                                </p>
-
-                                            `
-
-                                            : ""
-                                    }
-
-                                </div>
-
-                            </div>
-
-
-                            <div
-                                class="cart-item-controls"
+                            <article
+                                class="cart-item"
+                                data-cart-index="${index}"
                             >
 
                                 <div
-                                    class="quantity-control"
-                                    aria-label="Quantity controls"
+                                    class="cart-item-product"
                                 >
 
-                                    <button
-                                        type="button"
-                                        data-action="decrease"
-                                        data-index="${index}"
-                                        aria-label="Decrease quantity"
+                                    <a
+                                        href="${PRODUCTS_URL}"
+                                        class="cart-item-image-link"
+                                        aria-label="${name}"
+                                    >
+
                                         ${
-                                            quantity <=
-                                                1
-                                                ? "disabled"
+                                            image
+
+                                                ? `
+
+                                                    <img
+                                                        src="${image}"
+                                                        alt="${name}"
+                                                        class="cart-item-image"
+                                                        loading="lazy"
+                                                        decoding="async"
+                                                        referrerpolicy="no-referrer"
+                                                        data-original="${originalImage}"
+                                                    >
+
+                                                `
+
+                                                : `
+
+                                                    <div
+                                                        class="cart-item-image cart-item-image-placeholder"
+                                                        aria-hidden="true"
+                                                    >
+
+                                                        ${svgIcon(
+                                                            "image",
+                                                            "ui-icon ui-icon-md"
+                                                        )}
+
+                                                    </div>
+
+                                                `
+                                        }
+
+                                    </a>
+
+
+                                    <div
+                                        class="cart-item-info"
+                                    >
+
+                                        ${
+                                            category
+
+                                                ? `
+
+                                                    <span
+                                                        class="cart-item-category"
+                                                    >
+                                                        ${category}
+                                                    </span>
+
+                                                `
+
                                                 : ""
                                         }
-                                    >
-
-                                        ${materialIcon(
-                                            "remove",
-                                            "icon-sm"
-                                        )}
-
-                                    </button>
 
 
-                                    <input
-                                        class="quantity-input"
-                                        type="number"
-                                        min="1"
-                                        max="${MAX_QUANTITY}"
-                                        value="${quantity}"
-                                        data-action="quantity"
-                                        data-index="${index}"
-                                        aria-label="Quantity"
-                                        inputmode="numeric"
-                                        autocomplete="off"
-                                    >
+                                        <h3
+                                            class="cart-item-title"
+                                        >
+
+                                            <a
+                                                href="${PRODUCTS_URL}"
+                                            >
+                                                ${name}
+                                            </a>
+
+                                        </h3>
 
 
-                                    <button
-                                        type="button"
-                                        data-action="increase"
-                                        data-index="${index}"
-                                        aria-label="Increase quantity"
+                                        <p
+                                            class="cart-item-price"
+                                        >
+                                            ${formatPrice(
+                                                price
+                                            )}
+                                            each
+                                        </p>
+
+
                                         ${
-                                            quantity >=
-                                                MAX_QUANTITY
-                                                ? "disabled"
+                                            variantText
+
+                                                ? `
+
+                                                    <p
+                                                        class="cart-item-variant"
+                                                    >
+
+                                                        ${svgIcon(
+                                                            "tune",
+                                                            "ui-icon ui-icon-sm"
+                                                        )}
+
+                                                        <span>
+                                                            ${variantText}
+                                                        </span>
+
+                                                    </p>
+
+                                                `
+
                                                 : ""
                                         }
-                                    >
 
-                                        ${materialIcon(
-                                            "add",
-                                            "icon-sm"
-                                        )}
-
-                                    </button>
+                                    </div>
 
                                 </div>
 
 
                                 <div
-                                    class="cart-item-subtotal"
+                                    class="cart-item-controls"
                                 >
 
-                                    <strong>
-                                        ${formatPrice(
-                                            lineTotal
-                                        )}
-                                    </strong>
-
-
-                                    <button
-                                        type="button"
-                                        class="cart-remove-button"
-                                        data-action="remove"
-                                        data-index="${index}"
-                                        aria-label="Remove ${name} from cart"
+                                    <div
+                                        class="quantity-control"
+                                        aria-label="Quantity controls"
                                     >
 
-                                        ${materialIcon(
-                                            "delete",
-                                            "icon-sm"
-                                        )}
+                                        <button
+                                            type="button"
+                                            data-action="decrease"
+                                            data-index="${index}"
+                                            aria-label="Decrease quantity"
+                                            ${
+                                                quantity <= 1
+                                                    ? "disabled"
+                                                    : ""
+                                            }
+                                        >
 
-                                        <span>
-                                            Remove
-                                        </span>
+                                            ${svgIcon(
+                                                "remove",
+                                                "ui-icon ui-icon-sm"
+                                            )}
 
-                                    </button>
+                                        </button>
+
+
+                                        <input
+                                            class="quantity-input"
+                                            type="number"
+                                            min="1"
+                                            max="${MAX_QUANTITY}"
+                                            step="1"
+                                            value="${quantity}"
+                                            data-action="quantity"
+                                            data-index="${index}"
+                                            aria-label="Quantity"
+                                            inputmode="numeric"
+                                            autocomplete="off"
+                                        >
+
+
+                                        <button
+                                            type="button"
+                                            data-action="increase"
+                                            data-index="${index}"
+                                            aria-label="Increase quantity"
+                                            ${
+                                                quantity >= MAX_QUANTITY
+                                                    ? "disabled"
+                                                    : ""
+                                            }
+                                        >
+
+                                            ${svgIcon(
+                                                "add",
+                                                "ui-icon ui-icon-sm"
+                                            )}
+
+                                        </button>
+
+                                    </div>
+
+
+                                    <div
+                                        class="cart-item-subtotal"
+                                    >
+
+                                        <strong>
+                                            ${formatPrice(
+                                                lineTotal
+                                            )}
+                                        </strong>
+
+
+                                        <button
+                                            type="button"
+                                            class="cart-remove-button"
+                                            data-action="remove"
+                                            data-index="${index}"
+                                            aria-label="Remove ${name} from cart"
+                                        >
+
+                                            ${svgIcon(
+                                                "delete",
+                                                "ui-icon ui-icon-sm"
+                                            )}
+
+                                            <span>
+                                                Remove
+                                            </span>
+
+                                        </button>
+
+                                    </div>
 
                                 </div>
 
-                            </div>
+                            </article>
 
-                        </article>
+                        `;
 
-                    `;
+                    }
+                )
+                .join("");
 
-                }
-            ).join("");
+
+        elements.cartItems.innerHTML =
+            html;
 
 
         attachCartImageFallbacks();
@@ -2334,16 +2359,13 @@
 
 
                             placeholder.innerHTML =
-                                materialIcon(
+                                svgIcon(
                                     "image",
-                                    "icon-md"
+                                    "ui-icon ui-icon-md"
                                 );
 
 
-                            image.remove();
-
-
-                            parent.appendChild(
+                            image.replaceWith(
                                 placeholder
                             );
 
@@ -2364,17 +2386,11 @@
        20. FRESH PRODUCT VALIDATION
        ========================================================================= */
 
-    async function fetchFreshProduct(
-        item
-    ) {
+    async function fetchFreshProduct(item) {
 
         const pid =
-            getCJProductId(
-                item
-            ) ||
-            getProductId(
-                item
-            );
+            getCJProductId(item) ||
+            getProductId(item);
 
 
         if (
@@ -2382,7 +2398,7 @@
         ) {
 
             throw new Error(
-                `Missing CJ product ID for ${item.name}.`
+                `Missing CJ product ID for ${item.name || "product"}.`
             );
 
         }
@@ -2393,11 +2409,9 @@
 
 
         const timeout =
-            setTimeout(
+            window.setTimeout(
                 () => {
-
                     controller.abort();
-
                 },
                 REQUEST_TIMEOUT
             );
@@ -2407,20 +2421,16 @@
 
             const response =
                 await fetch(
-
                     `${PRODUCTS_ENDPOINT}?pid=${encodeURIComponent(
                         pid
                     )}`,
-
                     {
                         method:
                             "GET",
 
                         headers: {
-
-                            "Accept":
+                            Accept:
                                 "application/json"
-
                         },
 
                         cache:
@@ -2428,9 +2438,7 @@
 
                         signal:
                             controller.signal
-
                     }
-
                 );
 
 
@@ -2439,7 +2447,6 @@
 
 
             let data;
-
 
             try {
 
@@ -2451,7 +2458,7 @@
             } catch {
 
                 throw new Error(
-                    "The product service returned an invalid response."
+                    "The product service returned invalid JSON."
                 );
 
             }
@@ -2459,26 +2466,54 @@
 
             if (
                 !response.ok ||
-                data?.success !==
-                    true ||
+                data?.success !== true ||
                 !data?.product
             ) {
 
                 throw new Error(
                     data?.error ||
-                    `Unable to refresh ${item.name}.`
+                    `Unable to refresh ${item.name || "product"}.`
                 );
 
             }
 
 
-            return normalizeCartItem(
-                data.product
-            );
+            const fresh =
+                normalizeCartItem(
+                    data.product
+                );
+
+
+            if (
+                !fresh
+            ) {
+
+                throw new Error(
+                    `Unable to normalize ${item.name || "product"}.`
+                );
+
+            }
+
+
+            return fresh;
+
+        } catch (error) {
+
+            if (
+                error?.name === "AbortError"
+            ) {
+
+                throw new Error(
+                    "The product validation request timed out."
+                );
+
+            }
+
+            throw error;
 
         } finally {
 
-            clearTimeout(
+            window.clearTimeout(
                 timeout
             );
 
@@ -2488,7 +2523,98 @@
 
 
     /* =========================================================================
-       21. REFRESH CART FOR CHECKOUT
+       21. VARIANT MATCHING
+       ========================================================================= */
+
+    function findMatchingVariant(
+        freshProduct,
+        cartItem
+    ) {
+
+        if (
+            !Array.isArray(
+                freshProduct?.variants
+            )
+        ) {
+
+            return null;
+
+        }
+
+
+        const selectedVid =
+            getVariantId(
+                cartItem
+            );
+
+
+        if (
+            selectedVid
+        ) {
+
+            const byVid =
+                freshProduct.variants.find(
+                    variant =>
+                        String(
+                            variant.vid
+                        ) ===
+                        String(
+                            selectedVid
+                        )
+                );
+
+
+            if (
+                byVid
+            ) {
+
+                return byVid;
+
+            }
+
+        }
+
+
+        const selectedSku =
+            getVariantSKU(
+                cartItem
+            );
+
+
+        if (
+            selectedSku
+        ) {
+
+            const bySku =
+                freshProduct.variants.find(
+                    variant =>
+                        String(
+                            variant.sku
+                        ).toLowerCase() ===
+                        String(
+                            selectedSku
+                        ).toLowerCase()
+                );
+
+
+            if (
+                bySku
+            ) {
+
+                return bySku;
+
+            }
+
+        }
+
+
+        return null;
+
+    }
+
+
+    /* =========================================================================
+       22. REFRESH CART FOR CHECKOUT
        ========================================================================= */
 
     async function refreshCartForCheckout() {
@@ -2508,13 +2634,11 @@
         }
 
 
-        const refreshed =
-            [];
+        const refreshed = [];
 
 
         for (
-            const item
-            of cart
+            const item of cart
         ) {
 
             const fresh =
@@ -2523,27 +2647,33 @@
                 );
 
 
+            const selectedVariant =
+                findMatchingVariant(
+                    fresh,
+                    item
+                );
+
+
+            /*
+             * A selected variant must still exist.
+             */
+
             if (
-                !fresh
+                getVariantId(item) ||
+                getVariantSKU(item)
             ) {
 
-                throw new Error(
-                    `Unable to validate ${item.name}.`
-                );
+                if (
+                    !selectedVariant
+                ) {
+
+                    throw new Error(
+                        `${item.name} is no longer available in the selected variant.`
+                    );
+
+                }
 
             }
-
-
-            const selectedVid =
-                getVariantId(
-                    item
-                );
-
-
-            const selectedVariantSku =
-                getVariantSKU(
-                    item
-                );
 
 
             let updated = {
@@ -2551,99 +2681,84 @@
                 ...fresh,
 
                 quantity:
-                    item.quantity,
+                    normalizeQuantity(
+                        item.quantity
+                    ),
 
                 variantId:
-                    selectedVid,
+                    getVariantId(item),
 
                 vid:
-                    selectedVid,
+                    getVariantId(item),
 
                 variantSku:
-                    selectedVariantSku,
+                    getVariantSKU(item),
 
                 variantOptions:
-                    getVariantOptions(
-                        item
-                    )
+                    getVariantOptions(item)
 
             };
 
 
             /*
-             * Preserve selected variant price when available.
+             * Use the current CJ variant price.
              */
 
             if (
-                selectedVid &&
-                Array.isArray(
-                    fresh.variants
-                )
+                selectedVariant
             ) {
 
-                const variant =
-                    fresh.variants.find(
-                        current =>
-                            String(
-                                current.vid
-                            ) ===
-                            String(
-                                selectedVid
-                            )
+                updated.price =
+                    normalizePrice(
+                        selectedVariant.price
                     );
 
+                updated.availableQuantity =
+                    normalizeInventory(
+                        selectedVariant.inventory
+                    );
 
-                if (
-                    variant
-                ) {
+            } else {
 
-                    updated.price =
-                        normalizePrice(
-                            variant.price
-                        );
+                /*
+                 * For non-variant products,
+                 * use current product inventory.
+                 */
 
-                }
+                updated.availableQuantity =
+                    normalizeInventory(
+                        fresh.quantity
+                    );
+
+            }
+
+
+            const available =
+                getAvailableQuantity(
+                    updated
+                );
+
+
+            if (
+                available > 0 &&
+                updated.quantity > available
+            ) {
+
+                throw new Error(
+                    `${item.name} has only ${available} unit${
+                        available === 1
+                            ? ""
+                            : "s"
+                    } available.`
+                );
 
             }
 
 
             /*
-             * Verify requested quantity against current inventory.
+             * Preserve the browser's selected quantity,
+             * but use fresh authoritative product information.
              */
-
-            const available =
-                Number(
-                    fresh.quantity
-                );
-
-
-            if (
-                Number.isFinite(
-                    available
-                ) &&
-                available > 0
-            ) {
-
-                if (
-                    item.quantity >
-                    available
-                ) {
-
-                    throw new Error(
-                        `${item.name} has only ${available} unit${
-                            available === 1
-                                ? ""
-                                : "s"
-                        } available.`
-                    );
-
-                }
-
-                updated.availableQuantity =
-                    available;
-
-            }
-
 
             refreshed.push(
                 updated
@@ -2670,7 +2785,7 @@
 
 
     /* =========================================================================
-       22. CHECKOUT SNAPSHOT
+       23. CHECKOUT SNAPSHOT
        ========================================================================= */
 
     function createCheckoutSnapshot(
@@ -2743,11 +2858,6 @@
                                 item.quantity
                             ),
 
-                        /*
-                         * This is only for checkout display.
-                         * Final price must be revalidated by Worker.
-                         */
-
                         displayPrice:
                             normalizePrice(
                                 item.price
@@ -2762,7 +2872,7 @@
 
 
     /* =========================================================================
-       23. PROCEED TO CHECKOUT
+       24. PROCEED TO CHECKOUT
        ========================================================================= */
 
     async function proceedToCheckout() {
@@ -2796,11 +2906,12 @@
                 "true"
             );
 
+
             button.innerHTML = `
 
-                ${materialIcon(
-                    "sync",
-                    "icon-md"
+                ${svgIcon(
+                    "refresh",
+                    "ui-icon ui-icon-md"
                 )}
 
                 <span>
@@ -2847,9 +2958,7 @@
             window.location.href =
                 CHECKOUT_URL;
 
-        } catch (
-            error
-        ) {
+        } catch (error) {
 
             console.error(
                 "[PRASUN SHOP] Checkout preparation error:",
@@ -2868,25 +2977,27 @@
                 "Unable to prepare checkout. Please try again."
             );
 
-
         } finally {
 
             checkoutBusy =
                 false;
 
 
+            /*
+             * This page may have navigated already.
+             * If it has not, restore the button.
+             */
+
             if (
                 elements.checkoutButton
             ) {
 
                 elements.checkoutButton.disabled =
-                    cart.length ===
-                    0;
+                    cart.length === 0;
 
                 elements.checkoutButton.setAttribute(
                     "aria-disabled",
-                    cart.length ===
-                        0
+                    cart.length === 0
                         ? "true"
                         : "false"
                 );
@@ -2894,9 +3005,9 @@
 
                 elements.checkoutButton.innerHTML = `
 
-                    ${materialIcon(
-                        "shopping_cart_checkout",
-                        "icon-md"
+                    ${svgIcon(
+                        "cartCheck",
+                        "ui-icon ui-icon-md"
                     )}
 
                     <span>
@@ -2913,30 +3024,31 @@
 
 
     /* =========================================================================
-       24. CHECKOUT ERROR
+       25. CHECKOUT ERROR
        ========================================================================= */
 
     function showCheckoutError(
         message
     ) {
 
-        const existing =
+        const oldNotice =
             document.getElementById(
                 "cart-checkout-error"
             );
 
 
         if (
-            existing
+            oldNotice
         ) {
 
-            existing.remove();
+            oldNotice.remove();
 
         }
 
 
         if (
-            !elements.cartItems
+            !elements.cartItems ||
+            !elements.cartItems.parentElement
         ) {
 
             return;
@@ -2960,28 +3072,11 @@
         );
 
 
-        notice.style.cssText = `
-
-            display:flex;
-            align-items:flex-start;
-            gap:10px;
-            margin:16px 24px;
-            padding:13px 14px;
-            border:1px solid #fecaca;
-            border-radius:12px;
-            background:#fef2f2;
-            color:#991b1b;
-            font-size:0.86rem;
-            line-height:1.5;
-
-        `;
-
-
         notice.innerHTML = `
 
-            ${materialIcon(
+            ${svgIcon(
                 "error",
-                "icon-sm"
+                "ui-icon ui-icon-sm"
             )}
 
             <span>
@@ -2991,6 +3086,45 @@
             </span>
 
         `;
+
+
+        /*
+         * Keep the styling compatible with both the new cart page
+         * and the existing stylesheet.
+         */
+
+        notice.style.display =
+            "flex";
+
+        notice.style.alignItems =
+            "flex-start";
+
+        notice.style.gap =
+            "10px";
+
+        notice.style.margin =
+            "16px 22px";
+
+        notice.style.padding =
+            "12px 14px";
+
+        notice.style.border =
+            "1px solid #fecaca";
+
+        notice.style.borderRadius =
+            "12px";
+
+        notice.style.background =
+            "#fef2f2";
+
+        notice.style.color =
+            "#991b1b";
+
+        notice.style.fontSize =
+            "0.84rem";
+
+        notice.style.lineHeight =
+            "1.5";
 
 
         elements.cartItems.parentElement.insertBefore(
@@ -3012,15 +3146,17 @@
 
 
     /* =========================================================================
-       25. ACCESSIBILITY ANNOUNCEMENTS
+       26. ACCESSIBILITY
        ========================================================================= */
 
-    function announce(
-        message
-    ) {
+    function announce(message) {
+
+        const liveRegion =
+            elements.liveRegion;
+
 
         if (
-            !elements.liveRegion
+            !liveRegion
         ) {
 
             return;
@@ -3028,14 +3164,14 @@
         }
 
 
-        elements.liveRegion.textContent =
+        liveRegion.textContent =
             "";
 
 
         window.setTimeout(
             () => {
 
-                elements.liveRegion.textContent =
+                liveRegion.textContent =
                     String(
                         message ||
                         ""
@@ -3049,13 +3185,13 @@
 
 
     /* =========================================================================
-       26. EVENT LISTENERS
+       27. EVENT LISTENERS
        ========================================================================= */
 
     function bindEvents() {
 
         /*
-         * Cart item controls
+         * Cart controls
          */
 
         if (
@@ -3088,9 +3224,7 @@
 
 
                     if (
-                        !Number.isInteger(
-                            index
-                        ) ||
+                        !Number.isInteger(index) ||
                         index < 0 ||
                         index >= cart.length
                     ) {
@@ -3111,11 +3245,10 @@
 
                         updateQuantity(
                             index,
-                            cart[
-                                index
-                            ].quantity +
-                                1
+                            cart[index].quantity + 1
                         );
+
+                        return;
 
                     }
 
@@ -3127,11 +3260,10 @@
 
                         updateQuantity(
                             index,
-                            cart[
-                                index
-                            ].quantity -
-                                1
+                            cart[index].quantity - 1
                         );
+
+                        return;
 
                     }
 
@@ -3152,7 +3284,7 @@
 
 
             /*
-             * Quantity input
+             * Quantity field
              */
 
             elements.cartItems.addEventListener(
@@ -3185,10 +3317,6 @@
             );
 
 
-            /*
-             * Enter key on quantity input
-             */
-
             elements.cartItems.addEventListener(
                 "keydown",
                 event => {
@@ -3209,8 +3337,7 @@
 
 
                     if (
-                        event.key ===
-                        "Enter"
+                        event.key === "Enter"
                     ) {
 
                         event.preventDefault();
@@ -3262,10 +3389,14 @@
                     }
 
 
-                    if (
+                    const confirmed =
                         window.confirm(
                             "Are you sure you want to clear your cart?"
-                        )
+                        );
+
+
+                    if (
+                        confirmed
                     ) {
 
                         clearCart();
@@ -3279,12 +3410,12 @@
 
 
         /*
-         * Products pages can dispatch:
+         * Product pages can send:
          *
          * document.dispatchEvent(
-         *   new CustomEvent("cart:add", {
-         *     detail: product
-         *   })
+         *     new CustomEvent("cart:add", {
+         *         detail: product
+         *     })
          * )
          */
 
@@ -3309,7 +3440,7 @@
 
 
     /* =========================================================================
-       27. CROSS-TAB SYNCHRONIZATION
+       28. CROSS-TAB SYNCHRONIZATION
        ========================================================================= */
 
     window.addEventListener(
@@ -3317,9 +3448,7 @@
         event => {
 
             if (
-                event.key ===
-                    CART_KEY ||
-
+                event.key === CART_KEY ||
                 LEGACY_KEYS.includes(
                     event.key
                 )
@@ -3370,7 +3499,7 @@
 
 
     /* =========================================================================
-       28. PUBLIC API
+       29. PUBLIC API
        ========================================================================= */
 
     window.addToCart =
@@ -3431,7 +3560,7 @@
 
 
     /* =========================================================================
-       29. INITIALIZATION
+       30. INITIALIZATION
        ========================================================================= */
 
     function initialize() {
