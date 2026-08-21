@@ -1,11 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>PRASUN SHOP — products.js</title>
-</head>
-<body>
-<pre><code>/**
+/**
  * ============================================================================
  * PRASUN SHOP — PRODUCTS MANAGER
  * ============================================================================
@@ -4605,6 +4598,4 @@
     };
 
 })();
-</code></pre>
-</body>
-</html>
+
