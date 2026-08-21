@@ -265,127 +265,114 @@
                  ======================================================== -->
 
             <section
-                class="search-filter-bar products-toolbar"
-                aria-label="Product search and sorting"
+    class="search-filter-bar products-toolbar"
+    aria-label="Product search and sorting"
+>
+
+    <div class="search-container product-search-container">
+
+        <label
+            for="product-search"
+            class="visually-hidden"
+        >
+            Search products
+        </label>
+
+        <svg
+            class="ui-icon ui-icon-sm"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+        >
+            <circle
+                cx="11"
+                cy="11"
+                r="6.5"
+            ></circle>
+
+            <path
+                d="m16 16 5 5"
+            ></path>
+        </svg>
+
+        <input
+            id="product-search"
+            class="products-search-input"
+            type="search"
+            placeholder="Search products..."
+            autocomplete="off"
+            spellcheck="false"
+            enterkeyhint="search"
+            aria-label="Search products"
+        >
+
+        <button
+            id="clear-search"
+            type="button"
+            aria-label="Clear search"
+            title="Clear search"
+            hidden
+        >
+
+            <svg
+                class="ui-icon ui-icon-sm"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
             >
+                <path d="M6 6l12 12"></path>
+                <path d="M18 6L6 18"></path>
+            </svg>
 
-                <div
-                    class="search-container product-search-container"
-                >
+        </button>
 
-                    <label
-                        for="product-search"
-                        class="visually-hidden"
-                    >
-                        Search products
-                    </label>
+    </div>
 
 
-                    <svg
-                        class="ui-icon ui-icon-sm search-input-icon"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                        focusable="false"
-                    >
+    <label
+        for="product-sort"
+        class="visually-hidden"
+    >
+        Sort products
+    </label>
 
-                        <circle
-                            cx="11"
-                            cy="11"
-                            r="7"
-                        ></circle>
+    <select
+        id="product-sort"
+        class="product-sort"
+        aria-label="Sort products"
+    >
 
-                        <path
-                            d="m20 20-4-4"
-                        ></path>
+        <option value="featured">
+            Featured
+        </option>
 
-                    </svg>
+        <option value="Price: Low to High">
+            Price: Low to High
+        </option>
 
+        <option value="Price: High to Low">
+            Price: High to Low
+        </option>
 
-                    <input
-                        id="product-search"
-                        class="products-search-input"
-                        type="search"
-                        placeholder="Search products"
-                        autocomplete="off"
-                        spellcheck="false"
-                        enterkeyhint="search"
-                        aria-label="Search products"
-                    >
+        <option value="A to Z">
+            Name: A to Z
+        </option>
 
+        <option value="Z to A">
+            Name: Z to A
+        </option>
 
-                    <button
-                        id="clear-search"
-                        type="button"
-                        aria-label="Clear search"
-                        title="Clear search"
-                        hidden
-                    >
+    </select>
 
-                        <svg
-                            class="ui-icon ui-icon-sm"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                            focusable="false"
-                        >
-
-                            <path d="M6 6l12 12"></path>
-
-                            <path d="M18 6L6 18"></path>
-
-                        </svg>
-
-                    </button>
-
-                </div>
-
-
-                <label
-                    for="product-sort"
-                    class="visually-hidden"
-                >
-                    Sort products
-                </label>
-
-
-                <select
-                    id="product-sort"
-                    class="product-sort"
-                    aria-label="Sort products"
-                >
-
-                    <option value="featured">
-                        Featured
-                    </option>
-
-                    <option value="Price: Low to High">
-                        Price: Low to High
-                    </option>
-
-                    <option value="Price: High to Low">
-                        Price: High to Low
-                    </option>
-
-                    <option value="A to Z">
-                        Name: A to Z
-                    </option>
-
-                    <option value="Z to A">
-                        Name: Z to A
-                    </option>
-
-                </select>
-
-            </section>
+</section>
 
 
             <!-- ========================================================
