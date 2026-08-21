@@ -20,7 +20,7 @@
  *        ↓
  * local search
  *        ↓
- * local categories
+ * local category matching
  *        ↓
  * local sorting
  *
@@ -28,20 +28,13 @@
  * IMPORTANT
  * ============================================================================
  *
- * This file NEVER requests CJ categories for storefront filtering.
- *
- * All Products:
- *     Shows every product returned by /api/products.
- *
- * Categories:
- *     Filter the already-loaded catalog locally.
- *
- * Search:
- *     Searches the already-loaded catalog locally.
- *
- * No hard 5,000-product limit is applied here.
- *
- * ============================================================================
+ * 1. All Products NEVER applies a category filter.
+ * 2. Store categories are filtered locally.
+ * 3. Search is local.
+ * 4. No additional CJ API request is made when a category is clicked.
+ * 5. No hard 5,000-product storefront limit.
+ * 6. CJ category hierarchy is used whenever available.
+ * 7. Keyword matching is used as a fallback.
  *
  * STORE CATEGORIES
  * ============================================================================
@@ -89,35 +82,23 @@
         REQUEST_TIMEOUT:
             45000,
 
-        /*
-         * Do NOT use a fixed catalog ceiling.
-         *
-         * The Worker is authoritative.
-         */
         MAX_PRODUCTS:
             Number.POSITIVE_INFINITY,
 
-        /*
-         * Render gradually.
-         */
         RENDER_BATCH_SIZE:
             60,
 
-        DEFAULT_CATEGORY:
-            "General",
-
-        /*
-         * Maximum number of search terms.
-         * Prevents pathological search strings.
-         */
         MAX_SEARCH_TERMS:
-            12
+            12,
+
+        DEFAULT_CATEGORY:
+            "General"
 
     };
 
 
     /* =========================================================================
-       2. PLACEHOLDER IMAGE
+       2. PLACEHOLDER
        ========================================================================= */
 
     const PLACEHOLDER_IMAGE =
@@ -129,7 +110,6 @@
                 height="600"
                 viewBox="0 0 600 600"
             >
-
                 <rect
                     width="600"
                     height="600"
@@ -174,484 +154,517 @@
                 >
                     Image Unavailable
                 </text>
-
             </svg>
         `);
 
 
     /* =========================================================================
-       3. STORE CATEGORY DEFINITIONS
+       3. CATEGORY DEFINITIONS
        ========================================================================= */
-
-    /*
-     * These are intentionally BROAD.
-     *
-     * We search across:
-     *
-     * - title
-     * - name
-     * - description
-     * - category
-     * - category levels
-     * - category path
-     * - product type
-     * - SKU
-     *
-     * Therefore a product does not need an exact CJ category name
-     * to appear in the corresponding storefront category.
-     */
 
     const CATEGORY_MAP = [
 
         {
-            label:
-                "All Products",
-
-            query:
-                "",
-
-            icon:
-                "apps",
-
-            terms:
-                []
+            label: "All Products",
+            query: "",
+            icon: "apps",
+            terms: []
         },
 
-
         {
-            label:
-                "Solar Lights",
+            label: "Solar Lights",
+            query: "solar-lights",
+            icon: "solar",
 
-            query:
-                "solar-lights",
+            terms: [
+                "solar light",
+                "solar lights",
+                "solar lamp",
+                "solar lighting",
+                "solar led light",
+                "solar outdoor light",
+                "solar garden light",
+                "solar street light",
+                "solar wall light",
+                "solar flood light",
+                "solar floodlight",
+                "solar spotlight",
+                "solar pathway light",
+                "solar lawn light",
+                "solar motion light",
+                "solar security light",
+                "solar powered light",
+                "solar powered lamp",
+                "solar garden lamp",
+                "solar outdoor lamp",
+                "solar street lamp"
+            ],
 
-            icon:
-                "solar",
+            exactCategoryTerms: [
+                "solar light",
+                "solar lighting",
+                "solar lamp",
+                "solar lamps",
+                "solar led lighting",
+                "solar street lighting",
+                "solar outdoor lighting"
+            ],
 
-            terms:
-                [
-                    "solar",
-                    "solar light",
-                    "solar lights",
-                    "solar lamp",
-                    "solar lighting",
-                    "solar led",
-                    "solar led light",
-                    "solar outdoor",
-                    "solar garden",
-                    "solar street",
-                    "solar wall",
-                    "solar flood",
-                    "solar floodlight",
-                    "solar spotlight",
-                    "solar pathway",
-                    "solar lawn",
-                    "solar motion",
-                    "solar powered light",
-                    "solar powered lamp",
-                    "solar garden lamp",
-                    "solar outdoor lamp"
-                ]
+            requiredTitlePairs: [
+                ["solar", "light"],
+                ["solar", "lamp"],
+                ["solar", "lighting"],
+                ["solar", "flood"],
+                ["solar", "spotlight"],
+                ["solar", "street"],
+                ["solar", "wall"],
+                ["solar", "garden"],
+                ["solar", "pathway"],
+                ["solar", "motion"]
+            ]
         },
 
-
         {
-            label:
-                "Battery",
+            label: "Battery",
+            query: "battery",
+            icon: "battery",
 
-            query:
+            terms: [
                 "battery",
+                "batteries",
+                "rechargeable battery",
+                "lithium battery",
+                "lithium ion",
+                "li ion",
+                "li ion battery",
+                "li-ion",
+                "battery pack",
+                "battery bank",
+                "power battery",
+                "aa battery",
+                "aaa battery",
+                "18650",
+                "21700",
+                "lifepo4",
+                "life po4",
+                "rechargeable cell",
+                "battery cell",
+                "energy storage battery"
+            ],
 
-            icon:
+            exactCategoryTerms: [
+                "batteries",
                 "battery",
+                "rechargeable battery",
+                "lithium battery",
+                "battery accessories"
+            ],
 
-            terms:
-                [
-                    "battery",
-                    "batteries",
-                    "rechargeable battery",
-                    "lithium battery",
-                    "lithium ion",
-                    "li-ion",
-                    "li ion",
-                    "battery pack",
-                    "battery bank",
-                    "power battery",
-                    "aa battery",
-                    "aaa battery",
-                    "18650",
-                    "21700",
-                    "lifepo4",
-                    "li-ion battery",
-                    "rechargeable cell",
-                    "battery charger"
-                ]
+            requiredTitlePatterns: [
+                /\bbattery\b/,
+                /\bbatteries\b/,
+                /\b18650\b/,
+                /\b21700\b/,
+                /\blifepo4\b/
+            ]
         },
 
-
         {
-            label:
-                "Chargers",
+            label: "Chargers",
+            query: "chargers",
+            icon: "charger",
 
-            query:
-                "chargers",
-
-            icon:
+            terms: [
                 "charger",
+                "chargers",
+                "charging",
+                "charging station",
+                "fast charger",
+                "fast charging",
+                "quick charger",
+                "quick charge",
+                "wall charger",
+                "usb charger",
+                "type c charger",
+                "type-c charger",
+                "phone charger",
+                "mobile charger",
+                "wireless charger",
+                "car charger",
+                "travel charger",
+                "charging adapter",
+                "power adapter",
+                "usb power adapter",
+                "ac adapter"
+            ],
 
-            terms:
-                [
-                    "charger",
-                    "chargers",
-                    "charging",
-                    "charging station",
-                    "fast charger",
-                    "fast charging",
-                    "quick charger",
-                    "quick charge",
-                    "wall charger",
-                    "usb charger",
-                    "type c charger",
-                    "type-c charger",
-                    "phone charger",
-                    "mobile charger",
-                    "wireless charger",
-                    "car charger",
-                    "travel charger",
-                    "charging adapter",
-                    "power adapter",
-                    "usb power adapter",
-                    "ac adapter"
-                ]
+            exactCategoryTerms: [
+                "chargers",
+                "charger",
+                "power adapters",
+                "charging accessories",
+                "mobile phone accessories"
+            ],
+
+            exclusions: [
+                "power bank only",
+                "powerbank only"
+            ]
         },
 
-
         {
-            label:
-                "Power Bank",
+            label: "Power Bank",
+            query: "power-bank",
+            icon: "powerbank",
 
-            query:
-                "power-bank",
-
-            icon:
+            terms: [
+                "power bank",
                 "powerbank",
+                "portable power bank",
+                "portable charger",
+                "portable battery",
+                "mobile power bank",
+                "emergency power bank",
+                "power bank charger",
+                "mini power bank",
+                "magnetic power bank",
+                "wireless power bank",
+                "solar power bank"
+            ],
 
-            terms:
-                [
-                    "power bank",
-                    "powerbank",
-                    "portable power bank",
-                    "portable charger",
-                    "portable battery",
-                    "mobile power",
-                    "emergency power bank",
-                    "power bank charger",
-                    "power station",
-                    "portable power station"
-                ]
+            exactCategoryTerms: [
+                "power bank",
+                "power banks",
+                "portable power bank",
+                "portable charger",
+                "mobile power"
+            ],
+
+            requiredTitlePairs: [
+                ["power", "bank"],
+                ["powerbank"],
+                ["portable", "charger"],
+                ["portable", "battery"]
+            ]
         },
 
-
         {
-            label:
-                "Cables",
+            label: "Cables",
+            query: "cables",
+            icon: "cable",
 
-            query:
-                "cables",
-
-            icon:
+            terms: [
                 "cable",
+                "cables",
+                "usb cable",
+                "charging cable",
+                "data cable",
+                "type c cable",
+                "type-c cable",
+                "usb-c cable",
+                "usbc cable",
+                "lightning cable",
+                "micro usb cable",
+                "micro-usb cable",
+                "hdmi cable",
+                "network cable",
+                "ethernet cable",
+                "lan cable",
+                "audio cable",
+                "aux cable",
+                "display cable",
+                "dp cable",
+                "displayport cable",
+                "power cable"
+            ],
 
-            terms:
-                [
-                    "cable",
-                    "cables",
-                    "usb cable",
-                    "charging cable",
-                    "data cable",
-                    "type c cable",
-                    "type-c cable",
-                    "usb-c cable",
-                    "usbc cable",
-                    "lightning cable",
-                    "micro usb cable",
-                    "micro-usb cable",
-                    "hdmi cable",
-                    "network cable",
-                    "ethernet cable",
-                    "lan cable",
-                    "audio cable",
-                    "aux cable",
-                    "display cable",
-                    "dp cable",
-                    "displayport cable",
-                    "power cable"
-                ]
+            exactCategoryTerms: [
+                "cables",
+                "charging cables",
+                "usb cables",
+                "data cables",
+                "computer cables",
+                "audio cables"
+            ]
         },
 
-
         {
-            label:
-                "Earphones",
+            label: "Earphones",
+            query: "earphones",
+            icon: "earphone",
 
-            query:
-                "earphones",
-
-            icon:
+            terms: [
                 "earphone",
+                "earphones",
+                "earbud",
+                "earbuds",
+                "tws",
+                "true wireless",
+                "wireless earbud",
+                "wireless earbuds",
+                "bluetooth earphone",
+                "bluetooth earbuds",
+                "in-ear",
+                "in ear",
+                "in-ear headphones",
+                "sports earphones",
+                "headset earbuds"
+            ],
 
-            terms:
-                [
-                    "earphone",
-                    "earphones",
-                    "earbud",
-                    "earbuds",
-                    "tws",
-                    "true wireless",
-                    "wireless earbud",
-                    "wireless earbuds",
-                    "bluetooth earphone",
-                    "bluetooth earbuds",
-                    "in-ear",
-                    "in ear",
-                    "in-ear headphones",
-                    "sports earphones",
-                    "headset earbuds"
-                ]
+            exactCategoryTerms: [
+                "earphones",
+                "earbuds",
+                "true wireless stereo",
+                "tws earbuds",
+                "in-ear headphones"
+            ]
         },
 
-
         {
-            label:
-                "Headphones",
+            label: "Headphones",
+            query: "headphones",
+            icon: "headphone",
 
-            query:
-                "headphones",
-
-            icon:
+            terms: [
                 "headphone",
+                "headphones",
+                "headset",
+                "gaming headset",
+                "gaming headphones",
+                "bluetooth headset",
+                "wireless headset",
+                "wireless headphones",
+                "over-ear",
+                "over ear",
+                "on-ear",
+                "on ear",
+                "stereo headset",
+                "pc headset",
+                "computer headset",
+                "gaming headphone"
+            ],
 
-            terms:
-                [
-                    "headphone",
-                    "headphones",
-                    "headset",
-                    "gaming headset",
-                    "gaming headphones",
-                    "bluetooth headset",
-                    "wireless headset",
-                    "wireless headphones",
-                    "over-ear",
-                    "over ear",
-                    "on-ear",
-                    "on ear",
-                    "stereo headset",
-                    "pc headset",
-                    "computer headset",
-                    "gaming headphone"
-                ]
+            exactCategoryTerms: [
+                "headphones",
+                "headsets",
+                "gaming headsets",
+                "wireless headphones",
+                "over ear headphones"
+            ]
         },
 
-
         {
-            label:
-                "Modem",
+            label: "Modem",
+            query: "modem",
+            icon: "modem",
 
-            query:
+            terms: [
                 "modem",
+                "4g modem",
+                "5g modem",
+                "lte modem",
+                "usb modem",
+                "mobile modem",
+                "wireless modem",
+                "cellular modem",
+                "4g usb modem",
+                "5g usb modem",
+                "mobile broadband"
+            ],
 
-            icon:
-                "modem",
-
-            terms:
-                [
-                    "modem",
-                    "4g modem",
-                    "5g modem",
-                    "lte modem",
-                    "usb modem",
-                    "mobile modem",
-                    "wireless modem",
-                    "cellular modem",
-                    "4g usb modem",
-                    "5g usb modem",
-                    "mobile broadband"
-                ]
+            exactCategoryTerms: [
+                "modems",
+                "4g modems",
+                "5g modems",
+                "lte modems"
+            ]
         },
 
-
         {
-            label:
-                "Routers",
+            label: "Routers",
+            query: "routers",
+            icon: "router",
 
-            query:
-                "routers",
-
-            icon:
+            terms: [
                 "router",
+                "routers",
+                "wifi router",
+                "wi-fi router",
+                "wireless router",
+                "4g router",
+                "5g router",
+                "lte router",
+                "network router",
+                "mesh router",
+                "wifi mesh",
+                "wi-fi mesh",
+                "wireless networking",
+                "network gateway"
+            ],
 
-            terms:
-                [
-                    "router",
-                    "routers",
-                    "wifi router",
-                    "wi-fi router",
-                    "wireless router",
-                    "4g router",
-                    "5g router",
-                    "lte router",
-                    "network router",
-                    "mesh router",
-                    "wifi mesh",
-                    "wi-fi mesh",
-                    "network gateway",
-                    "wireless network"
-                ]
+            exactCategoryTerms: [
+                "routers",
+                "wireless routers",
+                "wifi routers",
+                "network routers",
+                "mesh routers"
+            ]
         },
 
-
         {
-            label:
-                "Laptops",
+            label: "Laptops",
+            query: "laptops",
+            icon: "laptop",
 
-            query:
-                "laptops",
-
-            icon:
+            terms: [
                 "laptop",
+                "laptops",
+                "notebook",
+                "notebooks",
+                "ultrabook",
+                "chromebook",
+                "gaming laptop",
+                "gaming notebook",
+                "computer notebook",
+                "portable computer",
+                "netbook",
+                "windows laptop",
+                "macbook"
+            ],
 
-            terms:
-                [
-                    "laptop",
-                    "laptops",
-                    "notebook",
-                    "notebooks",
-                    "ultrabook",
-                    "chromebook",
-                    "gaming laptop",
-                    "gaming notebook",
-                    "computer notebook",
-                    "portable computer",
-                    "netbook",
-                    "windows laptop",
-                    "macbook"
-                ]
+            exactCategoryTerms: [
+                "laptops",
+                "notebooks",
+                "computers",
+                "notebook computers",
+                "portable computers"
+            ]
         },
 
-
         {
-            label:
-                "Power Tools",
+            label: "Power Tools",
+            query: "power-tools",
+            icon: "tool",
 
-            query:
-                "power-tools",
+            terms: [
+                "power tool",
+                "power tools",
+                "drill",
+                "cordless drill",
+                "electric drill",
+                "impact driver",
+                "impact wrench",
+                "grinder",
+                "angle grinder",
+                "screwdriver",
+                "electric screwdriver",
+                "cordless screwdriver",
+                "saw",
+                "circular saw",
+                "jigsaw",
+                "reciprocating saw",
+                "sander",
+                "rotary tool",
+                "heat gun",
+                "polisher",
+                "cutting tool",
+                "hammer drill",
+                "power cutter",
+                "electric tool"
+            ],
 
-            icon:
-                "tool",
-
-            terms:
-                [
-                    "power tool",
-                    "power tools",
-                    "drill",
-                    "cordless drill",
-                    "electric drill",
-                    "impact driver",
-                    "impact wrench",
-                    "grinder",
-                    "angle grinder",
-                    "screwdriver",
-                    "electric screwdriver",
-                    "cordless screwdriver",
-                    "saw",
-                    "circular saw",
-                    "jigsaw",
-                    "reciprocating saw",
-                    "sander",
-                    "rotary tool",
-                    "heat gun",
-                    "polisher",
-                    "cutting tool",
-                    "hammer drill",
-                    "power cutter",
-                    "electric tool"
-                ]
+            exactCategoryTerms: [
+                "power tools",
+                "power tool",
+                "electric tools",
+                "hand tools",
+                "drills",
+                "grinders",
+                "saws"
+            ]
         },
 
-
         {
-            label:
-                "Camera",
+            label: "Camera",
+            query: "camera",
+            icon: "camera",
 
-            query:
+            terms: [
                 "camera",
+                "cameras",
+                "digital camera",
+                "security camera",
+                "cctv",
+                "ip camera",
+                "wireless camera",
+                "wifi camera",
+                "wi-fi camera",
+                "action camera",
+                "webcam",
+                "web camera",
+                "dash camera",
+                "dash cam",
+                "surveillance camera",
+                "outdoor camera",
+                "indoor camera",
+                "home camera",
+                "baby camera",
+                "doorbell camera",
+                "camera lens",
+                "camcorder"
+            ],
 
-            icon:
-                "camera",
-
-            terms:
-                [
-                    "camera",
-                    "cameras",
-                    "digital camera",
-                    "security camera",
-                    "cctv",
-                    "ip camera",
-                    "wireless camera",
-                    "wifi camera",
-                    "wi-fi camera",
-                    "action camera",
-                    "webcam",
-                    "web camera",
-                    "dash camera",
-                    "dash cam",
-                    "surveillance camera",
-                    "outdoor camera",
-                    "indoor camera",
-                    "home camera",
-                    "baby camera",
-                    "doorbell camera",
-                    "camera lens",
-                    "camcorder"
-                ]
+            exactCategoryTerms: [
+                "cameras",
+                "digital cameras",
+                "security cameras",
+                "surveillance cameras",
+                "action cameras",
+                "webcams",
+                "camera accessories"
+            ]
         },
 
-
         {
-            label:
-                "Smart Home",
+            label: "Smart Home",
+            query: "smart-home",
+            icon: "home",
 
-            query:
-                "smart-home",
+            terms: [
+                "smart home",
+                "smart device",
+                "smart devices",
+                "smart switch",
+                "smart plug",
+                "smart socket",
+                "smart sensor",
+                "smart lock",
+                "smart bulb",
+                "smart light",
+                "smart lighting",
+                "smart thermostat",
+                "smart security",
+                "smart doorbell",
+                "smart camera",
+                "wifi smart",
+                "wi-fi smart",
+                "home automation",
+                "smart automation",
+                "smart relay",
+                "smart remote",
+                "smart controller"
+            ],
 
-            icon:
-                "home",
-
-            terms:
-                [
-                    "smart home",
-                    "smart device",
-                    "smart devices",
-                    "smart switch",
-                    "smart plug",
-                    "smart socket",
-                    "smart sensor",
-                    "smart lock",
-                    "smart bulb",
-                    "smart light",
-                    "smart lighting",
-                    "smart thermostat",
-                    "smart security",
-                    "smart doorbell",
-                    "smart camera",
-                    "wifi smart",
-                    "wi-fi smart",
-                    "home automation",
-                    "smart automation",
-                    "smart relay",
-                    "smart remote",
-                    "smart controller"
-                ]
+            exactCategoryTerms: [
+                "smart home",
+                "smart devices",
+                "home automation",
+                "smart lighting",
+                "smart switches",
+                "smart plugs",
+                "smart sensors",
+                "smart security"
+            ]
         }
 
     ];
@@ -663,29 +676,21 @@
 
     const state = {
 
-        products:
-            [],
+        products: [],
 
-        filteredProducts:
-            [],
+        filteredProducts: [],
 
-        activeCategory:
-            "",
+        activeCategory: "",
 
-        searchQuery:
-            "",
+        searchQuery: "",
 
-        sortBy:
-            "featured",
+        sortBy: "featured",
 
-        loading:
-            false,
+        loading: false,
 
-        initialized:
-            false,
+        initialized: false,
 
-        renderToken:
-            0
+        renderToken: 0
 
     };
 
@@ -696,38 +701,27 @@
 
     const elements = {
 
-        productList:
-            null,
+        productList: null,
 
-        resultsCount:
-            null,
+        resultsCount: null,
 
-        searchInput:
-            null,
+        searchInput: null,
 
-        clearSearchButton:
-            null,
+        clearSearchButton: null,
 
-        sortSelect:
-            null,
+        sortSelect: null,
 
-        categoriesNav:
-            null,
+        categoriesNav: null,
 
-        pageHeading:
-            null,
+        pageHeading: null,
 
-        liveRegion:
-            null,
+        liveRegion: null,
 
-        productModal:
-            null,
+        productModal: null,
 
-        modalBody:
-            null,
+        modalBody: null,
 
-        modalClose:
-            null
+        modalClose: null
 
     };
 
@@ -737,17 +731,13 @@
        ========================================================================= */
 
     if (
-        document.readyState ===
-        "loading"
+        document.readyState === "loading"
     ) {
 
         document.addEventListener(
             "DOMContentLoaded",
             initialize,
-            {
-                once:
-                    true
-            }
+            { once: true }
         );
 
     } else {
@@ -767,10 +757,8 @@
 
         }
 
-
         state.initialized =
             true;
-
 
         cacheDOM();
 
@@ -785,12 +773,6 @@
         updatePageHeading();
 
         renderLoadingState();
-
-
-        /*
-         * Let the browser paint categories before
-         * starting the API request.
-         */
 
         window.setTimeout(
             loadCatalog,
@@ -811,60 +793,50 @@
                 "product-list"
             );
 
-
         elements.resultsCount =
             document.getElementById(
                 "results-count"
             );
-
 
         elements.searchInput =
             document.getElementById(
                 "product-search"
             );
 
-
         elements.clearSearchButton =
             document.getElementById(
                 "clear-search"
             );
-
 
         elements.sortSelect =
             document.getElementById(
                 "product-sort"
             );
 
-
         elements.categoriesNav =
             document.getElementById(
                 "products-categories"
             );
-
 
         elements.pageHeading =
             document.getElementById(
                 "page-heading"
             );
 
-
         elements.liveRegion =
             document.getElementById(
                 "aria-live-region"
             );
-
 
         elements.productModal =
             document.getElementById(
                 "product-modal"
             );
 
-
         elements.modalBody =
             document.getElementById(
                 "modal-body"
             );
-
 
         elements.modalClose =
             document.getElementById(
@@ -877,8 +849,7 @@
     function loadInitialSort() {
 
         if (
-            elements.sortSelect &&
-            elements.sortSelect.value
+            elements.sortSelect?.value
         ) {
 
             state.sortBy =
@@ -903,31 +874,23 @@
                 className
             );
 
-
         const icons = {
 
-            apps:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                >
+            apps: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <rect x="4" y="4" width="6" height="6" rx="1"></rect>
                     <rect x="14" y="4" width="6" height="6" rx="1"></rect>
                     <rect x="4" y="14" width="6" height="6" rx="1"></rect>
                     <rect x="14" y="14" width="6" height="6" rx="1"></rect>
                 </svg>
-                `,
+            `,
 
-            solar:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            solar: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <circle cx="12" cy="12" r="4"></circle>
                     <path d="M12 2v2"></path>
                     <path d="M12 20v2"></path>
@@ -938,110 +901,86 @@
                     <path d="m19.1 4.9-1.4 1.4"></path>
                     <path d="m6.3 17.7-1.4 1.4"></path>
                 </svg>
-                `,
+            `,
 
-            battery:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            battery: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <rect x="3" y="7" width="17" height="10" rx="2"></rect>
                     <path d="M21 10v4"></path>
                     <path d="M8 12h7"></path>
                 </svg>
-                `,
+            `,
 
-            charger:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            charger: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path d="M9 2v6"></path>
                     <path d="M15 2v6"></path>
                     <path d="M7 8h10"></path>
                     <path d="M12 8v14"></path>
                 </svg>
-                `,
+            `,
 
-            powerbank:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            powerbank: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <rect x="4" y="4" width="16" height="16" rx="2"></rect>
                     <path d="M8 12h8"></path>
                     <path d="M12 8v8"></path>
                 </svg>
-                `,
+            `,
 
-            cable:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            cable: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path d="M7 3v5"></path>
                     <path d="M17 16v5"></path>
                     <path d="M7 8c0 5 10 3 10 8"></path>
                     <path d="M5 3h4"></path>
                     <path d="M15 21h4"></path>
                 </svg>
-                `,
+            `,
 
-            earphone:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            earphone: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path d="M7 13a4 4 0 1 1 4-4v7"></path>
                     <path d="M17 13a4 4 0 1 0-4-4v7"></path>
                 </svg>
-                `,
+            `,
 
-            headphone:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            headphone: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path d="M4 15v-3a8 8 0 0 1 16 0v3"></path>
                     <path d="M4 15h3v5H5a1 1 0 0 1-1-1z"></path>
                     <path d="M20 15h-3v5h2a1 1 0 0 1-1-1z"></path>
                 </svg>
-                `,
+            `,
 
-            modem:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            modem: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <rect x="4" y="9" width="16" height="9" rx="2"></rect>
                     <path d="M8 13h.01"></path>
                     <path d="M12 13h.01"></path>
                     <path d="M16 13h.01"></path>
                     <path d="M9 6h6"></path>
                 </svg>
-                `,
+            `,
 
-            router:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            router: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <rect x="3" y="10" width="18" height="8" rx="2"></rect>
                     <path d="M8 10V7"></path>
                     <path d="M16 10V7"></path>
@@ -1049,161 +988,124 @@
                     <path d="M10 14h.01"></path>
                     <path d="M14 14h.01"></path>
                 </svg>
-                `,
+            `,
 
-            laptop:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            laptop: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <rect x="5" y="4" width="14" height="11" rx="1.5"></rect>
                     <path d="M3 19h18"></path>
                     <path d="M8 19l1-3h6l1 3"></path>
                 </svg>
-                `,
+            `,
 
-            tool:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            tool: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path d="M14 6a5 5 0 0 0-7 7l-4 4 4 4 4-4a5 5 0 0 0 7-7"></path>
                     <path d="m13 11 4 4"></path>
                 </svg>
-                `,
+            `,
 
-            camera:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            camera: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path d="M4 7h4l2-2h4l2 2h4v12H4z"></path>
                     <circle cx="12" cy="13" r="3"></circle>
                 </svg>
-                `,
+            `,
 
-            home:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            home: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path d="M3 11 12 4l9 7"></path>
                     <path d="M5 10v10h14V10"></path>
                     <path d="M9 20v-5h6v5"></path>
                 </svg>
-                `,
+            `,
 
-            category:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            category: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <rect x="4" y="4" width="6" height="6" rx="1"></rect>
                     <rect x="14" y="4" width="6" height="6" rx="1"></rect>
                     <rect x="4" y="14" width="6" height="6" rx="1"></rect>
                     <rect x="14" y="14" width="6" height="6" rx="1"></rect>
                 </svg>
-                `,
+            `,
 
-            eye:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            eye: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
                     <circle cx="12" cy="12" r="2.5"></circle>
                 </svg>
-                `,
+            `,
 
-            cart:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            cart: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <circle cx="9" cy="20" r="1"></circle>
                     <circle cx="19" cy="20" r="1"></circle>
                     <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"></path>
                     <path d="M16 4v5"></path>
                     <path d="M13.5 6.5h5"></path>
                 </svg>
-                `,
+            `,
 
-            check:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            check: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path d="m5 12 4 4L19 6"></path>
                 </svg>
-                `,
+            `,
 
-            inventory:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            inventory: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path d="M4 7h16v13H4z"></path>
                     <path d="M8 7V4h8v3"></path>
                     <path d="M8 11h8"></path>
                 </svg>
-                `,
+            `,
 
-            refresh:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            refresh: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path d="M20 11a8 8 0 1 0 1 4"></path>
                     <path d="M20 4v7h-7"></path>
                 </svg>
-                `,
+            `,
 
-            error:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            error: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <circle cx="12" cy="12" r="9"></circle>
                     <path d="M12 8v5"></path>
                     <path d="M12 16h.01"></path>
                 </svg>
-                `,
+            `,
 
-            star:
-                `
-                <svg
-                    class="${safeClass}"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
+            star: `
+                <svg class="${safeClass}"
+                     viewBox="0 0 24 24"
+                     aria-hidden="true">
                     <path d="m12 3 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9z"></path>
                 </svg>
-                `
+            `
 
         };
-
 
         return (
             icons[name] ||
@@ -1224,14 +1126,12 @@
             handleSearch
         );
 
-
         elements.searchInput?.addEventListener(
             "keydown",
             event => {
 
                 if (
-                    event.key ===
-                    "Escape"
+                    event.key === "Escape"
                 ) {
 
                     clearSearch();
@@ -1241,12 +1141,10 @@
             }
         );
 
-
         elements.clearSearchButton?.addEventListener(
             "click",
             clearSearch
         );
-
 
         elements.sortSelect?.addEventListener(
             "change",
@@ -1256,30 +1154,25 @@
                     event.target?.value ||
                     "featured";
 
-
                 applyFiltersAndRender();
 
             }
         );
-
 
         elements.categoriesNav?.addEventListener(
             "click",
             handleCategoryClick
         );
 
-
         elements.productList?.addEventListener(
             "click",
             handleProductGridClick
         );
 
-
         elements.modalClose?.addEventListener(
             "click",
             closeProductModal
         );
-
 
         elements.productModal?.addEventListener(
             "click",
@@ -1297,14 +1190,12 @@
             }
         );
 
-
         document.addEventListener(
             "keydown",
             event => {
 
                 if (
-                    event.key ===
-                    "Escape" &&
+                    event.key === "Escape" &&
                     elements.productModal?.classList.contains(
                         "is-open"
                     )
@@ -1338,7 +1229,6 @@
 
         }
 
-
         elements.categoriesNav.innerHTML =
             CATEGORY_MAP
                 .map(
@@ -1347,7 +1237,6 @@
                         const active =
                             category.query ===
                             state.activeCategory;
-
 
                         return `
                             <button
@@ -1397,7 +1286,6 @@
                 ".category-pill"
             );
 
-
         if (
             !button
         ) {
@@ -1406,22 +1294,13 @@
 
         }
 
-
         state.activeCategory =
-            String(
-                button.dataset.query ||
-                ""
-            )
-                .trim();
-
-
-        /*
-         * Category selection clears search.
-         */
+            cleanString(
+                button.dataset.query
+            );
 
         state.searchQuery =
             "";
-
 
         if (
             elements.searchInput
@@ -1431,7 +1310,6 @@
                 "";
 
         }
-
 
         updateClearSearchButton();
 
@@ -1452,18 +1330,15 @@
                 button => {
 
                     const active =
-                        String(
-                            button.dataset.query ||
-                            ""
+                        cleanString(
+                            button.dataset.query
                         ) ===
                         state.activeCategory;
-
 
                     button.classList.toggle(
                         "active",
                         active
                     );
-
 
                     button.setAttribute(
                         "aria-pressed",
@@ -1506,7 +1381,6 @@
 
         }
 
-
         if (
             !elements.productList
         ) {
@@ -1519,64 +1393,48 @@
 
         }
 
-
         state.loading =
             true;
 
-
         renderLoadingState();
-
 
         const controller =
             new AbortController();
 
-
         const timeout =
             window.setTimeout(
-                () => {
-
-                    controller.abort();
-
-                },
+                () => controller.abort(),
                 CONFIG.REQUEST_TIMEOUT
             );
-
 
         try {
 
             const endpoint =
                 `${CONFIG.API_BASE}${CONFIG.PRODUCTS_ENDPOINT}`;
 
-
             console.info(
                 "[PRASUN SHOP] Loading catalog:",
                 endpoint
             );
 
-
             const response =
                 await fetch(
                     endpoint,
                     {
+                        method: "GET",
 
-                        method:
-                            "GET",
-
-                        headers:
-                            {
-                                Accept:
-                                    "application/json"
-                            },
+                        headers: {
+                            Accept:
+                                "application/json"
+                        },
 
                         cache:
                             "no-store",
 
                         signal:
                             controller.signal
-
                     }
                 );
-
 
             if (
                 !response.ok
@@ -1588,14 +1446,11 @@
 
             }
 
-
             const data =
                 await response.json();
 
-
             if (
-                data?.success ===
-                false
+                data?.success === false
             ) {
 
                 throw new Error(
@@ -1605,12 +1460,10 @@
 
             }
 
-
             const rawProducts =
                 extractProducts(
                     data
                 );
-
 
             console.info(
                 "[PRASUN SHOP] Worker returned:",
@@ -1618,18 +1471,14 @@
                 "products"
             );
 
-
-            /*
-             * Normalize and deduplicate.
-             *
-             * IMPORTANT:
-             * Nothing here removes products because of category.
-             */
-
             state.products =
                 deduplicateProducts(
                     rawProducts
                 )
+                    .slice(
+                        0,
+                        CONFIG.MAX_PRODUCTS
+                    )
                     .map(
                         normalizeProduct
                     )
@@ -1637,13 +1486,11 @@
                         Boolean
                     );
 
-
             console.info(
                 "[PRASUN SHOP] Final catalog:",
                 state.products.length,
                 "products"
             );
-
 
             if (
                 !state.products.length
@@ -1653,9 +1500,9 @@
                     Number(
                         data?.count ||
                         data?.catalogProductCount ||
+                        data?.productCount ||
                         0
                     );
-
 
                 if (
                     serverCount > 0
@@ -1667,16 +1514,13 @@
 
                 }
 
-
                 throw new Error(
                     "The Worker returned an empty catalog. Complete the broad CJ synchronization first."
                 );
 
             }
 
-
             applyFiltersAndRender();
-
 
         } catch (
             error
@@ -1686,7 +1530,6 @@
                 "[PRASUN SHOP] Catalog loading failed:",
                 error
             );
-
 
             if (
                 error?.name ===
@@ -1712,7 +1555,6 @@
                 timeout
             );
 
-
             state.loading =
                 false;
 
@@ -1725,87 +1567,123 @@
         data
     ) {
 
-        if (
-            Array.isArray(
-                data
-            )
+        const candidates = [
+
+            data,
+
+            data?.products,
+
+            data?.items,
+
+            data?.results,
+
+            data?.data,
+
+            data?.data?.products,
+
+            data?.data?.items,
+
+            data?.data?.results,
+
+            data?.data?.list
+
+        ];
+
+        for (
+            const candidate
+            of candidates
         ) {
 
-            return data;
+            if (
+                Array.isArray(
+                    candidate
+                )
+            ) {
+
+                return candidate;
+
+            }
 
         }
 
+        /*
+         * Support CJ V2:
+         *
+         * data.content[].productList[]
+         */
 
         if (
             Array.isArray(
-                data?.products
+                data?.data?.content
             )
         ) {
 
-            return data.products;
+            const products =
+                [];
+
+            for (
+                const block
+                of data.data.content
+            ) {
+
+                if (
+                    Array.isArray(
+                        block?.productList
+                    )
+                ) {
+
+                    products.push(
+                        ...block.productList
+                    );
+
+                }
+
+            }
+
+            return products;
 
         }
-
 
         if (
             Array.isArray(
-                data?.data?.products
+                data?.content
             )
         ) {
 
-            return data.data.products;
+            const products =
+                [];
+
+            for (
+                const block
+                of data.content
+            ) {
+
+                if (
+                    Array.isArray(
+                        block?.productList
+                    )
+                ) {
+
+                    products.push(
+                        ...block.productList
+                    );
+
+                }
+
+            }
+
+            return products;
 
         }
-
-
-        if (
-            Array.isArray(
-                data?.data?.list
-            )
-        ) {
-
-            return data.data.list;
-
-        }
-
-
-        if (
-            Array.isArray(
-                data?.data
-            )
-        ) {
-
-            return data.data;
-
-        }
-
-
-        if (
-            Array.isArray(
-                data?.items
-            )
-        ) {
-
-            return data.items;
-
-        }
-
-
-        if (
-            Array.isArray(
-                data?.results
-            )
-        ) {
-
-            return data.results;
-
-        }
-
 
         return [];
 
     }
 
+
+    /* =========================================================================
+       12. DEDUPLICATION
+       ========================================================================= */
 
     function deduplicateProducts(
         products
@@ -1813,7 +1691,6 @@
 
         const map =
             new Map();
-
 
         for (
             const product
@@ -1830,19 +1707,15 @@
 
             }
 
-
             const key =
-                String(
+                cleanString(
                     product.pid ||
                     product.id ||
                     product.productId ||
                     product.cj_id ||
-                    product.sku ||
-                    ""
+                    product.sku
                 )
-                    .trim()
                     .toLowerCase();
-
 
             if (
                 !key
@@ -1851,14 +1724,6 @@
                 continue;
 
             }
-
-
-            /*
-             * Keep the newest/best record.
-             *
-             * If an existing record contains useful information
-             * and the new record does not, preserve the richer object.
-             */
 
             if (
                 !map.has(
@@ -1873,16 +1738,10 @@
 
             } else {
 
-                const existing =
-                    map.get(
-                        key
-                    );
-
-
                 map.set(
                     key,
                     mergeProductRecords(
-                        existing,
+                        map.get(key),
                         product
                     )
                 );
@@ -1890,7 +1749,6 @@
             }
 
         }
-
 
         return [
             ...map.values()
@@ -1904,93 +1762,111 @@
         b
     ) {
 
-        const result =
-            {
-                ...(a || {}),
-                ...(b || {})
-            };
+        const left =
+            a || {};
 
+        const right =
+            b || {};
 
-        const fields =
-            [
-                "description",
-                "category",
-                "oneCategoryName",
-                "twoCategoryName",
-                "threeCategoryName",
-                "categoryPath",
-                "image",
-                "originalImage",
-                "sku"
-            ];
+        const result = {
+            ...left,
+            ...right
+        };
 
+        const importantFields = [
+
+            "description",
+            "category",
+            "categoryName",
+            "categoryPath",
+            "categoryId",
+            "oneCategoryName",
+            "twoCategoryName",
+            "threeCategoryName",
+            "oneCategoryId",
+            "twoCategoryId",
+            "threeCategoryId",
+            "image",
+            "bigImage",
+            "productImage",
+            "originalImage",
+            "sku",
+            "productSku",
+            "productType"
+
+        ];
 
         for (
             const field
-            of fields
+            of importantFields
         ) {
 
             if (
-                !String(
-                    result[field] ||
-                    ""
-                ).trim()
+                !cleanString(
+                    result[field]
+                )
             ) {
 
                 result[field] =
-                    a?.[field] ||
-                    b?.[field] ||
+                    left[field] ??
+                    right[field] ??
                     "";
 
             }
 
         }
 
+        const arrayFields = [
+            "images",
+            "originalImages",
+            "productImageSet",
+            "variants",
+            "categories",
+            "tags"
+        ];
 
-        if (
-            !Array.isArray(
-                result.images
-            ) &&
-            Array.isArray(
-                a?.images
-            )
+        for (
+            const field
+            of arrayFields
         ) {
 
-            result.images =
-                a.images;
+            const merged =
+                [];
+
+            if (
+                Array.isArray(
+                    left[field]
+                )
+            ) {
+
+                merged.push(
+                    ...left[field]
+                );
+
+            }
+
+            if (
+                Array.isArray(
+                    right[field]
+                )
+            ) {
+
+                merged.push(
+                    ...right[field]
+                );
+
+            }
+
+            if (
+                merged.length
+            ) {
+
+                result[field] =
+                    merged;
+
+            }
 
         }
-
-
-        if (
-            !Array.isArray(
-                result.originalImages
-            ) &&
-            Array.isArray(
-                a?.originalImages
-            )
-        ) {
-
-            result.originalImages =
-                a.originalImages;
-
-        }
-
-
-        if (
-            !Array.isArray(
-                result.variants
-            ) &&
-            Array.isArray(
-                a?.variants
-            )
-        ) {
-
-            result.variants =
-                a.variants;
-
-        }
-
 
         return result;
 
@@ -1998,7 +1874,7 @@
 
 
     /* =========================================================================
-       12. SEARCH
+       13. SEARCH
        ========================================================================= */
 
     function handleSearch(
@@ -2011,11 +1887,6 @@
                 ""
             );
 
-
-        /*
-         * Search from the full catalog.
-         */
-
         if (
             state.searchQuery
         ) {
@@ -2026,7 +1897,6 @@
             highlightCategory();
 
         }
-
 
         updateClearSearchButton();
 
@@ -2046,15 +1916,12 @@
 
         }
 
-
         state.searchQuery =
             "";
-
 
         updateClearSearchButton();
 
         applyFiltersAndRender();
-
 
         elements.searchInput?.focus();
 
@@ -2071,7 +1938,6 @@
 
         }
 
-
         elements.clearSearchButton.hidden =
             !state.searchQuery;
 
@@ -2079,7 +1945,7 @@
 
 
     /* =========================================================================
-       13. FILTERING
+       14. FILTERING
        ========================================================================= */
 
     function applyFiltersAndRender() {
@@ -2089,30 +1955,18 @@
                 ...state.products
             ];
 
-
-        /*
-         * SEARCH
-         */
-
         if (
             state.searchQuery
         ) {
 
             const terms =
-                normalizeSearchText(
-                    state.searchQuery
-                )
-                    .split(
-                        /\s+/
-                    )
-                    .filter(
-                        Boolean
-                    )
+                state.searchQuery
+                    .split(/\s+/)
+                    .filter(Boolean)
                     .slice(
                         0,
                         CONFIG.MAX_SEARCH_TERMS
                     );
-
 
             if (
                 terms.length
@@ -2126,7 +1980,6 @@
                                 buildSearchText(
                                     product
                                 );
-
 
                             return terms.every(
                                 term =>
@@ -2142,18 +1995,12 @@
 
         }
 
-
-        /*
-         * CATEGORY
-         */
-
         if (
             state.activeCategory
         ) {
 
             const category =
                 getActiveCategory();
-
 
             products =
                 products.filter(
@@ -2166,24 +2013,16 @@
 
         }
 
-
-        /*
-         * SORT
-         */
-
         products.sort(
             compareProducts
         );
 
-
         state.filteredProducts =
             products;
-
 
         updatePageHeading();
 
         updateResultsCount();
-
 
         if (
             !products.length
@@ -2191,7 +2030,6 @@
 
             let message =
                 "No products are currently available.";
-
 
             if (
                 state.searchQuery
@@ -2205,25 +2043,26 @@
             ) {
 
                 message =
-                    `No products found in "${getActiveCategory().label}".`;
+                    `No synchronized products currently match "${getActiveCategory().label}".`;
 
             }
-
 
             renderEmptyState(
                 message
             );
 
-
             return;
 
         }
-
 
         renderProductGrid();
 
     }
 
+
+    /* =========================================================================
+       15. BUILD SEARCH TEXT
+       ========================================================================= */
 
     function buildSearchText(
         product
@@ -2232,75 +2071,66 @@
         const values = [
 
             product?.title,
-
             product?.name,
-
             product?.description,
 
             product?.category,
-
-            product?.oneCategoryName,
-
-            product?.twoCategoryName,
-
-            product?.threeCategoryName,
-
+            product?.categoryName,
             product?.categoryPath,
 
-            product?.categoryName,
+            product?.oneCategoryName,
+            product?.twoCategoryName,
+            product?.threeCategoryName,
 
-            product?.categoryFirstName,
-
-            product?.categorySecondName,
-
-            product?.categoryThirdName,
-
-            product?.sku,
-
-            product?.pid,
-
-            product?.id,
-
-            product?.productId,
+            product?.oneCategoryId,
+            product?.twoCategoryId,
+            product?.threeCategoryId,
+            product?.categoryId,
 
             product?.productType,
 
+            product?.sku,
+            product?.productSku,
+            product?.pid,
+            product?.id,
+            product?.productId,
+
+            product?.supplierName,
+
             product?.cj?.productType,
-
             product?.cj?.supplierName,
-
-            product?.cj?.sku,
-
-            product?.cj?.categoryId
+            product?.cj?.categoryId,
+            product?.cj?.categoryName
 
         ];
 
+        const arrayFields = [
 
-        if (
-            Array.isArray(
-                product?.categories
-            )
+            "categories",
+            "tags",
+            "categoryNames",
+            "categoryPathList"
+
+        ];
+
+        for (
+            const field
+            of arrayFields
         ) {
 
-            values.push(
-                ...product.categories
-            );
+            if (
+                Array.isArray(
+                    product?.[field]
+                )
+            ) {
+
+                values.push(
+                    ...product[field]
+                );
+
+            }
 
         }
-
-
-        if (
-            Array.isArray(
-                product?.tags
-            )
-        ) {
-
-            values.push(
-                ...product.tags
-            );
-
-        }
-
 
         return normalizeSearchText(
             values
@@ -2310,13 +2140,15 @@
                             value
                         )
                 )
-                .join(
-                    " "
-                )
+                .join(" ")
         );
 
     }
 
+
+    /* =========================================================================
+       16. CATEGORY MATCHING
+       ========================================================================= */
 
     function matchesCategory(
         product,
@@ -2325,182 +2157,586 @@
 
         if (
             !category ||
-            !Array.isArray(
-                category.terms
-            ) ||
-            !category.terms.length
+            category.query === ""
         ) {
 
             return true;
 
         }
 
-
         const searchable =
             buildSearchText(
                 product
             );
 
-
-        /*
-         * Exact phrase matching first.
-         */
-
-        for (
-            const term
-            of category.terms
-        ) {
-
-            const normalizedTerm =
-                normalizeSearchText(
-                    term
-                );
-
-
-            if (
-                normalizedTerm &&
-                searchable.includes(
-                    normalizedTerm
-                )
-            ) {
-
-                return true;
-
-            }
-
-        }
-
-
-        /*
-         * Special category fallbacks.
-         *
-         * These help products where CJ's category metadata
-         * is incomplete.
-         */
-
-        const title =
+        const titleText =
             normalizeSearchText(
                 [
                     product?.title,
                     product?.name
                 ]
-                    .join(
-                        " "
-                    )
+                    .join(" ")
             );
-
 
         const categoryText =
             normalizeSearchText(
                 [
                     product?.category,
+                    product?.categoryName,
+                    product?.categoryPath,
                     product?.oneCategoryName,
                     product?.twoCategoryName,
                     product?.threeCategoryName,
-                    product?.categoryPath
+                    product?.cj?.categoryName
                 ]
-                    .join(
-                        " "
+                    .join(" ")
+            );
+
+        /*
+         * --------------------------------------------------------------
+         * 1. Strong category-name match
+         * --------------------------------------------------------------
+         */
+
+        if (
+            Array.isArray(
+                category.exactCategoryTerms
+            )
+        ) {
+
+            for (
+                const term
+                of category.exactCategoryTerms
+            ) {
+
+                const normalized =
+                    normalizeSearchText(
+                        term
+                    );
+
+                if (
+                    normalized &&
+                    (
+                        categoryText.includes(
+                            normalized
+                        ) ||
+                        searchable.includes(
+                            normalized
+                        )
                     )
-            );
+                ) {
 
+                    return true;
 
-        if (
-            category.query ===
-            "solar-lights"
-        ) {
+                }
 
-            return (
-                /\bsolar\b/.test(
-                    title
-                ) ||
-                /\bsolar\b/.test(
-                    categoryText
-                )
-            );
+            }
 
         }
 
+        /*
+         * --------------------------------------------------------------
+         * 2. Category-specific title pair matching
+         * --------------------------------------------------------------
+         */
 
         if (
-            category.query ===
-            "battery"
+            Array.isArray(
+                category.requiredTitlePairs
+            )
         ) {
 
-            return (
-                /\bbattery\b/.test(
-                    title
-                ) ||
-                /\bbatteries\b/.test(
-                    title
-                ) ||
-                /\b18650\b/.test(
-                    title
-                ) ||
-                /\b21700\b/.test(
-                    title
-                )
+            for (
+                const pair
+                of category.requiredTitlePairs
+            ) {
 
-            );
+                if (
+                    Array.isArray(
+                        pair
+                    ) &&
+                    pair.length === 2
+                ) {
+
+                    const first =
+                        normalizeSearchText(
+                            pair[0]
+                        );
+
+                    const second =
+                        normalizeSearchText(
+                            pair[1]
+                        );
+
+                    if (
+                        first &&
+                        second &&
+                        titleText.includes(
+                            first
+                        ) &&
+                        titleText.includes(
+                            second
+                        )
+                    ) {
+
+                        return true;
+
+                    }
+
+                } else if (
+                    Array.isArray(pair) &&
+                    pair.length === 1
+                ) {
+
+                    const only =
+                        normalizeSearchText(
+                            pair[0]
+                        );
+
+                    if (
+                        only &&
+                        titleText.includes(
+                            only
+                        )
+                    ) {
+
+                        return true;
+
+                    }
+
+                }
+
+            }
 
         }
 
+        /*
+         * --------------------------------------------------------------
+         * 3. Category-specific regex rules
+         * --------------------------------------------------------------
+         */
 
         if (
-            category.query ===
-            "camera"
+            Array.isArray(
+                category.requiredTitlePatterns
+            )
         ) {
 
-            return (
-                /\bcamera\b/.test(
-                    title
-                ) ||
-                /\bcctv\b/.test(
-                    title
-                ) ||
-                /\bwebcam\b/.test(
-                    title
-                ) ||
-                /\bdash cam\b/.test(
-                    title
-                ) ||
-                /\bsurveillance\b/.test(
-                    title
-                )
+            for (
+                const pattern
+                of category.requiredTitlePatterns
+            ) {
 
-            );
+                if (
+                    pattern instanceof RegExp &&
+                    pattern.test(
+                        titleText
+                    )
+                ) {
+
+                    return true;
+
+                }
+
+            }
 
         }
 
+        /*
+         * --------------------------------------------------------------
+         * 4. Normal category terms
+         * --------------------------------------------------------------
+         *
+         * We intentionally do this AFTER the stronger rules.
+         */
 
         if (
-            category.query ===
-            "smart-home"
+            Array.isArray(
+                category.terms
+            )
         ) {
 
-            return (
-                /\bsmart\b/.test(
-                    title
-                ) ||
-                /\bhome automation\b/.test(
-                    searchable
-                ) ||
-                /\bsmart\b/.test(
-                    categoryText
-                )
+            for (
+                const term
+                of category.terms
+            ) {
 
-            );
+                const normalizedTerm =
+                    normalizeSearchText(
+                        term
+                    );
+
+                if (
+                    !normalizedTerm
+                ) {
+
+                    continue;
+
+                }
+
+                /*
+                 * For short/generic terms we prefer title or
+                 * category metadata instead of description alone.
+                 */
+
+                if (
+                    normalizedTerm.length <= 5
+                ) {
+
+                    if (
+                        titleText.includes(
+                            normalizedTerm
+                        ) ||
+                        categoryText.includes(
+                            normalizedTerm
+                        )
+                    ) {
+
+                        return true;
+
+                    }
+
+                } else if (
+                    searchable.includes(
+                        normalizedTerm
+                    )
+                ) {
+
+                    return true;
+
+                }
+
+            }
 
         }
 
+        /*
+         * --------------------------------------------------------------
+         * 5. Category-specific fallback logic
+         * --------------------------------------------------------------
+         */
 
-        return false;
+        return categoryFallbackMatch(
+            category.query,
+            titleText,
+            categoryText,
+            searchable
+        );
+
+    }
+
+
+    function categoryFallbackMatch(
+        query,
+        titleText,
+        categoryText,
+        searchable
+    ) {
+
+        switch (
+            query
+        ) {
+
+            case "solar-lights":
+
+                /*
+                 * Prevent solar panels from automatically becoming
+                 * Solar Lights.
+                 */
+
+                return (
+                    /\bsolar\b/.test(
+                        titleText
+                    ) &&
+                    (
+                        /\blight\b/.test(
+                            titleText
+                        ) ||
+                        /\blamp\b/.test(
+                            titleText
+                        ) ||
+                        /\blighting\b/.test(
+                            titleText
+                        ) ||
+                        /\bfloodlight\b/.test(
+                            titleText
+                        ) ||
+                        /\bspotlight\b/.test(
+                            titleText
+                        ) ||
+                        /\bstreet\b/.test(
+                            titleText
+                        ) ||
+                        /\bgarden\b/.test(
+                            titleText
+                        ) ||
+                        /\bwall\b/.test(
+                            titleText
+                        )
+                    )
+                ) ||
+                (
+                    /\bsolar\b/.test(
+                        categoryText
+                    ) &&
+                    (
+                        /\blight\b/.test(
+                            categoryText
+                        ) ||
+                        /\blamp\b/.test(
+                            categoryText
+                        ) ||
+                        /\blighting\b/.test(
+                            categoryText
+                        )
+                    )
+                );
+
+
+            case "battery":
+
+                return (
+                    /\bbattery\b/.test(
+                        titleText
+                    ) ||
+                    /\bbatteries\b/.test(
+                        titleText
+                    ) ||
+                    /\b18650\b/.test(
+                        titleText
+                    ) ||
+                    /\b21700\b/.test(
+                        titleText
+                    ) ||
+                    /\blifepo4\b/.test(
+                        titleText
+                    )
+                );
+
+
+            case "power-bank":
+
+                return (
+                    /\bpower\s*bank\b/.test(
+                        titleText
+                    ) ||
+                    /\bpowerbank\b/.test(
+                        titleText
+                    ) ||
+                    (
+                        /\bportable\b/.test(
+                            titleText
+                        ) &&
+                        (
+                            /\bcharger\b/.test(
+                                titleText
+                            ) ||
+                            /\bbattery\b/.test(
+                                titleText
+                            )
+                        )
+                    )
+                );
+
+
+            case "camera":
+
+                return (
+                    /\bcamera\b/.test(
+                        titleText
+                    ) ||
+                    /\bcctv\b/.test(
+                        titleText
+                    ) ||
+                    /\bwebcam\b/.test(
+                        titleText
+                    ) ||
+                    /\bdash\s*cam\b/.test(
+                        titleText
+                    ) ||
+                    /\bsurveillance\b/.test(
+                        titleText
+                    )
+                );
+
+
+            case "smart-home":
+
+                return (
+                    /\bsmart\b/.test(
+                        titleText
+                    ) ||
+                    /\bhome\s*automation\b/.test(
+                        searchable
+                    ) ||
+                    /\bsmart\b/.test(
+                        categoryText
+                    )
+                );
+
+
+            case "routers":
+
+                return (
+                    /\brouter\b/.test(
+                        titleText
+                    ) ||
+                    /\bwifi\s+router\b/.test(
+                        titleText
+                    ) ||
+                    /\bwi\s*fi\s+router\b/.test(
+                        titleText
+                    )
+                );
+
+
+            case "modem":
+
+                return (
+                    /\bmodem\b/.test(
+                        titleText
+                    ) ||
+                    /\blte\s+modem\b/.test(
+                        titleText
+                    ) ||
+                    /\b4g\s+modem\b/.test(
+                        titleText
+                    ) ||
+                    /\b5g\s+modem\b/.test(
+                        titleText
+                    )
+                );
+
+
+            case "laptops":
+
+                return (
+                    /\blaptop\b/.test(
+                        titleText
+                    ) ||
+                    /\bnotebook\b/.test(
+                        titleText
+                    ) ||
+                    /\bchromebook\b/.test(
+                        titleText
+                    ) ||
+                    /\bultrabook\b/.test(
+                        titleText
+                    ) ||
+                    /\bmacbook\b/.test(
+                        titleText
+                    )
+                );
+
+
+            case "earphones":
+
+                return (
+                    /\bearbuds?\b/.test(
+                        titleText
+                    ) ||
+                    /\bearphones?\b/.test(
+                        titleText
+                    ) ||
+                    /\btws\b/.test(
+                        titleText
+                    ) ||
+                    /\btrue\s+wireless\b/.test(
+                        titleText
+                    )
+                );
+
+
+            case "headphones":
+
+                return (
+                    /\bheadphones?\b/.test(
+                        titleText
+                    ) ||
+                    /\bheadset\b/.test(
+                        titleText
+                    )
+                );
+
+
+            case "cables":
+
+                return (
+                    /\bcable\b/.test(
+                        titleText
+                    ) ||
+                    /\bwire\b/.test(
+                        titleText
+                    ) &&
+                    (
+                        /\busb\b/.test(
+                            titleText
+                        ) ||
+                        /\bcharging\b/.test(
+                            titleText
+                        ) ||
+                        /\bdata\b/.test(
+                            titleText
+                        )
+                    )
+                );
+
+
+            case "chargers":
+
+                return (
+                    /\bcharger\b/.test(
+                        titleText
+                    ) ||
+                    /\bcharging\s+adapter\b/.test(
+                        titleText
+                    ) ||
+                    /\bpower\s+adapter\b/.test(
+                        titleText
+                    )
+                );
+
+
+            case "power-tools":
+
+                return (
+                    /\bdrill\b/.test(
+                        titleText
+                    ) ||
+                    /\bgrinder\b/.test(
+                        titleText
+                    ) ||
+                    /\bsander\b/.test(
+                        titleText
+                    ) ||
+                    /\bsaw\b/.test(
+                        titleText
+                    ) ||
+                    /\bpolisher\b/.test(
+                        titleText
+                    ) ||
+                    /\bscrewdriver\b/.test(
+                        titleText
+                    ) ||
+                    /\bheat\s+gun\b/.test(
+                        titleText
+                    ) ||
+                    /\bpower\s+tool\b/.test(
+                        titleText
+                    )
+                );
+
+            default:
+
+                return false;
+
+        }
 
     }
 
 
     /* =========================================================================
-       14. SORTING
+       17. SORTING
        ========================================================================= */
 
     function compareProducts(
@@ -2519,18 +2755,15 @@
                     ""
                 );
 
-
         const priceA =
             Number(
                 a?.price
             ) || 0;
 
-
         const priceB =
             Number(
                 b?.price
             ) || 0;
-
 
         const nameA =
             String(
@@ -2539,14 +2772,12 @@
                 ""
             );
 
-
         const nameB =
             String(
                 b?.name ||
                 b?.title ||
                 ""
             );
-
 
         if (
             sort.includes(
@@ -2557,13 +2788,9 @@
             )
         ) {
 
-            return (
-                priceA -
-                priceB
-            );
+            return priceA - priceB;
 
         }
-
 
         if (
             sort.includes(
@@ -2574,13 +2801,9 @@
             )
         ) {
 
-            return (
-                priceB -
-                priceA
-            );
+            return priceB - priceA;
 
         }
-
 
         if (
             sort.includes(
@@ -2602,7 +2825,6 @@
 
         }
 
-
         if (
             sort.includes(
                 "ztoa"
@@ -2623,26 +2845,15 @@
 
         }
 
-
-        /*
-         * Featured:
-         *
-         * 1. In stock
-         * 2. CJ listed count
-         * 3. Name
-         */
-
         const stockA =
             Number(
                 a?.quantity
             ) > 0;
 
-
         const stockB =
             Number(
                 b?.quantity
             ) > 0;
-
 
         if (
             stockA &&
@@ -2653,7 +2864,6 @@
 
         }
 
-
         if (
             !stockA &&
             stockB
@@ -2663,14 +2873,12 @@
 
         }
 
-
         const listedA =
             Number(
                 a?.listedNum ||
                 a?.cj?.listedNum ||
                 0
             );
-
 
         const listedB =
             Number(
@@ -2679,19 +2887,14 @@
                 0
             );
 
-
         if (
             listedA !==
             listedB
         ) {
 
-            return (
-                listedB -
-                listedA
-            );
+            return listedB - listedA;
 
         }
-
 
         return nameA.localeCompare(
             nameB,
@@ -2706,7 +2909,7 @@
 
 
     /* =========================================================================
-       15. NORMALIZATION
+       18. NORMALIZATION
        ========================================================================= */
 
     function normalizeProduct(
@@ -2723,7 +2926,6 @@
 
         }
 
-
         const id =
             cleanString(
                 raw.id ??
@@ -2733,7 +2935,6 @@
                 raw.sku
             );
 
-
         const pid =
             cleanString(
                 raw.pid ??
@@ -2741,7 +2942,6 @@
                 raw.productId ??
                 raw.cj_id
             );
-
 
         const name =
             cleanString(
@@ -2753,7 +2953,6 @@
                 "CJ Product"
             );
 
-
         if (
             !id ||
             !name
@@ -2763,41 +2962,15 @@
 
         }
 
-
-        const price =
-            normalizeProductPrice(
-                raw
-            );
-
-
-        const quantity =
-            normalizeProductQuantity(
-                raw
-            );
-
-
-        const rating =
-            normalizeRating(
-                raw.rating
-            );
-
-
         const images =
             getGalleryImages(
                 raw
             );
 
-
-        const image =
-            images[0] ||
-            PLACEHOLDER_IMAGE;
-
-
         const originalImages =
             collectProductImageUrls(
                 raw
             );
-
 
         return {
 
@@ -2843,6 +3016,13 @@
                     CONFIG.DEFAULT_CATEGORY
                 ),
 
+            categoryName:
+                cleanString(
+                    raw.categoryName ||
+                    raw.category ||
+                    raw.cj?.categoryName
+                ),
+
             oneCategoryName:
                 cleanString(
                     raw.oneCategoryName ||
@@ -2862,23 +3042,41 @@
                 ),
 
             categoryPath:
-                cleanString(
-                    raw.categoryPath
+                buildCategoryPath(
+                    raw
                 ),
 
             categoryId:
                 cleanString(
                     raw.categoryId ||
+                    raw.threeCategoryId ||
                     raw.cj?.categoryId
                 ),
 
-            price,
+            productType:
+                cleanString(
+                    raw.productType ||
+                    raw.cj?.productType
+                ),
 
-            quantity,
+            price:
+                normalizeProductPrice(
+                    raw
+                ),
 
-            rating,
+            quantity:
+                normalizeProductQuantity(
+                    raw
+                ),
 
-            image,
+            rating:
+                normalizeRating(
+                    raw.rating
+                ),
+
+            image:
+                images[0] ||
+                PLACEHOLDER_IMAGE,
 
             images,
 
@@ -2909,6 +3107,54 @@
     }
 
 
+    function buildCategoryPath(
+        raw
+    ) {
+
+        const explicit =
+            cleanString(
+                raw?.categoryPath
+            );
+
+        if (
+            explicit
+        ) {
+
+            return explicit;
+
+        }
+
+        const pieces = [
+
+            raw?.oneCategoryName,
+            raw?.twoCategoryName,
+            raw?.threeCategoryName
+
+        ]
+            .map(
+                cleanString
+            )
+            .filter(Boolean);
+
+        if (
+            pieces.length
+        ) {
+
+            return pieces.join(
+                " > "
+            );
+
+        }
+
+        return cleanString(
+            raw?.categoryName ||
+            raw?.category ||
+            raw?.cj?.categoryName
+        );
+
+    }
+
+
     function normalizeProductPrice(
         raw
     ) {
@@ -2920,7 +3166,6 @@
             raw?.nowPrice ??
             raw?.discountPrice ??
             0;
-
 
         if (
             value &&
@@ -2937,7 +3182,6 @@
 
         }
 
-
         const number =
             parseFloat(
                 String(
@@ -2948,7 +3192,6 @@
                         ""
                     )
             );
-
 
         return Number.isFinite(
             number
@@ -2967,45 +3210,29 @@
         raw
     ) {
 
-        const candidates = [
+        const explicitValues = [
 
             raw?.quantity,
-
             raw?.inventory,
-
             raw?.totalInventory,
-
             raw?.warehouseInventoryNum,
-
             raw?.totalVerifiedInventory,
-
             raw?.totalUnVerifiedInventory,
-
             raw?.availableQuantity,
-
             raw?.cj?.totalInventory,
-
-            raw?.cj?.warehouseInventoryNum,
-
-            raw?.cj?.totalVerifiedInventory
+            raw?.cj?.warehouseInventoryNum
 
         ];
 
-
-        /*
-         * Prefer explicit product-level inventory.
-         */
-
         for (
             const value
-            of candidates
+            of explicitValues
         ) {
 
             const number =
                 Number(
                     value
                 );
-
 
             if (
                 Number.isFinite(
@@ -3024,11 +3251,6 @@
 
         }
 
-
-        /*
-         * Fall back to variant inventory.
-         */
-
         if (
             Array.isArray(
                 raw?.variants
@@ -3038,13 +3260,12 @@
             let total =
                 0;
 
-
             for (
                 const variant
                 of raw.variants
             ) {
 
-                const inventory =
+                const number =
                     Number(
                         variant?.inventory ??
                         variant?.quantity ??
@@ -3052,10 +3273,9 @@
                         0
                     );
 
-
                 if (
                     Number.isFinite(
-                        inventory
+                        number
                     )
                 ) {
 
@@ -3063,7 +3283,7 @@
                         Math.max(
                             0,
                             Math.floor(
-                                inventory
+                                number
                             )
                         );
 
@@ -3071,11 +3291,9 @@
 
             }
 
-
             return total;
 
         }
-
 
         return 0;
 
@@ -3096,104 +3314,99 @@
 
         }
 
+        return variants.map(
+            variant => {
 
-        return variants
-            .map(
-                variant => {
+                const inventory =
+                    Number(
+                        variant?.inventory ??
+                        variant?.quantity ??
+                        variant?.totalInventory ??
+                        0
+                    );
 
-                    const inventory =
-                        Number(
-                            variant?.inventory ??
-                            variant?.quantity ??
-                            variant?.totalInventory ??
-                            0
-                        );
+                const price =
+                    Number(
+                        variant?.price ??
+                        variant?.sellPrice ??
+                        0
+                    );
 
+                const costPrice =
+                    Number(
+                        variant?.costPrice ??
+                        0
+                    );
 
-                    const price =
-                        Number(
-                            variant?.price ??
-                            variant?.sellPrice ??
-                            0
-                        );
+                return {
 
+                    ...variant,
 
-                    const costPrice =
-                        Number(
-                            variant?.costPrice ??
-                            0
-                        );
+                    vid:
+                        cleanString(
+                            variant?.vid ||
+                            variant?.id
+                        ),
 
+                    pid:
+                        cleanString(
+                            variant?.pid ||
+                            variant?.productId
+                        ),
 
-                    return {
+                    sku:
+                        cleanString(
+                            variant?.sku ||
+                            variant?.variantSku
+                        ),
 
-                        ...variant,
+                    name:
+                        cleanString(
+                            variant?.name ||
+                            variant?.variantNameEn ||
+                            variant?.variantName ||
+                            variant?.variantKey ||
+                            "Default"
+                        ),
 
-                        vid:
-                            cleanString(
-                                variant?.vid ||
-                                variant?.id
-                            ),
-
-                        pid:
-                            cleanString(
-                                variant?.pid ||
-                                variant?.productId
-                            ),
-
-                        sku:
-                            cleanString(
-                                variant?.sku ||
-                                variant?.variantSku
-                            ),
-
-                        name:
-                            cleanString(
-                                variant?.name ||
-                                variant?.variantNameEn ||
-                                variant?.variantName ||
-                                variant?.variantKey ||
-                                "Default"
-                            ),
-
-                        price:
-                            Number.isFinite(
-                                price
-                            )
-                                ? Number(
-                                    price.toFixed(
-                                        2
-                                    )
+                    price:
+                        Number.isFinite(
+                            price
+                        )
+                            ? Number(
+                                price.toFixed(
+                                    2
                                 )
-                                : 0,
-
-                        costPrice:
-                            Number.isFinite(
-                                costPrice
                             )
-                                ? Number(
-                                    costPrice.toFixed(
-                                        2
-                                    )
-                                )
-                                : 0,
+                            : 0,
 
-                        inventory:
-                            Number.isFinite(
-                                inventory
+                    costPrice:
+                        Number.isFinite(
+                            costPrice
+                        )
+                            ? Number(
+                                costPrice.toFixed(
+                                    2
+                                )
                             )
-                                ? Math.max(
-                                    0,
-                                    Math.floor(
-                                        inventory
-                                    )
+                            : 0,
+
+                    inventory:
+                        Number.isFinite(
+                            inventory
+                        )
+                            ? Math.max(
+                                0,
+                                Math.floor(
+                                    inventory
                                 )
-                                : 0
+                            )
+                            : 0
 
-                    };
+                };
 
-                }
-            );
+            }
+        );
 
     }
 
@@ -3207,7 +3420,6 @@
                 value
             );
 
-
         if (
             !Number.isFinite(
                 number
@@ -3217,7 +3429,6 @@
             return 0;
 
         }
-
 
         return Number(
             Math.min(
@@ -3236,7 +3447,7 @@
 
 
     /* =========================================================================
-       16. IMAGE HANDLING
+       19. IMAGE HANDLING
        ========================================================================= */
 
     function normalizeImageUrl(
@@ -3253,10 +3464,8 @@
 
         }
 
-
         let url =
             value.trim();
-
 
         if (
             !url
@@ -3265,7 +3474,6 @@
             return "";
 
         }
-
 
         if (
             url.startsWith(
@@ -3277,18 +3485,14 @@
 
         }
 
-
         if (
-            url.startsWith(
-                "//"
-            )
+            url.startsWith("//")
         ) {
 
             url =
                 `https:${url}`;
 
         }
-
 
         if (
             /^http:\/\//i.test(
@@ -3303,7 +3507,6 @@
                 );
 
         }
-
 
         return url;
 
@@ -3334,7 +3537,6 @@
                 value
             );
 
-
         if (
             !normalized
         ) {
@@ -3342,7 +3544,6 @@
             return "";
 
         }
-
 
         if (
             normalized.startsWith(
@@ -3354,7 +3555,6 @@
 
         }
 
-
         if (
             isProxyUrl(
                 normalized
@@ -3364,7 +3564,6 @@
             return normalized;
 
         }
-
 
         return (
             `${CONFIG.API_BASE}` +
@@ -3385,11 +3584,25 @@
         const candidates =
             [];
 
-
         candidates.push(
             product?.image
         );
 
+        candidates.push(
+            product?.bigImage
+        );
+
+        candidates.push(
+            product?.productImage
+        );
+
+        candidates.push(
+            product?.productImg
+        );
+
+        candidates.push(
+            product?.originalImage
+        );
 
         if (
             Array.isArray(
@@ -3403,12 +3616,6 @@
 
         }
 
-
-        candidates.push(
-            product?.originalImage
-        );
-
-
         if (
             Array.isArray(
                 product?.originalImages
@@ -3420,22 +3627,6 @@
             );
 
         }
-
-
-        candidates.push(
-            product?.bigImage
-        );
-
-
-        candidates.push(
-            product?.productImage
-        );
-
-
-        candidates.push(
-            product?.productImg
-        );
-
 
         if (
             Array.isArray(
@@ -3449,7 +3640,6 @@
 
         }
 
-
         if (
             typeof product?.productImageSet ===
             "string"
@@ -3461,11 +3651,6 @@
             );
 
         }
-
-
-        /*
-         * Images may also be nested in variants.
-         */
 
         if (
             Array.isArray(
@@ -3490,16 +3675,13 @@
 
         }
 
-
         return [
             ...new Set(
                 candidates
                     .map(
                         normalizeImageUrl
                     )
-                    .filter(
-                        Boolean
-                    )
+                    .filter(Boolean)
             )
         ];
 
@@ -3518,9 +3700,7 @@
                     .map(
                         buildProxyUrl
                     )
-                    .filter(
-                        Boolean
-                    )
+                    .filter(Boolean)
             )
         ];
 
@@ -3528,7 +3708,7 @@
 
 
     /* =========================================================================
-       17. GRID RENDERING
+       20. GRID RENDERING
        ========================================================================= */
 
     function renderProductGrid() {
@@ -3541,27 +3721,21 @@
 
         }
 
-
         const token =
             ++state.renderToken;
 
-
         elements.productList.innerHTML =
             "";
-
 
         setLoadingState(
             true
         );
 
-
         const products =
             state.filteredProducts;
 
-
         let index =
             0;
-
 
         const renderBatch =
             () => {
@@ -3575,10 +3749,8 @@
 
                 }
 
-
                 const fragment =
                     document.createDocumentFragment();
-
 
                 const end =
                     Math.min(
@@ -3586,7 +3758,6 @@
                         CONFIG.RENDER_BATCH_SIZE,
                         products.length
                     );
-
 
                 for (
                     ;
@@ -3598,7 +3769,6 @@
                         createProductCardElement(
                             products[index]
                         );
-
 
                     if (
                         card
@@ -3612,11 +3782,9 @@
 
                 }
 
-
                 elements.productList.appendChild(
                     fragment
                 );
-
 
                 if (
                     index <
@@ -3639,7 +3807,6 @@
 
             };
 
-
         renderBatch();
 
     }
@@ -3654,15 +3821,15 @@
                 "div"
             );
 
-
         wrapper.innerHTML =
             renderProductCard(
                 product
             );
 
-
-        return wrapper.firstElementChild ||
-            null;
+        return (
+            wrapper.firstElementChild ||
+            null
+        );
 
     }
 
@@ -3676,13 +3843,11 @@
                 product.id
             );
 
-
         const title =
             escapeHTML(
                 product.name ||
                 "CJ Product"
             );
-
 
         const category =
             escapeHTML(
@@ -3690,41 +3855,32 @@
                 CONFIG.DEFAULT_CATEGORY
             );
 
-
         const image =
             escapeHTML(
                 product.image ||
                 PLACEHOLDER_IMAGE
             );
 
-
         const price =
             formatPrice(
                 product.price
             );
-
 
         const quantity =
             Number(
                 product.quantity
             ) || 0;
 
-
         const available =
-            quantity >
-            0;
-
+            quantity > 0;
 
         const description =
             stripHtml(
                 product.description
             );
 
-
         const shortDescription =
-            description.length >
-            105
-
+            description.length > 105
                 ? (
                     description.slice(
                         0,
@@ -3732,12 +3888,15 @@
                     ) +
                     "..."
                 )
-
                 : (
                     description ||
                     "Product information available."
                 );
 
+        const rating =
+            Number(
+                product.rating
+            ) || 0;
 
         return `
             <article
@@ -3768,7 +3927,6 @@
 
                     </span>
 
-
                     <img
                         src="${image}"
                         alt="${title}"
@@ -3783,7 +3941,6 @@
                     >
 
                 </button>
-
 
                 <div
                     class="product-card-body"
@@ -3804,7 +3961,6 @@
 
                     </h3>
 
-
                     <p
                         class="product-card-description"
                     >
@@ -3813,18 +3969,12 @@
                         )}
                     </p>
 
-
                     ${
-                        Number(
-                            product.rating
-                        ) > 0
-
+                        rating > 0
                             ? `
                                 <div
                                     class="product-rating"
-                                    aria-label="Rating ${Number(
-                                        product.rating
-                                    ).toFixed(
+                                    aria-label="Rating ${rating.toFixed(
                                         1
                                     )} out of 5"
                                 >
@@ -3835,19 +3985,15 @@
                                     )}
 
                                     <span>
-                                        ${Number(
-                                            product.rating
-                                        ).toFixed(
+                                        ${rating.toFixed(
                                             1
                                         )}
                                     </span>
 
                                 </div>
                             `
-
                             : ""
                     }
-
 
                     <div
                         class="product-card-footer"
@@ -3867,7 +4013,6 @@
 
                         </div>
 
-
                         <div
                             class="product-actions-group"
                         >
@@ -3877,7 +4022,6 @@
                                 class="btn-card btn-secondary view-details-btn"
                                 data-action="view-details"
                                 data-product-id="${productId}"
-                                aria-label="View details for ${title}"
                             >
 
                                 ${svgIcon(
@@ -3890,7 +4034,6 @@
                                 </span>
 
                             </button>
-
 
                             <button
                                 type="button"
@@ -3917,13 +4060,11 @@
                                 )}
 
                                 <span>
-
                                     ${
                                         available
                                             ? "Add to Cart"
                                             : "Out of Stock"
                                     }
-
                                 </span>
 
                             </button>
@@ -3941,7 +4082,7 @@
 
 
     /* =========================================================================
-       18. GRID EVENTS
+       21. PRODUCT GRID EVENTS
        ========================================================================= */
 
     function handleProductGridClick(
@@ -3953,29 +4094,24 @@
                 '[data-action="view-details"]'
             );
 
-
         if (
             detailsButton
         ) {
 
             event.preventDefault();
 
-
             openProductModal(
                 detailsButton.dataset.productId
             );
-
 
             return;
 
         }
 
-
         const cartButton =
             event.target.closest(
                 '[data-action="add-cart"]'
             );
-
 
         if (
             !cartButton
@@ -3985,9 +4121,7 @@
 
         }
 
-
         event.preventDefault();
-
 
         const product =
             state.products.find(
@@ -4000,7 +4134,6 @@
                     )
             );
 
-
         if (
             !product
         ) {
@@ -4009,27 +4142,22 @@
 
         }
 
-
         if (
             Number(
                 product.quantity
-            ) <=
-            0
+            ) <= 0
         ) {
 
             announce(
                 `${product.name} is currently out of stock.`
             );
 
-
             return;
 
         }
 
-
         let added =
             false;
-
 
         if (
             typeof window.addToCart ===
@@ -4057,7 +4185,6 @@
                     )
                 );
 
-
                 added =
                     true;
 
@@ -4074,7 +4201,6 @@
 
         }
 
-
         if (
             !added
         ) {
@@ -4083,15 +4209,12 @@
 
         }
 
-
         cartButton.disabled =
             true;
-
 
         cartButton.classList.add(
             "added"
         );
-
 
         cartButton.innerHTML =
             `
@@ -4105,11 +4228,9 @@
                 </span>
             `;
 
-
         announce(
             `${product.name} added to cart.`
         );
-
 
         window.setTimeout(
             () => {
@@ -4117,11 +4238,9 @@
                 cartButton.disabled =
                     false;
 
-
                 cartButton.classList.remove(
                     "added"
                 );
-
 
                 cartButton.innerHTML =
                     `
@@ -4143,7 +4262,7 @@
 
 
     /* =========================================================================
-       19. IMAGE FALLBACK
+       22. IMAGE FALLBACK
        ========================================================================= */
 
     function attachProductImageFallbacks() {
@@ -4164,10 +4283,8 @@
 
                     }
 
-
                     image.dataset.fallbackBound =
                         "true";
-
 
                     image.addEventListener(
                         "error",
@@ -4187,7 +4304,6 @@
         const image =
             event.currentTarget;
 
-
         if (
             !image
         ) {
@@ -4196,10 +4312,8 @@
 
         }
 
-
         const original =
             image.dataset.originalImage;
-
 
         if (
             original &&
@@ -4209,12 +4323,10 @@
             image.dataset.originalAttempted =
                 "true";
 
-
             const proxy =
                 buildProxyUrl(
                     original
                 );
-
 
             if (
                 proxy &&
@@ -4225,13 +4337,11 @@
                 image.src =
                     proxy;
 
-
                 return;
 
             }
 
         }
-
 
         if (
             !image.dataset.placeholderUsed
@@ -4239,7 +4349,6 @@
 
             image.dataset.placeholderUsed =
                 "true";
-
 
             image.src =
                 PLACEHOLDER_IMAGE;
@@ -4250,7 +4359,7 @@
 
 
     /* =========================================================================
-       20. PRODUCT MODAL
+       23. PRODUCT MODAL
        ========================================================================= */
 
     function sanitizeDescription(
@@ -4265,19 +4374,14 @@
 
         }
 
-
         const parser =
             new DOMParser();
 
-
         const doc =
             parser.parseFromString(
-                String(
-                    html
-                ),
+                String(html),
                 "text/html"
             );
-
 
         [
             "script",
@@ -4310,7 +4414,6 @@
                 }
             );
 
-
         doc
             .querySelectorAll(
                 "*"
@@ -4328,11 +4431,9 @@
                                     attribute.name
                                         .toLowerCase();
 
-
                                 const value =
                                     attribute.value
                                         .trim();
-
 
                                 if (
                                     name.startsWith(
@@ -4348,13 +4449,10 @@
 
                                 }
 
-
                                 if (
                                     (
-                                        name ===
-                                        "href" ||
-                                        name ===
-                                        "src"
+                                        name === "src" ||
+                                        name === "href"
                                     ) &&
                                     /^javascript:/i.test(
                                         value
@@ -4373,7 +4471,6 @@
                 }
             );
 
-
         doc
             .querySelectorAll(
                 "img"
@@ -4386,7 +4483,6 @@
                             "src"
                         );
 
-
                     if (
                         source
                     ) {
@@ -4395,7 +4491,6 @@
                             normalizeImageUrl(
                                 source
                             );
-
 
                         if (
                             normalized
@@ -4412,12 +4507,10 @@
 
                     }
 
-
                     image.setAttribute(
                         "loading",
                         "lazy"
                     );
-
 
                     image.setAttribute(
                         "decoding",
@@ -4427,10 +4520,7 @@
                 }
             );
 
-
-        return (
-            doc.body.innerHTML
-        );
+        return doc.body.innerHTML;
 
     }
 
@@ -4445,14 +4535,12 @@
         ) {
 
             console.error(
-                "[PRASUN SHOP] Product modal is missing from the page."
+                "[PRASUN SHOP] Product modal is missing."
             );
-
 
             return;
 
         }
-
 
         const product =
             state.products.find(
@@ -4465,7 +4553,6 @@
                     )
             );
 
-
         if (
             !product
         ) {
@@ -4474,18 +4561,15 @@
 
         }
 
-
         const images =
             getGalleryImages(
                 product
             );
 
-
         const primaryImage =
             product.image ||
             images[0] ||
             PLACEHOLDER_IMAGE;
-
 
         const title =
             escapeHTML(
@@ -4493,19 +4577,16 @@
                 "CJ Product"
             );
 
-
         const category =
             escapeHTML(
                 product.category ||
                 CONFIG.DEFAULT_CATEGORY
             );
 
-
         const quantity =
             Number(
                 product.quantity
             ) || 0;
-
 
         const description =
             sanitizeDescription(
@@ -4517,14 +4598,10 @@
                 </p>
             `;
 
-
         const galleryHtml =
             images.length > 1
-
                 ? `
-                    <div
-                        class="modal-gallery"
-                    >
+                    <div class="modal-gallery">
 
                         ${images
                             .map(
@@ -4535,8 +4612,7 @@
                                     <button
                                         type="button"
                                         class="modal-gallery-thumb ${
-                                            index ===
-                                            0
+                                            index === 0
                                                 ? "is-active"
                                                 : ""
                                         }"
@@ -4544,8 +4620,7 @@
                                             image
                                         )}"
                                         aria-label="View product image ${
-                                            index +
-                                            1
+                                            index + 1
                                         }"
                                     >
 
@@ -4561,21 +4636,15 @@
                                     </button>
                                 `
                             )
-                            .join(
-                                ""
-                            )}
+                            .join("")}
 
                     </div>
                 `
-
                 : "";
-
 
         elements.modalBody.innerHTML =
             `
-                <div
-                    class="modal-image-column"
-                >
+                <div class="modal-image-column">
 
                     <img
                         id="main-modal-img"
@@ -4593,17 +4662,11 @@
 
                 </div>
 
+                <div class="modal-details">
 
-                <div
-                    class="modal-details"
-                >
-
-                    <span
-                        class="product-category-tag"
-                    >
+                    <span class="product-category-tag">
                         ${category}
                     </span>
-
 
                     <h2
                         id="modal-title"
@@ -4612,56 +4675,35 @@
                         ${title}
                     </h2>
 
+                    <div class="modal-product-price-row">
 
-                    <div
-                        class="modal-product-price-row"
-                    >
-
-                        <strong
-                            class="modal-product-price"
-                        >
+                        <strong class="modal-product-price">
                             ${formatPrice(
                                 product.price
                             )}
                         </strong>
 
-
-                        <span
-                            class="modal-product-stock"
-                        >
-
+                        <span class="modal-product-stock">
                             ${
                                 quantity > 0
                                     ? `In Stock: ${quantity}`
                                     : "Out of Stock"
                             }
-
                         </span>
 
                     </div>
 
+                    <div class="modal-description-box">
 
-                    <div
-                        class="modal-description-box"
-                    >
-
-                        <strong
-                            class="modal-description-title"
-                        >
+                        <strong class="modal-description-title">
                             Product Description
                         </strong>
 
-
-                        <div
-                            class="cj-description-container"
-                        >
-
+                        <div class="cj-description-container">
                             ${description}
-
                         </div>
 
                     </div>
-
 
                     <button
                         type="button"
@@ -4682,13 +4724,11 @@
                         )}
 
                         <span>
-
                             ${
                                 quantity > 0
                                     ? "Add to Cart"
                                     : "Out of Stock"
                             }
-
                         </span>
 
                     </button>
@@ -4696,12 +4736,10 @@
                 </div>
             `;
 
-
         const mainImage =
             document.getElementById(
                 "main-modal-img"
             );
-
 
         if (
             mainImage
@@ -4716,13 +4754,11 @@
 
                 },
                 {
-                    once:
-                        true
+                    once: true
                 }
             );
 
         }
-
 
         elements.modalBody
             .querySelectorAll(
@@ -4738,7 +4774,6 @@
                             const image =
                                 button.dataset.galleryImage;
 
-
                             if (
                                 mainImage &&
                                 image
@@ -4748,7 +4783,6 @@
                                     image;
 
                             }
-
 
                             elements.modalBody
                                 .querySelectorAll(
@@ -4761,7 +4795,6 @@
                                         )
                                 );
 
-
                             button.classList.add(
                                 "is-active"
                             );
@@ -4772,12 +4805,10 @@
                 }
             );
 
-
         const modalCartButton =
             document.getElementById(
                 "modal-add-cart-btn"
             );
-
 
         if (
             modalCartButton &&
@@ -4790,7 +4821,6 @@
 
                     let added =
                         false;
-
 
                     if (
                         typeof window.addToCart ===
@@ -4818,7 +4848,6 @@
                                 )
                             );
 
-
                             added =
                                 true;
 
@@ -4835,7 +4864,6 @@
 
                     }
 
-
                     if (
                         !added
                     ) {
@@ -4844,15 +4872,12 @@
 
                     }
 
-
                     modalCartButton.disabled =
                         true;
-
 
                     modalCartButton.classList.add(
                         "added"
                     );
-
 
                     modalCartButton.innerHTML =
                         `
@@ -4866,7 +4891,6 @@
                             </span>
                         `;
 
-
                     announce(
                         `${product.name} added to cart.`
                     );
@@ -4876,22 +4900,18 @@
 
         }
 
-
         elements.productModal.classList.add(
             "is-open"
         );
-
 
         elements.productModal.setAttribute(
             "aria-hidden",
             "false"
         );
 
-
         document.body.classList.add(
             "modal-open"
         );
-
 
         window.setTimeout(
             () =>
@@ -4912,22 +4932,18 @@
 
         }
 
-
         elements.productModal.classList.remove(
             "is-open"
         );
-
 
         elements.productModal.setAttribute(
             "aria-hidden",
             "true"
         );
 
-
         document.body.classList.remove(
             "modal-open"
         );
-
 
         if (
             elements.modalBody
@@ -4942,7 +4958,7 @@
 
 
     /* =========================================================================
-       21. UI STATES
+       24. UI STATES
        ========================================================================= */
 
     function renderLoadingState() {
@@ -4954,7 +4970,6 @@
             return;
 
         }
-
 
         elements.productList.innerHTML =
             `
@@ -4974,12 +4989,11 @@
                     </h3>
 
                     <p>
-                        Loading the complete CJ catalog...
+                        Loading the synchronized CJ catalog...
                     </p>
 
                 </div>
             `;
-
 
         if (
             elements.resultsCount
@@ -5005,6 +5019,11 @@
 
         }
 
+        /*
+         * Cancel an older progressive render.
+         */
+
+        state.renderToken++;
 
         elements.productList.innerHTML =
             `
@@ -5031,7 +5050,6 @@
                 </div>
             `;
 
-
         if (
             elements.resultsCount
         ) {
@@ -5040,7 +5058,6 @@
                 "0 products found";
 
         }
-
 
         setLoadingState(
             false
@@ -5061,6 +5078,7 @@
 
         }
 
+        state.renderToken++;
 
         elements.productList.innerHTML =
             `
@@ -5104,24 +5122,17 @@
                 </div>
             `;
 
-
         elements.productList
             .querySelector(
                 '[data-action="retry"]'
             )
             ?.addEventListener(
                 "click",
-                () => {
-
-                    loadCatalog();
-
-                },
+                () => loadCatalog(),
                 {
-                    once:
-                        true
+                    once: true
                 }
             );
-
 
         if (
             elements.resultsCount
@@ -5131,7 +5142,6 @@
                 "Unable to load products";
 
         }
-
 
         setLoadingState(
             false
@@ -5150,15 +5160,12 @@
 
         }
 
-
         const count =
             state.filteredProducts.length;
 
-
         elements.resultsCount.textContent =
             `${count} ${
-                count ===
-                1
+                count === 1
                     ? "product"
                     : "products"
             } available`;
@@ -5176,7 +5183,6 @@
 
         }
 
-
         if (
             state.activeCategory
         ) {
@@ -5184,11 +5190,9 @@
             elements.pageHeading.textContent =
                 getActiveCategory().label;
 
-
             return;
 
         }
-
 
         if (
             state.searchQuery
@@ -5197,11 +5201,9 @@
             elements.pageHeading.textContent =
                 `Search: ${state.searchQuery}`;
 
-
             return;
 
         }
-
 
         elements.pageHeading.textContent =
             "All Products";
@@ -5224,7 +5226,7 @@
 
 
     /* =========================================================================
-       22. HELPERS
+       25. HELPERS
        ========================================================================= */
 
     function cleanString(
@@ -5262,6 +5264,14 @@
                 " "
             )
             .replace(
+                /([a-z])([0-9])/g,
+                "$1 $2"
+            )
+            .replace(
+                /([0-9])([a-z])/g,
+                "$1 $2"
+            )
+            .replace(
                 /[^a-z0-9\s]+/g,
                 " "
             )
@@ -5279,28 +5289,23 @@
     ) {
 
         if (
-            value ===
-            null ||
-            value ===
-            undefined
+            value === null ||
+            value === undefined
         ) {
 
             return "";
 
         }
 
-
         const div =
             document.createElement(
                 "div"
             );
 
-
         div.innerHTML =
             String(
                 value
             );
-
 
         return (
             div.textContent ||
@@ -5325,7 +5330,6 @@
                 value
             );
 
-
         if (
             !Number.isFinite(
                 number
@@ -5335,7 +5339,6 @@
             return "$0.00";
 
         }
-
 
         return new Intl.NumberFormat(
             "en-US",
@@ -5404,10 +5407,8 @@
 
         }
 
-
         elements.liveRegion.textContent =
             "";
-
 
         window.setTimeout(
             () => {
@@ -5426,7 +5427,7 @@
 
 
     /* =========================================================================
-       23. PUBLIC API
+       26. PUBLIC API
        ========================================================================= */
 
     window.PrasunProducts = {
@@ -5434,7 +5435,6 @@
         reload:
             () =>
                 loadCatalog(),
-
 
         search:
             query => {
@@ -5444,21 +5444,17 @@
                         query
                     );
 
-
                 state.activeCategory =
                     "";
-
 
                 if (
                     elements.searchInput
                 ) {
 
                     elements.searchInput.value =
-                        query ||
-                        "";
+                        query || "";
 
                 }
-
 
                 updateClearSearchButton();
 
@@ -5467,7 +5463,6 @@
                 applyFiltersAndRender();
 
             },
-
 
         filterCategory:
             query => {
@@ -5477,10 +5472,8 @@
                         query
                     );
 
-
                 state.searchQuery =
                     "";
-
 
                 if (
                     elements.searchInput
@@ -5491,7 +5484,6 @@
 
                 }
 
-
                 updateClearSearchButton();
 
                 highlightCategory();
@@ -5500,14 +5492,12 @@
 
             },
 
-
         sort:
             value => {
 
                 state.sortBy =
                     value ||
                     "featured";
-
 
                 if (
                     elements.sortSelect
@@ -5518,11 +5508,9 @@
 
                 }
 
-
                 applyFiltersAndRender();
 
             },
-
 
         openDetails:
             id =>
@@ -5530,11 +5518,9 @@
                     id
                 ),
 
-
         closeDetails:
             () =>
                 closeProductModal(),
-
 
         getProducts:
             () =>
@@ -5542,13 +5528,11 @@
                     ...state.products
                 ],
 
-
         getFilteredProducts:
             () =>
                 [
                     ...state.filteredProducts
                 ],
-
 
         getProductById:
             id =>
@@ -5563,14 +5547,12 @@
                 ) ||
                 null,
 
-
         getCategoryMap:
             () =>
                 CATEGORY_MAP.map(
                     category => ({
                         label:
                             category.label,
-
                         query:
                             category.query
                     })
