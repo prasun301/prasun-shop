@@ -1,83 +1,660 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-D9F2VQ4247');
-</script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D9F2VQ4247"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-D9F2VQ4247');
+  </script>
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta
+    name="description"
+    content="Learn about PRASUN SHOP, an online store offering practical technology, electronics, smart home, renewable energy, and everyday digital products."
+  />
+
+  <meta
+    name="robots"
+    content="index, follow"
+  />
+
   <title>About — PRASUN SHOP</title>
+
+  <!-- Google AdSense -->
+  <script
+    async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168"
+    crossorigin="anonymous">
+  </script>
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background-color: #f8fafc; color: #334155; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; }
-    .header { border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); z-index: 100; }
-    .header-container { max-width: 1080px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; }
-    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #0f172a; font-weight: 700; font-size: 1.15rem; }
-    .nav-links { display: flex; gap: 2rem; }
-    .nav-links a { text-decoration: none; color: #64748b; font-size: 0.95rem; font-weight: 500; }
-    .nav-links a:hover, .nav-links a.active { color: #0f172a; font-weight: 600; }
-    .content-card { max-width: 800px; margin: 40px auto; padding: 2.5rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    h1 { color: #0f172a; font-size: 2.2rem; margin-bottom: 0.5rem; }
-    .subtitle { color: #64748b; font-size: 1.05rem; margin-bottom: 2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; }
-    h2 { color: #0f172a; font-size: 1.3rem; margin: 1.5rem 0 0.5rem 0; }
-    p { margin-bottom: 1rem; color: #334155; font-size: 0.975rem; }
-    a { color: #2563eb; text-decoration: none; }
-    .footer { border-top: 1px solid #e2e8f0; background-color: #ffffff; padding: 2.5rem 1.5rem; text-align: center; color: #64748b; font-size: 0.875rem; margin-top: 4rem; }
-    .footer-container { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 1.25rem; }
-    .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; }
-    .footer-links a { color: #64748b; text-decoration: none; font-weight: 500; }
+
+    /* =========================================================================
+       RESET / BASE
+       ========================================================================= */
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --body: #334155;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --max-width: 1080px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--body);
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: var(--primary-hover);
+    }
+
+
+    /* =========================================================================
+       HEADER
+       ========================================================================= */
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+
+      background: rgba(255, 255, 255, 0.96);
+
+      border-bottom: 1px solid var(--border);
+
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .header-container {
+      width: 100%;
+      max-width: var(--max-width);
+
+      margin: 0 auto;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 24px;
+
+      padding:
+        16px
+        24px;
+    }
+
+
+    /* =========================================================================
+       LOGO
+       ========================================================================= */
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+
+      color: var(--text);
+
+      text-decoration: none;
+
+      font-size: 1.08rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+
+      white-space: nowrap;
+    }
+
+    .logo:hover {
+      color: var(--text);
+    }
+
+    .logo svg {
+      width: 22px;
+      height: 22px;
+
+      flex: 0 0 auto;
+    }
+
+
+    /* =========================================================================
+       NAVIGATION
+       ========================================================================= */
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+
+      font-size: 0.93rem;
+      font-weight: 500;
+
+      text-decoration: none;
+
+      transition:
+        color 0.18s ease;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--text);
+    }
+
+    .nav-links a.active {
+      font-weight: 600;
+    }
+
+
+    /* =========================================================================
+       MAIN CONTENT
+       ========================================================================= */
+
+    main {
+      width: 100%;
+    }
+
+    .content-card {
+      width: calc(100% - 32px);
+      max-width: 800px;
+
+      margin:
+        48px auto
+        64px;
+
+      padding:
+        40px;
+
+      background: var(--surface);
+
+      border: 1px solid var(--border);
+
+      border-radius: 14px;
+
+      box-shadow:
+        0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    h1 {
+      color: var(--text);
+
+      font-size: clamp(
+        1.9rem,
+        4vw,
+        2.35rem
+      );
+
+      line-height: 1.2;
+
+      letter-spacing: -0.025em;
+
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+
+      font-size: 1rem;
+
+      line-height: 1.65;
+
+      padding-bottom: 22px;
+
+      margin-bottom: 26px;
+
+      border-bottom: 1px solid var(--border);
+    }
+
+    h2 {
+      color: var(--text);
+
+      font-size: 1.22rem;
+
+      line-height: 1.35;
+
+      margin:
+        30px 0
+        10px;
+
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      color: var(--body);
+
+      font-size: 0.97rem;
+
+      margin-bottom: 16px;
+    }
+
+    strong {
+      color: var(--text);
+      font-weight: 650;
+    }
+
+
+    /* =========================================================================
+       FOOTER
+       ========================================================================= */
+
+    .footer {
+      border-top: 1px solid var(--border);
+
+      background: var(--surface);
+
+      padding:
+        34px
+        20px;
+
+      text-align: center;
+
+      color: var(--muted);
+
+      font-size: 0.86rem;
+    }
+
+    .footer-container {
+      width: 100%;
+      max-width: var(--max-width);
+
+      margin: 0 auto;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      gap: 16px;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      gap:
+        10px
+        22px;
+    }
+
+    .footer-links a {
+      color: var(--muted);
+
+      font-weight: 500;
+
+      text-decoration: none;
+
+      transition:
+        color 0.18s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--text);
+    }
+
+    .footer p {
+      margin: 0;
+
+      color: var(--muted);
+
+      font-size: 0.86rem;
+    }
+
+
+    /* =========================================================================
+       MOBILE
+       ========================================================================= */
+
+    @media (max-width: 700px) {
+
+      .header-container {
+        padding:
+          14px
+          16px;
+
+        gap: 16px;
+      }
+
+      .logo {
+        font-size: 1rem;
+      }
+
+      .nav-links {
+        gap: 16px;
+      }
+
+      .nav-links a {
+        font-size: 0.86rem;
+      }
+
+      .content-card {
+        width: calc(100% - 24px);
+
+        margin:
+          28px auto
+          40px;
+
+        padding:
+          28px
+          22px;
+
+        border-radius: 12px;
+      }
+
+      h1 {
+        font-size: 1.85rem;
+      }
+
+      .subtitle {
+        font-size: 0.95rem;
+      }
+
+      h2 {
+        font-size: 1.15rem;
+      }
+
+      p {
+        font-size: 0.94rem;
+      }
+
+      .footer {
+        padding:
+          28px
+          16px;
+      }
+
+      .footer-links {
+        gap:
+          8px
+          16px;
+      }
+
+    }
+
+
+    /* =========================================================================
+       ACCESSIBILITY
+       ========================================================================= */
+
+    :focus-visible {
+      outline:
+        2px solid
+        var(--primary);
+
+      outline-offset: 3px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        transition: none !important;
+      }
+
+    }
+
   </style>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8736637194399168"
-     crossorigin="anonymous"></script>
+
 </head>
+
 <body>
+
+  <!-- =======================================================================
+       HEADER
+       ======================================================================= -->
+
   <header class="header">
+
     <div class="header-container">
-      <a href="index.html" class="logo">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+
+      <a
+        href="index.html"
+        class="logo"
+        aria-label="PRASUN SHOP home"
+      >
+
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+
         <span>PRASUN SHOP</span>
+
       </a>
-      <nav class="nav-links">
-        <a href="index.html">eBooks</a>
-        <a href="about.html" class="active">About</a>
-        <a href="contact.html">Contact</a>
+
+
+      <nav
+        class="nav-links"
+        aria-label="Primary navigation"
+      >
+
+        <a href="index.html">
+          Shop
+        </a>
+
+        <a
+          href="about.html"
+          class="active"
+          aria-current="page"
+        >
+          About
+        </a>
+
+        <a href="contact.html">
+          Contact
+        </a>
+
       </nav>
+
     </div>
+
   </header>
 
-  <main class="content-card">
-    <h1>About PRASUN SHOP</h1>
-    <p class="subtitle">Technical literature & practical guides designed for clarity and intuitive understanding.</p>
 
-    <p><strong>PRASUN SHOP</strong> is an independent digital bookstore created and curated by engineer and technical author <strong>Prasun Barua</strong>. The store focuses on delivering structured, practical, and accessible educational guides across engineering disciplines, modern technology, and renewable energy concepts.</p>
+  <!-- =======================================================================
+       MAIN
+       ======================================================================= -->
 
-    <h2>Author Background & Mission</h2>
-    <p>Engineered topics can often feel unnecessarily complex. The objective of every eBook available in this store is to demystify technical subjects—whether covering solar PV testing, semiconductor manufacturing, or fundamental electrical engineering—through intuitive explanations and clear structure.</p>
+  <main>
 
-    <h2>Digital Delivery & Security</h2>
-    <p>To provide a smooth, safe, and instant purchasing experience, all transactions on PRASUN SHOP are processed through merchant partner Lemon Squeezy, ensuring encrypted checkout and immediate delivery of downloadable PDF files.</p>
+    <article class="content-card">
 
-    <p>For inquiries, feedback, or licensing options, please visit our <a href="contact.html">Contact Page</a> or visit the author's primary website at <a href="https://prasunbarua.com" target="_blank" rel="noopener">prasunbarua.com</a>.</p>
+      <h1>
+        About PRASUN SHOP
+      </h1>
+
+      <p class="subtitle">
+        A simple online store for useful technology, electronics,
+        smart devices, renewable energy products, and everyday essentials.
+      </p>
+
+
+      <p>
+        <strong>PRASUN SHOP</strong> is an independent online store
+        created by engineer and technical professional
+        <strong>Prasun Barua</strong>.
+        The store brings together practical products selected for
+        technology-focused customers, including electronics,
+        smart home devices, power and charging products,
+        networking equipment, cameras, tools, and renewable-energy-related
+        products.
+      </p>
+
+
+      <h2>
+        Our Approach
+      </h2>
+
+      <p>
+        We aim to keep online shopping straightforward:
+        useful products, clear product information, simple navigation,
+        and a clean purchasing experience.
+        Products are selected with an emphasis on practicality,
+        everyday usefulness, and relevance to modern technology.
+      </p>
+
+
+      <h2>
+        Technology & Renewable Energy
+      </h2>
+
+      <p>
+        With a professional background in electrical engineering
+        and renewable energy, Prasun Barua has a particular interest
+        in products related to electrical technology, electronics,
+        solar energy, power systems, smart devices, and modern
+        engineering applications.
+      </p>
+
+
+      <h2>
+        Product Fulfillment
+      </h2>
+
+      <p>
+        PRASUN SHOP works with third-party suppliers and fulfillment
+        partners to make selected products available to customers
+        internationally. Product availability, shipping options,
+        delivery times, and applicable charges may vary by destination
+        and product.
+      </p>
+
+
+      <h2>
+        Customer Support
+      </h2>
+
+      <p>
+        We value clear communication and practical customer support.
+        For questions about products, orders, shipping, or other matters,
+        please visit our
+        <a href="contact.html">Contact Page</a>.
+      </p>
+
+
+      <p>
+        You can also learn more about Prasun Barua and his professional
+        background at
+        <a
+          href="https://prasunbarua.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          prasunbarua.com
+        </a>.
+      </p>
+
+    </article>
+
   </main>
 
+
+  <!-- =======================================================================
+       FOOTER
+       ======================================================================= -->
+
   <footer class="footer">
+
     <div class="footer-container">
-      <div class="footer-links">
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
-        <a href="privacy.html">Privacy Policy</a>
-        <a href="terms.html">Terms of Service</a>
-        <a href="refund.html">Refund Policy</a>
-      </div>
-      <p>&copy; 2026 PRASUN SHOP by <a href="https://prasunbarua.com" target="_blank" rel="noopener">Prasun Barua</a>. All rights reserved.</p>
+
+      <nav
+        class="footer-links"
+        aria-label="Footer navigation"
+      >
+
+        <a href="about.html">
+          About
+        </a>
+
+        <a href="contact.html">
+          Contact
+        </a>
+
+        <a href="privacy.html">
+          Privacy Policy
+        </a>
+
+        <a href="terms.html">
+          Terms of Service
+        </a>
+
+        <a href="refund.html">
+          Refund Policy
+        </a>
+
+      </nav>
+
+
+      <p>
+        &copy; 2026 PRASUN SHOP by
+        <a
+          href="https://prasunbarua.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Prasun Barua
+        </a>.
+        All rights reserved.
+      </p>
+
     </div>
+
   </footer>
+
 </body>
 </html>
+```
