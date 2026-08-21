@@ -43,8 +43,9 @@
  * - No CJ credentials are exposed in the browser.
  * - Product price and stock remain server-authoritative.
  * - CJ PID / VID / SKU / variants are preserved.
- * - No emoji or Unicode UI icons.
- * - Material Symbols are used for dynamic icons.
+ * - No emoji.
+ * - No Material Symbols dependency.
+ * - All dynamic UI icons use inline SVG.
  *
  * ============================================================================
  */
@@ -90,15 +91,6 @@
        2. LOCAL IMAGE PLACEHOLDER
        ========================================================================= */
 
-    /*
-     * This is intentionally local.
-     *
-     * It is NOT a product image and is only displayed when CJ did not return
-     * a usable image or the CJ image cannot be loaded.
-     *
-     * No external image URL is used.
-     */
-
     const PLACEHOLDER_IMAGE =
         "data:image/svg+xml;charset=UTF-8," +
         encodeURIComponent(`
@@ -108,6 +100,7 @@
                 height="600"
                 viewBox="0 0 600 600"
             >
+
                 <rect
                     width="600"
                     height="600"
@@ -152,6 +145,7 @@
                 >
                     Image Unavailable
                 </text>
+
             </svg>
         `);
 
@@ -416,29 +410,299 @@
 
 
     /* =========================================================================
-       8. MATERIAL SYMBOLS
+       8. INLINE SVG ICON SYSTEM
        ========================================================================= */
 
-    function materialIcon(
+    function svgIcon(
         name,
         className =
-            "icon-sm"
+            "ui-icon"
     ) {
 
-        return `
+        const safeClass =
+            escapeHTML(
+                className
+            );
 
-            <span
-                class="material-symbols-rounded ${escapeHTML(
-                    className
-                )}"
-                aria-hidden="true"
-            >
-                ${escapeHTML(
-                    name
-                )}
-            </span>
 
-        `;
+        const icons = {
+
+            apps: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <rect x="4" y="4" width="6" height="6" rx="1"></rect>
+                    <rect x="14" y="4" width="6" height="6" rx="1"></rect>
+                    <rect x="4" y="14" width="6" height="6" rx="1"></rect>
+                    <rect x="14" y="14" width="6" height="6" rx="1"></rect>
+                </svg>
+            `,
+
+            category: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="M4 5h6v6H4z"></path>
+                    <path d="M14 5h6v6h-6z"></path>
+                    <path d="M4 15h6v4H4z"></path>
+                    <path d="M14 15h6v4h-6z"></path>
+                </svg>
+            `,
+
+            light_mode: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2"></path>
+                    <path d="M12 20v2"></path>
+                    <path d="m4.93 4.93 1.41 1.41"></path>
+                    <path d="m17.66 17.66 1.41 1.41"></path>
+                    <path d="M2 12h2"></path>
+                    <path d="M20 12h2"></path>
+                    <path d="m6.34 17.66-1.41 1.41"></path>
+                    <path d="m19.07 4.93-1.41 1.41"></path>
+                </svg>
+            `,
+
+            devices: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <rect x="3" y="4" width="14" height="11" rx="2"></rect>
+                    <path d="M7 20h6"></path>
+                    <path d="M10 15v5"></path>
+                    <path d="M19 8h2v8a2 2 0 0 1-2 2h-2"></path>
+                </svg>
+            `,
+
+            battery: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <rect x="3" y="7" width="17" height="10" rx="2"></rect>
+                    <path d="M21 10v4"></path>
+                    <path d="M8 12h7"></path>
+                    <path d="M11.5 9.5 10 12h3.5L12 14.5"></path>
+                </svg>
+            `,
+
+            smart_home: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="M3 11 12 4l9 7"></path>
+                    <path d="M5 10v10h14V10"></path>
+                    <path d="M9 20v-5h6v5"></path>
+                    <circle cx="17" cy="8" r="2"></circle>
+                </svg>
+            `,
+
+            star: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path
+                        d="
+                            m12 3
+                            2.9 5.9
+                            6.5.9
+                            -4.7 4.6
+                            1.1 6.5
+                            -5.8-3.1
+                            -5.8 3.1
+                            1.1-6.5
+                            -4.7-4.6
+                            6.5-.9
+                            z
+                        "
+                    ></path>
+                </svg>
+            `,
+
+            eye: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path
+                        d="
+                            M2 12
+                            s3.5-6
+                            10-6
+                            10 6
+                            10 6
+                            -3.5 6
+                            -10 6
+                            S2 12 2 12Z
+                        "
+                    ></path>
+                    <circle cx="12" cy="12" r="2.5"></circle>
+                </svg>
+            `,
+
+            add_cart: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <circle cx="9" cy="20" r="1"></circle>
+                    <circle cx="19" cy="20" r="1"></circle>
+                    <path
+                        d="
+                            M3 4h2
+                            l2.4 11.2
+                            a2 2 0 0 0 2 1.6h8.8
+                            a2 2 0 0 0 1.9-1.4L22 8H6
+                        "
+                    ></path>
+                    <path d="M16 4v5"></path>
+                    <path d="M13.5 6.5h5"></path>
+                </svg>
+            `,
+
+            check: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="m5 12 4 4L19 6"></path>
+                </svg>
+            `,
+
+            inventory: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="M4 7h16v13H4z"></path>
+                    <path d="M8 7V4h8v3"></path>
+                    <path d="M8 11h8"></path>
+                    <path d="M8 15h5"></path>
+                </svg>
+            `,
+
+            refresh: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <path d="M20 11a8 8 0 1 0 1 4"></path>
+                    <path d="M20 4v7h-7"></path>
+                </svg>
+            `,
+
+            error: `
+                <svg
+                    class="${safeClass}"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                >
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 8v5"></path>
+                    <path d="M12 16h.01"></path>
+                </svg>
+            `
+
+        };
+
+
+        return (
+            icons[name] ||
+            icons.category
+        );
+
+    }
+
+
+    function getCategoryIcon(
+        query
+    ) {
+
+        const value =
+            String(
+                query ||
+                ""
+            ).toLowerCase();
+
+
+        if (
+            value.includes(
+                "solar"
+            )
+        ) {
+
+            return "light_mode";
+
+        }
+
+
+        if (
+            value.includes(
+                "electronic"
+            )
+        ) {
+
+            return "devices";
+
+        }
+
+
+        if (
+            value.includes(
+                "wireless"
+            )
+        ) {
+
+            return "battery";
+
+        }
+
+
+        if (
+            value.includes(
+                "smart"
+            )
+        ) {
+
+            return "smart_home";
+
+        }
+
+
+        return "category";
 
     }
 
@@ -745,6 +1009,14 @@
                             state.activeCategoryQuery;
 
 
+                        const icon =
+                            category.query
+                                ? getCategoryIcon(
+                                    category.query
+                                )
+                                : "apps";
+
+
                         return `
 
                             <button
@@ -764,19 +1036,10 @@
                                 }"
                             >
 
-                                ${
-                                    category.query
-                                        ? materialIcon(
-                                            getCategoryIcon(
-                                                category.query
-                                            ),
-                                            "icon-sm"
-                                        )
-                                        : materialIcon(
-                                            "apps",
-                                            "icon-sm"
-                                        )
-                                }
+                                ${svgIcon(
+                                    icon,
+                                    "ui-icon ui-icon-sm"
+                                )}
 
                                 <span>
                                     ${escapeHTML(
@@ -791,66 +1054,6 @@
                     }
                 )
                 .join("");
-
-    }
-
-
-    function getCategoryIcon(
-        query
-    ) {
-
-        const value =
-            String(
-                query ||
-                ""
-            ).toLowerCase();
-
-
-        if (
-            value.includes(
-                "solar"
-            )
-        ) {
-
-            return "light_mode";
-
-        }
-
-
-        if (
-            value.includes(
-                "electronic"
-            )
-        ) {
-
-            return "devices";
-
-        }
-
-
-        if (
-            value.includes(
-                "wireless"
-            )
-        ) {
-
-            return "battery_charging_full";
-
-        }
-
-
-        if (
-            value.includes(
-                "smart"
-            )
-        ) {
-
-            return "home_iot_device";
-
-        }
-
-
-        return "category";
 
     }
 
@@ -1104,6 +1307,10 @@
 
             const normalizedProducts =
                 rawProducts
+                    .slice(
+                        0,
+                        CONFIG.MAX_PRODUCTS
+                    )
                     .map(
                         normalizeProduct
                     )
@@ -1111,10 +1318,6 @@
                         Boolean
                     );
 
-
-            /*
-             * Ignore results belonging to an obsolete request.
-             */
 
             if (
                 requestId !==
@@ -1421,10 +1624,6 @@
             [];
 
 
-        /*
-         * Current Worker fields.
-         */
-
         candidates.push(
             product?.image
         );
@@ -1461,17 +1660,15 @@
         }
 
 
-        /*
-         * CJ compatibility fields.
-         */
-
         candidates.push(
             product?.bigImage
         );
 
+
         candidates.push(
             product?.productImage
         );
+
 
         candidates.push(
             product?.productImg
@@ -1511,17 +1708,13 @@
 
         return [
             ...new Set(
-
                 candidates
-
                     .map(
                         normalizeImageUrl
                     )
-
                     .filter(
                         Boolean
                     )
-
             )
         ];
 
@@ -1538,10 +1731,6 @@
             );
 
 
-        /*
-         * Prefer an image already proxied by Worker.
-         */
-
         const existingProxy =
             images.find(
                 isProxyUrl
@@ -1557,12 +1746,8 @@
         }
 
 
-        /*
-         * First real CJ image.
-         */
-
         if (
-            images.length
+            images.length > 0
         ) {
 
             return buildProxyUrl(
@@ -1571,10 +1756,6 @@
 
         }
 
-
-        /*
-         * Final neutral local placeholder.
-         */
 
         return PLACEHOLDER_IMAGE;
 
@@ -1585,13 +1766,19 @@
         product
     ) {
 
-        return collectProductImageUrls(
-            product
-        )
-            .map(
-                buildProxyUrl
+        return [
+            ...new Set(
+                collectProductImageUrls(
+                    product
+                )
+                    .map(
+                        buildProxyUrl
+                    )
+                    .filter(
+                        Boolean
+                    )
             )
-            .filter(Boolean);
+        ];
 
     }
 
@@ -1654,9 +1841,9 @@
         }
 
 
-        /*
-         * Price
-         */
+        /* ---------------------------------------------------------------------
+           Price
+           --------------------------------------------------------------------- */
 
         let rawPrice =
             raw.price ??
@@ -1703,9 +1890,9 @@
                 : 0;
 
 
-        /*
-         * Inventory
-         */
+        /* ---------------------------------------------------------------------
+           Inventory
+           --------------------------------------------------------------------- */
 
         const parsedQuantity =
             Number(
@@ -1731,11 +1918,9 @@
                 : 0;
 
 
-        /*
-         * Rating.
-         *
-         * No fake rating is generated.
-         */
+        /* ---------------------------------------------------------------------
+           Rating
+           --------------------------------------------------------------------- */
 
         const parsedRating =
             parseFloat(
@@ -1747,19 +1932,23 @@
             Number.isFinite(
                 parsedRating
             )
-                ? Math.max(
-                    0,
-                    Math.min(
-                        5,
-                        parsedRating
+                ? Number(
+                    Math.max(
+                        0,
+                        Math.min(
+                            5,
+                            parsedRating
+                        )
+                    ).toFixed(
+                        1
                     )
                 )
                 : 0;
 
 
-        /*
-         * Images
-         */
+        /* ---------------------------------------------------------------------
+           Images
+           --------------------------------------------------------------------- */
 
         const image =
             getPrimaryImage(
@@ -1773,9 +1962,9 @@
             );
 
 
-        /*
-         * Variants
-         */
+        /* ---------------------------------------------------------------------
+           Variants
+           --------------------------------------------------------------------- */
 
         const variants =
             Array.isArray(
@@ -1815,9 +2004,8 @@
                             ),
 
                         inventory:
-                            Number(
-                                variant?.inventory ||
-                                0
+                            normalizeInventory(
+                                variant?.inventory
                             )
 
                     })
@@ -1934,6 +2122,37 @@
     }
 
 
+    function normalizeInventory(
+        value
+    ) {
+
+        const number =
+            Number(
+                value
+            );
+
+
+        if (
+            !Number.isFinite(
+                number
+            )
+        ) {
+
+            return 0;
+
+        }
+
+
+        return Math.max(
+            0,
+            Math.floor(
+                number
+            )
+        );
+
+    }
+
+
     /* =========================================================================
        15. PAGE HEADING
        ========================================================================= */
@@ -1964,7 +2183,6 @@
 
             heading.textContent =
                 "Featured Products";
-
 
             return;
 
@@ -2018,8 +2236,8 @@
 
 
         /*
-         * The Worker already performs server-side search.
-         * We only perform a local compatibility filter here.
+         * Worker performs the primary search.
+         * Local filtering is only a compatibility fallback.
          */
 
         if (
@@ -2030,28 +2248,32 @@
                 products.filter(
                     product => {
 
-                        const searchable = (
+                        const searchable =
+                            [
 
-                            String(
-                                product.name ||
-                                ""
-                            ) +
+                                product.name,
 
-                            " " +
+                                product.title,
 
-                            String(
-                                product.category ||
-                                ""
-                            ) +
+                                product.category,
 
-                            " " +
+                                product.sku,
 
-                            String(
-                                product.sku ||
-                                ""
-                            )
+                                product.pid,
 
-                        ).toLowerCase();
+                                stripHtml(
+                                    product.description
+                                )
+
+                            ]
+                                .map(
+                                    value =>
+                                        String(
+                                            value ||
+                                            ""
+                                        ).toLowerCase()
+                                )
+                                .join(" ");
 
 
                         return searchable.includes(
@@ -2060,6 +2282,68 @@
 
                     }
                 );
+
+        }
+
+
+        /*
+         * Category local filtering.
+         *
+         * Normally the Worker already returns the category-filtered
+         * data because the category uses a search query.
+         */
+
+        if (
+            state.activeCategoryQuery &&
+            !state.searchQuery
+        ) {
+
+            const categoryQuery =
+                state.activeCategoryQuery
+                    .toLowerCase()
+                    .trim();
+
+
+            if (
+                categoryQuery
+            ) {
+
+                products =
+                    products.filter(
+                        product => {
+
+                            const searchable =
+                                (
+
+                                    String(
+                                        product.name ||
+                                        ""
+                                    ) +
+
+                                    " " +
+
+                                    String(
+                                        product.category ||
+                                        ""
+                                    ) +
+
+                                    " " +
+
+                                    stripHtml(
+                                        product.description
+                                    )
+
+                                ).toLowerCase();
+
+
+                            return searchable.includes(
+                                categoryQuery
+                            );
+
+                        }
+                    );
+
+            }
 
         }
 
@@ -2209,7 +2493,10 @@
 
             sort.includes(
                 "nameaz"
-            )
+            ) ||
+
+            sort ===
+                "nameasc"
         ) {
 
             return nameA.localeCompare(
@@ -2231,7 +2518,10 @@
 
             sort.includes(
                 "nameza"
-            )
+            ) ||
+
+            sort ===
+                "namedesc"
         ) {
 
             return nameB.localeCompare(
@@ -2270,7 +2560,7 @@
 
 
     /* =========================================================================
-       17. PRODUCT CARD
+       17. PRODUCT GRID
        ========================================================================= */
 
     function renderProductGrid() {
@@ -2308,6 +2598,10 @@
 
     }
 
+
+    /* =========================================================================
+       18. PRODUCT CARD
+       ========================================================================= */
 
     function renderProductCard(
         product
@@ -2353,12 +2647,17 @@
 
 
         const available =
+            Number.isFinite(
+                quantity
+            ) &&
             quantity > 0;
 
 
         const productUrl =
             `${CONFIG.PRODUCT_PAGE}?id=${encodeURIComponent(
-                product.id
+                String(
+                    product.id
+                )
             )}`;
 
 
@@ -2366,6 +2665,24 @@
             Number(
                 product.rating
             ) || 0;
+
+
+        const descriptionText =
+            stripHtml(
+                product.description
+            );
+
+
+        const shortDescription =
+            descriptionText.length > 120
+                ? `${descriptionText.slice(
+                    0,
+                    120
+                )}...`
+                : (
+                    descriptionText ||
+                    "CJ product information available."
+                );
 
 
         return `
@@ -2387,9 +2704,9 @@
                         class="product-badge"
                     >
 
-                        ${materialIcon(
+                        ${svgIcon(
                             "category",
-                            "icon-xs"
+                            "ui-icon ui-icon-sm"
                         )}
 
                         <span>
@@ -2437,23 +2754,14 @@
                     <p
                         class="product-card-description"
                     >
-                        ${
-                            escapeHTML(
-                                stripHtml(
-                                    product.description
-                                ).slice(
-                                    0,
-                                    120
-                                )
-                            ) ||
-                            "CJ product information available."
-                        }
+                        ${escapeHTML(
+                            shortDescription
+                        )}
                     </p>
 
 
                     ${
                         rating > 0
-
                             ? `
 
                                 <div
@@ -2463,9 +2771,9 @@
                                     )} out of 5"
                                 >
 
-                                    ${materialIcon(
+                                    ${svgIcon(
                                         "star",
-                                        "icon-sm"
+                                        "ui-icon ui-icon-sm"
                                     )}
 
                                     <span>
@@ -2477,9 +2785,7 @@
                                 </div>
 
                             `
-
                             : ""
-
                     }
 
 
@@ -2513,13 +2819,13 @@
                                 class="btn-card btn-secondary"
                             >
 
-                                ${materialIcon(
-                                    "visibility",
-                                    "icon-sm"
+                                ${svgIcon(
+                                    "eye",
+                                    "ui-icon ui-icon-sm"
                                 )}
 
                                 <span>
-                                    View
+                                    View Details
                                 </span>
 
                             </a>
@@ -2534,13 +2840,18 @@
                                         ? ""
                                         : "disabled"
                                 }
-                                aria-label="Add ${title} to cart"
+                                aria-label="${
+                                    available
+                                        ? `Add ${title} to cart`
+                                        : `${title} is out of stock`
+                                }"
                             >
 
-                                ${materialIcon(
+                                ${svgIcon(
                                     available
-                                        ? "add_shopping_cart"
-                                        : "inventory_2"
+                                        ? "add_cart"
+                                        : "inventory",
+                                    "ui-icon ui-icon-sm"
                                 )}
 
                                 <span>
@@ -2567,7 +2878,7 @@
 
 
     /* =========================================================================
-       18. IMAGE FALLBACKS
+       19. IMAGE FALLBACKS
        ========================================================================= */
 
     function attachProductImageFallbacks() {
@@ -2583,11 +2894,7 @@
 
                 image.addEventListener(
                     "error",
-                    handleProductImageError,
-                    {
-                        once:
-                            false
-                    }
+                    handleProductImageError
                 );
 
             }
@@ -2614,7 +2921,7 @@
 
 
         /*
-         * First try the original CJ URL through our Worker.
+         * Try original CJ image through Cloudflare Worker.
          */
 
         const original =
@@ -2645,7 +2952,6 @@
                 image.src =
                     proxiedOriginal;
 
-
                 return;
 
             }
@@ -2654,17 +2960,15 @@
 
 
         /*
-         * Final local fallback.
+         * Final local placeholder.
          */
 
         if (
-            image.src !==
-                PLACEHOLDER_IMAGE
+            !image.dataset.placeholderUsed
         ) {
 
             image.dataset.placeholderUsed =
                 "true";
-
 
             image.src =
                 PLACEHOLDER_IMAGE;
@@ -2675,7 +2979,7 @@
 
 
     /* =========================================================================
-       19. CART INTEGRATION
+       20. CART INTEGRATION
        ========================================================================= */
 
     function handleProductGridClick(
@@ -2772,23 +3076,39 @@
 
         } else {
 
-            const customEvent =
-                new CustomEvent(
-                    "cart:add",
-                    {
-                        detail:
-                            product
-                    }
+            try {
+
+                const customEvent =
+                    new CustomEvent(
+                        "cart:add",
+                        {
+                            detail:
+                                product
+                        }
+                    );
+
+
+                document.dispatchEvent(
+                    customEvent
                 );
 
 
-            document.dispatchEvent(
-                customEvent
-            );
+                added =
+                    true;
 
+            } catch (
+                error
+            ) {
 
-            added =
-                true;
+                console.error(
+                    "[PRASUN SHOP] Cart event error:",
+                    error
+                );
+
+                added =
+                    false;
+
+            }
 
         }
 
@@ -2813,9 +3133,9 @@
 
         button.innerHTML = `
 
-            ${materialIcon(
+            ${svgIcon(
                 "check",
-                "icon-sm"
+                "ui-icon ui-icon-sm"
             )}
 
             <span>
@@ -2844,9 +3164,9 @@
 
                 button.innerHTML = `
 
-                    ${materialIcon(
-                        "add_shopping_cart",
-                        "icon-sm"
+                    ${svgIcon(
+                        "add_cart",
+                        "ui-icon ui-icon-sm"
                     )}
 
                     <span>
@@ -2863,7 +3183,7 @@
 
 
     /* =========================================================================
-       20. UI STATES
+       21. UI STATES
        ========================================================================= */
 
     function renderLoadingState() {
@@ -2951,9 +3271,9 @@
                 role="status"
             >
 
-                ${materialIcon(
-                    "inventory_2",
-                    "icon-xl"
+                ${svgIcon(
+                    "inventory",
+                    "ui-icon ui-icon-xl"
                 )}
 
 
@@ -3017,9 +3337,9 @@
                 role="alert"
             >
 
-                ${materialIcon(
+                ${svgIcon(
                     "error",
-                    "icon-xl"
+                    "ui-icon ui-icon-xl"
                 )}
 
 
@@ -3041,9 +3361,9 @@
                     data-action="retry-products"
                 >
 
-                    ${materialIcon(
+                    ${svgIcon(
                         "refresh",
-                        "icon-sm"
+                        "ui-icon ui-icon-sm"
                     )}
 
                     <span>
@@ -3120,8 +3440,7 @@
 
         elements.resultsCount.textContent =
             `${count} ${
-                count ===
-                1
+                count === 1
                     ? "product"
                     : "products"
             } available`;
@@ -3133,12 +3452,8 @@
         loading
     ) {
 
-        const list =
-            elements.productList;
-
-
         if (
-            !list
+            !elements.productList
         ) {
 
             return;
@@ -3146,7 +3461,7 @@
         }
 
 
-        list.setAttribute(
+        elements.productList.setAttribute(
             "aria-busy",
             loading
                 ? "true"
@@ -3157,7 +3472,7 @@
 
 
     /* =========================================================================
-       21. TEXT HELPERS
+       22. TEXT HELPERS
        ========================================================================= */
 
     function stripHtml(
@@ -3315,7 +3630,7 @@
 
 
     /* =========================================================================
-       22. PUBLIC API
+       23. PUBLIC API
        ========================================================================= */
 
     window.PrasunProducts = {
@@ -3326,6 +3641,7 @@
                     state.searchQuery ||
                     state.activeCategoryQuery
                 ),
+
 
         search:
             query => {
@@ -3353,6 +3669,7 @@
 
                 updateClearSearchButton();
 
+
                 highlightActiveCategoryPill(
                     ""
                 );
@@ -3363,6 +3680,7 @@
                 );
 
             },
+
 
         sort:
             value => {
@@ -3386,17 +3704,20 @@
 
             },
 
+
         getProducts:
             () =>
                 [
                     ...state.products
                 ],
 
+
         getFilteredProducts:
             () =>
                 [
                     ...state.filteredProducts
                 ],
+
 
         getProductById:
             id =>
