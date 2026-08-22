@@ -5714,298 +5714,288 @@
 
             event.preventDefault();
 
-            openProductModal(
-                detailsButton.dataset.productId
-            );
+            async function findProductById(
+    id
+) {
 
-            return;
-        }
-
-        const cartButton =
-            event.target.closest(
-                '[data-action="add-cart"]'
-            );
-
-        if (
-            !cartButton ||
-            cartButton.disabled
-        ) {
-            return;
-        }
-
-        event.preventDefault();
-
-        const product =
-            findProductById(
-                cartButton.dataset.productId
-            );
-
-        if (
-            !product
-        ) {
-            announce(
-                "Product is no longer available."
-            );
-
-            return;
-        }
-
-        if (
-            Number(
-                product.quantity
-            ) <= 0
-        ) {
-
-            announce(
-                `${product.name} is currently out of stock.`
-            );
-
-            return;
-        }
-
-        const added =
-            invokeAddToCart(
-                product
-            );
-
-        if (
-            !added
-        ) {
-            return;
-        }
-
-        cartButton.disabled =
-            true;
-
-        cartButton.classList.add(
-            "added"
-        );
-
-        cartButton.innerHTML =
-            `
-                ${svgIcon(
-                    "check",
-                    "ui-icon ui-icon-sm"
-                )}
-
-                <span>
-                    Added
-                </span>
-            `;
-
-        announce(
-            `${product.name} added to cart.`
-        );
-
-        window.setTimeout(
-            () => {
-
-                if (
-                    !cartButton.isConnected
-                ) {
-                    return;
-                }
-
-                cartButton.disabled =
-                    false;
-
-                cartButton.classList.remove(
-                    "added"
-                );
-
-                cartButton.innerHTML =
-                    `
-                        ${svgIcon(
-                            "cart",
-                            "ui-icon ui-icon-sm"
-                        )}
-
-                        <span>
-                            Add to Cart
-                        </span>
-                    `;
-            },
-            1200
-        );
-    }
+    const wanted =
+        String(
+            id ||
+            ""
+        )
+            .trim();
 
 
-    function invokeAddToCart(
-        product
+    if (
+        !wanted
     ) {
-
-        if (
-            typeof window.addToCart ===
-            "function"
-        ) {
-
-            try {
-
-                const result =
-                    window.addToCart(
-                        product
-                    );
-
-                return result !== false;
-
-            } catch (
-                error
-            ) {
-
-                console.error(
-                    "[PRASUN SHOP] addToCart failed:",
-                    error
-                );
-
-                announce(
-                    "Unable to add this product to the cart."
-                );
-
-                return false;
-            }
-        }
-
-        try {
-
-            document.dispatchEvent(
-                new CustomEvent(
-                    "cart:add",
-                    {
-                        detail:
-                            product
-                    }
-                )
-            );
-
-            return true;
-
-        } catch (
-            error
-        ) {
-
-            console.error(
-                "[PRASUN SHOP] cart event failed:",
-                error
-            );
-
-            announce(
-                "Unable to add this product to the cart."
-            );
-
-            return false;
-        }
-    }
-
-
-    async function findProductById(
-        id
-    ) {
-
-        const wanted =
-            String(
-                id ||
-                ""
-            )
-                .trim();
-
-        if (
-            !wanted
-        ) {
-            return null;
-        }
-
-        const local =
-            state.products.find(
-                product =>
-                    String(
-                        product?.id
-                    ) ===
-                    wanted
-            ) ||
-            state.products.find(
-                product =>
-                    String(
-                        product?.pid
-                    ) ===
-                    wanted
-            ) ||
-            state.products.find(
-                product =>
-                    String(
-                        product?.productId
-                    ) ===
-                    wanted
-            );
-
-        if (
-            local
-        ) {
-            return local;
-        }
-
-        if (
-            state.productDetailCache.has(
-                wanted
-            )
-        ) {
-
-            return state.productDetailCache.get(
-                wanted
-            );
-        }
-
-        try {
-
-            const data =
-                await fetchJSON(
-                    buildProductsUrl(
-                        {
-                            pid:
-                                wanted
-                        }
-                    ),
-                    {
-                        timeout:
-                            CONFIG.REQUEST_TIMEOUT
-                    }
-                );
-
-            const raw =
-                data?.product ||
-                data?.data?.product ||
-                data?.data ||
-                data;
-
-            const normalized =
-                normalizeProduct(
-                    raw
-                );
-
-            if (
-                normalized
-            ) {
-
-                state.productDetailCache.set(
-                    wanted,
-                    normalized
-                );
-
-                return normalized;
-            }
-
-        } catch (
-            error
-        ) {
-
-            console.warn(
-                "[PRASUN SHOP] Product detail lookup failed:",
-                error
-            );
-        }
 
         return null;
+
     }
 
+
+    /*
+     * ================================================================
+     * 1. FULL DETAIL CACHE
+     * ================================================================
+     */
+
+    const cachedDetail =
+        state.productDetailCache?.get(
+            wanted
+        );
+
+
+    if (
+        cachedDetail &&
+        cachedDetail.detailLoaded === true
+    ) {
+
+        return cachedDetail;
+
+    }
+
+
+    /*
+     * ================================================================
+     * 2. LOCAL CATALOG FALLBACK
+     * ================================================================
+     *
+     * This is only a fallback.
+     *
+     * We intentionally DO NOT return it immediately because the
+     * catalog record may be the lightweight CJ listV2 record.
+     */
+
+    const local =
+        state.products.find(
+            product =>
+                String(
+                    product?.id ||
+                    ""
+                ) ===
+                wanted
+        ) ||
+
+        state.products.find(
+            product =>
+                String(
+                    product?.pid ||
+                    ""
+                ) ===
+                wanted
+        ) ||
+
+        state.products.find(
+            product =>
+                String(
+                    product?.productId ||
+                    ""
+                ) ===
+                wanted
+        ) ||
+
+        null;
+
+
+    /*
+     * ================================================================
+     * 3. REQUEST FULL CJ DETAIL FROM WORKER
+     * ================================================================
+     */
+
+    try {
+
+        const data =
+            await fetchJSON(
+                buildProductsUrl(
+                    {
+                        pid:
+                            wanted
+                    }
+                ),
+                {
+                    timeout:
+                        CONFIG.REQUEST_TIMEOUT
+                }
+            );
+
+
+        /*
+         * Worker response:
+         *
+         * {
+         *     success: true,
+         *     product: {...}
+         * }
+         */
+
+        if (
+            data?.success === false
+        ) {
+
+            throw new Error(
+                data?.error ||
+                data?.message ||
+                "Product detail request failed."
+            );
+
+        }
+
+
+        const raw =
+            data?.product ||
+            data?.data?.product ||
+            data?.data ||
+            null;
+
+
+        if (
+            !raw ||
+            typeof raw !== "object"
+        ) {
+
+            throw new Error(
+                "Product detail response was empty."
+            );
+
+        }
+
+
+        const normalized =
+            normalizeProduct(
+                raw
+            );
+
+
+        if (
+            !normalized
+        ) {
+
+            throw new Error(
+                "Product detail could not be normalized."
+            );
+
+        }
+
+
+        /*
+         * Explicitly mark this as full detail.
+         */
+        normalized.detailLoaded =
+            true;
+
+
+        normalized.detailFetchedAt =
+            new Date().toISOString();
+
+
+        /*
+         * Store in frontend detail cache.
+         */
+        state.productDetailCache.set(
+            wanted,
+            normalized
+        );
+
+
+        /*
+         * ============================================================
+         * 4. MERGE FULL DETAIL INTO MAIN PRODUCT STATE
+         * ============================================================
+         *
+         * This means the richer record becomes the product used by
+         * the rest of the storefront too.
+         */
+
+        const productIndex =
+            state.products.findIndex(
+                product =>
+                    String(
+                        product?.id ||
+                        product?.pid ||
+                        product?.productId ||
+                        ""
+                    ) ===
+                    wanted
+            );
+
+
+        if (
+            productIndex >= 0
+        ) {
+
+            state.products[
+                productIndex
+            ] =
+                {
+                    ...state.products[
+                        productIndex
+                    ],
+
+                    ...normalized
+                };
+
+        }
+
+
+        /*
+         * Also update filteredProducts when applicable.
+         */
+        const filteredIndex =
+            state.filteredProducts.findIndex(
+                product =>
+                    String(
+                        product?.id ||
+                        product?.pid ||
+                        product?.productId ||
+                        ""
+                    ) ===
+                    wanted
+            );
+
+
+        if (
+            filteredIndex >= 0
+        ) {
+
+            state.filteredProducts[
+                filteredIndex
+            ] =
+                {
+                    ...state.filteredProducts[
+                        filteredIndex
+                    ],
+
+                    ...normalized
+                };
+
+        }
+
+
+        return normalized;
+
+    } catch (
+        error
+    ) {
+
+        console.warn(
+            "[PRASUN SHOP] Full product detail lookup failed; using catalog fallback:",
+            error
+        );
+
+
+        /*
+         * If CJ detail is temporarily unavailable, don't break the
+         * product modal. Return the existing lightweight product.
+         */
+
+        return local || null;
+
+    }
+
+}
 
     /* =========================================================================
        25. IMAGE FALLBACK
