@@ -139,7 +139,7 @@ const PRODUCT_CATALOG = [
 
         price: 11.74,
 
-        image: "",
+        image: "https://cf.cjdropshipping.com/15734016/1298148721350.jpg",
 
         description:
             "LED solar wall light with multiple quantity and lamp options.",
