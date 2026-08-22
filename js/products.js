@@ -102,44 +102,60 @@
 
 const PRODUCT_CATALOG = [
 
+   {
+    id: "1615328471586897920",
+
+    name: "Solar Garden Light Waterproof Garden Lawn",
+
+    category: "Solar Lights",
+
+    price: 44.71,
+
+    image:
+        "https://cf.cjdropshipping.com/20652083-f3a5-4a12-ab41-af445124bb13.jpg",
+
+    description:
+        "Solar garden light suitable for outdoor garden and lawn applications.",
+
+    jobsProductId:
+        "1615328471586897920",
+
+    recommendProductId:
+        "2608221241380345100",
+
+    wed2cUrl:
+        "https://prasunshop.wed2c.com/goodsDetails?jobsProductId=1615328471586897920&recommendProductId=2608221241380345100&hyId=kibt-fe-cj",
+
+    wed2cShareUrl:
+        "https://prasunshop.wed2c.com/s/2GOGZubPOVn"
+},
+
     {
-        id: "1535868866805641216",
+    id: "1682031865621594112",
 
-        name: "Solar Garden Light Waterproof Garden Lawn",
+    name: "LED Solar Wall Light",
 
-        category: "Solar Lights",
+    category: "Solar Lights",
 
-        price: 44.71,
+    price: 11.74,
 
-        image:
-            "https://cf.cjdropshipping.com/20652083-f3a5-4a12-ab41-af445124bb13.jpg",
+    image: "",
 
-        description:
-            "Solar garden light suitable for outdoor garden and lawn applications.",
+    description:
+        "LED solar wall light with multiple quantity and lamp options.",
 
-        wed2cUrl:
-            "https://prasunshop.wed2c.com/goodsDetails?jobsProductId=1615328471586897920&recommendProductId=2608221241380345100&hyId=kibt-fe-cj"
-    },
+    jobsProductId:
+        "1682031865621594112",
 
-    {
-        id: "wed2c-2GOGZubPOVn",
+    recommendProductId:
+        "2608221741420326500",
 
-        name: "LED Solar Wall Light",
+    wed2cUrl:
+        "https://prasunshop.wed2c.com/goodsDetails?jobsProductId=1682031865621594112&recommendProductId=2608221741420326500&hyId=kibt-fe-cj",
 
-        category: "Solar Lights",
-
-        price: 11.74,
-
-        image: "",
-
-        description:
-            "LED solar wall light.",
-
-        wed2cUrl:
-            "https://prasunshop.wed2c.com/s/2GOGZubPOVn"
-    }
-
-];
+    wed2cShareUrl:
+        "https://prasunshop.wed2c.com/s/2GOGZubPOVn"
+},
 
 
 /* =========================================================================
