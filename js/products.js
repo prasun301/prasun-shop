@@ -3251,43 +3251,9 @@
             .trim();
     }
 
-
-   /* =========================================================================
+/* =========================================================================
    18. CATEGORY MATCHING
    ========================================================================= */
-
-/*
- * IMPORTANT
- * -------------------------------------------------------------------------
- * Storefront categories are controlled by CATEGORY_MAP.
- *
- * CJ's own category values must NOT be treated as storefront category IDs.
- *
- * Example CJ values:
- *
- *     solar
- *     lighting
- *     electrical
- *     home-improvement
- *
- * Our storefront values:
- *
- *     solar-lights
- *     battery
- *     chargers
- *     power-bank
- *     cables
- *     ...
- *
- * Therefore category filtering is primarily based on:
- *
- *     1. Product title
- *     2. CJ category metadata
- *     3. Product type / SKU / description
- *     4. Explicit storefront category ID, if genuinely present
- *
- * ======================================================================== */
-
 
 function matchesCategory(
     product,
@@ -3302,58 +3268,30 @@ function matchesCategory(
     }
 
 
-    /*
-     * Direct storefront category match.
-     *
-     * This is used ONLY when the value exactly equals one of our
-     * real storefront category IDs.
-     */
-
-    const explicitCategories =
+    const storeCategories =
         normalizeStoreCategories(
             product?.storeCategories
         );
 
 
-    const requestedCategory =
-        String(
-            category.query ||
-            ""
-        )
-            .trim()
-            .toLowerCase();
-
-
+    /*
+     * 1. Explicit storefront category.
+     */
     if (
-        requestedCategory &&
-        explicitCategories.includes(
-            requestedCategory
+        storeCategories.includes(
+            normalizeSearchText(
+                category.query
+            )
         )
     ) {
-
         return true;
-
     }
 
 
     /*
-     * Build normalized text sources.
+     * 2. Category metadata.
      */
-
-    const titleText =
-        normalizeSearchText(
-            [
-                product?.title,
-                product?.name,
-                product?.productNameEn,
-                product?.productName,
-                product?.subject
-            ]
-                .join(" ")
-        );
-
-
-    const categoryText =
+    const categoryMetadata =
         normalizeSearchText(
             [
                 product?.category,
@@ -3361,667 +3299,295 @@ function matchesCategory(
                 product?.oneCategoryName,
                 product?.twoCategoryName,
                 product?.threeCategoryName,
-                product?.categoryPath
+                product?.categoryPath,
+                product?.categoryId
             ]
                 .join(" ")
         );
 
 
-    const productText =
-        buildSearchText(
-            product
-        );
+    if (
+        category.terms.some(
+            term =>
+                categoryMetadata.includes(
+                    normalizeSearchText(
+                        term
+                    )
+                )
+        )
+    ) {
+        return true;
+    }
 
 
     /*
-     * ================================================================
-     * CATEGORY-SPECIFIC RULES
-     * ================================================================
+     * 3. Product title / name.
      */
+    const titleText =
+        normalizeSearchText(
+            [
+                product?.title,
+                product?.name,
+                product?.productNameEn,
+                product?.productName
+            ]
+                .join(" ")
+        );
 
-    switch (
-        requestedCategory
+
+    for (
+        const term
+        of category.terms
     ) {
 
-        /* ------------------------------------------------------------
-           SOLAR LIGHTS
-           ------------------------------------------------------------ */
+        const normalizedTerm =
+            normalizeSearchText(
+                term
+            );
+
+
+        if (
+            normalizedTerm &&
+            titleText.includes(
+                normalizedTerm
+            )
+        ) {
+            return true;
+        }
+
+    }
+
+
+    /*
+     * 4. Category-specific robust fallbacks.
+     */
+    switch (
+        category.query
+    ) {
 
         case "solar-lights":
 
             return (
-
+                /\bsolar\b/.test(
+                    titleText
+                ) &&
                 (
-                    /\bsolar\b/.test(
+                    /\blight\b/.test(
                         titleText
-                    ) &&
-                    (
-                        /\blight\b/.test(
-                            titleText
-                        ) ||
-                        /\blamp\b/.test(
-                            titleText
-                        ) ||
-                        /\bled\b/.test(
-                            titleText
-                        ) ||
-                        /\bfloodlight\b/.test(
-                            titleText
-                        ) ||
-                        /\bflood\s*light\b/.test(
-                            titleText
-                        ) ||
-                        /\bspotlight\b/.test(
-                            titleText
-                        ) ||
-                        /\bstreet\b/.test(
-                            titleText
-                        ) ||
-                        /\bgarden\b/.test(
-                            titleText
-                        ) ||
-                        /\bwall\b/.test(
-                            titleText
-                        ) ||
-                        /\bpathway\b/.test(
-                            titleText
-                        ) ||
-                        /\boutdoor\b/.test(
-                            titleText
-                        ) ||
-                        /\bmotion\b/.test(
-                            titleText
-                        )
+                    ) ||
+                    /\blamp\b/.test(
+                        titleText
+                    ) ||
+                    /\bled\b/.test(
+                        titleText
+                    ) ||
+                    /\bfloodlight\b/.test(
+                        titleText
+                    ) ||
+                    /\bspotlight\b/.test(
+                        titleText
+                    ) ||
+                    /\bstreet\b/.test(
+                        titleText
+                    ) ||
+                    /\bgarden\b/.test(
+                        titleText
+                    ) ||
+                    /\bwall\b/.test(
+                        titleText
+                    ) ||
+                    /\boutdoor\b/.test(
+                        titleText
+                    ) ||
+                    /\bpathway\b/.test(
+                        titleText
+                    ) ||
+                    /\bmotion\b/.test(
+                        titleText
                     )
                 )
-
-                ||
-
-                (
-                    /\bsolar\b/.test(
-                        categoryText
-                    ) &&
-                    (
-                        /\blamp\b/.test(
-                            categoryText
-                        ) ||
-                        /\blight\b/.test(
-                            categoryText
-                        ) ||
-                        /\blighting\b/.test(
-                            categoryText
-                        )
-                    )
-                )
-
             );
 
-
-        /* ------------------------------------------------------------
-           BATTERY
-           ------------------------------------------------------------ */
 
         case "battery":
 
             return (
-
-                /\bbatter(y|ies)\b/.test(
+                /\bbattery\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
+                /\bbatteries\b/.test(
+                    titleText
+                ) ||
                 /\b18650\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\b21700\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\blifepo4\b/.test(
                     titleText
                 )
-
-                ||
-
-                /\blithium\b/.test(
-                    titleText
-                ) &&
-                (
-                    /\bcell\b/.test(
-                        titleText
-                    ) ||
-                    /\bbattery\b/.test(
-                        titleText
-                    ) ||
-                    /\bion\b/.test(
-                        titleText
-                    )
-                )
-
-                ||
-
-                /\bbattery\b/.test(
-                    categoryText
-                )
-
             );
 
-
-        /* ------------------------------------------------------------
-           CHARGERS
-           ------------------------------------------------------------ */
 
         case "chargers":
 
             return (
-
                 /\bcharger\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bcharging\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bpower\s*adapter\b/.test(
                     titleText
                 )
+            );
 
-                ||
-
-                /\bwall\s*charger\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bfast\s*charger\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bwireless\s*charger\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bphone\s*charger\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bcar\s*charger\b/.test(
-                    titleText
-                );
-
-
-        /* ------------------------------------------------------------
-           POWER BANK
-           ------------------------------------------------------------ */
 
         case "power-bank":
 
             return (
-
-                /\bpower[\s-]*bank\b/.test(
+                /\bpower\s*bank\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bpowerbank\b/.test(
                     titleText
+                ) ||
+                /\bportable\s+(power\s+)?charger\b/.test(
+                    titleText
                 )
-
-                ||
-
-                (
-                    /\bportable\b/.test(
-                        titleText
-                    ) &&
-                    (
-                        /\bpower\b/.test(
-                            titleText
-                        ) ||
-                        /\bcharger\b/.test(
-                            titleText
-                        ) ||
-                        /\bbattery\b/.test(
-                            titleText
-                        )
-                    )
-                )
-
-                ||
-
-                (
-                    /\bpower[\s-]*bank\b/.test(
-                        categoryText
-                    )
-                )
-
             );
 
-
-        /* ------------------------------------------------------------
-           CABLES
-           ------------------------------------------------------------ */
 
         case "cables":
 
             return (
-
-                /\bcables?\b/.test(
+                /\bcable\b/.test(
                     titleText
-                )
-
-                ||
-
-                /\busb[\s-]*c\b/.test(
+                ) ||
+                /\btype[\s-]?c\b/.test(
                     titleText
-                )
-
-                ||
-
-                /\btype[\s-]*c\b/.test(
+                ) ||
+                /\busb[\s-]?c\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bhdmi\b/.test(
                     titleText
                 )
+            );
 
-                ||
-
-                /\bethernet\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\blan\s+cable\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bdisplayport\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\blightning\s+cable\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bmicro\s*usb\b/.test(
-                    titleText
-                );
-
-
-        /* ------------------------------------------------------------
-           EARPHONES
-           ------------------------------------------------------------ */
 
         case "earphones":
 
             return (
-
-                /\bearphones?\b/.test(
+                /\bearphone\b/.test(
                     titleText
-                )
-
-                ||
-
-                /\bearbuds?\b/.test(
+                ) ||
+                /\bearbud\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\btws\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\btrue\s+wireless\b/.test(
                     titleText
                 )
+            );
 
-                ||
-
-                /\bwireless\s+earbuds?\b/.test(
-                    titleText
-                );
-
-
-        /* ------------------------------------------------------------
-           HEADPHONES
-           ------------------------------------------------------------ */
 
         case "headphones":
 
             return (
-
-                /\bheadphones?\b/.test(
+                /\bheadphone\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bheadset\b/.test(
                     titleText
                 )
+            );
 
-                ||
-
-                /\bgaming\s+headset\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bgaming\s+headphones?\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bover[\s-]?ear\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bon[\s-]?ear\b/.test(
-                    titleText
-                );
-
-
-        /* ------------------------------------------------------------
-           MODEM
-           ------------------------------------------------------------ */
 
         case "modem":
 
-            return (
+            return /\bmodem\b/.test(
+                titleText
+            );
 
-                /\bmodem\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\b4g\s+modem\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\b5g\s+modem\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\blte\s+modem\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\busb\s+modem\b/.test(
-                    titleText
-                );
-
-
-        /* ------------------------------------------------------------
-           ROUTERS
-           ------------------------------------------------------------ */
 
         case "routers":
 
-            return (
+            return /\brouter\b/.test(
+                titleText
+            );
 
-                /\brouter\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bwi[\s-]?fi\s+router\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\b4g\s+router\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\b5g\s+router\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\blte\s+router\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bmesh\s+router\b/.test(
-                    titleText
-                );
-
-
-        /* ------------------------------------------------------------
-           LAPTOPS
-           ------------------------------------------------------------ */
 
         case "laptops":
 
             return (
-
-                /\blaptops?\b/.test(
+                /\blaptop\b/.test(
                     titleText
-                )
-
-                ||
-
-                /\bnotebooks?\b/.test(
+                ) ||
+                /\bnotebook\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bchromebook\b/.test(
                     titleText
                 )
+            );
 
-                ||
-
-                /\bultrabook\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bmacbook\b/.test(
-                    titleText
-                );
-
-
-        /* ------------------------------------------------------------
-           POWER TOOLS
-           ------------------------------------------------------------ */
 
         case "power-tools":
 
             return (
-
                 /\bdrill\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bgrinder\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bscrewdriver\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bwrench\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bsaw\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bsander\b/.test(
                     titleText
-                )
-
-                ||
-
-                /\bpower[\s-]*tool\b/.test(
+                ) ||
+                /\bpower\s+tool\b/.test(
                     titleText
                 )
+            );
 
-                ||
-
-                /\bimpact\s+driver\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bimpact\s+wrench\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bhammer\s+drill\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\brotary\s+tool\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bheat\s+gun\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bpolisher\b/.test(
-                    titleText
-                );
-
-
-        /* ------------------------------------------------------------
-           CAMERA
-           ------------------------------------------------------------ */
 
         case "camera":
 
             return (
-
-                /\bcameras?\b/.test(
+                /\bcamera\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bcctv\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bwebcam\b/.test(
                     titleText
-                )
-
-                ||
-
-                /\bdash[\s-]*cam\b/.test(
+                ) ||
+                /\bdash\s*cam\b/.test(
                     titleText
-                )
-
-                ||
-
+                ) ||
                 /\bsurveillance\b/.test(
                     titleText
                 )
+            );
 
-                ||
-
-                /\bsecurity\s+camera\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\bip\s+camera\b/.test(
-                    titleText
-                )
-
-                ||
-
-                /\baction\s+camera\b/.test(
-                    titleText
-                );
-
-
-        /* ------------------------------------------------------------
-           SMART HOME
-           ------------------------------------------------------------ */
 
         case "smart-home":
 
             return (
-
                 (
                     /\bsmart\b/.test(
                         titleText
@@ -4036,10 +3602,10 @@ function matchesCategory(
                         /\bswitch\b/.test(
                             titleText
                         ) ||
-                        /\bsocket\b/.test(
+                        /\bbulb\b/.test(
                             titleText
                         ) ||
-                        /\bbulb\b/.test(
+                        /\bsocket\b/.test(
                             titleText
                         ) ||
                         /\bsensor\b/.test(
@@ -4047,96 +3613,21 @@ function matchesCategory(
                         ) ||
                         /\block\b/.test(
                             titleText
-                        ) ||
-                        /\brelay\b/.test(
-                            titleText
                         )
                     )
-                )
-
-                ||
-
+                ) ||
                 /\bhome\s+automation\b/.test(
                     titleText
                 )
-
-                ||
-
-                (
-                    /\bsmart\b/.test(
-                        categoryText
-                    ) &&
-                    /\bhome\b/.test(
-                        categoryText
-                    )
-                );
-
-        default:
-
-            break;
-
-    }
-
-
-    /*
-     * ================================================================
-     * GENERIC TERM FALLBACK
-     * ================================================================
-     *
-     * Only after the category-specific rules fail.
-     *
-     * Prefer title/category metadata over the long description.
-     */
-
-    for (
-        const term
-        of category.terms || []
-    ) {
-
-        const normalizedTerm =
-            normalizeSearchText(
-                term
             );
 
 
-        if (
-            !normalizedTerm
-        ) {
-            continue;
-        }
+        default:
 
-
-        if (
-            titleText.includes(
-                normalizedTerm
-            )
-        ) {
-
-            return true;
-
-        }
-
-
-        if (
-            categoryText.includes(
-                normalizedTerm
-            )
-        ) {
-
-            return true;
-
-        }
+            return false;
 
     }
 
-
-    /*
-     * The full description is deliberately NOT used as a generic
-     * category trigger. A word appearing somewhere in a long CJ
-     * description is not sufficient to classify the product.
-     */
-
-    return false;
 }
 
 
@@ -4149,7 +3640,6 @@ function normalizeStoreCategories(
             categories
         )
     ) {
-
         return [];
     }
 
@@ -4157,13 +3647,17 @@ function normalizeStoreCategories(
     return categories
         .map(
             value =>
-                normalizeSearchText(
-                    value
+                String(
+                    value ??
+                    ""
                 )
+                    .trim()
+                    .toLowerCase()
         )
         .filter(
             Boolean
         );
+
 }
     /* =========================================================================
        19. FILTER + SORT + RENDER
