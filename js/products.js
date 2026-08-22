@@ -6336,230 +6336,807 @@
     }
 
 
-    async function openProductModal(
-        productId
+   async function openProductModal(
+    productId
+) {
+
+    if (
+        !elements.productModal ||
+        !elements.modalBody
     ) {
 
-        if (
-            !elements.productModal ||
-            !elements.modalBody
-        ) {
+        console.error(
+            "[PRASUN SHOP] Product modal is missing from the page."
+        );
 
-            console.error(
-                "[PRASUN SHOP] Product modal is missing."
-            );
+        return;
 
-            return;
-        }
+    }
 
-        let product =
-            state.products.find(
-                item =>
-                    String(
-                        item?.id
-                    ) ===
-                    String(
-                        productId
-                    )
-            );
 
-        if (
-            !product
-        ) {
+    /*
+     * ================================================================
+     * LOAD PRODUCT
+     * ================================================================
+     */
 
-            product =
-                await findProductById(
-                    productId
-                );
-        }
+    const product =
+        await findProductById(
+            productId
+        );
 
-        if (
-            !product
-        ) {
-            return;
-        }
 
-        const images =
-            getGalleryImages(
-                product
-            );
+    if (
+        !product
+    ) {
 
-        const primaryImage =
-            product.image ||
-            images[0] ||
-            PLACEHOLDER_IMAGE;
+        announce(
+            "Product is no longer available."
+        );
 
-        const title =
-            escapeHTML(
-                product.name ||
-                "Product"
-            );
+        return;
 
-        const category =
-            escapeHTML(
-                product.category ||
-                CONFIG.DEFAULT_CATEGORY
-            );
+    }
 
-        const quantity =
+
+    /*
+     * ================================================================
+     * FULL DETAIL DATA
+     * ================================================================
+     */
+
+    const images =
+        getGalleryImages(
+            product
+        );
+
+
+    const primaryImage =
+        normalizeImageUrl(
+            product?.image
+        ) ||
+        images[0] ||
+        PLACEHOLDER_IMAGE;
+
+
+    const title =
+        escapeHTML(
+            product?.name ||
+            product?.title ||
+            "CJ Product"
+        );
+
+
+    const category =
+        escapeHTML(
+            product?.category ||
+            CONFIG.DEFAULT_CATEGORY
+        );
+
+
+    const description =
+        sanitizeDescription(
+            product?.description
+        ) ||
+        `
+            <p>
+                Product description is currently unavailable.
+            </p>
+        `;
+
+
+    /*
+     * ================================================================
+     * VARIANTS
+     * ================================================================
+     */
+
+    const variants =
+        Array.isArray(
+            product?.variants
+        )
+            ? product.variants
+                .filter(
+                    variant =>
+                        variant &&
+                        (
+                            variant?.vid ||
+                            variant?.sku
+                        )
+                )
+            : [];
+
+
+    /*
+     * ================================================================
+     * INITIAL VARIANT
+     * ================================================================
+     *
+     * If there is exactly one variant, select it automatically.
+     *
+     * If there are multiple variants, select the first IN-STOCK
+     * variant as the visual default, but the customer can change it.
+     */
+
+    let selectedVariant =
+        null;
+
+
+    if (
+        variants.length ===
+        1
+    ) {
+
+        selectedVariant =
+            variants[0];
+
+    } else if (
+        variants.length > 1
+    ) {
+
+        selectedVariant =
+            variants.find(
+                variant =>
+                    Number(
+                        variant?.inventory ??
+                        variant?.quantity ??
+                        0
+                    ) > 0
+            ) ||
+            variants[0] ||
+            null;
+
+    }
+
+
+    /*
+     * ================================================================
+     * VARIANT HELPERS
+     * ================================================================
+     */
+
+    const getVariantInventory =
+        variant =>
             Number(
-                product.quantity
+                variant?.inventory ??
+                variant?.quantity ??
+                0
             ) || 0;
 
-        const description =
-            sanitizeDescription(
-                product.description
-            ) ||
-            `
-                <p>
-                    Product description is currently unavailable.
-                </p>
-            `;
 
-        const variants =
-            Array.isArray(
-                product.variants
+    const getVariantPrice =
+        variant => {
+
+            const value =
+                Number(
+                    variant?.price
+                );
+
+            return Number.isFinite(
+                value
             )
-                ? product.variants
-                : [];
+                ? value
+                : Number(
+                    product?.price
+                ) || 0;
+        };
 
-        const galleryHtml =
-            images.length > 1
-                ? `
-                    <div class="modal-gallery">
-                        ${images
-                            .map(
-                                (
-                                    image,
-                                    index
-                                ) => `
-                                    <button
-                                        type="button"
-                                        class="modal-gallery-thumb ${
-                                            index === 0
-                                                ? "is-active"
-                                                : ""
-                                        }"
-                                        data-gallery-image="${escapeHTML(
+
+    const getVariantImage =
+        variant =>
+            normalizeImageUrl(
+                variant?.image
+            ) ||
+            primaryImage;
+
+
+    const getVariantLabel =
+        variant => {
+
+            return (
+                String(
+                    variant?.name ||
+                    variant?.variantNameEn ||
+                    variant?.variantKey ||
+                    variant?.variantStandard ||
+                    "Default"
+                )
+                    .trim() ||
+                "Default"
+            );
+
+        };
+
+
+    /*
+     * ================================================================
+     * GALLERY HTML
+     * ================================================================
+     */
+
+    const galleryHtml =
+        images.length > 1
+            ? `
+                <div
+                    class="modal-gallery"
+                >
+
+                    ${images
+                        .map(
+                            (
+                                image,
+                                index
+                            ) => `
+
+                                <button
+                                    type="button"
+                                    class="modal-gallery-thumb ${
+                                        index === 0
+                                            ? "is-active"
+                                            : ""
+                                    }"
+                                    data-gallery-image="${escapeHTML(
+                                        image
+                                    )}"
+                                    aria-label="View product image ${
+                                        index + 1
+                                    }"
+                                >
+
+                                    <img
+                                        src="${escapeHTML(
                                             image
                                         )}"
-                                        aria-label="View product image ${
-                                            index + 1
-                                        }"
+                                        alt=""
+                                        loading="lazy"
+                                        decoding="async"
+                                        referrerpolicy="no-referrer"
                                     >
-                                        <img
-                                            src="${escapeHTML(
-                                                image
-                                            )}"
-                                            alt=""
-                                            loading="lazy"
-                                            decoding="async"
-                                            referrerpolicy="no-referrer"
-                                        >
-                                    </button>
-                                `
-                            )
-                            .join("")}
-                    </div>
-                `
-                : "";
 
-        const variantsHtml =
-            variants.length > 0
-                ? `
-                    <div class="product-variants-info">
-                        <strong>
-                            ${
-                                variants.length === 1
-                                    ? "Variant:"
-                                    : "Variants:"
-                            }
-                        </strong>
+                                </button>
 
-                        <span>
-                            ${variants.length} available
-                        </span>
-                    </div>
-                `
-                : "";
+                            `
+                        )
+                        .join("")}
 
-        elements.modalBody.innerHTML =
+                </div>
             `
-                <div class="modal-image-column">
+            : "";
 
-                    <img
-                        id="main-modal-img"
-                        src="${escapeHTML(
-                            primaryImage
-                        )}"
-                        alt="${title}"
-                        class="modal-product-img"
-                        loading="eager"
-                        decoding="async"
-                        referrerpolicy="no-referrer"
+
+    /*
+     * ================================================================
+     * VARIANT SELECTOR
+     * ================================================================
+     */
+
+    const variantsHtml =
+        variants.length > 0
+            ? `
+
+                <div
+                    class="product-variant-selector"
+                >
+
+                    <label
+                        for="modal-variant-select"
+                        class="product-variant-label"
+                    >
+                        Select Variant
+                    </label>
+
+
+                    <select
+                        id="modal-variant-select"
+                        class="product-variant-select"
                     >
 
-                    ${galleryHtml}
+                        ${
+                            variants
+                                .map(
+                                    variant => {
+
+                                        const variantId =
+                                            String(
+                                                variant?.vid ||
+                                                variant?.sku ||
+                                                ""
+                                            );
+
+
+                                        const inventory =
+                                            getVariantInventory(
+                                                variant
+                                            );
+
+
+                                        const label =
+                                            getVariantLabel(
+                                                variant
+                                            );
+
+
+                                        const price =
+                                            formatPrice(
+                                                getVariantPrice(
+                                                    variant
+                                                )
+                                            );
+
+
+                                        const selected =
+                                            selectedVariant &&
+                                            String(
+                                                selectedVariant?.vid ||
+                                                selectedVariant?.sku ||
+                                                ""
+                                            ) ===
+                                            variantId;
+
+
+                                        return `
+                                            <option
+                                                value="${escapeHTML(
+                                                    variantId
+                                                )}"
+                                                ${
+                                                    selected
+                                                        ? "selected"
+                                                        : ""
+                                                }
+                                                ${
+                                                    inventory <= 0
+                                                        ? "disabled"
+                                                        : ""
+                                                }
+                                            >
+                                                ${escapeHTML(
+                                                    label
+                                                )}
+                                                — ${escapeHTML(
+                                                    price
+                                                )}
+                                                ${
+                                                    inventory > 0
+                                                        ? ` — ${inventory} in stock`
+                                                        : " — Out of stock"
+                                                }
+                                            </option>
+                                        `;
+
+                                    }
+                                )
+                                .join("")
+                        }
+
+                    </select>
 
                 </div>
 
-                <div class="modal-details">
+            `
+            : "";
 
-                    <span class="product-category-tag">
-                        ${category}
+
+    /*
+     * ================================================================
+     * INITIAL VARIANT STATE
+     * ================================================================
+     */
+
+    const initialQuantity =
+        selectedVariant
+            ? getVariantInventory(
+                selectedVariant
+            )
+            : (
+                Number(
+                    product?.quantity
+                ) || 0
+            );
+
+
+    const initialPrice =
+        selectedVariant
+            ? getVariantPrice(
+                selectedVariant
+            )
+            : (
+                Number(
+                    product?.price
+                ) || 0
+            );
+
+
+    /*
+     * ================================================================
+     * MODAL HTML
+     * ================================================================
+     */
+
+    elements.modalBody.innerHTML =
+        `
+
+            <div
+                class="modal-image-column"
+            >
+
+                <img
+                    id="main-modal-img"
+                    src="${escapeHTML(
+                        primaryImage
+                    )}"
+                    alt="${title}"
+                    class="modal-product-img"
+                    loading="eager"
+                    decoding="async"
+                    referrerpolicy="no-referrer"
+                >
+
+                ${galleryHtml}
+
+            </div>
+
+
+            <div
+                class="modal-details"
+            >
+
+                <span
+                    class="product-category-tag"
+                >
+                    ${category}
+                </span>
+
+
+                <h2
+                    id="modal-title"
+                    class="modal-product-title"
+                >
+                    ${title}
+                </h2>
+
+
+                <div
+                    class="modal-product-price-row"
+                >
+
+                    <strong
+                        class="modal-product-price"
+                        id="modal-current-price"
+                    >
+                        ${formatPrice(
+                            initialPrice
+                        )}
+                    </strong>
+
+
+                    <span
+                        class="modal-product-stock"
+                        id="modal-current-stock"
+                    >
+                        ${
+                            initialQuantity > 0
+                                ? `In Stock: ${initialQuantity}`
+                                : "Out of Stock"
+                        }
                     </span>
 
-                    <h2
-                        id="modal-title"
-                        class="modal-product-title"
+                </div>
+
+
+                ${variantsHtml}
+
+
+                <div
+                    class="modal-description-box"
+                >
+
+                    <strong
+                        class="modal-description-title"
                     >
-                        ${title}
-                    </h2>
+                        Product Description
+                    </strong>
 
-                    <div class="modal-product-price-row">
 
-                        <strong class="modal-product-price">
-                            ${formatPrice(
-                                product.price
-                            )}
-                        </strong>
-
-                        <span class="modal-product-stock">
-                            ${
-                                quantity > 0
-                                    ? `In Stock: ${quantity}`
-                                    : "Out of Stock"
-                            }
-                        </span>
-
+                    <div
+                        class="cj-description-container"
+                    >
+                        ${description}
                     </div>
 
-                    ${variantsHtml}
+                </div>
 
-                    <div class="modal-description-box">
 
-                        <strong class="modal-description-title">
-                            Product Description
-                        </strong>
+                <button
+                    type="button"
+                    id="modal-add-cart-btn"
+                    class="btn-primary modal-add-cart-button"
+                    ${
+                        initialQuantity <= 0
+                            ? "disabled"
+                            : ""
+                    }
+                >
 
-                        <div class="cj-description-container">
-                            ${description}
-                        </div>
+                    ${svgIcon(
+                        initialQuantity > 0
+                            ? "cart"
+                            : "inventory",
+                        "ui-icon ui-icon-sm"
+                    )}
 
-                    </div>
-
-                    <button
-                        type="button"
-                        id="modal-add-cart-btn"
-                        class="btn-primary modal-add-cart-button"
+                    <span>
                         ${
-                            quantity <= 0
-                                ? "disabled"
-                                : ""
+                            initialQuantity > 0
+                                ? "Add to Cart"
+                                : "Out of Stock"
                         }
-                    >
+                    </span>
+
+                </button>
+
+            </div>
+
+        `;
+
+
+    /*
+     * ================================================================
+     * MAIN IMAGE FALLBACK
+     * ================================================================
+     */
+
+    const mainImage =
+        document.getElementById(
+            "main-modal-img"
+        );
+
+
+    if (
+        mainImage
+    ) {
+
+        mainImage.addEventListener(
+            "error",
+            () => {
+
+                const original =
+                    normalizeImageUrl(
+                        product?.originalImage
+                    );
+
+
+                if (
+                    original &&
+                    !mainImage.dataset.proxyAttempted
+                ) {
+
+                    mainImage.dataset.proxyAttempted =
+                        "true";
+
+
+                    const proxy =
+                        buildProxyUrl(
+                            original
+                        );
+
+
+                    if (
+                        proxy &&
+                        proxy !==
+                        mainImage.src
+                    ) {
+
+                        mainImage.src =
+                            proxy;
+
+                        return;
+
+                    }
+
+                }
+
+
+                if (
+                    !mainImage.dataset.placeholderUsed
+                ) {
+
+                    mainImage.dataset.placeholderUsed =
+                        "true";
+
+
+                    mainImage.src =
+                        PLACEHOLDER_IMAGE;
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /*
+     * ================================================================
+     * GALLERY CLICK
+     * ================================================================
+     */
+
+    elements.modalBody
+        .querySelectorAll(
+            ".modal-gallery-thumb"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        const image =
+                            button.dataset.galleryImage;
+
+
+                        if (
+                            mainImage &&
+                            image
+                        ) {
+
+                            mainImage.src =
+                                image;
+
+
+                            mainImage.dataset.placeholderUsed =
+                                "";
+
+                        }
+
+
+                        elements.modalBody
+                            .querySelectorAll(
+                                ".modal-gallery-thumb"
+                            )
+                            .forEach(
+                                thumbnail =>
+                                    thumbnail.classList.remove(
+                                        "is-active"
+                                    )
+                            );
+
+
+                        button.classList.add(
+                            "is-active"
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+    /*
+     * ================================================================
+     * VARIANT SELECTION
+     * ================================================================
+     */
+
+    const variantSelect =
+        document.getElementById(
+            "modal-variant-select"
+        );
+
+
+    const modalPrice =
+        document.getElementById(
+            "modal-current-price"
+        );
+
+
+    const modalStock =
+        document.getElementById(
+            "modal-current-stock"
+        );
+
+
+    const modalCartButton =
+        document.getElementById(
+            "modal-add-cart-btn"
+        );
+
+
+    const findVariant =
+        value => {
+
+            const wanted =
+                String(
+                    value ||
+                    ""
+                )
+                    .trim();
+
+
+            return (
+                variants.find(
+                    variant =>
+                        String(
+                            variant?.vid ||
+                            variant?.sku ||
+                            ""
+                        ) ===
+                        wanted
+                ) ||
+                null
+            );
+
+        };
+
+
+    const updateVariantUI =
+        variant => {
+
+            selectedVariant =
+                variant ||
+                null;
+
+
+            const inventory =
+                selectedVariant
+                    ? getVariantInventory(
+                        selectedVariant
+                    )
+                    : Number(
+                        product?.quantity
+                    ) || 0;
+
+
+            const price =
+                selectedVariant
+                    ? getVariantPrice(
+                        selectedVariant
+                    )
+                    : Number(
+                        product?.price
+                    ) || 0;
+
+
+            if (
+                modalPrice
+            ) {
+
+                modalPrice.textContent =
+                    formatPrice(
+                        price
+                    );
+
+            }
+
+
+            if (
+                modalStock
+            ) {
+
+                modalStock.textContent =
+                    inventory > 0
+                        ? `In Stock: ${inventory}`
+                        : "Out of Stock";
+
+            }
+
+
+            if (
+                modalCartButton
+            ) {
+
+                modalCartButton.disabled =
+                    inventory <= 0;
+
+
+                modalCartButton.innerHTML =
+                    `
+
                         ${svgIcon(
-                            quantity > 0
+                            inventory > 0
                                 ? "cart"
                                 : "inventory",
                             "ui-icon ui-icon-sm"
@@ -6567,231 +7144,344 @@
 
                         <span>
                             ${
-                                quantity > 0
+                                inventory > 0
                                     ? "Add to Cart"
                                     : "Out of Stock"
                             }
                         </span>
-                    </button>
 
-                </div>
-            `;
+                    `;
 
-        const mainImage =
-            document.getElementById(
-                "main-modal-img"
-            );
+            }
 
-        if (
-            mainImage
-        ) {
 
-            mainImage.addEventListener(
-                "error",
-                () => {
+            /*
+             * Change the main image when the selected variant has
+             * a dedicated CJ variant image.
+             */
 
-                    const original =
-                        normalizeImageUrl(
-                            product.originalImage
-                        );
+            if (
+                mainImage &&
+                selectedVariant
+            ) {
 
-                    if (
-                        original &&
-                        !mainImage.dataset.proxyAttempted
-                    ) {
-
-                        mainImage.dataset.proxyAttempted =
-                            "true";
-
-                        const proxy =
-                            buildProxyUrl(
-                                original
-                            );
-
-                        if (
-                            proxy &&
-                            proxy !==
-                            mainImage.src
-                        ) {
-
-                            mainImage.src =
-                                proxy;
-
-                            return;
-                        }
-                    }
-
-                    if (
-                        !mainImage.dataset.placeholderUsed
-                    ) {
-
-                        mainImage.dataset.placeholderUsed =
-                            "true";
-
-                        mainImage.src =
-                            PLACEHOLDER_IMAGE;
-                    }
-                }
-            );
-        }
-
-        elements.modalBody
-            .querySelectorAll(
-                ".modal-gallery-thumb"
-            )
-            .forEach(
-                button => {
-
-                    button.addEventListener(
-                        "click",
-                        () => {
-
-                            const image =
-                                button.dataset.galleryImage;
-
-                            if (
-                                mainImage &&
-                                image
-                            ) {
-
-                                mainImage.src =
-                                    image;
-
-                                mainImage.dataset.placeholderUsed =
-                                    "";
-                            }
-
-                            elements.modalBody
-                                .querySelectorAll(
-                                    ".modal-gallery-thumb"
-                                )
-                                .forEach(
-                                    thumbnail =>
-                                        thumbnail.classList.remove(
-                                            "is-active"
-                                        )
-                                );
-
-                            button.classList.add(
-                                "is-active"
-                            );
-                        }
-                    );
-                }
-            );
-
-        const modalCartButton =
-            document.getElementById(
-                "modal-add-cart-btn"
-            );
-
-        if (
-            modalCartButton &&
-            quantity > 0
-        ) {
-
-            modalCartButton.addEventListener(
-                "click",
-                () => {
-
-                    const added =
-                        invokeAddToCart(
-                            product
-                        );
-
-                    if (
-                        !added
-                    ) {
-                        return;
-                    }
-
-                    modalCartButton.disabled =
-                        true;
-
-                    modalCartButton.classList.add(
-                        "added"
+                const variantImage =
+                    getVariantImage(
+                        selectedVariant
                     );
 
-                    modalCartButton.innerHTML =
-                        `
-                            ${svgIcon(
-                                "check",
-                                "ui-icon ui-icon-sm"
-                            )}
 
-                            <span>
-                                Added to Cart
-                            </span>
-                        `;
+                if (
+                    variantImage
+                ) {
+
+                    mainImage.src =
+                        buildProxyUrl(
+                            variantImage
+                        );
+
+                }
+
+            }
+
+        };
+
+
+    if (
+        variantSelect
+    ) {
+
+        variantSelect.addEventListener(
+            "change",
+            () => {
+
+                const variant =
+                    findVariant(
+                        variantSelect.value
+                    );
+
+
+                updateVariantUI(
+                    variant
+                );
+
+            }
+        );
+
+    }
+
+
+    /*
+     * ================================================================
+     * ADD TO CART
+     * ================================================================
+     */
+
+    if (
+        modalCartButton
+    ) {
+
+        modalCartButton.addEventListener(
+            "click",
+            () => {
+
+                /*
+                 * Product with multiple variants requires a real
+                 * selected variant.
+                 */
+
+                if (
+                    variants.length > 1 &&
+                    !selectedVariant
+                ) {
 
                     announce(
-                        `${product.name} added to cart.`
+                        "Please select a product variant."
                     );
+
+                    return;
+
                 }
-            );
-        }
 
-        elements.productModal.classList.add(
-            "is-open"
+
+                const inventory =
+                    selectedVariant
+                        ? getVariantInventory(
+                            selectedVariant
+                        )
+                        : Number(
+                            product?.quantity
+                        ) || 0;
+
+
+                if (
+                    inventory <= 0
+                ) {
+
+                    announce(
+                        "This variant is currently out of stock."
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                 * Create a separate cart object.
+                 *
+                 * IMPORTANT:
+                 *
+                 * The original product object is NOT modified.
+                 */
+
+                const cartProduct =
+                    {
+                        ...product,
+
+                        /*
+                         * Parent PID stays the same.
+                         */
+                        pid:
+                            product?.pid ||
+                            product?.id ||
+                            product?.productId ||
+                            "",
+
+                        id:
+                            product?.id ||
+                            product?.pid ||
+                            "",
+
+                        productId:
+                            product?.productId ||
+                            product?.pid ||
+                            product?.id ||
+                            "",
+
+                        /*
+                         * Selected CJ variant.
+                         */
+                        vid:
+                            selectedVariant?.vid ||
+                            "",
+
+                        variantId:
+                            selectedVariant?.vid ||
+                            "",
+
+                        variantSku:
+                            selectedVariant?.sku ||
+                            "",
+
+                        selectedVariant:
+                            selectedVariant
+                                ? {
+                                    vid:
+                                        selectedVariant.vid ||
+                                        "",
+
+                                    sku:
+                                        selectedVariant.sku ||
+                                        "",
+
+                                    name:
+                                        selectedVariant.name ||
+                                        selectedVariant.variantKey ||
+                                        "Default",
+
+                                    variantKey:
+                                        selectedVariant.variantKey ||
+                                        "",
+
+                                    price:
+                                        getVariantPrice(
+                                            selectedVariant
+                                        ),
+
+                                    costPrice:
+                                        Number(
+                                            selectedVariant?.costPrice
+                                        ) || 0,
+
+                                    inventory:
+                                        inventory,
+
+                                    quantity:
+                                        inventory,
+
+                                    image:
+                                        selectedVariant.image ||
+                                        ""
+                                }
+                                : null,
+
+                        /*
+                         * IMPORTANT:
+                         *
+                         * Put the selected variant SKU into top-level sku
+                         * because your Worker already reads item.sku.
+                         */
+                        sku:
+                            selectedVariant?.sku ||
+                            product?.sku ||
+                            "",
+
+                        price:
+                            getVariantPrice(
+                                selectedVariant
+                            ),
+
+                        quantity:
+                            inventory,
+
+                        image:
+                            selectedVariant?.image
+                                ? buildProxyUrl(
+                                    selectedVariant.image
+                                )
+                                : product?.image
+
+                    };
+
+
+                const added =
+                    invokeAddToCart(
+                        cartProduct
+                    );
+
+
+                if (
+                    !added
+                ) {
+
+                    return;
+
+                }
+
+
+                modalCartButton.disabled =
+                    true;
+
+
+                modalCartButton.classList.add(
+                    "added"
+                );
+
+
+                modalCartButton.innerHTML =
+                    `
+
+                        ${svgIcon(
+                            "check",
+                            "ui-icon ui-icon-sm"
+                        )}
+
+                        <span>
+                            Added to Cart
+                        </span>
+
+                    `;
+
+
+                announce(
+                    selectedVariant
+                        ? `${product.name} — ${getVariantLabel(
+                            selectedVariant
+                        )} added to cart.`
+                        : `${product.name} added to cart.`
+                );
+
+            }
         );
 
-        elements.productModal.setAttribute(
-            "aria-hidden",
-            "false"
-        );
-
-        elements.productModal.setAttribute(
-            "role",
-            "dialog"
-        );
-
-        elements.productModal.setAttribute(
-            "aria-modal",
-            "true"
-        );
-
-        document.body.classList.add(
-            "modal-open"
-        );
-
-        window.setTimeout(
-            () => {
-                elements.modalClose?.focus();
-            },
-            50
-        );
     }
 
 
-    function closeProductModal() {
+    /*
+     * ================================================================
+     * OPEN MODAL
+     * ================================================================
+     */
 
-        if (
-            !elements.productModal
-        ) {
-            return;
-        }
+    elements.productModal.classList.add(
+        "is-open"
+    );
 
-        elements.productModal.classList.remove(
-            "is-open"
-        );
 
-        elements.productModal.setAttribute(
-            "aria-hidden",
-            "true"
-        );
+    elements.productModal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
 
-        document.body.classList.remove(
-            "modal-open"
-        );
 
-        if (
-            elements.modalBody
-        ) {
-            elements.modalBody.innerHTML =
-                "";
-        }
-    }
+    elements.productModal.setAttribute(
+        "role",
+        "dialog"
+    );
 
+
+    elements.productModal.setAttribute(
+        "aria-modal",
+        "true"
+    );
+
+
+    document.body.classList.add(
+        "modal-open"
+    );
+
+
+    window.setTimeout(
+        () => {
+
+            elements.modalClose?.focus();
+
+        },
+        50
+    );
+
+}
 
     /* =========================================================================
        27. UI STATES
