@@ -94,34 +94,47 @@
 
 
     /* =========================================================================
-       2. STATIC PRODUCT CATALOG
-       =========================================================================
-       IMPORTANT:
-       Add your WED2C products here.
+   2. STATIC PRODUCT CATALOG
+   =========================================================================
+   IMPORTANT:
+   Add your WED2C products here.
+   ========================================================================= */
 
-       The first product below is verified from your WED2C page source.
-       ========================================================================= */
-
- const PRODUCT_CATALOG = [
+const PRODUCT_CATALOG = [
 
     {
         id: "1535868866805641216",
+
         name: "Solar Garden Light Waterproof Garden Lawn",
+
         category: "Solar Lights",
+
         price: 44.71,
-        image: "https://cf.cjdropshipping.com/20652083-f3a5-4a12-ab41-af445124bb13.jpg",
-        description: "Solar garden light suitable for outdoor garden and lawn applications.",
+
+        image:
+            "https://cf.cjdropshipping.com/20652083-f3a5-4a12-ab41-af445124bb13.jpg",
+
+        description:
+            "Solar garden light suitable for outdoor garden and lawn applications.",
+
         wed2cUrl:
             "https://prasunshop.wed2c.com/goodsDetails?jobsProductId=1615328471586897920&recommendProductId=2608221241380345100&hyId=kibt-fe-cj"
     },
 
     {
         id: "wed2c-2GOGZubPOVn",
+
         name: "LED Solar Wall Light",
+
         category: "Solar Lights",
+
         price: 11.74,
+
         image: "",
-        description: "LED solar wall light.",
+
+        description:
+            "LED solar wall light.",
+
         wed2cUrl:
             "https://prasunshop.wed2c.com/s/2GOGZubPOVn"
     }
@@ -129,32 +142,94 @@
 ];
 
 
-    /* =========================================================================
-       3. STOREFRONT CATEGORIES
-       ========================================================================= */
+/* =========================================================================
+   3. STOREFRONT CATEGORIES
+   ========================================================================= */
 
-    const PRODUCT_CATALOG = [
+const CATEGORY_MAP = [
 
     {
-        id: "1535868866805641216",
-        name: "Solar Garden Light Waterproof Garden Lawn",
-        category: "Solar Lights",
-        price: 44.71,
-        image: "https://cf.cjdropshipping.com/20652083-f3a5-4a12-ab41-af445124bb13.jpg",
-        description: "Solar garden light suitable for outdoor garden and lawn applications.",
-        wed2cUrl:
-            "https://prasunshop.wed2c.com/goodsDetails?jobsProductId=1615328471586897920&recommendProductId=2608221241380345100&hyId=kibt-fe-cj"
+        label: "All Products",
+        query: "",
+        icon: "apps"
     },
 
     {
-        id: "wed2c-2GOGZubPOVn",
-        name: "LED Solar Wall Light",
-        category: "Solar Lights",
-        price: 11.74,
-        image: "",
-        description: "LED solar wall light.",
-        wed2cUrl:
-            "https://prasunshop.wed2c.com/s/2GOGZubPOVn"
+        label: "Solar Lights",
+        query: "solar-lights",
+        icon: "solar"
+    },
+
+    {
+        label: "Battery",
+        query: "battery",
+        icon: "battery"
+    },
+
+    {
+        label: "Chargers",
+        query: "chargers",
+        icon: "charger"
+    },
+
+    {
+        label: "Power Bank",
+        query: "power-bank",
+        icon: "powerbank"
+    },
+
+    {
+        label: "Cables",
+        query: "cables",
+        icon: "cable"
+    },
+
+    {
+        label: "Earphones",
+        query: "earphones",
+        icon: "earphone"
+    },
+
+    {
+        label: "Headphones",
+        query: "headphones",
+        icon: "headphone"
+    },
+
+    {
+        label: "Modem",
+        query: "modem",
+        icon: "modem"
+    },
+
+    {
+        label: "Routers",
+        query: "routers",
+        icon: "router"
+    },
+
+    {
+        label: "Laptops",
+        query: "laptops",
+        icon: "laptop"
+    },
+
+    {
+        label: "Power Tools",
+        query: "power-tools",
+        icon: "tool"
+    },
+
+    {
+        label: "Camera",
+        query: "camera",
+        icon: "camera"
+    },
+
+    {
+        label: "Smart Home",
+        query: "smart-home",
+        icon: "home"
     }
 
 ];
