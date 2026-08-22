@@ -3253,446 +3253,835 @@
 
 
     /* =========================================================================
-       18. CATEGORY MATCHING
-       ========================================================================= */
+   18. CATEGORY MATCHING
+   ========================================================================= */
 
-    function matchesCategory(
-        product,
-        category
+function matchesCategory(
+    product,
+    category
+) {
+
+    if (
+        !category ||
+        category.query === ""
     ) {
+        return true;
+    }
 
-        if (
-            !category ||
-            category.query ===
-            ""
-        ) {
-            return true;
-        }
+    return (
+        getCategoryMatchScore(
+            product,
+            category
+        ) > 0
+    );
+}
 
-        return (
-            getCategoryMatchScore(
-                product,
-                category
-            ) > 0
-        );
+
+function getCategoryMatchScore(
+    product,
+    category
+) {
+
+    if (
+        !product ||
+        !category
+    ) {
+        return 0;
     }
 
 
-    function getCategoryMatchScore(
-        product,
-        category
+    const categoryId =
+        normalizeSearchText(
+            category.query
+        );
+
+
+    /*
+     * =====================================================================
+     * 1. STOREFRONT CATEGORY METADATA
+     * =====================================================================
+     *
+     * Only treat a value as an authoritative storefront category when it
+     * exactly matches one of our actual storefront IDs.
+     *
+     * This prevents CJ's generic categories such as:
+     *
+     *     solar
+     *     lighting
+     *     electrical
+     *     home-improvement
+     *
+     * from incorrectly overriding our own:
+     *
+     *     solar-lights
+     *     battery
+     *     power-bank
+     *     cables
+     */
+
+    const storeCategories =
+        normalizeStoreCategories(
+            product?.storeCategories
+        );
+
+
+    if (
+        storeCategories.includes(
+            categoryId
+        )
     ) {
 
-        if (
-            !product ||
-            !category
-        ) {
-            return 0;
-        }
+        return 100;
 
-        const storeCategories =
-            normalizeStoreCategories(
-                product?.storeCategories
+    }
+
+
+    /*
+     * =====================================================================
+     * 2. CATEGORY METADATA
+     * =====================================================================
+     */
+
+    const categoryText =
+        normalizeSearchText(
+            [
+                product?.category,
+                product?.categoryName,
+                product?.oneCategoryName,
+                product?.twoCategoryName,
+                product?.threeCategoryName,
+                product?.categoryPath
+            ]
+                .join(" ")
+        );
+
+
+    /*
+     * =====================================================================
+     * 3. PRODUCT TITLE
+     * =====================================================================
+     *
+     * Title is the strongest text-based signal because it is generally much
+     * more reliable than a long CJ description.
+     */
+
+    const titleText =
+        normalizeSearchText(
+            [
+                product?.title,
+                product?.name,
+                product?.subject,
+                product?.productName,
+                product?.productNameEn
+            ]
+                .join(" ")
+        );
+
+
+    /*
+     * =====================================================================
+     * 4. COMPLETE PRODUCT TEXT
+     * =====================================================================
+     *
+     * Used only as a low-confidence fallback.
+     */
+
+    const fullText =
+        buildSearchText(
+            product
+        );
+
+
+    let score =
+        0;
+
+
+    /*
+     * =====================================================================
+     * 5. CATEGORY TERM MATCHING
+     * =====================================================================
+     */
+
+    for (
+        const term
+        of category.terms || []
+    ) {
+
+        const normalizedTerm =
+            normalizeSearchText(
+                term
             );
 
-        /*
-         * Store category metadata gets the strongest score.
-         */
+
         if (
-            storeCategories.includes(
-                normalizeSearchText(
-                    category.query
-                )
+            !normalizedTerm
+        ) {
+            continue;
+        }
+
+
+        /*
+         * Exact title.
+         */
+
+        if (
+            titleText ===
+            normalizedTerm
+        ) {
+
+            score += 60;
+
+            continue;
+
+        }
+
+
+        /*
+         * Strong title match.
+         */
+
+        if (
+            titleText.includes(
+                normalizedTerm
             )
         ) {
-            return 100;
+
+            score += 35;
+
+            continue;
+
         }
 
-        /*
-         * Category text.
-         */
-        const categoryText =
-            normalizeSearchText(
-                [
-                    product?.category,
-                    product?.categoryName,
-                    product?.oneCategoryName,
-                    product?.twoCategoryName,
-                    product?.threeCategoryName,
-                    product?.categoryPath
-                ]
-                    .join(
-                        " "
-                    )
-            );
 
         /*
-         * Product title.
+         * Category metadata match.
          */
-        const titleText =
-            normalizeSearchText(
-                [
-                    product?.title,
-                    product?.name,
-                    product?.subject,
-                    product?.productName,
-                    product?.productNameEn
-                ]
-                    .join(
-                        " "
-                    )
-            );
 
-        /*
-         * Complete product text.
-         */
-        const fullText =
-            buildSearchText(
-                product
-            );
-
-        let score =
-            0;
-
-        for (
-            const term
-            of category.terms || []
-        ) {
-
-            const normalizedTerm =
-                normalizeSearchText(
-                    term
-                );
-
-            if (
-                !normalizedTerm
-            ) {
-                continue;
-            }
-
-            if (
-                titleText ===
+        if (
+            categoryText.includes(
                 normalizedTerm
-            ) {
-                score += 40;
-                continue;
-            }
-
-            if (
-                titleText.includes(
-                    normalizedTerm
-                )
-            ) {
-                score += 25;
-                continue;
-            }
-
-            if (
-                categoryText.includes(
-                    normalizedTerm
-                )
-            ) {
-                score += 18;
-                continue;
-            }
-
-            if (
-                fullText.includes(
-                    normalizedTerm
-                )
-            ) {
-                score += 5;
-            }
-        }
-
-        /*
-         * Specific category heuristics.
-         */
-        switch (
-            category.query
+            )
         ) {
 
-            case "solar-lights":
+            score += 25;
 
-                if (
-                    /\bsolar\b/.test(
+            continue;
+
+        }
+
+
+        /*
+         * Full product text is weak evidence only.
+         *
+         * This prevents words in long descriptions from creating a
+         * category by themselves.
+         */
+
+        if (
+            fullText.includes(
+                normalizedTerm
+            )
+        ) {
+
+            score += 3;
+
+        }
+
+    }
+
+
+    /*
+     * =====================================================================
+     * 6. CATEGORY-SPECIFIC STRONG HEURISTICS
+     * =====================================================================
+     */
+
+    switch (
+        category.query
+    ) {
+
+        /* -----------------------------------------------------------------
+           SOLAR LIGHTS
+           ----------------------------------------------------------------- */
+
+        case "solar-lights":
+
+            if (
+                /\bsolar\b/.test(
+                    titleText
+                ) &&
+                (
+                    /\blight\b/.test(
                         titleText
-                    ) &&
-                    (
-                        /\blight\b/.test(
-                            titleText
-                        ) ||
-                        /\blamp\b/.test(
-                            titleText
-                        ) ||
-                        /\bled\b/.test(
-                            titleText
-                        ) ||
-                        /\bfloodlight\b/.test(
-                            titleText
-                        ) ||
-                        /\bspotlight\b/.test(
-                            titleText
-                        ) ||
-                        /\bstreet\b/.test(
-                            titleText
-                        ) ||
-                        /\bgarden\b/.test(
-                            titleText
-                        ) ||
-                        /\bwall\b/.test(
-                            titleText
-                        )
+                    ) ||
+                    /\blamp\b/.test(
+                        titleText
+                    ) ||
+                    /\bled\b/.test(
+                        titleText
+                    ) ||
+                    /\bfloodlight\b/.test(
+                        titleText
+                    ) ||
+                    /\bflood\s*light\b/.test(
+                        titleText
+                    ) ||
+                    /\bspotlight\b/.test(
+                        titleText
+                    ) ||
+                    /\bstreet\b/.test(
+                        titleText
+                    ) ||
+                    /\bgarden\b/.test(
+                        titleText
+                    ) ||
+                    /\bwall\b/.test(
+                        titleText
+                    ) ||
+                    /\bpathway\b/.test(
+                        titleText
+                    ) ||
+                    /\boutdoor\b/.test(
+                        titleText
+                    ) ||
+                    /\bmotion\b/.test(
+                        titleText
                     )
-                ) {
-                    score += 40;
-                }
+                )
+            ) {
 
-                break;
+                score += 80;
 
-            case "power-bank":
+            }
 
-                if (
-                    /\bpower\s*bank\b/.test(
-                        titleText
+            /*
+             * CJ category fallback:
+             * "Solar Lamps", "Solar Lighting", etc.
+             */
+
+            if (
+                /\bsolar\b/.test(
+                    categoryText
+                ) &&
+                (
+                    /\blamp\b/.test(
+                        categoryText
                     ) ||
-                    /\bpowerbank\b/.test(
-                        titleText
+                    /\blight\b/.test(
+                        categoryText
+                    ) ||
+                    /\blighting\b/.test(
+                        categoryText
                     )
-                ) {
-                    score += 50;
-                }
+                )
+            ) {
 
-                break;
+                score += 60;
 
-            case "battery":
+            }
 
-                if (
-                    /\bbattery\b/.test(
-                        titleText
-                    ) ||
-                    /\bbatteries\b/.test(
-                        titleText
-                    ) ||
-                    /\b18650\b/.test(
-                        titleText
-                    ) ||
-                    /\b21700\b/.test(
-                        titleText
-                    ) ||
-                    /\blifepo4\b/.test(
-                        titleText
-                    )
-                ) {
-                    score += 45;
-                }
+            break;
 
-                break;
 
-            case "chargers":
+        /* -----------------------------------------------------------------
+           BATTERY
+           ----------------------------------------------------------------- */
 
-                if (
+        case "battery":
+
+            if (
+                /\bbattery\b/.test(
+                    titleText
+                ) ||
+                /\bbatteries\b/.test(
+                    titleText
+                ) ||
+                /\b18650\b/.test(
+                    titleText
+                ) ||
+                /\b21700\b/.test(
+                    titleText
+                ) ||
+                /\blifepo4\b/.test(
+                    titleText
+                ) ||
+                /\blithium\s+(ion\s+)?battery\b/.test(
+                    titleText
+                )
+            ) {
+
+                score += 80;
+
+            }
+
+            break;
+
+
+        /* -----------------------------------------------------------------
+           CHARGERS
+           ----------------------------------------------------------------- */
+
+        case "chargers":
+
+            if (
+                /\bcharger\b/.test(
+                    titleText
+                ) ||
+                /\bcharging\s+adapter\b/.test(
+                    titleText
+                ) ||
+                /\bfast\s+charger\b/.test(
+                    titleText
+                ) ||
+                /\bquick\s+charger\b/.test(
+                    titleText
+                ) ||
+                /\bwireless\s+charger\b/.test(
+                    titleText
+                ) ||
+                /\bwall\s+charger\b/.test(
+                    titleText
+                ) ||
+                /\bphone\s+charger\b/.test(
+                    titleText
+                ) ||
+                /\bcar\s+charger\b/.test(
+                    titleText
+                )
+            ) {
+
+                score += 80;
+
+            }
+
+            break;
+
+
+        /* -----------------------------------------------------------------
+           POWER BANK
+           ----------------------------------------------------------------- */
+
+        case "power-bank":
+
+            if (
+                /\bpower[\s-]*bank\b/.test(
+                    titleText
+                ) ||
+                /\bpowerbank\b/.test(
+                    titleText
+                )
+            ) {
+
+                score += 90;
+
+            } else if (
+                /\bportable\b/.test(
+                    titleText
+                ) &&
+                (
                     /\bcharger\b/.test(
                         titleText
                     ) ||
-                    /\bcharging\b/.test(
+                    /\bbattery\b/.test(
+                        titleText
+                    ) ||
+                    /\bpower\b/.test(
                         titleText
                     )
-                ) {
-                    score += 35;
-                }
+                )
+            ) {
 
-                break;
+                score += 45;
 
-            case "cables":
+            }
 
-                if (
-                    /\bcable\b/.test(
-                        titleText
-                    ) ||
-                    /\busb[\s-]?c\b/.test(
-                        titleText
-                    ) ||
-                    /\bhdmi\b/.test(
-                        titleText
-                    )
-                ) {
-                    score += 45;
-                }
+            break;
 
-                break;
 
-            case "earphones":
+        /* -----------------------------------------------------------------
+           CABLES
+           ----------------------------------------------------------------- */
 
-                if (
-                    /\bearphone\b/.test(
-                        titleText
-                    ) ||
-                    /\bearbud\b/.test(
-                        titleText
-                    ) ||
-                    /\btws\b/.test(
-                        titleText
-                    )
-                ) {
-                    score += 45;
-                }
+        case "cables":
 
-                break;
+            if (
+                /\bcable\b/.test(
+                    titleText
+                ) ||
+                /\bcables\b/.test(
+                    titleText
+                ) ||
+                /\busb[\s-]*c\b/.test(
+                    titleText
+                ) ||
+                /\btype[\s-]*c\b/.test(
+                    titleText
+                ) ||
+                /\bhdmi\b/.test(
+                    titleText
+                ) ||
+                /\bethernet\b/.test(
+                    titleText
+                ) ||
+                /\blan\s+cable\b/.test(
+                    titleText
+                ) ||
+                /\bdisplayport\b/.test(
+                    titleText
+                )
+            ) {
 
-            case "headphones":
+                score += 80;
 
-                if (
-                    /\bheadphone\b/.test(
-                        titleText
-                    ) ||
-                    /\bheadset\b/.test(
-                        titleText
-                    )
-                ) {
-                    score += 45;
-                }
+            }
 
-                break;
+            break;
 
-            case "modem":
 
-                if (
-                    /\bmodem\b/.test(
-                        titleText
-                    )
-                ) {
-                    score += 45;
-                }
+        /* -----------------------------------------------------------------
+           EARPHONES
+           ----------------------------------------------------------------- */
 
-                break;
+        case "earphones":
 
-            case "routers":
+            if (
+                /\bearphone\b/.test(
+                    titleText
+                ) ||
+                /\bearbuds?\b/.test(
+                    titleText
+                ) ||
+                /\btws\b/.test(
+                    titleText
+                ) ||
+                /\btrue\s+wireless\b/.test(
+                    titleText
+                ) ||
+                /\bwireless\s+earbuds?\b/.test(
+                    titleText
+                )
+            ) {
 
-                if (
-                    /\brouter\b/.test(
-                        titleText
-                    )
-                ) {
-                    score += 45;
-                }
+                score += 80;
 
-                break;
+            }
 
-            case "laptops":
+            break;
 
-                if (
-                    /\blaptop\b/.test(
-                        titleText
-                    ) ||
-                    /\bnotebook\b/.test(
-                        titleText
-                    ) ||
-                    /\bchromebook\b/.test(
-                        titleText
-                    )
-                ) {
-                    score += 45;
-                }
 
-                break;
+        /* -----------------------------------------------------------------
+           HEADPHONES
+           ----------------------------------------------------------------- */
 
-            case "power-tools":
+        case "headphones":
 
-                if (
-                    /\bdrill\b/.test(
-                        titleText
-                    ) ||
-                    /\bgrinder\b/.test(
-                        titleText
-                    ) ||
-                    /\bscrewdriver\b/.test(
-                        titleText
-                    ) ||
-                    /\bwrench\b/.test(
-                        titleText
-                    ) ||
-                    /\bsaw\b/.test(
-                        titleText
-                    ) ||
-                    /\bsander\b/.test(
-                        titleText
-                    )
-                ) {
-                    score += 45;
-                }
+            if (
+                /\bheadphones?\b/.test(
+                    titleText
+                ) ||
+                /\bheadset\b/.test(
+                    titleText
+                ) ||
+                /\bgaming\s+headset\b/.test(
+                    titleText
+                ) ||
+                /\bover[\s-]?ear\b/.test(
+                    titleText
+                ) ||
+                /\bon[\s-]?ear\b/.test(
+                    titleText
+                )
+            ) {
 
-                break;
+                score += 80;
 
-            case "camera":
+            }
 
-                if (
-                    /\bcamera\b/.test(
-                        titleText
-                    ) ||
-                    /\bcctv\b/.test(
-                        titleText
-                    ) ||
-                    /\bwebcam\b/.test(
-                        titleText
-                    ) ||
-                    /\bsurveillance\b/.test(
-                        titleText
-                    )
-                ) {
-                    score += 45;
-                }
+            break;
 
-                break;
 
-            case "smart-home":
+        /* -----------------------------------------------------------------
+           MODEM
+           ----------------------------------------------------------------- */
 
-                if (
+        case "modem":
+
+            if (
+                /\bmodem\b/.test(
+                    titleText
+                ) ||
+                /\b4g\s+modem\b/.test(
+                    titleText
+                ) ||
+                /\b5g\s+modem\b/.test(
+                    titleText
+                ) ||
+                /\blte\s+modem\b/.test(
+                    titleText
+                ) ||
+                /\busb\s+modem\b/.test(
+                    titleText
+                )
+            ) {
+
+                score += 80;
+
+            }
+
+            break;
+
+
+        /* -----------------------------------------------------------------
+           ROUTERS
+           ----------------------------------------------------------------- */
+
+        case "routers":
+
+            if (
+                /\brouter\b/.test(
+                    titleText
+                ) ||
+                /\bwi[\s-]?fi\s+router\b/.test(
+                    titleText
+                ) ||
+                /\b4g\s+router\b/.test(
+                    titleText
+                ) ||
+                /\b5g\s+router\b/.test(
+                    titleText
+                ) ||
+                /\blte\s+router\b/.test(
+                    titleText
+                ) ||
+                /\bmesh\s+router\b/.test(
+                    titleText
+                )
+            ) {
+
+                score += 80;
+
+            }
+
+            break;
+
+
+        /* -----------------------------------------------------------------
+           LAPTOPS
+           ----------------------------------------------------------------- */
+
+        case "laptops":
+
+            if (
+                /\blaptop\b/.test(
+                    titleText
+                ) ||
+                /\bnotebook\b/.test(
+                    titleText
+                ) ||
+                /\bchromebook\b/.test(
+                    titleText
+                ) ||
+                /\bultrabook\b/.test(
+                    titleText
+                ) ||
+                /\bmacbook\b/.test(
+                    titleText
+                )
+            ) {
+
+                score += 80;
+
+            }
+
+            break;
+
+
+        /* -----------------------------------------------------------------
+           POWER TOOLS
+           ----------------------------------------------------------------- */
+
+        case "power-tools":
+
+            if (
+                /\bdrill\b/.test(
+                    titleText
+                ) ||
+                /\bgrinder\b/.test(
+                    titleText
+                ) ||
+                /\bscrewdriver\b/.test(
+                    titleText
+                ) ||
+                /\bwrench\b/.test(
+                    titleText
+                ) ||
+                /\bsaw\b/.test(
+                    titleText
+                ) ||
+                /\bsander\b/.test(
+                    titleText
+                ) ||
+                /\bpower[\s-]*tool\b/.test(
+                    titleText
+                ) ||
+                /\bimpact\s+driver\b/.test(
+                    titleText
+                ) ||
+                /\bimpact\s+wrench\b/.test(
+                    titleText
+                ) ||
+                /\bheat\s+gun\b/.test(
+                    titleText
+                ) ||
+                /\brotary\s+tool\b/.test(
+                    titleText
+                )
+            ) {
+
+                score += 80;
+
+            }
+
+            break;
+
+
+        /* -----------------------------------------------------------------
+           CAMERA
+           ----------------------------------------------------------------- */
+
+        case "camera":
+
+            if (
+                /\bcamera\b/.test(
+                    titleText
+                ) ||
+                /\bcctv\b/.test(
+                    titleText
+                ) ||
+                /\bwebcam\b/.test(
+                    titleText
+                ) ||
+                /\bdash[\s-]*cam\b/.test(
+                    titleText
+                ) ||
+                /\bsurveillance\b/.test(
+                    titleText
+                ) ||
+                /\bip\s+camera\b/.test(
+                    titleText
+                ) ||
+                /\bsecurity\s+camera\b/.test(
+                    titleText
+                )
+            ) {
+
+                score += 80;
+
+            }
+
+            break;
+
+
+        /* -----------------------------------------------------------------
+           SMART HOME
+           ----------------------------------------------------------------- */
+
+        case "smart-home":
+
+            if (
+                (
                     /\bsmart\b/.test(
                         titleText
-                    ) ||
-                    /\bhome\s+automation\b/.test(
-                        titleText
+                    ) &&
+                    (
+                        /\bhome\b/.test(
+                            titleText
+                        ) ||
+                        /\bplug\b/.test(
+                            titleText
+                        ) ||
+                        /\bswitch\b/.test(
+                            titleText
+                        ) ||
+                        /\bsocket\b/.test(
+                            titleText
+                        ) ||
+                        /\bbulb\b/.test(
+                            titleText
+                        ) ||
+                        /\bsensor\b/.test(
+                            titleText
+                        ) ||
+                        /\block\b/.test(
+                            titleText
+                        ) ||
+                        /\brelay\b/.test(
+                            titleText
+                        )
                     )
-                ) {
-                    score += 35;
-                }
+                ) ||
+                /\bhome\s+automation\b/.test(
+                    titleText
+                )
+            ) {
 
-                break;
+                score += 80;
 
-            default:
-                break;
-        }
+            }
 
-        return score;
+            break;
+
+
+        default:
+
+            break;
     }
 
 
-    function normalizeStoreCategories(
-        categories
+    /*
+     * =====================================================================
+     * 7. MINIMUM CONFIDENCE
+     * =====================================================================
+     *
+     * A weak description-only match should not create a category.
+     *
+     * Title/category/storefront-ID matches will normally exceed this
+     * threshold comfortably.
+     */
+
+    return score >= 15
+        ? score
+        : 0;
+}
+
+
+function normalizeStoreCategories(
+    categories
+) {
+
+    if (
+        !Array.isArray(
+            categories
+        )
     ) {
 
-        if (
-            !Array.isArray(
-                categories
-            )
-        ) {
-            return [];
-        }
+        return [];
 
-        return categories
-            .map(
-                value =>
-                    normalizeSearchText(
-                        value
-                    )
-            )
-            .filter(
-                Boolean
-            );
     }
 
 
+    return categories
+        .map(
+            value =>
+                normalizeSearchText(
+                    value
+                )
+        )
+        .filter(
+            Boolean
+        );
+
+}
     /* =========================================================================
        19. FILTER + SORT + RENDER
        ========================================================================= */
