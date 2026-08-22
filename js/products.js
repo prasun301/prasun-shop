@@ -3251,414 +3251,448 @@
             .trim();
     }
 
-/* =========================================================================
-   18. CATEGORY MATCHING
-   ========================================================================= */
 
-function matchesCategory(
-    product,
-    category
-) {
+    /* =========================================================================
+       18. CATEGORY MATCHING
+       ========================================================================= */
 
-    if (
-        !category ||
-        category.query === ""
+    function matchesCategory(
+        product,
+        category
     ) {
-        return true;
-    }
-
-
-    const storeCategories =
-        normalizeStoreCategories(
-            product?.storeCategories
-        );
-
-
-    /*
-     * 1. Explicit storefront category.
-     */
-    if (
-        storeCategories.includes(
-            normalizeSearchText(
-                category.query
-            )
-        )
-    ) {
-        return true;
-    }
-
-
-    /*
-     * 2. Category metadata.
-     */
-    const categoryMetadata =
-        normalizeSearchText(
-            [
-                product?.category,
-                product?.categoryName,
-                product?.oneCategoryName,
-                product?.twoCategoryName,
-                product?.threeCategoryName,
-                product?.categoryPath,
-                product?.categoryId
-            ]
-                .join(" ")
-        );
-
-
-    if (
-        category.terms.some(
-            term =>
-                categoryMetadata.includes(
-                    normalizeSearchText(
-                        term
-                    )
-                )
-        )
-    ) {
-        return true;
-    }
-
-
-    /*
-     * 3. Product title / name.
-     */
-    const titleText =
-        normalizeSearchText(
-            [
-                product?.title,
-                product?.name,
-                product?.productNameEn,
-                product?.productName
-            ]
-                .join(" ")
-        );
-
-
-    for (
-        const term
-        of category.terms
-    ) {
-
-        const normalizedTerm =
-            normalizeSearchText(
-                term
-            );
-
 
         if (
-            normalizedTerm &&
-            titleText.includes(
-                normalizedTerm
-            )
+            !category ||
+            category.query ===
+            ""
         ) {
             return true;
         }
 
+        return (
+            getCategoryMatchScore(
+                product,
+                category
+            ) > 0
+        );
     }
 
 
-    /*
-     * 4. Category-specific robust fallbacks.
-     */
-    switch (
-        category.query
+    function getCategoryMatchScore(
+        product,
+        category
     ) {
 
-        case "solar-lights":
+        if (
+            !product ||
+            !category
+        ) {
+            return 0;
+        }
 
-            return (
-                /\bsolar\b/.test(
-                    titleText
-                ) &&
-                (
-                    /\blight\b/.test(
-                        titleText
-                    ) ||
-                    /\blamp\b/.test(
-                        titleText
-                    ) ||
-                    /\bled\b/.test(
-                        titleText
-                    ) ||
-                    /\bfloodlight\b/.test(
-                        titleText
-                    ) ||
-                    /\bspotlight\b/.test(
-                        titleText
-                    ) ||
-                    /\bstreet\b/.test(
-                        titleText
-                    ) ||
-                    /\bgarden\b/.test(
-                        titleText
-                    ) ||
-                    /\bwall\b/.test(
-                        titleText
-                    ) ||
-                    /\boutdoor\b/.test(
-                        titleText
-                    ) ||
-                    /\bpathway\b/.test(
-                        titleText
-                    ) ||
-                    /\bmotion\b/.test(
-                        titleText
+        const storeCategories =
+            normalizeStoreCategories(
+                product?.storeCategories
+            );
+
+        /*
+         * Store category metadata gets the strongest score.
+         */
+        if (
+            storeCategories.includes(
+                normalizeSearchText(
+                    category.query
+                )
+            )
+        ) {
+            return 100;
+        }
+
+        /*
+         * Category text.
+         */
+        const categoryText =
+            normalizeSearchText(
+                [
+                    product?.category,
+                    product?.categoryName,
+                    product?.oneCategoryName,
+                    product?.twoCategoryName,
+                    product?.threeCategoryName,
+                    product?.categoryPath
+                ]
+                    .join(
+                        " "
                     )
+            );
+
+        /*
+         * Product title.
+         */
+        const titleText =
+            normalizeSearchText(
+                [
+                    product?.title,
+                    product?.name,
+                    product?.subject,
+                    product?.productName,
+                    product?.productNameEn
+                ]
+                    .join(
+                        " "
+                    )
+            );
+
+        /*
+         * Complete product text.
+         */
+        const fullText =
+            buildSearchText(
+                product
+            );
+
+        let score =
+            0;
+
+        for (
+            const term
+            of category.terms || []
+        ) {
+
+            const normalizedTerm =
+                normalizeSearchText(
+                    term
+                );
+
+            if (
+                !normalizedTerm
+            ) {
+                continue;
+            }
+
+            if (
+                titleText ===
+                normalizedTerm
+            ) {
+                score += 40;
+                continue;
+            }
+
+            if (
+                titleText.includes(
+                    normalizedTerm
                 )
-            );
+            ) {
+                score += 25;
+                continue;
+            }
 
-
-        case "battery":
-
-            return (
-                /\bbattery\b/.test(
-                    titleText
-                ) ||
-                /\bbatteries\b/.test(
-                    titleText
-                ) ||
-                /\b18650\b/.test(
-                    titleText
-                ) ||
-                /\b21700\b/.test(
-                    titleText
-                ) ||
-                /\blifepo4\b/.test(
-                    titleText
+            if (
+                categoryText.includes(
+                    normalizedTerm
                 )
-            );
+            ) {
+                score += 18;
+                continue;
+            }
 
-
-        case "chargers":
-
-            return (
-                /\bcharger\b/.test(
-                    titleText
-                ) ||
-                /\bcharging\b/.test(
-                    titleText
-                ) ||
-                /\bpower\s*adapter\b/.test(
-                    titleText
+            if (
+                fullText.includes(
+                    normalizedTerm
                 )
-            );
+            ) {
+                score += 5;
+            }
+        }
 
+        /*
+         * Specific category heuristics.
+         */
+        switch (
+            category.query
+        ) {
 
-        case "power-bank":
+            case "solar-lights":
 
-            return (
-                /\bpower\s*bank\b/.test(
-                    titleText
-                ) ||
-                /\bpowerbank\b/.test(
-                    titleText
-                ) ||
-                /\bportable\s+(power\s+)?charger\b/.test(
-                    titleText
-                )
-            );
-
-
-        case "cables":
-
-            return (
-                /\bcable\b/.test(
-                    titleText
-                ) ||
-                /\btype[\s-]?c\b/.test(
-                    titleText
-                ) ||
-                /\busb[\s-]?c\b/.test(
-                    titleText
-                ) ||
-                /\bhdmi\b/.test(
-                    titleText
-                )
-            );
-
-
-        case "earphones":
-
-            return (
-                /\bearphone\b/.test(
-                    titleText
-                ) ||
-                /\bearbud\b/.test(
-                    titleText
-                ) ||
-                /\btws\b/.test(
-                    titleText
-                ) ||
-                /\btrue\s+wireless\b/.test(
-                    titleText
-                )
-            );
-
-
-        case "headphones":
-
-            return (
-                /\bheadphone\b/.test(
-                    titleText
-                ) ||
-                /\bheadset\b/.test(
-                    titleText
-                )
-            );
-
-
-        case "modem":
-
-            return /\bmodem\b/.test(
-                titleText
-            );
-
-
-        case "routers":
-
-            return /\brouter\b/.test(
-                titleText
-            );
-
-
-        case "laptops":
-
-            return (
-                /\blaptop\b/.test(
-                    titleText
-                ) ||
-                /\bnotebook\b/.test(
-                    titleText
-                ) ||
-                /\bchromebook\b/.test(
-                    titleText
-                )
-            );
-
-
-        case "power-tools":
-
-            return (
-                /\bdrill\b/.test(
-                    titleText
-                ) ||
-                /\bgrinder\b/.test(
-                    titleText
-                ) ||
-                /\bscrewdriver\b/.test(
-                    titleText
-                ) ||
-                /\bwrench\b/.test(
-                    titleText
-                ) ||
-                /\bsaw\b/.test(
-                    titleText
-                ) ||
-                /\bsander\b/.test(
-                    titleText
-                ) ||
-                /\bpower\s+tool\b/.test(
-                    titleText
-                )
-            );
-
-
-        case "camera":
-
-            return (
-                /\bcamera\b/.test(
-                    titleText
-                ) ||
-                /\bcctv\b/.test(
-                    titleText
-                ) ||
-                /\bwebcam\b/.test(
-                    titleText
-                ) ||
-                /\bdash\s*cam\b/.test(
-                    titleText
-                ) ||
-                /\bsurveillance\b/.test(
-                    titleText
-                )
-            );
-
-
-        case "smart-home":
-
-            return (
-                (
-                    /\bsmart\b/.test(
+                if (
+                    /\bsolar\b/.test(
                         titleText
                     ) &&
                     (
-                        /\bhome\b/.test(
+                        /\blight\b/.test(
                             titleText
                         ) ||
-                        /\bplug\b/.test(
+                        /\blamp\b/.test(
                             titleText
                         ) ||
-                        /\bswitch\b/.test(
+                        /\bled\b/.test(
                             titleText
                         ) ||
-                        /\bbulb\b/.test(
+                        /\bfloodlight\b/.test(
                             titleText
                         ) ||
-                        /\bsocket\b/.test(
+                        /\bspotlight\b/.test(
                             titleText
                         ) ||
-                        /\bsensor\b/.test(
+                        /\bstreet\b/.test(
                             titleText
                         ) ||
-                        /\block\b/.test(
+                        /\bgarden\b/.test(
+                            titleText
+                        ) ||
+                        /\bwall\b/.test(
                             titleText
                         )
                     )
-                ) ||
-                /\bhome\s+automation\b/.test(
-                    titleText
-                )
-            );
+                ) {
+                    score += 40;
+                }
 
+                break;
 
-        default:
+            case "power-bank":
 
-            return false;
+                if (
+                    /\bpower\s*bank\b/.test(
+                        titleText
+                    ) ||
+                    /\bpowerbank\b/.test(
+                        titleText
+                    )
+                ) {
+                    score += 50;
+                }
 
+                break;
+
+            case "battery":
+
+                if (
+                    /\bbattery\b/.test(
+                        titleText
+                    ) ||
+                    /\bbatteries\b/.test(
+                        titleText
+                    ) ||
+                    /\b18650\b/.test(
+                        titleText
+                    ) ||
+                    /\b21700\b/.test(
+                        titleText
+                    ) ||
+                    /\blifepo4\b/.test(
+                        titleText
+                    )
+                ) {
+                    score += 45;
+                }
+
+                break;
+
+            case "chargers":
+
+                if (
+                    /\bcharger\b/.test(
+                        titleText
+                    ) ||
+                    /\bcharging\b/.test(
+                        titleText
+                    )
+                ) {
+                    score += 35;
+                }
+
+                break;
+
+            case "cables":
+
+                if (
+                    /\bcable\b/.test(
+                        titleText
+                    ) ||
+                    /\busb[\s-]?c\b/.test(
+                        titleText
+                    ) ||
+                    /\bhdmi\b/.test(
+                        titleText
+                    )
+                ) {
+                    score += 45;
+                }
+
+                break;
+
+            case "earphones":
+
+                if (
+                    /\bearphone\b/.test(
+                        titleText
+                    ) ||
+                    /\bearbud\b/.test(
+                        titleText
+                    ) ||
+                    /\btws\b/.test(
+                        titleText
+                    )
+                ) {
+                    score += 45;
+                }
+
+                break;
+
+            case "headphones":
+
+                if (
+                    /\bheadphone\b/.test(
+                        titleText
+                    ) ||
+                    /\bheadset\b/.test(
+                        titleText
+                    )
+                ) {
+                    score += 45;
+                }
+
+                break;
+
+            case "modem":
+
+                if (
+                    /\bmodem\b/.test(
+                        titleText
+                    )
+                ) {
+                    score += 45;
+                }
+
+                break;
+
+            case "routers":
+
+                if (
+                    /\brouter\b/.test(
+                        titleText
+                    )
+                ) {
+                    score += 45;
+                }
+
+                break;
+
+            case "laptops":
+
+                if (
+                    /\blaptop\b/.test(
+                        titleText
+                    ) ||
+                    /\bnotebook\b/.test(
+                        titleText
+                    ) ||
+                    /\bchromebook\b/.test(
+                        titleText
+                    )
+                ) {
+                    score += 45;
+                }
+
+                break;
+
+            case "power-tools":
+
+                if (
+                    /\bdrill\b/.test(
+                        titleText
+                    ) ||
+                    /\bgrinder\b/.test(
+                        titleText
+                    ) ||
+                    /\bscrewdriver\b/.test(
+                        titleText
+                    ) ||
+                    /\bwrench\b/.test(
+                        titleText
+                    ) ||
+                    /\bsaw\b/.test(
+                        titleText
+                    ) ||
+                    /\bsander\b/.test(
+                        titleText
+                    )
+                ) {
+                    score += 45;
+                }
+
+                break;
+
+            case "camera":
+
+                if (
+                    /\bcamera\b/.test(
+                        titleText
+                    ) ||
+                    /\bcctv\b/.test(
+                        titleText
+                    ) ||
+                    /\bwebcam\b/.test(
+                        titleText
+                    ) ||
+                    /\bsurveillance\b/.test(
+                        titleText
+                    )
+                ) {
+                    score += 45;
+                }
+
+                break;
+
+            case "smart-home":
+
+                if (
+                    /\bsmart\b/.test(
+                        titleText
+                    ) ||
+                    /\bhome\s+automation\b/.test(
+                        titleText
+                    )
+                ) {
+                    score += 35;
+                }
+
+                break;
+
+            default:
+                break;
+        }
+
+        return score;
     }
 
-}
 
-
-function normalizeStoreCategories(
-    categories
-) {
-
-    if (
-        !Array.isArray(
-            categories
-        )
+    function normalizeStoreCategories(
+        categories
     ) {
-        return [];
+
+        if (
+            !Array.isArray(
+                categories
+            )
+        ) {
+            return [];
+        }
+
+        return categories
+            .map(
+                value =>
+                    normalizeSearchText(
+                        value
+                    )
+            )
+            .filter(
+                Boolean
+            );
     }
 
 
-    return categories
-        .map(
-            value =>
-                String(
-                    value ??
-                    ""
-                )
-                    .trim()
-                    .toLowerCase()
-        )
-        .filter(
-            Boolean
-        );
-
-}
     /* =========================================================================
        19. FILTER + SORT + RENDER
        ========================================================================= */
@@ -5680,288 +5714,298 @@ function normalizeStoreCategories(
 
             event.preventDefault();
 
-            async function findProductById(
-    id
-) {
-
-    const wanted =
-        String(
-            id ||
-            ""
-        )
-            .trim();
-
-
-    if (
-        !wanted
-    ) {
-
-        return null;
-
-    }
-
-
-    /*
-     * ================================================================
-     * 1. FULL DETAIL CACHE
-     * ================================================================
-     */
-
-    const cachedDetail =
-        state.productDetailCache?.get(
-            wanted
-        );
-
-
-    if (
-        cachedDetail &&
-        cachedDetail.detailLoaded === true
-    ) {
-
-        return cachedDetail;
-
-    }
-
-
-    /*
-     * ================================================================
-     * 2. LOCAL CATALOG FALLBACK
-     * ================================================================
-     *
-     * This is only a fallback.
-     *
-     * We intentionally DO NOT return it immediately because the
-     * catalog record may be the lightweight CJ listV2 record.
-     */
-
-    const local =
-        state.products.find(
-            product =>
-                String(
-                    product?.id ||
-                    ""
-                ) ===
-                wanted
-        ) ||
-
-        state.products.find(
-            product =>
-                String(
-                    product?.pid ||
-                    ""
-                ) ===
-                wanted
-        ) ||
-
-        state.products.find(
-            product =>
-                String(
-                    product?.productId ||
-                    ""
-                ) ===
-                wanted
-        ) ||
-
-        null;
-
-
-    /*
-     * ================================================================
-     * 3. REQUEST FULL CJ DETAIL FROM WORKER
-     * ================================================================
-     */
-
-    try {
-
-        const data =
-            await fetchJSON(
-                buildProductsUrl(
-                    {
-                        pid:
-                            wanted
-                    }
-                ),
-                {
-                    timeout:
-                        CONFIG.REQUEST_TIMEOUT
-                }
+            openProductModal(
+                detailsButton.dataset.productId
             );
 
-
-        /*
-         * Worker response:
-         *
-         * {
-         *     success: true,
-         *     product: {...}
-         * }
-         */
-
-        if (
-            data?.success === false
-        ) {
-
-            throw new Error(
-                data?.error ||
-                data?.message ||
-                "Product detail request failed."
-            );
-
+            return;
         }
 
-
-        const raw =
-            data?.product ||
-            data?.data?.product ||
-            data?.data ||
-            null;
-
+        const cartButton =
+            event.target.closest(
+                '[data-action="add-cart"]'
+            );
 
         if (
-            !raw ||
-            typeof raw !== "object"
+            !cartButton ||
+            cartButton.disabled
         ) {
-
-            throw new Error(
-                "Product detail response was empty."
-            );
-
+            return;
         }
 
+        event.preventDefault();
 
-        const normalized =
-            normalizeProduct(
-                raw
+        const product =
+            findProductById(
+                cartButton.dataset.productId
             );
-
 
         if (
-            !normalized
+            !product
         ) {
-
-            throw new Error(
-                "Product detail could not be normalized."
+            announce(
+                "Product is no longer available."
             );
 
+            return;
         }
 
+        if (
+            Number(
+                product.quantity
+            ) <= 0
+        ) {
 
-        /*
-         * Explicitly mark this as full detail.
-         */
-        normalized.detailLoaded =
+            announce(
+                `${product.name} is currently out of stock.`
+            );
+
+            return;
+        }
+
+        const added =
+            invokeAddToCart(
+                product
+            );
+
+        if (
+            !added
+        ) {
+            return;
+        }
+
+        cartButton.disabled =
             true;
 
-
-        normalized.detailFetchedAt =
-            new Date().toISOString();
-
-
-        /*
-         * Store in frontend detail cache.
-         */
-        state.productDetailCache.set(
-            wanted,
-            normalized
+        cartButton.classList.add(
+            "added"
         );
 
+        cartButton.innerHTML =
+            `
+                ${svgIcon(
+                    "check",
+                    "ui-icon ui-icon-sm"
+                )}
 
-        /*
-         * ============================================================
-         * 4. MERGE FULL DETAIL INTO MAIN PRODUCT STATE
-         * ============================================================
-         *
-         * This means the richer record becomes the product used by
-         * the rest of the storefront too.
-         */
+                <span>
+                    Added
+                </span>
+            `;
 
-        const productIndex =
-            state.products.findIndex(
-                product =>
-                    String(
-                        product?.id ||
-                        product?.pid ||
-                        product?.productId ||
-                        ""
-                    ) ===
-                    wanted
-            );
-
-
-        if (
-            productIndex >= 0
-        ) {
-
-            state.products[
-                productIndex
-            ] =
-                {
-                    ...state.products[
-                        productIndex
-                    ],
-
-                    ...normalized
-                };
-
-        }
-
-
-        /*
-         * Also update filteredProducts when applicable.
-         */
-        const filteredIndex =
-            state.filteredProducts.findIndex(
-                product =>
-                    String(
-                        product?.id ||
-                        product?.pid ||
-                        product?.productId ||
-                        ""
-                    ) ===
-                    wanted
-            );
-
-
-        if (
-            filteredIndex >= 0
-        ) {
-
-            state.filteredProducts[
-                filteredIndex
-            ] =
-                {
-                    ...state.filteredProducts[
-                        filteredIndex
-                    ],
-
-                    ...normalized
-                };
-
-        }
-
-
-        return normalized;
-
-    } catch (
-        error
-    ) {
-
-        console.warn(
-            "[PRASUN SHOP] Full product detail lookup failed; using catalog fallback:",
-            error
+        announce(
+            `${product.name} added to cart.`
         );
 
+        window.setTimeout(
+            () => {
 
-        /*
-         * If CJ detail is temporarily unavailable, don't break the
-         * product modal. Return the existing lightweight product.
-         */
+                if (
+                    !cartButton.isConnected
+                ) {
+                    return;
+                }
 
-        return local || null;
+                cartButton.disabled =
+                    false;
 
+                cartButton.classList.remove(
+                    "added"
+                );
+
+                cartButton.innerHTML =
+                    `
+                        ${svgIcon(
+                            "cart",
+                            "ui-icon ui-icon-sm"
+                        )}
+
+                        <span>
+                            Add to Cart
+                        </span>
+                    `;
+            },
+            1200
+        );
     }
 
-}
+
+    function invokeAddToCart(
+        product
+    ) {
+
+        if (
+            typeof window.addToCart ===
+            "function"
+        ) {
+
+            try {
+
+                const result =
+                    window.addToCart(
+                        product
+                    );
+
+                return result !== false;
+
+            } catch (
+                error
+            ) {
+
+                console.error(
+                    "[PRASUN SHOP] addToCart failed:",
+                    error
+                );
+
+                announce(
+                    "Unable to add this product to the cart."
+                );
+
+                return false;
+            }
+        }
+
+        try {
+
+            document.dispatchEvent(
+                new CustomEvent(
+                    "cart:add",
+                    {
+                        detail:
+                            product
+                    }
+                )
+            );
+
+            return true;
+
+        } catch (
+            error
+        ) {
+
+            console.error(
+                "[PRASUN SHOP] cart event failed:",
+                error
+            );
+
+            announce(
+                "Unable to add this product to the cart."
+            );
+
+            return false;
+        }
+    }
+
+
+    async function findProductById(
+        id
+    ) {
+
+        const wanted =
+            String(
+                id ||
+                ""
+            )
+                .trim();
+
+        if (
+            !wanted
+        ) {
+            return null;
+        }
+
+        const local =
+            state.products.find(
+                product =>
+                    String(
+                        product?.id
+                    ) ===
+                    wanted
+            ) ||
+            state.products.find(
+                product =>
+                    String(
+                        product?.pid
+                    ) ===
+                    wanted
+            ) ||
+            state.products.find(
+                product =>
+                    String(
+                        product?.productId
+                    ) ===
+                    wanted
+            );
+
+        if (
+            local
+        ) {
+            return local;
+        }
+
+        if (
+            state.productDetailCache.has(
+                wanted
+            )
+        ) {
+
+            return state.productDetailCache.get(
+                wanted
+            );
+        }
+
+        try {
+
+            const data =
+                await fetchJSON(
+                    buildProductsUrl(
+                        {
+                            pid:
+                                wanted
+                        }
+                    ),
+                    {
+                        timeout:
+                            CONFIG.REQUEST_TIMEOUT
+                    }
+                );
+
+            const raw =
+                data?.product ||
+                data?.data?.product ||
+                data?.data ||
+                data;
+
+            const normalized =
+                normalizeProduct(
+                    raw
+                );
+
+            if (
+                normalized
+            ) {
+
+                state.productDetailCache.set(
+                    wanted,
+                    normalized
+                );
+
+                return normalized;
+            }
+
+        } catch (
+            error
+        ) {
+
+            console.warn(
+                "[PRASUN SHOP] Product detail lookup failed:",
+                error
+            );
+        }
+
+        return null;
+    }
+
 
     /* =========================================================================
        25. IMAGE FALLBACK
