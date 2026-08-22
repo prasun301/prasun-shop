@@ -100,6 +100,42 @@
         STORE_URL:
             "https://prasunshop.wed2c.com",
 
+        HY_ID:
+            "kibt-fe-cj",
+
+        /*
+         * WED2C creates its own product identifiers. They are NOT the same
+         * as the CJ PID, so they cannot be mathematically generated from a
+         * CJ PID.
+         *
+         * Add a mapping here whenever a product has been imported into your
+         * WED2C store and you have its jobsProductId + recommendProductId.
+         *
+         * This first mapping is verified from the WED2C product page supplied
+         * for the Solar Garden Light product.
+         */
+        PRODUCTS:
+            {
+                /* Verified Solar Garden Light mapping. */
+                "CJTY1501525": {
+                    jobsProductId:
+                        "1615328471586897920",
+
+                    recommendProductId:
+                        "2608221241380345100"
+                },
+
+                /* Same WED2C product, indexed by the CJ parent PID. */
+                "1535868866805641216": {
+                    jobsProductId:
+                        "1615328471586897920",
+
+                    recommendProductId:
+                        "2608221241380345100"
+                }
+            },
+
+        /* Legacy direct share-link support. */
         SHARE_LINKS:
             {
                 "1535868866805641216":
@@ -1922,12 +1958,15 @@
     }
 
 
-    function getWed2cShareUrl(product) {
+    function getWed2cProductUrl(product) {
 
         if (!product || typeof product !== "object") {
             return "";
         }
 
+        /*
+         * 1. If the backend already supplied a WED2C URL, use it.
+         */
         const direct = [
             product.wed2cUrl,
             product.wed2cShareUrl,
@@ -1938,12 +1977,87 @@
             product.externalLink
         ]
             .map(value => cleanString(value))
-            .find(Boolean);
+            .find(value => isSafeExternalProductUrl(value));
 
         if (direct) {
             return direct;
         }
 
+        /*
+         * 2. If the raw product contains WED2C identifiers, construct the
+         * exact goodsDetails URL. This is the preferred format.
+         */
+        const jobsProductId = cleanString(
+            product.jobsProductId ||
+            product.wed2cJobsProductId ||
+            product.wed2c?.jobsProductId ||
+            product.wed2cProductId
+        );
+
+        const recommendProductId = cleanString(
+            product.recommendProductId ||
+            product.wed2cRecommendProductId ||
+            product.wed2c?.recommendProductId
+        );
+
+        if (jobsProductId && recommendProductId) {
+            return buildWED2CProductUrl(
+                jobsProductId,
+                recommendProductId
+            );
+        }
+
+        /*
+         * 3. Match by a true CJ/product SKU using our explicit WED2C map.
+         */
+        const skuCandidates = [
+            product.sku,
+            product.productSku,
+            product.cj?.sku
+        ]
+            .map(value => cleanString(value))
+            .filter(Boolean);
+
+        for (const sku of skuCandidates) {
+
+            const mapping = WED2C.PRODUCTS?.[sku];
+
+            if (mapping?.jobsProductId && mapping?.recommendProductId) {
+                return buildWED2CProductUrl(
+                    mapping.jobsProductId,
+                    mapping.recommendProductId
+                );
+            }
+        }
+
+        /*
+         * 4. Also match the WED2C map by CJ PID / product ID when the
+         * catalogue record does not expose the SKU consistently.
+         */
+        const productIdCandidates = [
+            product.pid,
+            product.id,
+            product.productId,
+            product.cj_id
+        ]
+            .map(value => cleanString(value))
+            .filter(Boolean);
+
+        for (const productId of productIdCandidates) {
+
+            const mapping = WED2C.PRODUCTS?.[productId];
+
+            if (mapping?.jobsProductId && mapping?.recommendProductId) {
+                return buildWED2CProductUrl(
+                    mapping.jobsProductId,
+                    mapping.recommendProductId
+                );
+            }
+        }
+
+        /*
+         * 5. Legacy /s/... share-link mapping.
+         */
         const ids = [
             product.id,
             product.pid,
@@ -1954,8 +2068,11 @@
             .filter(Boolean);
 
         for (const id of ids) {
-            if (WED2C.SHARE_LINKS[id]) {
-                return WED2C.SHARE_LINKS[id];
+
+            const shareLink = WED2C.SHARE_LINKS?.[id];
+
+            if (isSafeExternalProductUrl(shareLink)) {
+                return shareLink;
             }
         }
 
@@ -1963,46 +2080,139 @@
     }
 
 
-    function openWed2cProduct(product) {
-
-        const url = getWed2cShareUrl(product);
-
-        if (!url) {
-            announce(
-                "This product is not connected to WED2C yet."
-            );
-            return false;
-        }
-
-        window.location.href = url;
-        return true;
+    /* Backward-compatible alias for existing public code. */
+    function getWed2cShareUrl(product) {
+        return getWed2cProductUrl(product);
     }
 
 
+    function buildWED2CProductUrl(
+        jobsProductId,
+        recommendProductId
+    ) {
+
+        return (
+            `${WED2C.STORE_URL}/goodsDetails` +
+            `?jobsProductId=${encodeURIComponent(jobsProductId)}` +
+            `&recommendProductId=${encodeURIComponent(recommendProductId)}` +
+            `&hyId=${encodeURIComponent(WED2C.HY_ID)}`
+        );
+    }
+
+
+    function isSafeExternalProductUrl(value) {
+
+        const normalized = cleanString(value);
+
+        if (!normalized) {
+            return false;
+        }
+
+        try {
+
+            const url = new URL(
+                normalized,
+                window.location.href
+            );
+
+            return (
+                url.protocol === "https:" &&
+                (
+                    url.hostname === "prasunshop.wed2c.com" ||
+                    url.hostname.endsWith(".wed2c.com")
+                )
+            );
+
+        } catch {
+            return false;
+        }
+    }
+
+
+    function openWed2cProduct(product) {
+
+        const directUrl =
+            getWed2cProductUrl(product);
+
+        const url =
+            directUrl ||
+            WED2C.STORE_URL;
+
+        if (!url) {
+
+            announce(
+                "WED2C store is currently unavailable."
+            );
+
+            return false;
+        }
+
+        /*
+         * Keep the customer in the same tab. WED2C then owns the rest of the
+         * transaction: variant selection, cart, checkout, payment and
+         * fulfillment.
+         */
+        window.location.href = url;
+
+        return true;
+    }
+
     function renderProductCard(product) {
 
-        const productId = escapeHTML(product.id);
-        const title = escapeHTML(product.name || "CJ Product");
-        const category = escapeHTML(
-            product.category || CONFIG.DEFAULT_CATEGORY
-        );
-        const image = escapeHTML(
-            product.image || PLACEHOLDER_IMAGE
-        );
-        const originalImage = escapeHTML(
-            product.originalImage || ""
-        );
+        const productId =
+            escapeHTML(product.id);
 
-        const wed2cUrl = getWed2cShareUrl(product);
-        const description = stripHtml(product.description);
+        const title =
+            escapeHTML(
+                product.name ||
+                "CJ Product"
+            );
 
-        const shortDescription = description.length > 105
-            ? `${description.slice(0, 105)}...`
-            : (description || "Product information available.");
+        const category =
+            escapeHTML(
+                product.category ||
+                CONFIG.DEFAULT_CATEGORY
+            );
 
-        const variantCount = Array.isArray(product.variants)
-            ? product.variants.length
-            : 0;
+        const image =
+            escapeHTML(
+                product.image ||
+                PLACEHOLDER_IMAGE
+            );
+
+        const originalImage =
+            escapeHTML(
+                product.originalImage ||
+                ""
+            );
+
+        const wed2cUrl =
+            getWed2cProductUrl(product);
+
+        const hasDirectWED2C =
+            Boolean(wed2cUrl);
+
+        const destinationUrl =
+            wed2cUrl ||
+            WED2C.STORE_URL;
+
+        const description =
+            stripHtml(
+                product.description
+            );
+
+        const shortDescription =
+            description.length > 105
+                ? `${description.slice(0, 105)}...`
+                : (
+                    description ||
+                    "Product information available."
+                );
+
+        const variantCount =
+            Array.isArray(product.variants)
+                ? product.variants.length
+                : 0;
 
         return `
             <article
@@ -2016,6 +2226,7 @@
                     data-action="wed2c-view"
                     data-product-id="${productId}"
                     aria-label="View ${title} on WED2C"
+                    title="${hasDirectWED2C ? "View product on WED2C" : "Open PRASUN SHOP on WED2C"}"
                 >
 
                     <span class="product-badge">
@@ -2046,6 +2257,7 @@
                             class="product-title-button"
                             data-action="wed2c-view"
                             data-product-id="${productId}"
+                            title="${hasDirectWED2C ? "View product on WED2C" : "Open PRASUN SHOP on WED2C"}"
                         >
                             ${title}
                         </button>
@@ -2089,21 +2301,13 @@
 
                         <div class="price-container">
 
-                            ${
-                                wed2cUrl
-                                    ? `
-                                        <span class="product-price">
-                                            ${escapeHTML(
-                                                formatPrice(product.price)
-                                            )}
-                                        </span>
-                                    `
-                                    : `
-                                        <span class="product-price">
-                                            View price on WED2C
-                                        </span>
-                                    `
-                            }
+                            <span class="product-price">
+                                ${escapeHTML(
+                                    formatPrice(
+                                        product.price
+                                    )
+                                )}
+                            </span>
 
                         </div>
 
@@ -2121,25 +2325,41 @@
                                     "ui-icon ui-icon-sm"
                                 )}
                                 <span>
-                                    View on WED2C
+                                    ${
+                                        hasDirectWED2C
+                                            ? "View on WED2C"
+                                            : "Open WED2C Store"
+                                    }
                                 </span>
                             </button>
 
                             <button
                                 type="button"
-                                class="btn-card btn-primary btn-add-to-cart add-to-cart-btn"
+                                class="btn-card btn-primary btn-wed2c buy-now-button"
                                 data-action="wed2c-buy"
                                 data-product-id="${productId}"
-                                ${wed2cUrl ? "" : "disabled"}
-                                aria-label="${wed2cUrl ? `Buy ${title} on WED2C` : `${title} is not connected to WED2C`}"
-                                title="${wed2cUrl ? "Continue to WED2C checkout" : "WED2C share link not configured"}"
+                                data-wed2c-url="${escapeHTML(destinationUrl)}"
+                                aria-label="${
+                                    hasDirectWED2C
+                                        ? `Buy ${title} on WED2C`
+                                        : `Open PRASUN SHOP on WED2C`
+                                }"
+                                title="${
+                                    hasDirectWED2C
+                                        ? "Continue to the WED2C product page"
+                                        : "Open the PRASUN SHOP WED2C store"
+                                }"
                             >
                                 ${svgIcon(
-                                    wed2cUrl ? "cart" : "inventory",
+                                    "cart",
                                     "ui-icon ui-icon-sm"
                                 )}
                                 <span>
-                                    ${wed2cUrl ? "Buy Now" : "WED2C Link Needed"}
+                                    ${
+                                        hasDirectWED2C
+                                            ? "Buy on WED2C"
+                                            : "Shop on WED2C"
+                                    }
                                 </span>
                             </button>
 
@@ -2152,7 +2372,6 @@
             </article>
         `;
     }
-
 
     /* =========================================================================
        22. GRID EVENTS / CART
@@ -2396,35 +2615,10 @@
 
         /*
          * WED2C is now the commerce engine.
-         * Send customers to the WED2C seller/share page so WED2C
-         * handles variants, cart, checkout, payment and fulfillment.
+         * Send customers to the direct WED2C product page when the mapping
+         * exists; otherwise open the PRASUN SHOP WED2C storefront.
          */
-        if (openWed2cProduct(product)) {
-            return;
-        }
-
-        /*
-         * If a share link has not yet been configured for this product,
-         * keep the existing detail modal available as a safe fallback.
-         */
-        if (!elements.productModal || !elements.modalBody) {
-            return;
-        }
-
-        elements.productModal.classList.add("is-open");
-        elements.productModal.setAttribute("aria-hidden", "false");
-        elements.productModal.setAttribute("role", "dialog");
-        elements.productModal.setAttribute("aria-modal", "true");
-        document.body.classList.add("modal-open");
-
-        elements.modalBody.innerHTML = `
-            <div class="product-status-card" role="status">
-                <h3>WED2C Link Not Configured</h3>
-                <p>
-                    This product has not yet been connected to its WED2C share link.
-                </p>
-            </div>
-        `;
+        openWed2cProduct(product);
     }
 
 
@@ -3035,8 +3229,14 @@
 
         getWED2CLink: id => {
             const product = findCatalogProductById(id);
-            return getWed2cShareUrl(product);
+            return getWed2cProductUrl(product) || WED2C.STORE_URL;
         },
+
+        getWED2CConfig: () => ({
+            storeUrl: WED2C.STORE_URL,
+            hyId: WED2C.HY_ID,
+            products: { ...WED2C.PRODUCTS }
+        }),
 
         getCategoryMap: () => CATEGORY_MAP.map(category => ({
             label: category.label,
