@@ -102,281 +102,62 @@
        The first product below is verified from your WED2C page source.
        ========================================================================= */
 
-    const PRODUCT_CATALOG = [
+ const PRODUCT_CATALOG = [
 
-        {
-            id:
-                "1535868866805641216",
+    {
+        id: "1535868866805641216",
+        name: "Solar Garden Light Waterproof Garden Lawn",
+        category: "Solar Lights",
+        price: 44.71,
+        image: "https://cf.cjdropshipping.com/20652083-f3a5-4a12-ab41-af445124bb13.jpg",
+        description: "Solar garden light suitable for outdoor garden and lawn applications.",
+        wed2cUrl:
+            "https://prasunshop.wed2c.com/goodsDetails?jobsProductId=1615328471586897920&recommendProductId=2608221241380345100&hyId=kibt-fe-cj"
+    },
 
-            pid:
-                "1535868866805641216",
+    {
+        id: "wed2c-2GOGZubPOVn",
+        name: "LED Solar Wall Light",
+        category: "Solar Lights",
+        price: 11.74,
+        image: "",
+        description: "LED solar wall light.",
+        wed2cUrl:
+            "https://prasunshop.wed2c.com/s/2GOGZubPOVn"
+    }
 
-            sku:
-                "CJTY1501525",
-
-            name:
-                "Solar Garden Light Waterproof Garden Lawn",
-
-            title:
-                "Solar Garden Light Waterproof Garden Lawn",
-
-            category:
-                "Solar Lights",
-
-            storeCategories:
-                [
-                    "solar-lights"
-                ],
-
-            price:
-                44.71,
-
-            quantity:
-                1,
-
-            image:
-                "https://cf.cjdropshipping.com/20652083-f3a5-4a12-ab41-af445124bb13.jpg",
-
-            description:
-                "Solar garden light suitable for outdoor garden and lawn applications. IP65 protection class with multiple size options.",
-
-            jobsProductId:
-                "1615328471586897920",
-
-            recommendProductId:
-                "2608221241380345100",
-
-            wed2cUrl:
-                "https://prasunshop.wed2c.com/goodsDetails?jobsProductId=1615328471586897920&recommendProductId=2608221241380345100&hyId=kibt-fe-cj",
-
-            wed2cShareUrl:
-                "https://prasunshop.wed2c.com/s/2GOGScv6sKC",
-
-            variants:
-                [
-                    {
-                        sku:
-                            "CJTY150152502BY",
-
-                        name:
-                            "15.5CM Solar",
-
-                        price:
-                            44.71,
-
-                        inventory:
-                            1
-                    },
-
-                    {
-                        sku:
-                            "CJTY150152504DW",
-
-                        name:
-                            "20CM Solar",
-
-                        price:
-                            52.60,
-
-                        inventory:
-                            1
-                    },
-
-                    {
-                        sku:
-                            "CJTY150152506FU",
-
-                        name:
-                            "30CM Solar",
-
-                        price:
-                            61.98,
-
-                        inventory:
-                            1
-                    },
-
-                    {
-                        sku:
-                            "CJTY150152507GT",
-
-                        name:
-                            "40CM",
-
-                        price:
-                            79.70,
-
-                        inventory:
-                            1
-                    }
-                ]
-        }
-
-    ];
+];
 
 
     /* =========================================================================
        3. STOREFRONT CATEGORIES
        ========================================================================= */
 
-    const CATEGORY_MAP = [
+    const PRODUCT_CATALOG = [
 
-        {
-            label:
-                "All Products",
+    {
+        id: "1535868866805641216",
+        name: "Solar Garden Light Waterproof Garden Lawn",
+        category: "Solar Lights",
+        price: 44.71,
+        image: "https://cf.cjdropshipping.com/20652083-f3a5-4a12-ab41-af445124bb13.jpg",
+        description: "Solar garden light suitable for outdoor garden and lawn applications.",
+        wed2cUrl:
+            "https://prasunshop.wed2c.com/goodsDetails?jobsProductId=1615328471586897920&recommendProductId=2608221241380345100&hyId=kibt-fe-cj"
+    },
 
-            query:
-                "",
+    {
+        id: "wed2c-2GOGZubPOVn",
+        name: "LED Solar Wall Light",
+        category: "Solar Lights",
+        price: 11.74,
+        image: "",
+        description: "LED solar wall light.",
+        wed2cUrl:
+            "https://prasunshop.wed2c.com/s/2GOGZubPOVn"
+    }
 
-            icon:
-                "apps"
-        },
-
-        {
-            label:
-                "Solar Lights",
-
-            query:
-                "solar-lights",
-
-            icon:
-                "solar"
-        },
-
-        {
-            label:
-                "Camera",
-
-            query:
-                "camera",
-
-            icon:
-                "camera"
-        },
-
-        {
-            label:
-                "Battery",
-
-            query:
-                "battery",
-
-            icon:
-                "battery"
-        },
-
-        {
-            label:
-                "Power Bank",
-
-            query:
-                "power-bank",
-
-            icon:
-                "powerbank"
-        },
-
-        {
-            label:
-                "Chargers",
-
-            query:
-                "chargers",
-
-            icon:
-                "charger"
-        },
-
-        {
-            label:
-                "Cables",
-
-            query:
-                "cables",
-
-            icon:
-                "cable"
-        },
-
-        {
-            label:
-                "Earphones",
-
-            query:
-                "earphones",
-
-            icon:
-                "earphone"
-        },
-
-        {
-            label:
-                "Headphones",
-
-            query:
-                "headphones",
-
-            icon:
-                "headphone"
-        },
-
-        {
-            label:
-                "Modem",
-
-            query:
-                "modem",
-
-            icon:
-                "modem"
-        },
-
-        {
-            label:
-                "Routers",
-
-            query:
-                "routers",
-
-            icon:
-                "router"
-        },
-
-        {
-            label:
-                "Laptops",
-
-            query:
-                "laptops",
-
-            icon:
-                "laptop"
-        },
-
-        {
-            label:
-                "Power Tools",
-
-            query:
-                "power-tools",
-
-            icon:
-                "tool"
-        },
-
-        {
-            label:
-                "Smart Home",
-
-            query:
-                "smart-home",
-
-            icon:
-                "home"
-        }
-
-    ];
-
+];
 
     /* =========================================================================
        4. PLACEHOLDER
