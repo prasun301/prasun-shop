@@ -37,7 +37,10 @@
         href="https://shop.prasunbarua.com/"
     >
 
-    <!-- FAVICON -->
+    <!-- ================================================================
+         FAVICON
+         ================================================================ -->
+
     <link
         rel="icon"
         href="/favicon.ico"
@@ -71,7 +74,7 @@
 
     <link
         rel="stylesheet"
-        href="/css/style.css?v=20260821-09"
+        href="/css/style.css?v=20260822-01"
     >
 
 
@@ -92,7 +95,11 @@
         }
 
         gtag("js", new Date());
-        gtag("config", "G-D9F2VQ4247");
+
+        gtag(
+            "config",
+            "G-D9F2VQ4247"
+        );
     </script>
 
 
@@ -121,27 +128,35 @@
         <div class="container">
 
 
-            <!-- BRAND -->
+            <!-- ========================================================
+                 BRAND
+                 ======================================================== -->
 
-           <a
-    href="/"
-    class="site-logo"
-    aria-label="PRASUN SHOP home"
->
-    <img
-    class="site-logo-image"
-    src="/logo.jpg"
-    width="44"
-    height="44"
-    alt="PRASUN SHOP"
-    decoding="async"
->
+            <a
+                href="/"
+                class="site-logo"
+                aria-label="PRASUN SHOP home"
+            >
 
-    <span>PRASUN SHOP</span>
-</a>
+                <img
+                    class="site-logo-image"
+                    src="/logo.jpg"
+                    width="44"
+                    height="44"
+                    alt="PRASUN SHOP"
+                    decoding="async"
+                >
+
+                <span>
+                    PRASUN SHOP
+                </span>
+
+            </a>
 
 
-            <!-- NAVIGATION -->
+            <!-- ========================================================
+                 NAVIGATION
+                 ======================================================== -->
 
             <nav
                 class="nav-links"
@@ -157,56 +172,16 @@
                 </a>
 
 
-                <a
-                    href="/cart.html"
-                    class="cart-link"
-                    aria-label="Shopping cart"
-                >
+                <!--
+                    Cart is intentionally removed.
 
-                    <svg
-                        class="ui-icon ui-icon-sm"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                        focusable="false"
-                    >
-
-                        <circle
-                            cx="9"
-                            cy="20"
-                            r="1.25"
-                        ></circle>
-
-                        <circle
-                            cx="18"
-                            cy="20"
-                            r="1.25"
-                        ></circle>
-
-                        <path
-                            d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.5a2 2 0 0 0 1.9-1.5L21 8H6"
-                        ></path>
-
-                    </svg>
-
-                    <span class="cart-link-label">
-                        Cart
-                    </span>
-
-                    <span
-                        id="cart-count"
-                        class="cart-count"
-                        hidden
-                        aria-label="0 items in cart"
-                    >
-                        0
-                    </span>
-
-                </a>
+                    WED2C handles:
+                    - Cart
+                    - Variants
+                    - Checkout
+                    - Payment
+                    - Orders
+                -->
 
 
                 <a
@@ -256,6 +231,7 @@
                     Home Improvement &amp; Solar
                 </h1>
 
+
                 <p class="shop-subtitle">
                     Practical products for home, solar, lighting,
                     smart home and everyday needs.
@@ -285,7 +261,7 @@
                     </label>
 
 
-                    <!-- Search icon -->
+                    <!-- SEARCH ICON -->
 
                     <svg
                         class="ui-icon ui-icon-sm"
@@ -347,8 +323,13 @@
                             focusable="false"
                         >
 
-                            <path d="M6 6l12 12"></path>
-                            <path d="M18 6L6 18"></path>
+                            <path
+                                d="M6 6l12 12"
+                            ></path>
+
+                            <path
+                                d="M18 6L6 18"
+                            ></path>
 
                         </svg>
 
@@ -398,8 +379,6 @@
 
             <!-- ========================================================
                  CATEGORIES
-
-                 products.js replaces the contents dynamically.
                  ======================================================== -->
 
             <nav
@@ -408,6 +387,10 @@
                 aria-label="Product categories"
             >
 
+                <!--
+                    products.js replaces this dynamically.
+                -->
+
                 <button
                     type="button"
                     class="category-pill active"
@@ -415,7 +398,9 @@
                     data-query=""
                     aria-pressed="true"
                 >
+
                     All Products
+
                 </button>
 
             </nav>
@@ -433,6 +418,7 @@
                 <span id="page-heading">
                     Featured Products
                 </span>
+
 
                 <span
                     id="results-count"
@@ -466,9 +452,11 @@
                         aria-hidden="true"
                     ></div>
 
+
                     <h3>
                         Loading Products
                     </h3>
+
 
                     <p>
                         Fetching the latest catalog.
@@ -486,7 +474,9 @@
     <!-- ================================================================
          PRODUCT DETAILS MODAL
 
-         products.js populates this dynamically.
+         Kept temporarily for compatibility with the current
+         products.js. The next products.js update can redirect the
+         customer directly to WED2C instead.
          ================================================================ -->
 
     <div
@@ -522,8 +512,13 @@
                     focusable="false"
                 >
 
-                    <path d="M6 6l12 12"></path>
-                    <path d="M18 6L6 18"></path>
+                    <path
+                        d="M6 6l12 12"
+                    ></path>
+
+                    <path
+                        d="M18 6L6 18"
+                    ></path>
 
                 </svg>
 
@@ -560,19 +555,23 @@
 
         <div class="container">
 
+
             <div class="footer-links">
 
                 <a href="/privacy.html">
                     Privacy Policy
                 </a>
 
+
                 <a href="/terms.html">
                     Terms of Service
                 </a>
 
+
                 <a href="/refund.html">
                     Refund Policy
                 </a>
+
 
                 <a href="/contact.html">
                     Contact
@@ -582,6 +581,7 @@
 
 
             <p>
+
                 &copy; 2026 PRASUN SHOP by
 
                 <a
@@ -593,6 +593,7 @@
                 </a>.
 
                 All rights reserved.
+
             </p>
 
         </div>
@@ -603,18 +604,20 @@
     <!-- ================================================================
          APPLICATION JAVASCRIPT
 
-         defer prevents blocking HTML parsing.
+         products.js remains for:
+         - Catalog
+         - Categories
+         - Search
+         - Sorting
+         - Product rendering
+         - WED2C product links
          ================================================================ -->
 
     <script
-        src="/js/cart.js?v=20260821-08"
+        src="/js/products.js?v=20260822-01"
         defer
     ></script>
 
-    <script
-        src="/js/products.js?v=20260821-09"
-        defer
-    ></script>
 
 </body>
 
