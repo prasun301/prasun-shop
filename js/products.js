@@ -93,7 +93,7 @@
     };
 
 
-    /* =========================================================================
+  /* =========================================================================
    2. STATIC PRODUCT CATALOG
    =========================================================================
    IMPORTANT:
@@ -102,60 +102,62 @@
 
 const PRODUCT_CATALOG = [
 
-   {
-    id: "1615328471586897920",
+    {
+        id: "1615328471586897920",
 
-    name: "Solar Garden Light Waterproof Garden Lawn",
+        name: "Solar Garden Light Waterproof Garden Lawn",
 
-    category: "Solar Lights",
+        category: "Solar Lights",
 
-    price: 44.71,
+        price: 44.71,
 
-    image:
-        "https://cf.cjdropshipping.com/20652083-f3a5-4a12-ab41-af445124bb13.jpg",
+        image:
+            "https://cf.cjdropshipping.com/20652083-f3a5-4a12-ab41-af445124bb13.jpg",
 
-    description:
-        "Solar garden light suitable for outdoor garden and lawn applications.",
+        description:
+            "Solar garden light suitable for outdoor garden and lawn applications.",
 
-    jobsProductId:
-        "1615328471586897920",
+        jobsProductId:
+            "1615328471586897920",
 
-    recommendProductId:
-        "2608221241380345100",
+        recommendProductId:
+            "2608221241380345100",
 
-    wed2cUrl:
-        "https://prasunshop.wed2c.com/goodsDetails?jobsProductId=1615328471586897920&recommendProductId=2608221241380345100&hyId=kibt-fe-cj",
+        wed2cUrl:
+            "https://prasunshop.wed2c.com/goodsDetails?jobsProductId=1615328471586897920&recommendProductId=2608221241380345100&hyId=kibt-fe-cj",
 
-    wed2cShareUrl:
-        "https://prasunshop.wed2c.com/s/2GOGZubPOVn"
-},
+        wed2cShareUrl:
+            "https://prasunshop.wed2c.com/s/2GOGScv6sKC"
+    },
 
     {
-    id: "1682031865621594112",
+        id: "1682031865621594112",
 
-    name: "LED Solar Wall Light",
+        name: "LED Solar Wall Light",
 
-    category: "Solar Lights",
+        category: "Solar Lights",
 
-    price: 11.74,
+        price: 11.74,
 
-    image: "",
+        image: "",
 
-    description:
-        "LED solar wall light with multiple quantity and lamp options.",
+        description:
+            "LED solar wall light with multiple quantity and lamp options.",
 
-    jobsProductId:
-        "1682031865621594112",
+        jobsProductId:
+            "1682031865621594112",
 
-    recommendProductId:
-        "2608221741420326500",
+        recommendProductId:
+            "2608221741420326500",
 
-    wed2cUrl:
-        "https://prasunshop.wed2c.com/goodsDetails?jobsProductId=1682031865621594112&recommendProductId=2608221741420326500&hyId=kibt-fe-cj",
+        wed2cUrl:
+            "https://prasunshop.wed2c.com/goodsDetails?jobsProductId=1682031865621594112&recommendProductId=2608221741420326500&hyId=kibt-fe-cj",
 
-    wed2cShareUrl:
-        "https://prasunshop.wed2c.com/s/2GOGZubPOVn"
-},
+        wed2cShareUrl:
+            "https://prasunshop.wed2c.com/s/2GOGZubPOVn"
+    }
+
+];
 
 
 /* =========================================================================
@@ -249,7 +251,6 @@ const CATEGORY_MAP = [
     }
 
 ];
-
     /* =========================================================================
        4. PLACEHOLDER
        ========================================================================= */
